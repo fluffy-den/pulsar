@@ -13,7 +13,6 @@
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
-#include "pulsar/utils/string.hpp"
 
 // Include: C
 #include <cassert>

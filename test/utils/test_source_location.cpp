@@ -1,7 +1,7 @@
 /**
  * @file    source_location.cpp
  * @author  Fluffy (noe.louis-quentin@hotmail.fr)
- * @brief
+ * @brief		Test of source location
  * @date    05-01-2022
  *
  * @copyright Copyright (c) 2022 - Pulsar Software
@@ -14,5 +14,6 @@
 // Pulsar
 pulsar::int32_t main()
 {
+	pulsar::source_location srcloc1;
 	return 0;
 }

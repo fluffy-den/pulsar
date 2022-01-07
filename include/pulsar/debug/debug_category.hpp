@@ -14,11 +14,11 @@
 // Include: Pulsar
 #include "pulsar/debug/debug.hpp"
 
-// Include: C++
-#include <system_error>
-
 // Include: C
 #include <cerrno>
+
+// Include: C++
+#include <system_error>
 
 // Pulsar
 namespace pulsar
@@ -31,15 +31,15 @@ namespace pulsar
 		 * @category Debugging
 		 */
 
-		// Code
+		/// Type
 		using error_code = std::error_code;
 
-		// Category
+		/// Category
 		/**
 		 * @brief
 		 *
 		 */
-		class pf_decl_novtable pulsar_category pf_attr_final: public std::error_category
+		class pulsar_category pf_attr_final: public std::error_category
 		{
 			// Constructors
 
@@ -59,7 +59,7 @@ namespace pulsar
 			}
 		};
 
-		// Errno
+		/// Errno
 		/**
 		 * @brief
 		 *
@@ -71,6 +71,7 @@ namespace pulsar
 		}
 
 	} // Debug
+
 } // Pulsar
 
 #endif // !PF_DEBUG_CATEGORY_HPP

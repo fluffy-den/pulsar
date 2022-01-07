@@ -1,7 +1,7 @@
 /**
  * @file    compile_test.cpp
  * @author  Fluffy (noe.louis-quentin@hotmail.fr)
- * @brief		This file checks if compilation was successful
+ * @brief		Test compile time of pulsar
  * @date    04-12-2021
  *
  * @copyright Copyright (c) 2021 - Pulsar Software

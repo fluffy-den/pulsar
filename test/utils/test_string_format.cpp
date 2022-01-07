@@ -1,7 +1,7 @@
 /**
  * @file    string_format.cpp
  * @author  Fluffy (noe.louis-quentin@hotmail.fr)
- * @brief
+ * @brief		Test of string format function
  * @date    05-01-2022
  *
  * @copyright Copyright (c) 2022 - Pulsar Software

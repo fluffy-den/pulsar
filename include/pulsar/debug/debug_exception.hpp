@@ -33,24 +33,6 @@ namespace pulsar
 		{
 		public:
 			/// Constructors
-			/**
-			 * @brief
-			 *
-			 * @param r
-			 */
-			exception(error_code c,
-								string_view file = __FILE__,
-								string_view func = __FUNCSIG__) pf_attr_noexcept
-			{}
-			/**
-			 * @brief
-			 *
-			 * @param r
-			 */
-			exception(exception const &r,
-								string_view file = __FILE__,
-								string_view func = __FUNCSIG__) pf_attr_noexcept
-			{}
 
 			/// Destructor
 			/**
@@ -73,7 +55,7 @@ namespace pulsar
 			 *
 			 * @return
 			 */
-			pf_decl_virtual const char *what() const pf_attr_noexcept pf_attr_override
+			const char *what() const pf_attr_noexcept
 			{
 				// TODO: What [pulsar_module] (CODE) -> Message in __FUNCSIG__, at FILENAME, LINE
 				return nullptr;

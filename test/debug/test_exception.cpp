@@ -1,7 +1,7 @@
 /**
  * @file    test_exception.cpp
  * @author  Fluffy (noe.louis-quentin@hotmail.fr)
- * @brief
+ * @brief		Test of pulsar exception
  * @date    01-01-2022
  *
  * @copyright Copyright (c) 2022 - Pulsar Software

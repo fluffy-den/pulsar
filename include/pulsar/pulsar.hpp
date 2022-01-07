@@ -23,8 +23,13 @@
 		|| defined(__WIN64__) || defined(WIN64)
 #	define PF_OS_WINDOWS 1
 
+// Reduces size of windows.h inclusion
+#	define WIN32_LEAN_AND_MEAN
+#	define NOMINMAX	1
+
+
 // Call
-#	define pf_oscall			__stdcall
+#	define pf_oscall __stdcall
 
 #	if defined(_WIN64) || defined(__WIN64__) || defined(WIN64)
 #		define PF_64BIT 1

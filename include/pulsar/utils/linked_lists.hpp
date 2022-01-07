@@ -23,7 +23,14 @@
 namespace pulsar
 {
 
-	// Singly Link
+	/**
+	 * @category Singly
+	 */
+
+	/// Link
+	/**
+	 * @brief
+	 */
 	class singlylink
 	{
 		pf_decl_friend class singlylist;
@@ -31,14 +38,33 @@ namespace pulsar
 	public:
 		using thread_safe = std::false_type;
 
-		// Constructors
-		pf_decl_constexpr pf_decl_explicit singlylink() pf_attr_noexcept : next_(nullptr)
+		/// Constructors
+		/**
+		 *
+		 */
+		pf_decl_constexpr pf_decl_explicit singlylink() pf_attr_noexcept: next_(nullptr)
 		{}
-		pf_decl_constexpr pf_decl_explicit singlylink(singlylink const &r)
-		  pf_attr_noexcept															   = delete;
-		pf_decl_constexpr pf_decl_explicit singlylink(singlylink &&r) pf_attr_noexcept = delete;
+		/**
+		 * @brief
+		 *
+		 * @param r
+		 * @return pf_decl_constexpr
+		 */
+		pf_decl_constexpr pf_decl_explicit singlylink(singlylink const &r) pf_attr_noexcept = delete;
+		/**
+		 * @brief
+		 *
+		 * @param r
+		 * @return pf_decl_constexpr
+		 */
+		pf_decl_constexpr pf_decl_explicit singlylink(singlylink &&r) pf_attr_noexcept			= delete;
 
 		// Next
+		/**
+		 * @brief
+		 *
+		 * @return pf_decl_constexpr*
+		 */
 		pf_decl_constexpr singlylink *next() pf_attr_noexcept
 		{
 			return this->next_;
@@ -60,43 +86,82 @@ namespace pulsar
 		return x->next();
 	}
 
-
-	// Singly Linked-list
+	/// Lists
+	/**
+	 * @brief
+	 *
+	 */
 	class singlylist
 	{
 	public:
 		using thread_safe = std::false_type;
 
-		// Constructors
+		/// Constructors
+		/**
+		 *
+		 */
 		pf_decl_constexpr pf_decl_explicit singlylist() pf_attr_noexcept
-			: front_(nullptr)
-			, back_(nullptr)
+				: front_(nullptr)
+				, back_(nullptr)
 		{}
+		/**
+		 * @brief
+		 *
+		 * @param list
+		 * @return pf_decl_constexpr
+		 */
 		pf_decl_constexpr singlylist(std::initializer_list<singlylink *> list) pf_attr_noexcept
-			: singlylist()
+				: singlylist()
 		{
 			for (auto &it : list) { this->insert_front(it); }
 		}
+		/**
+		 * @brief
+		 *
+		 * @param y
+		 * @return pf_decl_constexpr
+		 */
 		pf_decl_constexpr pf_decl_explicit singlylist(singlylist const &y)
-		  pf_attr_noexcept = delete;
+				pf_attr_noexcept = delete;
+		/**
+		 * @brief
+		 *
+		 * @param y
+		 * @return pf_decl_constexpr
+		 */
 		pf_decl_constexpr pf_decl_explicit singlylist(singlylist &&y) pf_attr_noexcept
-			: front_(y.front_)
-			, back_(y.back_)
+				: front_(y.front_)
+				, back_(y.back_)
 		{
 			y.front_ = nullptr;
 			y.back_	 = nullptr;
 			if (this->front_) this->front_->next_ = nullptr;
 		}
 
-		// Destructor
+		/// Destructor
+		/**
+		 *
+		 */
 		pf_decl_constexpr ~singlylist() pf_attr_noexcept
 		{
 			this->clear();
 		}
 
-		// Operator=
+		/// Operators=
+		/**
+		 *
+		 */
 		pf_decl_constexpr singlylist &operator=(singlylist const &y) pf_attr_noexcept = delete;
-		pf_decl_constexpr singlylist &operator=(singlylist &&y) pf_attr_noexcept
+		/**
+		 * @brief
+		 *
+		 * @param y
+		 * @return pf_decl_constexpr&
+		 */
+		/**
+		 *
+		 */
+		pf_decl_constexpr singlylist &operator																				=(singlylist &&y) pf_attr_noexcept
 		{
 			this->front_ = y.front_;
 			this->back_	 = y.back_;
@@ -105,6 +170,12 @@ namespace pulsar
 		}
 
 		// Insert
+		/**
+		 * @brief
+		 *
+		 * @param e
+		 * @return pf_decl_constexpr*
+		 */
 		pf_decl_constexpr singlylink *insert_front(singlylink *e) pf_attr_noexcept
 		{
 			// TODO: Exception !e
@@ -117,13 +188,19 @@ namespace pulsar
 			else
 			{
 				this->front_->next_ = e;
-				this->front_		= e;
+				this->front_				= e;
 			}
 
 			e->next_ = nullptr;
 
 			return this->front_;
 		}
+		/**
+		 * @brief
+		 *
+		 * @param e
+		 * @return pf_decl_constexpr*
+		 */
 		pf_decl_constexpr singlylink *insert_back(singlylink *e) pf_attr_noexcept
 		{
 			// TODO: Exception !e
@@ -135,7 +212,7 @@ namespace pulsar
 			}
 			else
 			{
-				e->next_	= this->back_;
+				e->next_		= this->back_;
 				this->back_ = e;
 			}
 
@@ -143,6 +220,13 @@ namespace pulsar
 
 			return this->back_;
 		}
+		/**
+		 * @brief
+		 *
+		 * @param p
+		 * @param e
+		 * @return pf_decl_constexpr*
+		 */
 		pf_decl_constexpr singlylink *insert_after(singlylink *p, singlylink *e) pf_attr_noexcept
 		{
 			// TODO: Exception !e
@@ -157,6 +241,11 @@ namespace pulsar
 		}
 
 		// Remove
+		/**
+		 * @brief
+		 *
+		 * @return pf_decl_constexpr*
+		 */
 		pf_decl_constexpr singlylink *remove_front() pf_attr_noexcept
 		{
 			if (!this->back_) return nullptr;
@@ -167,13 +256,24 @@ namespace pulsar
 			this->front_ = p;
 			return f;
 		}
+		/**
+		 * @brief
+		 *
+		 * @return pf_decl_constexpr*
+		 */
 		pf_decl_constexpr singlylink *remove_back() pf_attr_noexcept
 		{
 			if (!this->back_) return nullptr;
 			singlylink *b = this->back_;
-			this->back_	  = this->back_->next_;
+			this->back_		= this->back_->next_;
 			return b;
 		}
+		/**
+		 * @brief
+		 *
+		 * @param p
+		 * @return pf_decl_constexpr*
+		 */
 		pf_decl_constexpr singlylink *remove_after(singlylink *p) pf_attr_noexcept
 		{
 			if (!p) return this->remove_back();
@@ -196,6 +296,12 @@ namespace pulsar
 		}
 
 		// Look-up
+		/**
+		 * @brief
+		 *
+		 * @param e
+		 * @return pf_hint_nodiscard*
+		 */
 		pf_hint_nodiscard pf_decl_constexpr singlylink *lookup(singlylink *e) const pf_attr_noexcept
 		{
 			// TODO: Exception !e
@@ -211,9 +317,14 @@ namespace pulsar
 		}
 
 		// Size
+		/**
+		 * @brief
+		 *
+		 * @return pf_hint_nodiscard
+		 */
 		pf_hint_nodiscard pf_decl_constexpr size_t size() const pf_attr_noexcept
 		{
-			size_t i	  = 0;
+			size_t i			= 0;
 			singlylink *p = this->back_;
 			while (p)
 			{
@@ -225,6 +336,11 @@ namespace pulsar
 		}
 
 		// Clear
+		/**
+		 * @brief
+		 *
+		 * @return pf_decl_constexpr
+		 */
 		pf_decl_constexpr void clear() pf_attr_noexcept
 		{
 			if (!this->back_) return;
@@ -242,12 +358,14 @@ namespace pulsar
 		}
 
 	private:
-
 		singlylink *front_;
 		singlylink *back_;
 	};
 
-	// Atomic Singly Link
+	/**
+	 * @brief
+	 *
+	 */
 	class atomic_singlylink
 	{
 		pf_decl_friend class atomic_singlylist;
@@ -255,11 +373,22 @@ namespace pulsar
 	public:
 		using thread_safe = std::true_type;
 
-		// Constructors
-		pf_decl_explicit atomic_singlylink() pf_attr_noexcept : next_(nullptr)
+		/// Constructors
+		/**
+		 * @brief
+		 *
+		 * @return pf_decl_explicit
+		 */
+		pf_decl_explicit atomic_singlylink() pf_attr_noexcept: next_(nullptr)
 		{}
+		/**
+		 * @brief
+		 *
+		 * @param r
+		 * @return pf_decl_explicit
+		 */
 		pf_decl_explicit atomic_singlylink(atomic_singlylink const &r) pf_attr_noexcept = delete;
-		pf_decl_explicit atomic_singlylink(atomic_singlylink &&r) pf_attr_noexcept		= delete;
+		pf_decl_explicit atomic_singlylink(atomic_singlylink &&r) pf_attr_noexcept			= delete;
 
 		// Next
 		atomic_singlylink *next() pf_attr_noexcept
@@ -283,8 +412,8 @@ namespace pulsar
 
 		// Constructors
 		pf_decl_constexpr pf_decl_explicit atomic_singlylist() pf_attr_noexcept
-			: front_(nullptr)
-			, back_(nullptr)
+				: front_(nullptr)
+				, back_(nullptr)
 		{}
 
 	private:
