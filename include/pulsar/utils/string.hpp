@@ -35,14 +35,14 @@ namespace pulsar
 
 	/// Format
 	/**
-	 * @brief Creates a pulsar::string from a pulsar::string_view f formatted by the variadic
-	 * 				arguments based on std::vsnprintf function.
+	 * @brief Creates a pulsar::string from a pulsar::string_view @a __format formatted by the
+	 * 				variadic arguments based on std::vsnprintf function
 	 *
 	 * @ref See https://en.cppreference.com/w/cpp/io/c/fprintf to know how to use this function
-	 * 			(same arguments as std::fprintf)
+	 * 			(For @a __format and variadic arguments)
 	 *
-	 * @param __f Formatting string
-	 * @param ... Variadic arguments sent to @a __f
+	 * @param __format Formatting string
+	 * @param ... 		 Variadic arguments sent to @a __format
 	 *
 	 * @throw error_errno()
 	 *
