@@ -20,9 +20,13 @@ execute_process(
   OUTPUT_VARIABLE VERSION_STRING
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+
+# Version extracting from full version string
 string(REGEX REPLACE "([0-9]+).*" "\\1" VERSION_MAJOR "${VERSION_STRING}")
 string(REGEX REPLACE "[0-9]+\\.([0-9]+).*" "\\1" VERSION_MINOR "${VERSION_STRING}")
 string(REGEX REPLACE "[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" VERSION_PATCH "${VERSION_STRING}")
+
+# Commit hash value (SHA-1) -> Version
 execute_process(
   COMMAND "${GIT_EXECUTABLE}" rev-parse --short=7 HEAD
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -51,7 +55,6 @@ configure_file(
 if(NOT EXISTS CPM_DOWNLOAD_VERSION)
   set(CPM_DOWNLOAD_VERSION 0.34.2)
 endif()
-
 set(CPM_DOWNLOAD_LOCATION "${CMAKE_SOURCE_DIR}/cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
 if(NOT (EXISTS ${CPM_DOWNLOAD_LOCATION}))
   file(DOWNLOAD
@@ -70,6 +73,7 @@ endif()
 
 # Library
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
+
 add_library(${PROJECT_NAME} INTERFACE ${HEADERS})
 set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} LINKER_LANGUAGE CXX)
 target_include_directories(
@@ -103,6 +107,5 @@ if(BUILD_TESTING)
     add_executable(${BINARY_NAME} ${TEST_SOURCE})
     add_test(NAME ${BINARY_NAME} COMMAND ${BINARY_NAME})
     target_link_libraries(${BINARY_NAME} PRIVATE ${PROJECT_NAME})
-    message(STATUS "[pulsar]: Added test \"${BINARY_NAME}\"")
   endforeach()
 endif()
