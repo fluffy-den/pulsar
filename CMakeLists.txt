@@ -14,27 +14,29 @@ find_package(Git)
 if(NOT GIT_FOUND)
   message(FATAL_ERROR "[pulsar]: Need git installed on this machine!")
 endif()
-
 execute_process(
-  COMMAND "${GIT_EXECUTABLE}" describe --tags
+  COMMAND "${GIT_EXECUTABLE}" describe --tags --always
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-  RESULT_VARIABLE GIT_RESULT
-  OUTPUT_VARIABLE GIT_OUTPUT
+  OUTPUT_VARIABLE VERSION_STRING
+  OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-
-message(STATUS ${GIT_OUTPUT})
-
-set(PULSAR_MAJOR_VER 0)
-set(PULSAR_MINOR_VER 1)
-set(PULSAR_PATCH_VER 0)
-set(PULSAR_VERSION ${PULSAR_MAJOR_VER}.${PULSAR_MINOR_VER}.${PULSAR_PATCH_VER})
-message(STATUS "[pulsar]: Version = ${P")
+string(REGEX REPLACE "([0-9]+).*" "\\1" VERSION_MAJOR "${VERSION_STRING}")
+string(REGEX REPLACE "[0-9]+\\.([0-9]+).*" "\\1" VERSION_MINOR "${VERSION_STRING}")
+string(REGEX REPLACE "[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" VERSION_PATCH "${VERSION_STRING}")
+execute_process(
+  COMMAND "${GIT_EXECUTABLE}" rev-parse --short=7 HEAD
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+  OUTPUT_VARIABLE VERSION_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+set(VERSION_STRING ${VERSION_STRING}-${VERSION_HASH})
+message(STATUS "[pulsar]: v${VERSION_STRING}")
 
 # Project
 project(
   pulsar
-  VERSION ${PULSAR_MAJOR_VER}.${PULSAR_MINOR_VER}.${PULSAR_PATCH_VER}
   LANGUAGES CXX
+  VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
 )
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -74,12 +76,6 @@ target_include_directories(
   ${PROJECT_NAME} INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
                             $<INSTALL_INTERFACE:include>
 )
-target_compile_definitions(
-  ${PROJECT_NAME}
-  INTERFACE PULSAR_MAJOR_VER=${PULSAR_MAJOR_VER},
-  INTERFACE PULSAR_MINOR_VER=${PULSAR_MINOR_VER},
-  INTERFACE PULSAR_BUILD_VER=${PULSAR_BUILD_VER}
-)
 
 # CPM -> PackageProject
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.8.0")
@@ -107,6 +103,6 @@ if(BUILD_TESTING)
     add_executable(${BINARY_NAME} ${TEST_SOURCE})
     add_test(NAME ${BINARY_NAME} COMMAND ${BINARY_NAME})
     target_link_libraries(${BINARY_NAME} PRIVATE ${PROJECT_NAME})
-    message(STATUS "[pulsar]: Added test for ${BINARY_NAME}")
+    message(STATUS "[pulsar]: Added test \"${BINARY_NAME}\"")
   endforeach()
 endif()

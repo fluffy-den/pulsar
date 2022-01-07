@@ -1,7 +1,7 @@
 /**
  * @file    pulsar_version.hpp.in
  * @author  Fluffy (noe.louis-quentin@hotmail.fr)
- * @brief   This header specifies the version of the Pulsar library.
+ * @brief   Specifies the version of the library
  * @date    07-01-2022
  *
  * @copyright Copyright (c) 2022 - Pulsar Software
@@ -9,11 +9,12 @@
  */
 
 #ifndef PULSAR_VERSION_HPP
-#define PULSAR_VERSION_HPP 1
+#define PULSAR_VERSION_HPP	 1
 
 // Version
-#define PULSAR_VERSION_MAJOR = @PULSAR_MAJOR_VER@
-#define PULSAR_VERSION_MINOR = @PULSAR_MINOR_VER@
-#define PULSAR_VERSION_PATCH = @PULSAR_PATCH_VER@
+#define PULSAR_VERSION_MAJOR @VERSION_MAJOR@
+#define PULSAR_VERSION_MINOR @VERSION_MINOR@
+#define PULSAR_VERSION_PATCH @VERSION_PATCH@
+#define PULSAR_VERSION       "@VERSION_STRING@"
 
 #endif // !PULSAR_VERSION_HPP

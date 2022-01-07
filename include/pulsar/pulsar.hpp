@@ -163,4 +163,7 @@ namespace pulsar
 
 } // Pulsar
 
+// Version
+#include "pulsar/pulsar_version.hpp"
+
 #endif // !PULSAR_HPP
