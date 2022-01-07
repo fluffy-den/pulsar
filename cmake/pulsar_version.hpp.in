@@ -1,7 +1,7 @@
 /**
  * @file    pulsar_version.hpp.in
  * @author  Fluffy (noe.louis-quentin@hotmail.fr)
- * @brief
+ * @brief   This header specifies the version of the Pulsar library.
  * @date    07-01-2022
  *
  * @copyright Copyright (c) 2022 - Pulsar Software
@@ -9,7 +9,7 @@
  */
 
 #ifndef PULSAR_VERSION_HPP
-#define PULSAR_VERSION_HPP	 1
+#define PULSAR_VERSION_HPP 1
 
 // Version
 #define PULSAR_VERSION_MAJOR = @PULSAR_MAJOR_VER@

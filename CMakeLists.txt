@@ -11,23 +11,24 @@ option(BUILD_TESTING "[pulsar]: Build test executable(s)?" On)
 
 # Version (from git local repository)
 find_package(Git)
-if(!Git_FOUND)
+if(NOT GIT_FOUND)
   message(FATAL_ERROR "[pulsar]: Need git installed on this machine!")
 endif()
 
 execute_process(
-  COMMAND "${GIT_EXECUTABLE}" describe VERSION --tags --dirty=-dirty
+  COMMAND "${GIT_EXECUTABLE}" describe --tags
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   RESULT_VARIABLE GIT_RESULT
   OUTPUT_VARIABLE GIT_OUTPUT
 )
 
-message(STATUS ${GIT_RESULT})
 message(STATUS ${GIT_OUTPUT})
 
 set(PULSAR_MAJOR_VER 0)
 set(PULSAR_MINOR_VER 1)
 set(PULSAR_PATCH_VER 0)
+set(PULSAR_VERSION ${PULSAR_MAJOR_VER}.${PULSAR_MINOR_VER}.${PULSAR_PATCH_VER})
+message(STATUS "[pulsar]: Version = ${P")
 
 # Project
 project(
