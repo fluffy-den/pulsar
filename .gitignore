@@ -1,0 +1,11 @@
+# Ignore VScode cache
+.VScode/*
+
+# Ignore CMake cache
+build/*
+
+# Ignore binaries
+*.exe
+
+# Ignore CMake generated
+cmake/pulsarConfig.cmake

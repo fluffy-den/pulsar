@@ -1,0 +1,19 @@
+/**
+ * @file    pulsar_version.hpp.in
+ * @author  Fluffy (noe.louis-quentin@hotmail.fr)
+ * @brief
+ * @date    07-01-2022
+ *
+ * @copyright Copyright (c) 2022 - Pulsar Software
+ *
+ */
+
+#ifndef PULSAR_VERSION_HPP
+#define PULSAR_VERSION_HPP	 1
+
+// Version
+#define PULSAR_VERSION_MAJOR = @PULSAR_MAJOR_VER@
+#define PULSAR_VERSION_MINOR = @PULSAR_MINOR_VER@
+#define PULSAR_VERSION_PATCH = @PULSAR_PATCH_VER@
+
+#endif // !PULSAR_VERSION_HPP
