@@ -9,3 +9,4 @@ build/*
 
 # Ignore CMake generated
 cmake/pulsarConfig.cmake
+include/pulsar/pulsar_version.hpp

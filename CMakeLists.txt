@@ -20,6 +20,7 @@ execute_process(
   OUTPUT_VARIABLE VERSION_STRING
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
+string(TOLOWER "${PROJECT_NAME}/pulsar_version.hpp" VERSION_HEADER_PATH)
 
 # Version extracting from full version string
 string(REGEX REPLACE "([0-9]+).*" "\\1" VERSION_MAJOR "${VERSION_STRING}")
@@ -92,6 +93,7 @@ packageProject(
   BINARY_DIR ${PROJECT_BINARY_DIR}
   INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
   INCLUDE_DESTINATION include/pulsar
+  VERSION_HEADER "${VERSION_HEADER_PATH}"
   COMPATIBILITY SameMajorVersion
 )
 
