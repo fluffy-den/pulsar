@@ -28,20 +28,15 @@ namespace pulsar
 			 * @category Fnv1-a 32 bits version
 			 */
 			/**
-			 * @brief Hash calculation function of the Fnv1-a function. Returns a 32-bit unsigned integer
-			 * 				representing the hash of the Fnv1-a function from the memory pointed to by "p", of
-			 * 				size "sizeInBytes".
+			 * @brief Calculates the 32 bits version of the fnv1-a hash function
 			 *
-			 * @warning This hash function should not be used to secure data.
-			 *
-			 * @param (const void*) 	 p  				 Pointer to the beginning of a continuous data
-			 * 																		 structure
-			 * @param (pulsar::size_t) sizeInBytes Size of this data structure
-			 * @return (pulsar::uint32_t) Numerical representation of the function Fnv1-a of the data
-			 * 														structure pointed by "p", of length "sizeInBytes"
+			 * @param __p		 Pointer to the beginning of a continuous data structure
+			 * @param __size Size of this data structure in bytes
+			 * @return An unsigned integer representing the hashed data pointed by @a __ptr of size
+			 * 				 @a __size in bytes
 			 */
-			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(const void *p,
-																													size_t sizeInBytes) pf_attr_noexcept
+			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(const void *__ptr,
+																													size_t __size) pf_attr_noexcept
 			{
 				uint32_t val = 0x811c9dc5u;
 				union
@@ -50,9 +45,9 @@ namespace pulsar
 					const void *as_void;
 				};
 
-				as_void = p;
+				as_void = __ptr;
 
-				for (size_t i = 0; i < sizeInBytes; ++i)
+				for (size_t i = 0; i < __size; ++i)
 				{
 					val = (val ^ *as_byte) * 0x01000193u;
 					as_byte++;
@@ -61,27 +56,30 @@ namespace pulsar
 				return val;
 			}
 			/**
-			 * @see hash32
+			 * @brief Does the same thing as hash32 function
+			 *
+			 * @tparam _Ty  Type of @a __arr array
+			 * @tparam _Len Len of @a __arr array
+			 * @param __arr Reference to an array structure
 			 */
 			template <typename _Ty, size_t _Len>
-			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(const _Ty (&arr)[_Len])
+			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(const _Ty (&__arr)[_Len])
 					pf_attr_noexcept
 			{
-				return hash32(&arr[0], _Len * sizeof(_Ty));
+				return hash32(&__arr[0], _Len * sizeof(_Ty));
 			}
 
 			/**
 			 * @category Fnv-1a 64 bits version
 			 */
 			/**
-			 * @brief Hash calculation function of the Fnv1-a function. Returns a 64-bit unsigned integer
-			 * 				representing the hash of the Fnv1-a function from the memory pointed to by "p", of
-			 * 				size "sizeInBytes".
+			 * @brief Calculates the 64 bits version of the fnv1-a hash function
+			 * 				This function does same as the hash32 function
 			 *
 			 * @see hash32
 			 */
-			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(const void *p,
-																													size_t sizeInBytes) pf_attr_noexcept
+			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(const void *__ptr,
+																													size_t __size) pf_attr_noexcept
 			{
 				uint64_t val = 0xcbf29ce484222325ull;
 
@@ -91,9 +89,9 @@ namespace pulsar
 					const void *as_void;
 				};
 
-				as_void = p;
+				as_void = __ptr;
 
-				for (size_t i = 0; i < sizeInBytes; ++i)
+				for (size_t i = 0; i < __size; ++i)
 				{
 					val = (val ^ *as_byte) * 0xcbf29ce484222325ull;
 					as_byte++;
@@ -105,11 +103,12 @@ namespace pulsar
 			 * @see hash64
 			 */
 			template <typename _Ty, size_t _Len>
-			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(const _Ty (&arr)[_Len])
+			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(const _Ty (&__arr)[_Len])
 					pf_attr_noexcept
 			{
-				return hash64(&arr[0], _Len * sizeof(_Ty));
+				return hash64(&__arr[0], _Len * sizeof(_Ty));
 			}
+
 		} // Fnv1-a
 
 	} // Hash
