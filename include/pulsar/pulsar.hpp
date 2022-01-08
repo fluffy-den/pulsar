@@ -3,7 +3,7 @@
  * @author  Fluffy (noe.louis-quentin@hotmail.fr)
  * @brief   This file verifies that compilation is possible, by the presence of compatible
  * 					operating systems and compilers and defines all the macros, types, of these for their
- * 					use through the pulsar framework. Pulsar framework requires at least C++17!
+ * 					use through the pulsar framework. Pulsar framework requires at least C++20!
  * @date    23-11-2021
  *
  * @copyright Copyright (c) 2021 - Pulsar Software

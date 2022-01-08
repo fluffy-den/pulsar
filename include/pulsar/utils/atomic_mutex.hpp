@@ -1,18 +1,18 @@
 /**
  * @file    memory_locks.hpp
  * @author  Fluffy (noe.louis-quentin@hotmail.fr)
- * @brief		Defines atomic objects
+ * @brief		Defines atomic mutex objects.
  * @date    15-12-2021
  *
  * @copyright Copyright (c) 2021 - Pulsar Software
  *
  */
 
-#ifndef PULSAR_MEMORY_LOCK_HPP
-#define PULSAR_MEMORY_LOCK_HPP 1
+#ifndef PULSAR_ATOMIC_MUTEX_HPP
+#define PULSAR_ATOMIC_MUTEX_HPP 1
 
 // Include: Pulsar
-#include "pulsar/pulsar.hpp"
+#include "pulsar/utils/atomic.hpp"
 
 // Include: C++
 #include <atomic>
@@ -20,12 +20,6 @@
 // Pulsar
 namespace pulsar
 {
-	/// Atomic
-	template <typename _Ty>
-	using atomic			 = std::atomic<_Ty>;
-	using atomic_flag	 = std::atomic_flag;
-	using memory_order = std::memory_order;
-
 	/// Atomic Mutex
 	/**
 	 * @brief	Atomic mutex object.
@@ -64,11 +58,7 @@ namespace pulsar
 		 */
 		~atomic_mutex()
 		{
-			if (locked_)
-			{
-				this->unlock();
-				locked_ = false;
-			}
+			if (locked_) this->unlock();
 		}
 
 		/// Operator=
@@ -78,7 +68,7 @@ namespace pulsar
 		 *
 		 * @param __other Another instancied atomic_mutex type.
 		 */
-		atomic_mutex &operator=(atomic_mutex const &r) pf_attr_noexcept = delete;
+		atomic_mutex &operator=(atomic_mutex const &__other) pf_attr_noexcept = delete;
 
 	private:
 		/// Lock
@@ -97,7 +87,7 @@ namespace pulsar
 			if (locked_)
 				return -1;
 			int64_t i = this->count_.fetch_add(1, memory_order::store);
-			if (i > 0) this->count_.wait(i - 1, memory_order::relaxed);
+			if (i > 0) this->count_.wait(i + 1, memory_order::relaxed);
 			locked_ = true;
 			return i;
 		}
@@ -121,7 +111,7 @@ namespace pulsar
 		}
 
 		/// Atomic lock
-		atomic<int64_t> count_;
+		std::atomic<int64_t> count_;
 		pf_decl_thread_local pf_decl_static pf_decl_inline bool locked_;
 	};
 
@@ -144,28 +134,25 @@ namespace pulsar
 		pf_decl_explicit atomic_lock(atomic_mutex &m)
 				: mutex_(&m)
 		{
-			// TODO: Exception
+			// TODO: Exception m == nullptr
 			this->mutex_->lock();
 		}
 		/**
-		 * @brief
-		 *
-		 * @return pf_decl_explicit
+		 * @brief Copy constructor.
+		 * 				A lock isn't copy constructible.
 		 */
 		pf_decl_explicit atomic_lock(atomic_lock const &) pf_attr_noexcept = delete;
 
 		/// Operator=
 		/**
-		 * @brief
-		 *
-		 * @return atomic_lock&
+		 * @brief Copy asignment.
+		 * 				A lock isn't copy assignable.
 		 */
 		atomic_lock &operator=(atomic_lock const &) pf_attr_noexcept = delete;
 
 		/// Destructor
 		/**
-		 * @brief Destroy the atomic lock object
-		 *
+		 * @brief Destroy the atomic lock object.
 		 */
 		~atomic_lock() pf_attr_noexcept
 		{
@@ -178,4 +165,4 @@ namespace pulsar
 
 } // Pulsar
 
-#endif // !PULSAR_MEMORY_LOCKS_HPP
+#endif // !PULSAR_ATOMIC_MUTEX_HPP
