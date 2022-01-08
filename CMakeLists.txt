@@ -27,16 +27,6 @@ string(REGEX REPLACE "([0-9]+).*" "\\1" VERSION_MAJOR "${VERSION_STRING}")
 string(REGEX REPLACE "[0-9]+\\.([0-9]+).*" "\\1" VERSION_MINOR "${VERSION_STRING}")
 string(REGEX REPLACE "[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" VERSION_PATCH "${VERSION_STRING}")
 
-# Commit hash value (SHA-1) -> Version
-execute_process(
-  COMMAND "${GIT_EXECUTABLE}" rev-parse --short=7 HEAD
-  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-  OUTPUT_VARIABLE VERSION_HASH
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-set(VERSION_STRING ${VERSION_STRING}-${VERSION_HASH})
-message(STATUS "[pulsar]: v${VERSION_STRING}")
-
 # Project
 project(
   pulsar
