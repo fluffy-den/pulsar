@@ -1,38 +1,25 @@
 /**
- * @file    string.hpp
+ * @file    string_format.hpp
  * @author  Fluffy (noe.louis-quentin@hotmail.fr)
  * @brief
- * @date    02-01-2022
+ * @date    08-01-2022
  *
  * @copyright Copyright (c) 2022 - Pulsar Software
  *
  */
 
-#ifndef PULSAR_STRING_HPP
-#define PULSAR_STRING_HPP 1
+#ifndef PULSAR_STRING_FORMAT_HPP
+#define PULSAR_STRING_FORMAT_HPP 1
 
 // Include: Pulsar
-#include "pulsar/debug/debug_category.hpp"
+#include "pulsar/pulsar.hpp"
 
 // Include: C
-#include <cstdarg> // va_*
-#include <cstdio>	 // vsnprintf
-
-// Include: C++
-#include <string>
-#include <string_view>
+#include <cstdarg>
 
 // Pulsar
 namespace pulsar
 {
-
-	/**
-	 * @category String
-	 */
-	/// Types
-	using string			= std::basic_string<char, std::char_traits<char>, allocator<char>>;
-	using string_view = std::basic_string_view<char, std::char_traits<char>>;
-
 	/// Format
 	/**
 	 * @brief Creates a pulsar::string from a pulsar::string_view @a __format formatted by the
@@ -48,18 +35,18 @@ namespace pulsar
 	 *
 	 * @return The formatted string
 	 */
-	string string_format(string_view __format, ...)
+	std::string string_format(std::string_view __format, ...)
 	{
 		va_list va;
 		va_start(va, __format);
 		size_t n = std::vsnprintf(nullptr, 0, __format.data(), va) + 1;
-		string s(n, '\0');
+		std::string s(n, '\0');
 		if (std::vsnprintf(s.data(), n, __format.data(), va) < 0)
-			throw debug::error_errno();
+			return "";
 		va_end(va);
 		return s;
 	}
 
 } // Pulsar
 
-#endif // !PULSAR_STRING_HPP
+#endif // !PULSAR_STRING_FORMAT_HPP

@@ -17,6 +17,6 @@
 // Main: Test
 pulsar::int32_t main()
 {
-	std::printf("[pulsar]: The compilation test has been successfully completed!");
+	std::printf("The compilation test has been successfully completed!");
 	return 0;
 }

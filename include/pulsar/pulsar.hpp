@@ -1,9 +1,9 @@
 /**
  * @file    pulsar_common.hpp
  * @author  Fluffy (noe.louis-quentin@hotmail.fr)
- * @brief   This file verifies that compilation is possible, by the presence of compatible operating
- * 			systems and compilers and defines all the macros, types, of these for their use through
- * 			the pulsar framework. Pulsar framework requires at least C++17!
+ * @brief   This file verifies that compilation is possible, by the presence of compatible
+ * 					operating systems and compilers and defines all the macros, types, of these for their
+ * 					use through the pulsar framework. Pulsar framework requires at least C++17!
  * @date    23-11-2021
  *
  * @copyright Copyright (c) 2021 - Pulsar Software
@@ -26,7 +26,6 @@
 // Reduces size of windows.h inclusion
 #	define WIN32_LEAN_AND_MEAN
 #	define NOMINMAX	1
-
 
 // Call
 #	define pf_oscall __stdcall
@@ -155,16 +154,10 @@ namespace pulsar
 	 * @brief Alias that defines function pointers more easily
 	 *
 	 * @tparam _Ret  The type of return
-	 * @tparam _Args (Variadic) Types of arguments
+	 * @tparam _Args Types of parameters
 	 */
 	template <typename _Ret, typename... _Args>
 	using ptrfun = _Ret (*)(_Args...);
-
-	// Allocator
-#ifndef PF_ALLOCATOR
-	template <typename _Ty>
-	using allocator = std::allocator<_Ty>;
-#endif // !PF_CUSTOM_ALLOCATOR
 
 } // Pulsar
 

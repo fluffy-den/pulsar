@@ -19,13 +19,9 @@
 #include <initializer_list>
 #include <type_traits>
 
-// namespace pulsar
+// Pulsar
 namespace pulsar
 {
-
-	/**
-	 * @category Singly
-	 */
 
 	/// Link
 	/**
@@ -86,7 +82,7 @@ namespace pulsar
 		return x->next();
 	}
 
-	/// Lists
+	/// Linked-Lists
 	/**
 	 * @brief
 	 *
@@ -404,13 +400,13 @@ namespace pulsar
 		atomic<atomic_singlylink *> next_;
 	};
 
-	// Atomic Singly List
+	// Atomic Singly-List
 	class atomic_singlylist
 	{
 	public:
 		using thread_safe = std::true_type;
 
-		// Constructors
+		/// Constructors
 		pf_decl_constexpr pf_decl_explicit atomic_singlylist() pf_attr_noexcept
 				: front_(nullptr)
 				, back_(nullptr)
@@ -421,6 +417,6 @@ namespace pulsar
 		atomic<atomic_singlylink *> back_;
 	};
 
-}; // namespace pulsar
+}; // Pulsar
 
 #endif // !PULSAR_LINKED_LISTS_HPP

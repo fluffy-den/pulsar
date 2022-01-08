@@ -1,5 +1,5 @@
 /**
- * @file    pulsar_version.hpp.in
+ * @file    pulsar_version.hpp
  * @author  Fluffy (noe.louis-quentin@hotmail.fr)
  * @brief   Specifies the version of the library
  * @date    07-01-2022

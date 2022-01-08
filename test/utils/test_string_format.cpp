@@ -9,7 +9,7 @@
  */
 
 // Include: Pulsar
-#include "pulsar/utils/string.hpp"
+#include "pulsar/utils/string_format.hpp"
 
 // Include: C++
 #include <iostream>
@@ -17,18 +17,22 @@
 // Main: Test
 pulsar::int32_t main()
 {
+	// #1.
 	std::cout << pulsar::string_format(
-			"[pulsar]: (FORMAT TEST) #1 -> The sum of %u and %u is equal to : %u\n",
+			"The sum of %u and %u is equal to : %u\n",
 			1,
 			2,
 			3);
+
+	// #2.
 	std::cout << pulsar::string_format(
-			"[pulsar]: (FORMAT TEST) #2 -> Some different radices: %d %x %o %#x %#o \n",
+			"Some different radices: %d %x %o %#x %#o \n",
 			100,
 			100,
 			100,
 			100,
 			100);
 
+	// #End
 	return 0;
 }

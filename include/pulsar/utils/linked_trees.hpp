@@ -14,17 +14,17 @@
 // Include: Pulsar
 #include "pulsar/memory/memory_locks.hpp"
 
-// namespace pulsar
+// Pulsar
 namespace pulsar
 {
-	// namespace linked
-	namespace linked
-	{} // namespace linked
+	// Linked
+	namespace Linked
+	{} // Linked
 
-	// namespace atomic_linked
+	// Atomic-Linked
 	namespace atomic_linked
-	{} // namespace atomic_linked
+	{} // Atomic-Linked
 
-} // namespace pulsar
+} // Pulsar
 
 #endif // !PULSAR_LINKED_TREES_HPP

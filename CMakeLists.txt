@@ -20,7 +20,7 @@ execute_process(
   OUTPUT_VARIABLE VERSION_STRING
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-string(TOLOWER "${PROJECT_NAME}/pulsar_version.hpp" VERSION_HEADER_PATH)
+string(TOLOWER "${PROJECT_NAME}/version.hpp" VERSION_HEADER_PATH)
 
 # Version extracting from full version string
 string(REGEX REPLACE "([0-9]+).*" "\\1" VERSION_MAJOR "${VERSION_STRING}")
@@ -54,7 +54,7 @@ if(NOT (EXISTS ${CPM_DOWNLOAD_LOCATION}))
        ${CPM_DOWNLOAD_LOCATION}
   )
 endif()
-include(cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake)
+include("cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
 
 # Additionnal parameters (Warnings L4)
 if(MSVC)
@@ -65,12 +65,18 @@ endif()
 
 # Library
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
-
-add_library(${PROJECT_NAME} INTERFACE ${HEADERS})
-set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${PROJECT_VERSION} LINKER_LANGUAGE CXX)
+add_library(${PROJECT_NAME} ${HEADERS})
+set_target_properties(
+  ${PROJECT_NAME}
+  PROPERTIES VERSION ${PROJECT_VERSION}
+             LINKER_LANGUAGE CXX
+             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
+             ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
+             LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
+)
 target_include_directories(
-  ${PROJECT_NAME} INTERFACE $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-                            $<INSTALL_INTERFACE:include>
+  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+                         $<INSTALL_INTERFACE:include>
 )
 
 # CPM -> PackageProject
@@ -81,8 +87,8 @@ packageProject(
   NAME ${PROJECT_NAME}
   VERSION ${PROJECT_VERSION}
   BINARY_DIR ${PROJECT_BINARY_DIR}
-  INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include
-  INCLUDE_DESTINATION include/pulsar
+  INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include"
+  INCLUDE_DESTINATION "include/pulsar"
   VERSION_HEADER "${VERSION_HEADER_PATH}"
   COMPATIBILITY SameMajorVersion
 )

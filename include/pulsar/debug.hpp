@@ -12,31 +12,34 @@
 #define PULSAR_DEBUG_HPP 1
 
 // Include: Pulsar
-#include "pulsar/pulsar.hpp"
+#include "pulsar/utils/string_format.hpp"
 
 // Include: C
 #include <cassert>
 
+// Include: C++
+#include <source_location>
+#include <system_error>
+
 // Pulsar
 namespace pulsar
 {
-	/**
-	 * @category Debugging
-	 */
-
-	// Debug
+	/// Macro
 #ifdef _DEBUG
 #	define pf_debug 1
 #else
 #	define pf_debug 0
 #endif // _DEBUG
 
-	// Debug: Static Assert
+	/// Static Assert
 #define pf_static_assert(val, message) static_assert(val, message)
 
-	// Debug: Assert
+	/// Assert
 #define pf_assert(val, message)				 assert(val, message)
 
+	/// Types
+	using error_code		 = std::error_code;
+	using error_category = std::error_category;
 } // Pulsar
 
 #endif // !PULSAR_DEBUG_HPP
