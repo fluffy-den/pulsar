@@ -24,12 +24,11 @@ namespace pulsar
 		namespace fnv1a
 		{
 			/// 32 bits
-			/**
-			 * @brief Calculates the 32 bits version of the fnv1-a hash function.
+			/*! @brief Calculates the 32 bits version of the fnv1-a hash function.
 			 *
-			 * @param __p		 Pointer to the beginning of a continuous data structure.
-			 * @param __size Size of this data structure in bytes.
-			 * @return The hashed data pointed by @a __ptr of size @a __size in bytes.
+			 *  @param __p		Pointer to the beginning of a continuous data structure.
+			 *  @param __size Size of this data structure in bytes.
+			 *  @return The hashed data pointed by @a __ptr of size @a __size in bytes.
 			 */
 			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(const void *__ptr,
 																													size_t __size) pf_attr_noexcept
@@ -51,12 +50,11 @@ namespace pulsar
 
 				return val;
 			}
-			/**
-			 * @brief Does the same thing as hash32 function.
+			/*! @brief Does the same thing as hash32 function.
 			 *
-			 * @tparam _Ty  Type of @a __arr array.
-			 * @tparam _Len Len of @a __arr array.
-			 * @param __arr Reference to an array structure.
+			 *  @tparam _Ty  Type of @a __arr array.
+			 *  @tparam _Len Len of @a __arr array.
+			 *  @param __arr Reference to an array structure.
 			 */
 			template <typename _Ty, size_t _Len>
 			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(const _Ty (&__arr)[_Len])
@@ -66,11 +64,10 @@ namespace pulsar
 			}
 
 			/// 64 bits
-			/**
-			 * @brief Calculates the 64 bits version of the fnv1-a hash function.
-			 * 				This function does same as the hash32 function.
+			/*! @brief Calculates the 64 bits version of the fnv1-a hash function.
+			 * 				 This function does same as the hash32 function.
 			 *
-			 * @see hash32.
+			 *  @see hash32.
 			 */
 			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(const void *__ptr,
 																													size_t __size) pf_attr_noexcept
@@ -93,8 +90,7 @@ namespace pulsar
 
 				return val;
 			}
-			/**
-			 * @see hash64.
+			/*! @see hash64.
 			 */
 			template <typename _Ty, size_t _Len>
 			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(const _Ty (&__arr)[_Len])

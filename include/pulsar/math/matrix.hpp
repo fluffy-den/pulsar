@@ -15,7 +15,7 @@
 #include "pulsar/pulsar.hpp"
 
 // Pulsar
-namespace pulsar
+namespace pul
 {
 	// TODO: Matrix object
 } // Pulsar

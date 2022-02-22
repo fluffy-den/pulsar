@@ -7,12 +7,14 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 
 # Options
-option(BUILD_TESTING "[pulsar]: Build test executable(s)?" On)
+option(BUILD_TESTING "Build test executable(s)?" On)
+option(BUILD_SHARED_LIBS "Build shared libraries?" On)
+option(BUILD_STATIC_LIBS "Build static libraries?" On)
 
 # Version (from git local repository)
 find_package(Git)
 if(NOT GIT_FOUND)
-  message(FATAL_ERROR "[pulsar]: Need git installed on this machine!")
+  message(FATAL_ERROR "Need git installed on this machine!")
 endif()
 execute_process(
   COMMAND "${GIT_EXECUTABLE}" describe --tags --always
@@ -20,7 +22,7 @@ execute_process(
   OUTPUT_VARIABLE VERSION_STRING
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-string(TOLOWER "${PROJECT_NAME}/version.hpp" VERSION_HEADER_PATH)
+string(TOLOWER "${PROJECT_NAME}/pulsar_version.hpp" VERSION_HEADER_PATH)
 
 # Version extracting from full version string
 string(REGEX REPLACE "([0-9]+).*" "\\1" VERSION_MAJOR "${VERSION_STRING}")
@@ -60,30 +62,71 @@ include("cmake/CPM_${CPM_DOWNLOAD_VERSION}.cmake")
 if(MSVC)
   add_compile_options(/W4)
 else()
-  add_compile_options(-Wall -Wextra -pedantic)
+  add_compile_options(
+    -Wall
+    -Wextra
+    -pedantic
+    -Wno-unknown-pragmas
+    -fvisibility=hidden
+    -Wstrict-prototypes
+    -g
+  )
+endif()
+
+# 64 bit?
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(OUTPUT_SUFFIX 64)
+else()
+  set(OUTPUT_SUFFIX 32)
+endif()
+
+# OS Name
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL Windows)
+  set(OUTPUT_SYSTEM win${OUTPUT_SUFFIX})
+elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL Linux)
+  set(OUTPUT_SYSTEM lin${OUTPUT_SUFFIX})
+elseif(CMAKE_HOST_SYSTEM_NAME STREQUAL Darwin)
+  set(OUTPUT_SYSTEM mac${OUTPUT_SUFFIX})
+else()
+  message(FATAL_ERROR "Unknown system name!")
+endif()
+# Debug?
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+  set(OUTPUT_SUFFIX _debug${OUTPUT_SUFFIX})
 endif()
 
 # Library
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp")
-add_library(${PROJECT_NAME} ${HEADERS})
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
+)
+add_library(${PROJECT_NAME} SHARED ${SOURCES})
+target_compile_definitions(${PROJECT_NAME} PRIVATE PULSAR_CONSTRUCT=1)
 set_target_properties(
   ${PROJECT_NAME}
   PROPERTIES VERSION ${PROJECT_VERSION}
              LINKER_LANGUAGE CXX
-             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
-             ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
-             LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
+             LINK_FLAGS "-Wl,--large-address-aware"
+             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/bin/${OUTPUT_SYSTEM}/
+             ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/bin/${OUTPUT_SYSTEM}/
+             LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/bin/${OUTPUT_SYSTEM}/
+             COMPILE_PDB_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/symbols/${OUTPUT_SYSTEM}/
+             PDB_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/symbols/${OUTPUT_SYSTEM}/
+             OUTPUT_NAME ${PROJECT_NAME}${OUTPUT_SUFFIX}
+             PREFIX ""
 )
+target_link_libraries(${PROJECT_NAME} PRIVATE dbghelp)
 target_include_directories(
-  ${PROJECT_NAME} PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
-                         $<INSTALL_INTERFACE:include>
+  ${PROJECT_NAME}
+  PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
+  PRIVATE src
 )
 
 # CPM -> PackageProject
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.8.0")
 
 # Package
-packageProject(
+PackageProject(
   NAME ${PROJECT_NAME}
   VERSION ${PROJECT_VERSION}
   BINARY_DIR ${PROJECT_BINARY_DIR}
@@ -104,7 +147,12 @@ if(BUILD_TESTING)
   foreach(TEST_SOURCE IN ITEMS ${TEST_SOURCES})
     get_filename_component(BINARY_NAME ${TEST_SOURCE} NAME_WLE)
     add_executable(${BINARY_NAME} ${TEST_SOURCE})
-    add_test(NAME ${BINARY_NAME} COMMAND ${BINARY_NAME})
     target_link_libraries(${BINARY_NAME} PRIVATE ${PROJECT_NAME})
+    set_target_properties(
+      ${BINARY_NAME}
+      PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/bin/${OUTPUT_SYSTEM}/
+                 LINK_FLAGS "-Wl,--large-address-aware"
+    )
+    add_test(NAME ${BINARY_NAME} COMMAND ${BINARY_NAME})
   endforeach()
 endif()

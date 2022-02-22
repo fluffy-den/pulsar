@@ -75,7 +75,7 @@ SortIncludes: CaseInsensitive
 SortUsingDeclarations: true
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeCaseColon: false
-SpaceBeforeCpp11BracedList: true
+SpaceBeforeCpp11BracedList: false
 SpaceBeforeCtorInitializerColon: true
 SpaceBeforeInheritanceColon: false
 SpaceBeforeRangeBasedForLoopColon: true
@@ -92,3 +92,4 @@ SpacesInLineCommentPrefix:
   Maximum: -1
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
+Cpp11BracedListStyle: false

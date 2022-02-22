@@ -44,7 +44,7 @@ parse:
       pargs:
         nargs: '*'
         flags: []
-      spelling: packageProject
+      spelling: PackageProject
       kwargs:
         NAME: 1
         VERSION: 1
