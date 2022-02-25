@@ -16,7 +16,6 @@
 #include "pulsar/pulsar.hpp"
 #include "pulsar/utility.hpp"
 
-
 // Include: C
 #include <cassert>
 
@@ -48,36 +47,32 @@ namespace pul
 		pf_decl_constexpr uint32_t none					 = 0x00000000;
 		pf_decl_constexpr uint32_t write_in_logs = 0x00000001; // Write in logs when constructor is called.
 
-		pf_decl_constexpr uint32_t write_in_logs_stacktrace			 = 0x00000002;
-		pf_decl_constexpr uint32_t write_in_logs_with_stacktrace = write_in_logs // Write in logs with stacktrace.
-																														 | write_in_logs_stacktrace;
-
 		// ! Dumpfile is only generated in release mode !
-		pf_decl_constexpr uint32_t generate_dumpfile											= 0x00000004;											// Generate dump file with default data.
-		pf_decl_constexpr uint32_t dump_with_data_segs										= generate_dumpfile | 0x00000008; // Dump with data sections of all modules (global variables).
-		pf_decl_constexpr uint32_t dump_with_full_memory									= generate_dumpfile | 0x00000010; // Dump with all accessible memory of the process.
-		pf_decl_constexpr uint32_t dump_with_handle_data									= generate_dumpfile | 0x00000020; // Dump with high-level information of the OS.
-		pf_decl_constexpr uint32_t dump_with_filter_memory								= generate_dumpfile | 0x00000040; // Dump with stack and backing store memory filtered.
-		pf_decl_constexpr uint32_t dump_with_scan_memory									= generate_dumpfile | 0x00000080; // Dump with stack and backing store memory scanned for reference on modules.
-		pf_decl_constexpr uint32_t dump_with_unloaded_modules							= generate_dumpfile | 0x00000100; // Dump with unloaded modules information.
-		pf_decl_constexpr uint32_t dump_with_indirectly_referenced_memory = generate_dumpfile | 0x00000200; // Dump with pages referenced by locals or other stack memory.
-		pf_decl_constexpr uint32_t dump_with_filter_module_paths					= generate_dumpfile | 0x00000400; // Dump with module path filtering such as user names or important directories.
-		pf_decl_constexpr uint32_t dump_with_process_thread_data					= generate_dumpfile | 0x00000800; // Dump with complete per-process and per-thread information from OS.
-		pf_decl_constexpr uint32_t dump_with_private_readwrite_memory			= generate_dumpfile | 0x00001000; // Dump with scan of virtual address space with read and write access.
-		pf_decl_constexpr uint32_t dump_without_auxiliary_state						= generate_dumpfile | 0x00002000; // Dump without auxiliary-supported memory gathering.
-		pf_decl_constexpr uint32_t dump_with_full_auxiliary_state					= generate_dumpfile | 0x00004000; // Dump with full auxiliary data.
-		pf_decl_constexpr uint32_t dump_with_private_write								= generate_dumpfile | 0x00008000; // Dump with virtual address with write only access.
-		pf_decl_constexpr uint32_t dump_without_inaccessible_memory				= generate_dumpfile | 0x00010000; // Dump without inaccessible memory.
-		pf_decl_constexpr uint32_t dump_with_token_information						= generate_dumpfile | 0x00020000; // Dump with security tokens for user data.
-		pf_decl_constexpr uint32_t dump_with_module_headers								= generate_dumpfile | 0x00040000; // Dump with module header related data.
-		pf_decl_constexpr uint32_t dump_with_filter_triage								= generate_dumpfile | 0x00080000; // Dump with filter triage related data.
-		pf_decl_constexpr uint32_t dump_with_avx_state_context						= generate_dumpfile | 0x00100000; // Dump with avx state context.
-		pf_decl_constexpr uint32_t dump_with_ipt_trace										= generate_dumpfile | 0x00200000; // Dump with Intel processor trace related data.
-		pf_decl_constexpr uint32_t dump_with_inaccessible_partial_pages		= generate_dumpfile | 0x00400000; // Dump with inaccessible partial pages.
-		pf_decl_constexpr uint32_t dump_with_valid_type_flags							= generate_dumpfile | 0x00800000; // Dump with valid type flags.
+		pf_decl_constexpr uint32_t generate_dumpfile											= 0x00000002;											// Generate dump file with default data.
+		pf_decl_constexpr uint32_t dump_with_data_segs										= generate_dumpfile | 0x00000004; // Dump with data sections of all modules (global variables).
+		pf_decl_constexpr uint32_t dump_with_full_memory									= generate_dumpfile | 0x00000008; // Dump with all accessible memory of the process.
+		pf_decl_constexpr uint32_t dump_with_handle_data									= generate_dumpfile | 0x00000010; // Dump with high-level information of the OS.
+		pf_decl_constexpr uint32_t dump_with_filter_memory								= generate_dumpfile | 0x00000020; // Dump with stack and backing store memory filtered.
+		pf_decl_constexpr uint32_t dump_with_scan_memory									= generate_dumpfile | 0x00000040; // Dump with stack and backing store memory scanned for reference on modules.
+		pf_decl_constexpr uint32_t dump_with_unloaded_modules							= generate_dumpfile | 0x00000080; // Dump with unloaded modules information.
+		pf_decl_constexpr uint32_t dump_with_indirectly_referenced_memory = generate_dumpfile | 0x00000100; // Dump with pages referenced by locals or other stack memory.
+		pf_decl_constexpr uint32_t dump_with_filter_module_paths					= generate_dumpfile | 0x00000200; // Dump with module path filtering such as user names or important directories.
+		pf_decl_constexpr uint32_t dump_with_process_thread_data					= generate_dumpfile | 0x00000400; // Dump with complete per-process and per-thread information from OS.
+		pf_decl_constexpr uint32_t dump_with_private_readwrite_memory			= generate_dumpfile | 0x00000800; // Dump with scan of virtual address space with read and write access.
+		pf_decl_constexpr uint32_t dump_without_auxiliary_state						= generate_dumpfile | 0x00001000; // Dump without auxiliary-supported memory gathering.
+		pf_decl_constexpr uint32_t dump_with_full_auxiliary_state					= generate_dumpfile | 0x00002000; // Dump with full auxiliary data.
+		pf_decl_constexpr uint32_t dump_with_private_write								= generate_dumpfile | 0x00004000; // Dump with virtual address with write only access.
+		pf_decl_constexpr uint32_t dump_without_inaccessible_memory				= generate_dumpfile | 0x00008000; // Dump without inaccessible memory.
+		pf_decl_constexpr uint32_t dump_with_token_information						= generate_dumpfile | 0x00010000; // Dump with security tokens for user data.
+		pf_decl_constexpr uint32_t dump_with_module_headers								= generate_dumpfile | 0x00020000; // Dump with module header related data.
+		pf_decl_constexpr uint32_t dump_with_filter_triage								= generate_dumpfile | 0x00040000; // Dump with filter triage related data.
+		pf_decl_constexpr uint32_t dump_with_avx_state_context						= generate_dumpfile | 0x00080000; // Dump with avx state context.
+		pf_decl_constexpr uint32_t dump_with_ipt_trace										= generate_dumpfile | 0x00100000; // Dump with Intel processor trace related data.
+		pf_decl_constexpr uint32_t dump_with_inaccessible_partial_pages		= generate_dumpfile | 0x00200000; // Dump with inaccessible partial pages.
+		pf_decl_constexpr uint32_t dump_with_valid_type_flags							= generate_dumpfile | 0x00400000; // Dump with valid type flags.
 		// ! Dumpfile is only generated in release mode !
 
-		pf_decl_constexpr uint32_t default_flags = write_in_logs_with_stacktrace
+		pf_decl_constexpr uint32_t default_flags = write_in_logs
 																						 | generate_dumpfile;
 	}
 
@@ -98,13 +93,12 @@ namespace pul
 	 *  @param[in] __numToIgnore Number of trace to ignore.
 	 *  @return Trace list of the call stack.
 	 */
-	pulsar_api std::vector<debug_trace_t> debug_stacktrace(
+	pulsar_api std::vector<debug_trace_t> dbgstacktrace(
 			uint32_t __numToIgnore = 1);
 
 	/// Levels
 
-	/*! @brief
-	 *
+	/*! @brief Structure listing the levels of the messages.
 	 */
 	enum class debug_level : char
 	{
@@ -114,9 +108,7 @@ namespace pul
 	};
 
 	/// Filter
-
-	/*! @brief
-	 *
+	/*! @brief Structure listing the message filters.
 	 */
 	enum class debug_filter
 	{
@@ -134,7 +126,7 @@ namespace pul
 	 *  @param[in] __flags See the flags for generating a dump file.
 	 *  @return Absolute location of the created dump file.
 	 */
-	pulsar_api std::filesystem::path debug_dumpbin(
+	pulsar_api std::filesystem::path dbggenbin(
 			std::filesystem::path const &__p,
 			uint32_t __flags);
 
@@ -145,10 +137,10 @@ namespace pul
 	 *  @param[in] __title	 Title of the pop-up window.
 	 *  @param[in] __message Message of the pop-up window.
 	 */
-	pulsar_api void debug_messagebox(
+	pulsar_api void dbgpopbox(
 			debug_level __level,
 			std::string_view __title,
-			std::string_view __message) pf_attr_noexcept;
+			std::string_view __message);
 
 	/// Debug TP
 	pf_decl_static pf_decl_inline const auto DEBUG_TP = std::chrono::high_resolution_clock::now();
@@ -162,95 +154,70 @@ namespace pul
 		pf_decl_friend class exception;
 
 	public:
-		/*! @brief
-		 *
+		/*! @brief Type of writing function.
 		 */
-		using formatter_t = std::function<std::string(
-				debug_level __level,
-				std::chrono::nanoseconds __when,
-				std::vector<debug_trace_t> const &__trace,
-				std::string_view __message)>;
-
-		/*! @brief
-		 *
-		 */
-		using writter_t =
-				std::function<void(std::string_view __message)>;
+		using writer_t = std::function<void(std::string_view __message)>;
 
 		/// Constructors
-		/*! @brief Construct a new debug logger object
-		 *
+		/*! @brief Default constructor.
 		 */
 		debug_logger()												= delete;
-		/*! @brief Construct a new debug logger object
+		/*! @brief Copy constructor.
 		 *
-		 *  @param[in] __r
+		 *  @param[in] __r Another instance from which to copy.
 		 */
 		debug_logger(debug_logger const &__r) = delete;
 
 		/// Operators=
-		/*! @brief
+		/*! @brief Copy assignment operator.
 		 *
-		 *  @param[in] __r
-		 *  @return debug_logger&
+		 *  @param[in] __r Another instance from which to copy.
+		 *  @return Reference to this current instance.
 		 */
 		debug_logger &operator=(debug_logger const &__r) = delete;
 
 		/// Destructor
-		/*! @brief Destroy the debug logger object
-		 *
+		/*! @brief Destructor.
 		 */
 		~debug_logger() pf_attr_noexcept = delete;
 
 		/// Set
-		/*! @brief Set the formatter object
+		/*! @brief Set the new writing function.
 		 *
-		 *  @param[in] __fun
-		 *  @return pf_decl_static
+		 *  @param[in] __fun New writing function.
+		 *  @return Old writing function.
 		 */
-		pf_decl_static formatter_t set_formatter(
-				formatter_t &&__fun) pf_attr_noexcept;
-		/*! @brief Set the writer object
-		 *
-		 *  @param[in] __fun
-		 *  @return pf_decl_static
-		 */
-		pf_decl_static writter_t set_writer(
-				writter_t &&__fun) pf_attr_noexcept;
+		pf_decl_static writer_t set_writter(
+				writer_t &&__fun) pf_attr_noexcept;
 
 		/// Get
-		/*! @brief Get the formatter object
+		/*! @brief Get the current writing function.
 		 *
-		 *  @return pf_hint_nodiscard&
+		 *  @return Reference on the current writting function.
 		 */
-		pf_hint_nodiscard pf_decl_static formatter_t &get_formatter() pf_attr_noexcept;
-		/*! @brief Get the writer object
-		 *
-		 *  @return pf_hint_nodiscard&
-		 */
-		pf_hint_nodiscard pf_decl_static writter_t &get_writer() pf_attr_noexcept;
+		pf_hint_nodiscard pf_decl_static writer_t &get_writter() pf_attr_noexcept;
 
 		/// Filter
-		/*! @brief Get the filter object
+		/*! @brief Get the he current message filter.
 		 *
-		 *  @return pf_decl_static
+		 *  @return Current message filter.
 		 */
 		pf_hint_nodiscard pf_decl_static debug_filter get_filter() pf_attr_noexcept;
-		/*! @brief Set the filter object
+		/*! @brief Set the message filter.
 		 *
-		 *  @param __filter
-		 *  @return pf_decl_static
+		 *  @param[in] __filter New message filter.
+		 *  @return Current message filter.
 		 */
 		pf_decl_static debug_filter set_filter(
 				debug_filter __filter) pf_attr_noexcept;
 
 		/// Write
-		/*! @brief
+		/*! @brief Sends the message to the log system.
 		 *
-		 *  @param[in] __level
-		 *  @param[in] __message
-		 *  @param[in] __flags
-		 *  @return pf_decl_static
+		 *  @param[in] __level	 Level of the message.
+		 *  @param[in] __filter	 Importance of the message.
+		 *  @param[in] __message (optional) Message to write.
+		 *  @param[in] __flags	 (optional) @see debug_flags
 		 */
 		pf_decl_static void write(
 				debug_level __level,
@@ -259,138 +226,87 @@ namespace pul
 				uint32_t __flags = debug_flags::none) pf_attr_noexcept;
 
 		/// Default
-		/*! @brief
+		/*! @brief Default writing function of the log system. Sends the message to std::puts.
 		 *
-		 *  @param[in] __level
-		 *  @param[in] __when
-		 *  @param[in] __trace
-		 *  @param[in] __message
-		 *  @return pf_hint_nodiscard
-		 */
-		pf_hint_nodiscard pf_decl_static std::string default_format(
-				debug_level __level,
-				std::chrono::nanoseconds __when,
-				std::vector<debug_trace_t> const &__trace,
-				std::string_view __message) pf_attr_noexcept;
-		/*! @brief
-		 *
-		 *  @param[in] __message
-		 *  @return pf_decl_static
+		 *  @param[in] __message Formatted message to write.
 		 */
 		pf_decl_static void default_writter(
 				std::string_view __message) pf_attr_noexcept;
 	};
 
 	/// Exception
-	/*! @brief
-	 *
+	/*! @brief Class defining unexpected errors.
 	 */
 	class pulsar_api exception pf_attr_final: public std::exception
 	{
 	public:
 		/// Constructors
-		/*! @brief Construct a new exception object
+		/*! @brief Constructor.
 		 *
-		 *  @param[in] __cat
-		 *  @param[in] __code
-		 *  @param[in] __message
-		 *  @param[in] __flags
+		 *  @param[in] __cat		 Category of the error.
+		 *  @param[in] __code		 Code of the error.
+		 *  @param[in] __message (optional) Message explaining the error.
+		 *  @param[in] __flags	 (optional) @see debug_flags.
 		 */
 		exception(
 				std::error_category const &__cat,
 				int32_t __code,
 				std::string_view __message = "",
 				uint32_t __flags					 = debug_flags::default_flags) pf_attr_noexcept;
-		/*! @brief Construct a new exception object
+		/*! @brief Copy constructor.
 		 *
-		 *  @param[in] __r
+		 *  @param[in] __r Another instance from wich to copy.
 		 */
 		exception(exception const &__r) pf_attr_noexcept = delete;
 
 		/// Operator=
-		/*! @brief
+		/*! @brief Copy assignment operator.
 		 *
-		 *  @param[in] __r
-		 *  @return exception&
+		 *  @param[in] __r Another instance from wich to copy.
+		 *  @return Reference on this instance.
 		 */
 		exception &operator=(exception const &__r) pf_attr_noexcept = delete;
 
 		/// Code
-		/*! @brief
+		/*! @brief Gets the associated error_code with this exception.
 		 *
-		 *  @return pf_hint_nodiscard const&
+		 *  @return Constant reference on this associated error_code.
 		 */
 		pf_hint_nodiscard const std::error_code &code() const pf_attr_noexcept;
 
 		/// What
-		/*! @brief
+		/*! @brief Gets the formatted message explaining the exception.
 		 *
-		 *  @return pf_hint_nodiscard const*
+		 *  @return Constant pointer on this associated formatted message explaining the error.
 		 */
 		pf_hint_nodiscard const char *what() const pf_attr_noexcept;
 
 		/// Flags
-		/*! @brief Get the flags object
+		/*! @brief Gets the current associated flags with this exception.
 		 *
-		 *  @return pf_hint_nodiscard
+		 *  @return @see debug_flags.
 		 */
 		pf_hint_nodiscard uint32_t get_flags() const pf_attr_noexcept;
 
-		/*! @brief Set the flags object
+		/*! @brief Set the new flags for this exception.
 		 *
-		 *  @param __flags
-		 *  @return uint32_t
+		 *  @param[in] __flags @see debug_flags.
+		 *  @return Old flags of this exception.
 		 */
-		uint32_t set_flags(
-				uint32_t __flags) pf_attr_noexcept;
+		uint32_t set_flags(uint32_t __flags) pf_attr_noexcept;
 
 		/// Formatters
-		/*! @brief
+		/*! @brief Generates a formatted message of an error.
 		 *
-		 *  @param __cat
-		 *  @param __code
-		 *  @param __message
-		 *  @return pf_hint_nodiscard
+		 *  @param[in] __cat	   Category of the error.
+		 *  @param[in] __code		 Code of the error.
+		 *  @param[in] __message (optional) Message explaining the error.
+		 *  @return Formatted error message.
 		 */
 		pf_hint_nodiscard pf_decl_static std::string format(
 				std::error_category const &__cat,
 				int32_t __code,
 				std::string_view __message = "") pf_attr_noexcept;
-		/*! @brief
-		 *
-		 *  @param __code
-		 *  @param __message
-		 *  @return pf_hint_nodiscard
-		 */
-		pf_hint_nodiscard pf_decl_static std::string system_format(
-				int32_t __code,
-				std::string_view __message = "") pf_attr_noexcept;
-		/*! @brief
-		 *
-		 *  @param __code
-		 *  @param __message
-		 *  @return pf_hint_nodiscard
-		 */
-		pf_hint_nodiscard pf_decl_static std::string generic_format(
-				std::errc __code,
-				std::string_view __message = "") pf_attr_noexcept;
-
-		/// Makers
-		/*! @brief
-		 *
-		 *  @param __code
-		 *  @param __message
-		 *  @param __flags
-		 *  @return pf_hint_nodiscard
-		 */
-		pf_hint_nodiscard pf_decl_static exception system_error(
-				int32_t __code,
-				std::string_view __message = "",
-				uint32_t __flags					 = debug_flags::default_flags) pf_attr_noexcept;
-		pf_hint_nodiscard pf_decl_static exception generic_error(
-				int32_t __code,
-				std::string_view __message = "",
-				uint32_t __flags					 = debug_flags::default_flags) pf_attr_noexcept;
 
 	private:
 		std::error_code code_;
@@ -398,12 +314,12 @@ namespace pul
 		uint32_t flags_;
 	};
 
-	/*! @brief
+	/*! @brief Converts a generic error code to an integer.
 	 *
-	 *  @param __code
-	 *  @return pf_hint_nodiscard
+	 *  @param[in] __code The standard error code.
+	 *  @return Converted error code as integer.
 	 */
-	pf_hint_nodiscard pf_decl_constexpr pf_decl_static int32_t debug_errc(
+	pf_hint_nodiscard pf_decl_constexpr pf_decl_static int32_t dbgerrc(
 			std::errc __code) pf_attr_noexcept
 	{
 		union
@@ -421,41 +337,40 @@ namespace pul
 		pf_decl_friend class __debug;
 
 		/// Constructors
-		/*! @brief Construct a new debug object
-		 *
+		/*! @brief Default constructor.
 		 */
 		debug() pf_attr_noexcept;
-		/*! @brief Construct a new debug object
+		/*! @brief Copy constructor.
 		 *
-		 *  @param __r
+		 *  @param[in] __r Another instance to copy from.
 		 */
 		debug(debug const &__r) pf_attr_noexcept = delete;
 
 		/// Destructor
-		/*! @brief Destroy the debug object
-		 *
+		/*! @brief Destructor.
 		 */
 		~debug() pf_attr_noexcept;
 
 		/// Operator=
-		/*! @brief
+		/*! @brief Assignment operator.
 		 *
-		 *  @param __r
-		 *  @return debug&
+		 *  @param[in] __r Another instance to copy from.
+		 *  @return Reference on this instance.
 		 */
 		debug &operator=(debug const &__r) pf_attr_noexcept = delete;
 
 	public:
 		/// Dumpbin
-		/*! @brief Get the dumpfile creation path object
+		/*! @brief Returns the path to the directory where the dump files are generated.
+		 *				 generation.
 		 *
-		 *  @return pf_hint_nodiscard&
+		 *  @return Reference on the path.
 		 */
 		pf_hint_nodiscard pf_decl_static std::filesystem::path &get_dumpfile_creation_path() pf_attr_noexcept;
-		/*! @brief Set the dumpfile creation path object
+		/*! @brief Changes the path of the directory where the dump files are generated.
 		 *
-		 *  @param[in] __p
-		 *  @return pf_decl_static
+		 *  @param[in] __p New directory.
+		 *  @return Old path.
 		 */
 		pf_decl_static std::filesystem::path set_dumpfile_creation_path(
 				std::filesystem::path &&__p) pf_attr_noexcept;

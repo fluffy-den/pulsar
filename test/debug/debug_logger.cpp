@@ -32,13 +32,6 @@ pul::int32_t main()
 			pul::debug_filter::important,
 			"This is an error message...");
 
-	// Test#4 -> Info write with stacktrace
-	pul::debug_logger::write(
-			pul::debug_level::info,
-			pul::debug_filter::important,
-			"This is a warning message...",
-			pul::debug_flags::write_in_logs_stacktrace);
-
 	// Success
 	return 0;
 }

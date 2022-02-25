@@ -15,7 +15,7 @@
 pul::int32_t main()
 {
 	// Fake exception
-	throw pul::exception::system_error(0, "This is fake error.");
+	throw pul::exception(std::system_category(), 0, "This is fake error.");
 
 	// Success
 	return 0;

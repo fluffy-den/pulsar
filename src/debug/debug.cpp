@@ -22,39 +22,25 @@ namespace pul
 		pf_decl_friend class debug_logger;
 
 		/// Filter
-		pf_decl_static pf_decl_inline debug_filter FILTER = debug_filter::detail; // All message are authorized
+		pf_decl_static pf_decl_inline debug_filter FILTER = debug_filter::detail; // All messages are authorized.
 
 		/// Callbacks
-		pf_decl_static pf_decl_inline debug_logger::writter_t WRITTER_CLBK		 = &debug_logger::default_writter;
-		pf_decl_static pf_decl_inline debug_logger::formatter_t FORMATTER_CLBK = &debug_logger::default_format;
+		pf_decl_static pf_decl_inline debug_logger::writer_t WRITTER_CLBK = &debug_logger::default_writter;
 	};
 
 	/// Set
-	pulsar_api debug_logger::formatter_t debug_logger::set_formatter(
-			formatter_t &&__fun) pf_attr_noexcept
+	pulsar_api debug_logger::writer_t debug_logger::set_writter(
+			writer_t &&__fun) pf_attr_noexcept
 	{
-		formatter_t clbk = __debug_logger::FORMATTER_CLBK;
-		if (!__fun)
-			__fun = &default_format;
-		__debug_logger::FORMATTER_CLBK = std::forward<formatter_t>(__fun);
-		return clbk;
-	}
-	pulsar_api debug_logger::writter_t debug_logger::set_writer(
-			writter_t &&__fun) pf_attr_noexcept
-	{
-		writter_t clbk = __debug_logger::WRITTER_CLBK;
+		writer_t clbk = __debug_logger::WRITTER_CLBK;
 		if (!__fun)
 			__fun = &default_writter;
-		__debug_logger::WRITTER_CLBK = std::forward<writter_t>(__fun);
+		__debug_logger::WRITTER_CLBK = std::forward<writer_t>(__fun);
 		return clbk;
 	}
 
 	/// Get
-	pulsar_api debug_logger::formatter_t &debug_logger::get_formatter() pf_attr_noexcept // TODO: Remove formatter.
-	{
-		return __debug_logger::FORMATTER_CLBK;
-	}
-	pulsar_api debug_logger::writter_t &debug_logger::get_writer() pf_attr_noexcept
+	pulsar_api debug_logger::writer_t &debug_logger::get_writter() pf_attr_noexcept
 	{
 		return __debug_logger::WRITTER_CLBK;
 	}
@@ -79,56 +65,37 @@ namespace pul
 			std::string_view __message,
 			uint32_t __flags) pf_attr_noexcept
 	{
-		if (__debug_logger::FILTER <= __filter) return;
-
-		std::vector<debug_trace_t> stL;
-
-		if (__flags & debug_flags::write_in_logs_stacktrace) stL = debug_stacktrace(1);
-
-		__debug_logger::WRITTER_CLBK(__debug_logger::FORMATTER_CLBK(
+		// checks if message isn't filtered (displayable)
+		if (__debug_logger::FILTER <= __filter)
+			return;
+		// reservation
+		const size_t headersize = 27;
+		std::string msg;
+		msg.reserve(headersize + 5
+								+ __message.length() + (__message.length() / headersize + 1) * headersize);
+		// chrono header
+		auto now			= std::chrono::high_resolution_clock::now() - DEBUG_TP;
+		const auto h	= std::chrono::duration_cast<std::chrono::hours>(now);
+		const auto m	= std::chrono::duration_cast<std::chrono::minutes>(now - h);
+		const auto s	= std::chrono::duration_cast<std::chrono::seconds>(now - h - m);
+		const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - h - s);
+		// fmt chrono
+		strfmt(
+				"[%c] - [%.4lli:%.2lli:%.2lli:%.4lli] -> ",
+				msg,
+				msg.end(),
 				__level,
-				std::chrono::high_resolution_clock::now() - DEBUG_TP,
-				stL,
-				__message));
-
-		// TODO: Multithreading writting, buffering, filtering.
-	}
-
-	/// Default
-	pulsar_api std::string debug_logger::default_format(
-			debug_level __level,
-			std::chrono::nanoseconds __when,
-			std::vector<debug_trace_t> const &__trace,
-			std::string_view __message) pf_attr_noexcept
-	{
-		const auto h	= std::chrono::duration_cast<std::chrono::hours>(__when);
-		const auto m	= std::chrono::duration_cast<std::chrono::minutes>(__when - h);
-		const auto s	= std::chrono::duration_cast<std::chrono::seconds>(__when - h - m);
-		const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(__when - h - s);
-
-		// headerfmt
-		std::string msg = strfmt("[%c] - [%.4lli:%.2lli:%.2lli:%.4lli] -> ",
-														 __level,
-														 h.count(),
-														 m.count(),
-														 s.count(),
-														 ms.count());
-
-		const size_t headersize = msg.length();
-
-		// reserve
-		msg.reserve(__message.length()
-								+ memory::padding_of(__message.length(), memory::max_align)
-								+ __trace.size() * (1024 + 32 + 4 + memory::padding_of(1024 + 32 + 4, memory::max_align) * 3));
-
-		// __message
+				h.count(),
+				m.count(),
+				s.count(),
+				ms.count());
+		// fmt msg
 		if (__message.empty())
 		{
 			msg += "unknown.";
 		}
 		else
 		{
-			__message.data();
 			for (auto i : __message)
 			{
 				msg += i;
@@ -138,46 +105,11 @@ namespace pul
 				}
 			}
 		}
-		msg += '\n';
-		msg.append(headersize, ' ');
-
-		// __trace fmt
-		for (auto &i : __trace)
-		{
-			// at file=pulsar/bla.hpp:525 in module=module, func=int sum(int a, int b) noexcept
-
-			// space + at file=
-			msg += "at file=";
-			// filename
-			msg += i.filename;
-			// line
-			if (i.fileline != 0)
-			{
-				msg += ':';
-				msg += std::to_string(i.fileline);
-			}
-			// " in module="
-			msg += " in module=";
-			// module
-			msg += i.modulename;
-			// ", func="
-			msg += ", func=";
-			msg += i.undname;
-			msg += '\n';
-			msg.append(headersize, ' ');
-		}
-
-		strtriml(msg);
-		strtrimr(msg);
-
-		// end
-		return msg;
+		// write
+		__debug_logger::WRITTER_CLBK(msg);
 	}
-	/*! @brief
-	 *
-	 *  @param[in] __message
-	 *  @return pf_decl_static
-	 */
+
+	/// Default
 	pulsar_api void debug_logger::default_writter(
 			std::string_view __message) pf_attr_noexcept
 	{
@@ -186,6 +118,46 @@ namespace pul
 
 
 	/// Exception
+	/// message initializer
+	std::string __exception_message(
+			std::error_category const &__cat,
+			int32_t __code,
+			std::string_view __message) pf_attr_noexcept
+	{
+		std::vector<debug_trace_t> dtl = dbgstacktrace(2);
+		std::string msg;
+		size_t rsv = __message.length() * 2
+							 + dtl.size() * (4 * 1024 + 32);
+		rsv += memory::padding_of(rsv, memory::max_align);
+		msg.reserve(rsv);
+		msg += exception::format(__cat, __code, __message);
+		msg += '\n';
+		for (auto &tr : dtl)
+		{
+			msg += "at file=";
+			msg += tr.filename;
+			if (tr.fileline != 0)
+			{
+				msg += ':';
+				msg += std::to_string(tr.fileline);
+			}
+			msg += " in module=";
+			msg += tr.modulename;
+			msg += ", func=";
+			msg += tr.undname;
+			msg += '\n';
+		}
+		return msg;
+	}
+	// message point to end
+	std::string &__add_end_point_to_message(
+			std::string &__str) pf_attr_noexcept
+	{
+		if (__str.back() != '.')
+			__str += '.';
+		return __str;
+	}
+
 	/// Constructors
 	pulsar_api exception::exception(
 			std::error_category const &__cat,
@@ -193,14 +165,10 @@ namespace pul
 			std::string_view __message,
 			uint32_t __flags) pf_attr_noexcept
 			: code_(__code, __cat)
-			, message_(format(__cat, __code, __message))
+			, message_(__exception_message(__cat, __code, __message))
 			, flags_(__flags)
 	{
-		if (this->message_.back() != '.')
-		{
-			this->message_ += '.';
-		}
-		if (this->flags_ & debug_flags::write_in_logs)
+		if ((this->flags_ & debug_flags::write_in_logs) == debug_flags::write_in_logs)
 		{
 			debug_logger::write(debug_level::error,
 													debug_filter::important,
@@ -240,39 +208,24 @@ namespace pul
 			int32_t __code,
 			std::string_view __message) pf_attr_noexcept
 	{
-		return strfmt(__message.empty() ? "category=%s, code=%i, message=%s" : "category=%s, code=%i, message=%s, additional=%s",
-									__cat.name(),
-									__code,
-									__cat.message(__code).c_str(),
-									__message.data());
-	}
-	pulsar_api pf_hint_nodiscard std::string exception::system_format(
-			int32_t __code,
-			std::string_view __message) pf_attr_noexcept
-	{
-		return format(std::system_category(), __code, __message);
-	}
-	pulsar_api pf_hint_nodiscard std::string exception::generic_format(
-			std::errc __code,
-			std::string_view __message) pf_attr_noexcept
-	{
-		return format(std::generic_category(), debug_errc(__code), __message);
-	}
-
-	/// Makers
-	pulsar_api pf_hint_nodiscard exception exception::system_error(
-			int32_t __code,
-			std::string_view __message,
-			uint32_t __flags) pf_attr_noexcept
-	{
-		return exception(std::system_category(), __code, __message, __flags);
-	}
-	pulsar_api pf_hint_nodiscard exception exception::generic_error(
-			int32_t __code,
-			std::string_view __message,
-			uint32_t __flags) pf_attr_noexcept
-	{
-		return exception(std::generic_category(), __code, __message, __flags);
+		std::string catmsg = __cat.message(__code).c_str();
+		__add_end_point_to_message(catmsg);
+		strtriml(catmsg);
+		strtrimr(catmsg);
+		std::string fmtmsg;
+		fmtmsg.resize(__message.size());
+		__message.copy(fmtmsg.data(), fmtmsg.size());
+		strtriml(fmtmsg);
+		strtrimr(fmtmsg);
+		__add_end_point_to_message(fmtmsg);
+		return strfmt(
+				__message.empty()
+						? "category=%s, code=%i, message=%s"
+						: "category=%s, code=%i, message=%s %s",
+				__cat.name(),
+				__code,
+				catmsg.data(),
+				fmtmsg.data());
 	}
 
 	/// Debug
@@ -295,12 +248,11 @@ namespace pul
 		{
 #ifndef PF_DEBUG
 			std::exception_ptr ep = std::current_exception();
-
 			if (ep)
 			{
 				std::string cat, msg;
 				uint32_t flags = 0;
-
+				// get the last exception, and process it.
 				try
 				{
 					std::rethrow_exception(ep);
@@ -315,24 +267,33 @@ namespace pul
 					msg		= "unknown.";
 					flags = debug_flags::generate_dumpfile;
 				}
-
-				auto dbp = debug_dumpbin(__debug::DUMPBIN_PATH, flags);
-
-				debug_messagebox(
-						debug_level::error,
-						"Pulsar - Framework Library",
-						strfmt("Unexpected error! %s\n\nGenerated dumbfile with "
-									 "code=%u, at path=%s\n"
-									 "The process will now terminate...",
-									 msg.c_str(),
-									 flags,
-									 dbp.string().c_str()));
+				// then generate a dumpbin with exception information
+				try
+				{
+					auto dbp = dbggenbin(__debug::DUMPBIN_PATH, flags);
+					dbgpopbox(
+							debug_level::error,
+							"Pulsar - Framework Library",
+							strfmt("Unexpected error! %s\n\nGenerated dumbfile with "
+										 "code=%u, at path=%s\n"
+										 "The process will now terminate...",
+										 msg.c_str(),
+										 flags,
+										 dbp.string().c_str()));
+				}
+				catch (exception const &e)
+				{
+					// ignore to avoid creating an error loop
+					std::ignore = e;
+					return;
+				}
 			}
 #endif
-
+			// using the standard c abort function
 			std::abort();
 		};
 
+		// using the standard library for error handling
 		std::set_terminate(lbd);
 	}
 

@@ -1,21 +1,21 @@
 # Planned features
 # 0.1.0 Debug
 - Debugging tools
-    - DebugLogger?
+    - Debug Logger?
         - Default write to std::puts, with standard format 100%
-        - Multithreading using job system 0%
-        - Buffering 0%
         - Filtering 100%
-    - DebugException
+    - Debug Exception
         - Standard exception 100%
-        - auto-converter ???%
-    - DebugStackTrace
+    - Debug StackTrace
         - Implementation of the walker 100%
-        - With symbols to test ???%
     - Custom terminate handler (using std::set_terminate)
         - Standard handler 100%
-    - DebugPop-up Message 100%
-
+    - Debug Pop-up Message 100%
+# 0.1.2 
+- Update Cmake
+    - Compiler flags (for MSVC and GCC / Clang)
+    - Options implementation
+    - Cleaning
 # 0.2.0 Custom Allocators
 - Memory custom allocators (atomic & standard)
     - Linear
@@ -30,6 +30,8 @@
 - Job system
 - Job system tests and benchmarking
 
+# 0.3.1
+- Deubg logger using job system
 # 0.4.0
 - System information retrieval
     - RAM

@@ -17,21 +17,10 @@
 // Main: Test
 pul::int32_t main()
 {
-	auto sL = pul::debug_stacktrace();
-
-	std::printf("Test: Debug StackTrace\n");
-	size_t k = 0;
-	for (auto &i : sL)
+	const auto start = std::chrono::high_resolution_clock::now();
+	while (std::chrono::high_resolution_clock::now() - start < std::chrono::seconds(10))
 	{
-		std::printf(
-				"[%zu] undName=%s, name=%s, filename=%s, modulename=%s, fileline=%zu\n",
-				k,
-				i.undname.c_str(),
-				i.name.c_str(),
-				i.filename.c_str(),
-				i.modulename.c_str(),
-				i.fileline);
-		++k;
+		pul::dbgstacktrace(0);
 	}
 
 	// Success

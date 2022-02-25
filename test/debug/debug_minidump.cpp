@@ -17,7 +17,7 @@
 // Main: Test
 pul::int32_t main()
 {
-	auto dbp = pul::debug_dumpbin(
+	auto dbp = pul::dbggenbin(
 			std::filesystem::current_path(),
 			pul::debug_flags::generate_dumpfile);
 	if (dbp.empty())

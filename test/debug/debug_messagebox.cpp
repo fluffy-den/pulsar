@@ -18,19 +18,19 @@
 pul::int32_t main()
 {
 	// Test#1 -> Info message box
-	pul::debug_messagebox(
+	pul::dbgpopbox(
 			pul::debug_level::info,
 			"Info message box",
 			"This is an info message box.");
 
 	// Test#2 -> Warning message box
-	pul::debug_messagebox(
+	pul::dbgpopbox(
 			pul::debug_level::warning,
 			"Warning message box",
 			"This is a warning message box.");
 
 	// Test#3 -> Error message box
-	pul::debug_messagebox(
+	pul::dbgpopbox(
 			pul::debug_level::error,
 			"Error message box",
 			"This is an error message box.");
