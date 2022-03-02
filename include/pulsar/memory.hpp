@@ -23,8 +23,6 @@ namespace pul
 
 		/// Alignment
 		pf_decl_constexpr size_t max_align = alignof(void *);
-
-		/// Utils
 		/*! @brief Calculates the offset of a memory sequence starting at address @a __addr needed to
 		 * 				 align the sequence to the value of @a __align.
 		 *
@@ -42,7 +40,6 @@ namespace pul
 				return 0;
 			return (__align - (__addr & (__align - 1))) & (__align - 1);
 		}
-
 		/*! @brief Computes from the base @a __ptr a new pointer aligned to the value of @a __align by
 		 *  			 an	offset of @a __offset.
 		 *
@@ -67,7 +64,6 @@ namespace pul
 			as_addr += padding_of(as_addr + __offset, __align);
 			return as_voidptr;
 		}
-
 		/*! @brief Checks if a block of memory pointed to by @a __ptr whose head is aligned by
 		 *				 @a __align by an @a __offset.
 		 *
@@ -93,49 +89,8 @@ namespace pul
 			return padding_of(as_addr + __offset, __align) == 0;
 		}
 
-		/*! @brief Calls the constructor of the @a _Ty object parameterized by @a _Args explicitly on a
-		 * 			 	 memory sequence starting with the @a __ptr pointer of @a __args parameters.
-		 * 				 This function isn't defined when the constructor of @a _Ty does not exist or is not
-		 * 				 visible in the context of this call.
-		 *
-		 *  @tparam _Ty   A class with a constructor parameterized by the argument(s) of type(s)
-		 * 								@a _Args.
-		 *  @tparam _Args The arguments of a @a _Ty constructor.
-		 *
-		 *  @param __ptr	Pointer to a memory sequence.
-		 *  @param __args Parameters sent to a constructor of @a _Ty.
-		 */
-		template <typename _Ty,
-							typename... _Args>
-			requires(std::is_constructible_v<_Ty, _Args...>)
-		pf_decl_constexpr void construct_at(
-				_Ty *__ptr,
-				_Args &&...__args)
-		{
-			new (__ptr) _Ty(std::forward<_Args>(__args)...);
-		}
 
-		/*! @brief Calls the destructor of the object @a Ty explicitly on the memory sequence pointed
-		 *				 by @a __ptr.
-		 * 				 This function isn't defined when the constructor of @a _Ty does not exist or is not
-		 * 				 visible in the context of this call.
-		 *
-		 *  @tparam _Ty  The class from which the destructor is called.
-		 *
-		 *  @param __ptr Pointer to a memory sequence.
-		 */
-		template <typename _Ty>
-			requires(std::is_destructible_v<_Ty>)
-		pf_decl_constexpr void destruct_at(_Ty *__ptr)
-		{
-			__ptr->~_Ty();
-		}
-
-
-		// TODO: Allocators (linear, stack, pool, slab, freelist, general)
 	}
 }
-
-// TODO: Operators new/delete with allocators
 
 #endif // !PULSAR_MEMORY_HPP

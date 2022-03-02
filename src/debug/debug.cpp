@@ -124,7 +124,7 @@ namespace pul
 			int32_t __code,
 			std::string_view __message) pf_attr_noexcept
 	{
-		std::vector<debug_trace_t> dtl = dbgstacktrace(2);
+		std::vector<debug_trace_t> dtl = debug_stacktrace(2);
 		std::string msg;
 		size_t rsv = __message.length() * 2
 							 + dtl.size() * (4 * 1024 + 32);
@@ -270,13 +270,13 @@ namespace pul
 				// then generate a dumpbin with exception information
 				try
 				{
-					auto dbp = dbggenbin(__debug::DUMPBIN_PATH, flags);
-					dbgpopbox(
+					auto dbp = debug_gendumpbin(__debug::DUMPBIN_PATH, flags);
+					debug_messagebox(
 							debug_level::error,
-							"Pulsar - Framework Library",
-							strfmt("Unexpected error! %s\n\nGenerated dumbfile with "
+							"Pulsar - Framework",
+							strfmt("Unexpected error! %s\n\nGenerated dumbfile"
 										 "code=%u, at path=%s\n"
-										 "The process will now terminate...",
+										 "The ok to terminate the process...",
 										 msg.c_str(),
 										 flags,
 										 dbp.string().c_str()));

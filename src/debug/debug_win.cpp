@@ -30,7 +30,7 @@ namespace pul
 	pf_decl_constexpr uint32_t MAX_NAME_LEN		= 1024;
 
 	// Debug Trace
-	pulsar_api std::vector<debug_trace_t> dbgstacktrace(
+	pulsar_api std::vector<debug_trace_t> debug_stacktrace(
 			uint32_t __ignoreNum)
 	{
 		// for now, stacktrace is used only on this process
@@ -205,7 +205,7 @@ namespace pul
 	}
 
 	/// DumpBin
-	pulsar_api std::filesystem::path dbggenbin(
+	pulsar_api std::filesystem::path debug_gendumpbin(
 			std::filesystem::path const &__p,
 			uint32_t __flags)
 	{
@@ -314,7 +314,7 @@ namespace pul
 	}
 
 	/// Debug Message box
-	pulsar_api void dbgpopbox(
+	pulsar_api void debug_messagebox(
 			debug_level __level,
 			std::string_view __title,
 			std::string_view __message)

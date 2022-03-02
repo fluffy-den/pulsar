@@ -33,6 +33,7 @@ project(
 set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE OFF)
 
 #
 # Configure file version
@@ -156,15 +157,40 @@ PackageProject(
 #
 if(BUILD_TESTING)
   include(CTest)
+  enable_testing()
+
+  # Google Test
+  CPMAddPackage(
+    NAME google_test
+    GITHUB_REPOSITORY google/googletest
+    GIT_TAG release-1.11.0
+    OPTIONS "INSTALL_GTEST OFF" "gtest_force_shared_crt"
+  )
+
+  # Google Benchmark
+  CPMAddPackage(
+    NAME google_benchmark
+    GITHUB_REPOSITORY google/benchmark
+    GIT_TAG v1.6.1
+    OPTIONS "BENCHMARK_ENABLE_TESTING OFF"
+  )
+
+  # Discover the tests
   file(
     GLOB_RECURSE TEST_SOURCES
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     "test/*.cpp"
   )
+
+  # Process the tests
   foreach(TEST_SOURCE IN ITEMS ${TEST_SOURCES})
     get_filename_component(BINARY_NAME ${TEST_SOURCE} NAME_WLE)
     add_executable(${BINARY_NAME} ${TEST_SOURCE})
-    target_link_libraries(${BINARY_NAME} PRIVATE ${PROJECT_NAME})
+    target_link_libraries(
+      ${BINARY_NAME}
+      PRIVATE ${PROJECT_NAME}
+      PUBLIC gtest_main gmock benchmark
+    )
     set_target_properties(
       ${BINARY_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                                 ${CMAKE_CURRENT_LIST_DIR}/bin/${OUTPUT_SYSTEM}/

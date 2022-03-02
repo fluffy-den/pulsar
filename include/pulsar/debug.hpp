@@ -93,7 +93,7 @@ namespace pul
 	 *  @param[in] __numToIgnore Number of trace to ignore.
 	 *  @return Trace list of the call stack.
 	 */
-	pulsar_api std::vector<debug_trace_t> dbgstacktrace(
+	pulsar_api std::vector<debug_trace_t> debug_stacktrace(
 			uint32_t __numToIgnore = 1);
 
 	/// Levels
@@ -126,7 +126,7 @@ namespace pul
 	 *  @param[in] __flags See the flags for generating a dump file.
 	 *  @return Absolute location of the created dump file.
 	 */
-	pulsar_api std::filesystem::path dbggenbin(
+	pulsar_api std::filesystem::path debug_gendumpbin(
 			std::filesystem::path const &__p,
 			uint32_t __flags);
 
@@ -137,7 +137,7 @@ namespace pul
 	 *  @param[in] __title	 Title of the pop-up window.
 	 *  @param[in] __message Message of the pop-up window.
 	 */
-	pulsar_api void dbgpopbox(
+	pulsar_api void debug_messagebox(
 			debug_level __level,
 			std::string_view __title,
 			std::string_view __message);

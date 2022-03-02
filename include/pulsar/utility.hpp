@@ -155,7 +155,7 @@ namespace pul
 	{
 		std::array<char, 64> buf;
 		buf.fill(' ');
-		size_t n = std::strftime(buf.data(), buf.size(), __format.data(), __tm);
+		size_t n = std::strftime(buf.data(), buf.size(), __format.data(), __tm) + 1;
 		if (n == 0)
 			return "";
 		if (n <= buf.size())
@@ -179,7 +179,7 @@ namespace pul
 	{
 		std::array<char, 64> buf;
 		buf.fill(' ');
-		size_t n = std::strftime(buf.data(), buf.size(), __format.data(), __tm);
+		size_t n = std::strftime(buf.data(), buf.size(), __format.data(), __tm) + 1;
 		if (n == 0)
 			return __str;
 		if (n <= buf.size())
