@@ -10,62 +10,33 @@
     - Custom terminate handler (using std::set_terminate)
         - Standard handler 100%
     - Debug Pop-up Message 100%
-    - Convert test to google test
+    - Convert test to google test 100%
+# 0.1.1 - Custom Memory
+- Buffer     100%
+- Allocators
+    - Linear 100%
+    - Stack  100%
+    - Pool   100%
+- Allocator wrapper for STL library 100%
+- Benchmarks 100%
 
-# 0.1.1 - Utilities
-
-#
-# Main problem
-# 1. !LOCK-FREE / !WAIT-FREE
-#    -> std::mutex
-# 2. !LOCK-FREE / WAIT-FREE
-#    -> std::atomic<_Ty>
-# 3. LOCK-FREE / WAIT-FREE
-#    -> std::atomic_flag 
-#    -> https://github.com/khizmax/libcds
-#    -> https://superchargedcomputing.com/2018/03/25/atomics-and-lockfree-data-structures-in-c/
-#    -> https://www.codeleading.com/article/25062250006/
-#
-
-- LIFO + FIFO structures
-    - Thread-safe
-    - Standard
-- Linked-Lists
-    - Standard
-    - Cyclic
-    - Packed
-    - Atomic ?
-- Trees
-    - Binary
-    - Red-black
-- Tests and benchmarking
-
-# 0.1.2 - Custom Memory
-- Memory buffers (atomic & standard)
-- Memory provider (atomic & standard)
-- Memory custom allocators (atomic & standard)
-    - Linear
-    - Stack
-    - Pool
-    - Freelist
-- Memory utility functions
-- Memory tests and benchmarking
-- Operator new / delete overloading with allocators
-
+# 0.1.2 - Thread-Safe Custom Memory
+- Thread-Safe Allocators
+    - Linear 100%
+    - Stack  100%
+    - Pool   100%
+- Benchmarks 100% (without multithreading)
 # 0.1.3 - Job System
-- Job system
-    - Job structure
-    - Task structure
-        - 2 insertions types : first / last
-        - Handle return values
-        - Custom memory management of stored data
-            - Pool allocator for tasks and jobs
-            - Freelist allocator for unique (sizeable) data
-    - Caching system / growing allocation (must be realy fast)
-    
-- Job system tests and benchmarking
+- 1. Type Job
+    - In pool allocator
+- 2. Type Task
+    - In pool allocator
+    - Can return value (std::future like)
+    - Wrapper from function to task (global memory management)
+- 3. Type Argument
+    - Memory operations, locations are done here (constexpr best)
 
-# 0.1.4 - Multithreaded job system
+# 0.1.4 - Job System Logger
 - Debug logger using job system
 - Test / Benchmark
 
@@ -80,17 +51,5 @@
         - Storage
         - Speakers
         - Microphone
-        - Internet
-    - GPU ? (Or only renderer will use )
-
-# 0.1.6 More utility functions
-- Mathematics
-    - Matrix
-    - Vector
-    - Quaternion
-    - Some useful mathematics functions
-- Color
-    - HEXA <=> RGBA
-    - Light color <=> RGBA
-- Sort functions
-- Search functions
+        - Networking Card
+    - GPU ? (Or only renderer will use display info on it)

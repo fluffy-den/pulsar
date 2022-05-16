@@ -74,9 +74,6 @@
 #	define pf_assert(val, message)
 #endif
 
-// Include: C++
-#include <memory>
-
 // Pulsar
 namespace pul
 {
@@ -110,7 +107,10 @@ namespace pul
 	using diff_t = int32_t;
 #endif // PF_64BIT
 
-// GNU / MSVC compiler
+	// Align
+	using align_val_t = std::align_val_t;
+
+	// GNU / MSVC compiler
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
 #	define pf_pragma(pragma)		_pragma(pragma)
 
@@ -135,7 +135,6 @@ namespace pul
 #endif	 // _MSC_VER || defined(__MINGW32__) || defined(__MINGW64__)
 
 // CPP decl
-#define pf_decl_alignas(alignment)																					alignas(alignment)
 #define pf_decl_constexpr																										constexpr
 #define pf_decl_consteval																										consteval
 #define pf_decl_friend																											friend

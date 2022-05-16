@@ -1,6 +1,6 @@
 /*! @file   debug.cpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief	Implements platform-independent debugging utilities.
  *  @date   22-02-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
@@ -10,6 +10,10 @@
 
 // Include: Pulsar
 #include "pulsar/debug.hpp"
+
+#include "pulsar/memory.hpp"
+#include "pulsar/utility.hpp"
+
 
 // Pulsar
 namespace pul
@@ -62,8 +66,7 @@ namespace pul
 	pulsar_api void debug_logger::write(
 			debug_level __level,
 			debug_filter __filter,
-			std::string_view __message,
-			uint32_t __flags) pf_attr_noexcept
+			std::string_view __message) pf_attr_noexcept
 	{
 		// checks if message isn't filtered (displayable)
 		if (__debug_logger::FILTER <= __filter)
@@ -128,7 +131,7 @@ namespace pul
 		std::string msg;
 		size_t rsv = __message.length() * 2
 							 + dtl.size() * (4 * 1024 + 32);
-		rsv += memory::padding_of(rsv, memory::max_align);
+		rsv += memory::padding_of(rsv, memory::MAX_ALIGN);
 		msg.reserve(rsv);
 		msg += exception::format(__cat, __code, __message);
 		msg += '\n';
@@ -172,8 +175,7 @@ namespace pul
 		{
 			debug_logger::write(debug_level::error,
 													debug_filter::important,
-													this->message_,
-													this->flags_);
+													this->message_);
 		}
 	}
 
@@ -292,7 +294,6 @@ namespace pul
 			// using the standard c abort function
 			std::abort();
 		};
-
 		// using the standard library for error handling
 		std::set_terminate(lbd);
 	}

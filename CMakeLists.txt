@@ -78,6 +78,10 @@ if(MSVC)
 else()
   add_compile_options(-Wall -Wextra -pedantic -Wno-unknown-pragmas -fvisibility=hidden)
 endif()
+# Release
+if(CMAKE_BUILD_TYPE STREQUAL Release)
+  add_compile_options(-O3)
+endif()
 
 #
 # Compiler Platform
@@ -156,24 +160,15 @@ PackageProject(
 # Testing
 #
 if(BUILD_TESTING)
-  include(CTest)
+  # Catch2
+  CPMAddPackage(
+    NAME catch2
+    GITHUB_REPOSITORY catchorg/Catch2
+    GIT_TAG v3.0.0-preview5
+    OPTIONS "CATCH_BUILD_TESTING OFF" "gtest_force_shared_crt"
+  )
+
   enable_testing()
-
-  # Google Test
-  CPMAddPackage(
-    NAME google_test
-    GITHUB_REPOSITORY google/googletest
-    GIT_TAG release-1.11.0
-    OPTIONS "INSTALL_GTEST OFF" "gtest_force_shared_crt"
-  )
-
-  # Google Benchmark
-  CPMAddPackage(
-    NAME google_benchmark
-    GITHUB_REPOSITORY google/benchmark
-    GIT_TAG v1.6.1
-    OPTIONS "BENCHMARK_ENABLE_TESTING OFF"
-  )
 
   # Discover the tests
   file(
@@ -189,7 +184,7 @@ if(BUILD_TESTING)
     target_link_libraries(
       ${BINARY_NAME}
       PRIVATE ${PROJECT_NAME}
-      PUBLIC gtest_main gmock benchmark
+      PUBLIC Catch2::Catch2WithMain
     )
     set_target_properties(
       ${BINARY_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY

@@ -15,14 +15,18 @@
 #ifdef PF_OS_WINDOWS
 #	include <windows.h>
 
+// Include: C++
+#	include <tuple>
+
 BOOL APIENTRY DllMain(
 		HANDLE __module,
 		DWORD __reason,
 		LPVOID __reserved)
 {
+	std::ignore = __module;
 	std::ignore = __reserved;
 
-	// TODO: Security
+	// TODO: DLL attachment security
 	switch (__reason)
 	{
 		case DLL_PROCESS_ATTACH:

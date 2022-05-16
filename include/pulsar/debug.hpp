@@ -1,20 +1,18 @@
 /*! @file   debug.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief  Defines all utilities to facilitate debugging of applications using this library.
+ *  @brief  Defines all utilities to make easier debugging of applications using this library.
  *  @date   01-01-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
  *
- *  @since 0.1
+ *  @since 0.1.0
  */
 
 #ifndef PULSAR_DEBUG_HPP
 #define PULSAR_DEBUG_HPP 1
 
 // Include: Pulsar
-#include "pulsar/memory.hpp"
 #include "pulsar/pulsar.hpp"
-#include "pulsar/utility.hpp"
 
 // Include: C
 #include <cassert>
@@ -45,7 +43,7 @@ namespace pul
 	{
 
 		pf_decl_constexpr uint32_t none					 = 0x00000000;
-		pf_decl_constexpr uint32_t write_in_logs = 0x00000001; // Write in logs when constructor is called.
+		pf_decl_constexpr uint32_t write_in_logs = 0x00000001; // Write in logs when exception is called.
 
 		// ! Dumpfile is only generated in release mode !
 		pf_decl_constexpr uint32_t generate_dumpfile											= 0x00000002;											// Generate dump file with default data.
@@ -79,7 +77,7 @@ namespace pul
 	/// Debug Trace
 	/*! @brief Structure containing the trace of a symbol.
 	 */
-	struct pf_decl_alignas(memory::max_align) debug_trace_t
+	struct debug_trace_t
 	{
 		const std::string undname;
 		const std::string name;
@@ -93,7 +91,7 @@ namespace pul
 	 *  @param[in] __numToIgnore Number of trace to ignore.
 	 *  @return Trace list of the call stack.
 	 */
-	pulsar_api std::vector<debug_trace_t> debug_stacktrace(
+	pulsar_api pf_hint_nodiscard std::vector<debug_trace_t> debug_stacktrace(
 			uint32_t __numToIgnore = 1);
 
 	/// Levels
@@ -126,7 +124,7 @@ namespace pul
 	 *  @param[in] __flags See the flags for generating a dump file.
 	 *  @return Absolute location of the created dump file.
 	 */
-	pulsar_api std::filesystem::path debug_gendumpbin(
+	pulsar_api pf_hint_nodiscard std::filesystem::path debug_gendumpbin(
 			std::filesystem::path const &__p,
 			uint32_t __flags);
 
@@ -222,8 +220,7 @@ namespace pul
 		pf_decl_static void write(
 				debug_level __level,
 				debug_filter __filter,
-				std::string_view __message,
-				uint32_t __flags = debug_flags::none) pf_attr_noexcept;
+				std::string_view __message) pf_attr_noexcept;
 
 		/// Default
 		/*! @brief Default writing function of the log system. Sends the message to std::puts.
@@ -319,7 +316,7 @@ namespace pul
 	 *  @param[in] __code The standard error code.
 	 *  @return Converted error code as integer.
 	 */
-	pf_hint_nodiscard pf_decl_constexpr pf_decl_static int32_t dbgerrc(
+	pf_hint_nodiscard pf_decl_constexpr pf_decl_inline int32_t generic_code(
 			std::errc __code) pf_attr_noexcept
 	{
 		union

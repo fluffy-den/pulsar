@@ -17,21 +17,24 @@
 // Pulsar
 namespace pulsar
 {
+
 	// Hash
 	namespace hash
 	{
+
 		// Fnv1-a
 		namespace fnv1a
 		{
 			/// 32 bits
 			/*! @brief Calculates the 32 bits version of the fnv1-a hash function.
 			 *
-			 *  @param __p		Pointer to the beginning of a continuous data structure.
+			 *  @param __p		Pointer to the beginning of a continuous data
+			 * structure.
 			 *  @param __size Size of this data structure in bytes.
-			 *  @return The hashed data pointed by @a __ptr of size @a __size in bytes.
+			 *  @return The hashed data pointed by @a __ptr of size @a __size in
+			 * bytes.
 			 */
-			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(const void *__ptr,
-																													size_t __size) pf_attr_noexcept
+			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(const void *__ptr, size_t __size) pf_attr_noexcept
 			{
 				uint32_t val = 0x811c9dc5u;
 				union
@@ -57,8 +60,8 @@ namespace pulsar
 			 *  @param __arr Reference to an array structure.
 			 */
 			template <typename _Ty, size_t _Len>
-			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(const _Ty (&__arr)[_Len])
-					pf_attr_noexcept
+			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(
+					const _Ty (&__arr)[_Len]) pf_attr_noexcept
 			{
 				return hash32(&__arr[0], _Len * sizeof(_Ty));
 			}
@@ -69,8 +72,9 @@ namespace pulsar
 			 *
 			 *  @see hash32.
 			 */
-			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(const void *__ptr,
-																													size_t __size) pf_attr_noexcept
+			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(
+					const void *__ptr,
+					size_t __size) pf_attr_noexcept
 			{
 				uint64_t val = 0xcbf29ce484222325ull;
 
@@ -93,8 +97,8 @@ namespace pulsar
 			/*! @see hash64.
 			 */
 			template <typename _Ty, size_t _Len>
-			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(const _Ty (&__arr)[_Len])
-					pf_attr_noexcept
+			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(
+					const _Ty (&__arr)[_Len]) pf_attr_noexcept
 			{
 				return hash64(&__arr[0], _Len * sizeof(_Ty));
 			}
@@ -102,6 +106,32 @@ namespace pulsar
 		} // Fnv1-a
 
 	} // Hash
+
+	/// STD: Fnv1a impl
+	/*! @brief
+	 *
+	 *  @tparam _Key
+	 */
+	template <typename _Key>
+	class hash_fnv1a: public std::hash
+	{
+	public:
+		/// Operator()
+		/*! @brief
+		 *
+		 *  @param[in] __key
+		 *  @return pf_hint_nodiscard
+		 */
+		pf_hint_nodiscard pf_decl_constexpr size_t operator()(
+				_Key __key) const pf_attr_noexcept
+		{
+#ifdef PF_64BIT
+			return hash::fnv1a::hash64(&__key, sizeof(_Key));
+#else
+			return hash::fnv1a::hash32(&__key, sizeof(_Key));
+#endif // PF_64BIT
+		}
+	};
 
 } // Pulsar
 #endif // !PULSAR_MATHEMATICS_HASH_FNV1A_HPP

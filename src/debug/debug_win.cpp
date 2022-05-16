@@ -1,6 +1,6 @@
 /*! @file   debug_win.cpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief	Implements debugging utilities under Windows.
  *  @date   22-01-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
@@ -30,7 +30,7 @@ namespace pul
 	pf_decl_constexpr uint32_t MAX_NAME_LEN		= 1024;
 
 	// Debug Trace
-	pulsar_api std::vector<debug_trace_t> debug_stacktrace(
+	pulsar_api pf_hint_nodiscard std::vector<debug_trace_t> debug_stacktrace(
 			uint32_t __ignoreNum)
 	{
 		// for now, stacktrace is used only on this process
@@ -79,7 +79,7 @@ namespace pul
 		sf.AddrPC.Offset		= ctx.Rip;
 		sf.AddrPC.Mode			= AddrModeFlat;
 		sf.AddrFrame.Offset = ctx.Rsp;
-		sf.AddrFrame.mode		= AddrModeFlat;
+		sf.AddrFrame.Mode		= AddrModeFlat;
 		sf.AddrStack.Offset = ctx.Rsp;
 		sf.AddrStack.Mode		= AddrModeFlat;
 #	else
@@ -205,7 +205,7 @@ namespace pul
 	}
 
 	/// DumpBin
-	pulsar_api std::filesystem::path debug_gendumpbin(
+	pulsar_api pf_hint_nodiscard std::filesystem::path debug_gendumpbin(
 			std::filesystem::path const &__p,
 			uint32_t __flags)
 	{
@@ -213,7 +213,7 @@ namespace pul
 		if (__p.has_extension())
 			throw exception(
 					std::generic_category(),
-					dbgerrc(std::errc::not_a_directory),
+					generic_code(std::errc::not_a_directory),
 					"__p must be a directory!");
 		// What flags to generate the dumpbin?
 		union

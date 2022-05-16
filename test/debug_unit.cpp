@@ -1,6 +1,6 @@
 /*! @file 	debug_unit.cpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief	Unit test of the debugging tools.
+ *  @brief	Test unit for the debugging tools.
  *  @date 	02-03-2022
  *
  * 	@copyright Copyright (c) 2022 - Pulsar Software
@@ -11,58 +11,62 @@
 // Include: Pulsar
 #include "pulsar/debug.hpp"
 
-// Include: Google Test
-#include "gtest/gtest.h"
+// Include: Catch2
+#include "catch2/catch_all.hpp"
 
-/// Debug Logger
-GTEST_TEST(DebugLoggerTest, DebugLoggerInfoTest)
+// Pulsar
+namespace pul
 {
-	pul::debug_logger::write(
-			pul::debug_level::info,
-			pul::debug_filter::important,
-			"This is an info message...");
-}
-GTEST_TEST(DebugLoggerTest, DebugLoggerWarningTest)
-{
-	pul::debug_logger::write(
-			pul::debug_level::warning,
-			pul::debug_filter::important,
-			"This is a warning message...");
-}
-GTEST_TEST(DebugLoggerTest, DebugLoggerErrorTest)
-{
-	pul::debug_logger::write(
-			pul::debug_level::error,
-			pul::debug_filter::important,
-			"This is an error message...");
-}
+	// Debug Logger
+	TEST_CASE("DebugLoggerInfoTest", "[debug]")
+	{
+		debug_logger::write(
+				debug_level::info,
+				debug_filter::important,
+				"This is an info message...");
+	}
+	TEST_CASE("DebugLoggerWarningTest", "[debug]")
+	{
+		debug_logger::write(
+				debug_level::warning,
+				debug_filter::important,
+				"This is a warning message...");
+	}
+	TEST_CASE("DebugLoggerErrorTest", "[debug]")
+	{
+		debug_logger::write(
+				debug_level::error,
+				debug_filter::important,
+				"This is an error message...");
+	}
 
-/// Debug Message Box
-GTEST_TEST(DebugMessageBox, DebugMessageBoxInfo)
-{
-	pul::debug_messagebox(
-			pul::debug_level::info,
-			"Info message box",
-			"This is an info message box.");
-}
-GTEST_TEST(DebugMessageBox, DebugMessageBoxWarning)
-{
-	pul::debug_messagebox(
-			pul::debug_level::warning,
-			"Warning message box",
-			"This is a warning message box.");
-}
-GTEST_TEST(DebugMessageBox, DebugMessageBoxError)
-{
-	pul::debug_messagebox(
-			pul::debug_level::error,
-			"Error message box",
-			"This is an error message box.");
-}
+	// Debug Message Box
+	TEST_CASE("DebugMessageBoxInfo", "[debug]")
+	{
+		debug_messagebox(
+				debug_level::info,
+				"Info message box",
+				"This is an info message box.");
+	}
+	TEST_CASE("DebugMessageBoxWarning", "[debug]")
+	{
+		debug_messagebox(
+				debug_level::warning,
+				"Warning message box",
+				"This is a warning message box.");
+	}
+	TEST_CASE("DebugMessageBoxError", "[debug]")
+	{
+		debug_messagebox(
+				debug_level::error,
+				"Error message box",
+				"This is an error message box.");
+	}
 
-/// Debug StackTrace
-GTEST_TEST(DebugStacktraceTest, DebugStacktraceTest)
-{
-	auto stl = pul::debug_stacktrace(0);
-	GTEST_ASSERT_FALSE(stl.empty());
+	// Debug StackTrace
+	TEST_CASE("DebugStacktraceTest", "[debug]")
+	{
+		auto stl = debug_stacktrace(0);
+		REQUIRE(!stl.empty());
+	}
 }
