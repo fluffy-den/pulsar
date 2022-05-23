@@ -273,4 +273,28 @@ namespace pul
 			void *__where,
 			size_t __size,
 			size_t __access);
+
+	/// DEVICES: Monitor
+	class device_monitor
+	{};
+
+	/// DEVICES: Keyboard
+	class device_keyboard
+	{};
+
+	/// DEVICES: Mouse
+	class device_mouse
+	{};
+
+	/// DEVICES: Headphones
+	class device_headphones
+	{};
+
+	/// DEVICES: Controller
+	class device_controller
+	{};
+
+	/// SURFACE: System
+	class surface
+	{};
 }

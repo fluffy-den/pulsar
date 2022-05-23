@@ -184,6 +184,7 @@ namespace pul
 			pf_decl_constexpr buffer &operator=(
 					buffer const &__r) pf_attr_noexcept
 			{
+				if (&__r == this) return *this;
 				this->resize(__r.capacity(), MAX_ALIGN);
 				return *this;
 			}
@@ -196,6 +197,7 @@ namespace pul
 			pf_decl_constexpr buffer &operator=(
 					buffer &&__r) pf_attr_noexcept
 			{
+				if (&__r == this) return *this;
 				this->__free();
 				this->align_ = __r.align_;
 				this->beg_	 = __r.beg_;
@@ -396,6 +398,7 @@ namespace pul
 			pf_decl_constexpr allocator_linear &operator=(
 					allocator_linear const &__r) pf_attr_noexcept
 			{
+				if (&__r == this) return *this;
 				this->buf_ = __r.buf_;
 				this->off_ = this->buf_.begin();
 				return *this;
@@ -408,6 +411,7 @@ namespace pul
 			pf_decl_constexpr allocator_linear &operator=(
 					allocator_linear &&__r) pf_attr_noexcept
 			{
+				if (&__r == this) return *this;
 				this->buf_ = __r.buf_;
 				this->off_ = __r.off_;
 				return *this;
@@ -690,6 +694,7 @@ namespace pul
 			pf_decl_constexpr allocator_pool &operator=(
 					allocator_pool const &__r) pf_attr_noexcept
 			{
+				if (&__r == this) return *this;
 				this->buf_			 = __r.buf_;
 				this->elemsize_	 = __r.elemsize_;
 				this->elemcount_ = __r.elemcount_;
@@ -705,6 +710,7 @@ namespace pul
 			pf_decl_constexpr allocator_pool &operator=(
 					allocator_pool &&__r) pf_attr_noexcept
 			{
+				if (&__r == this) return *this;
 				this->buf_			 = std::move(__r.buf_);
 				this->list_			 = std::move(__r.list_);
 				this->elemsize_	 = __r.elemsize_;
@@ -843,6 +849,7 @@ namespace pul
 			allocator_cds_linear &operator=(
 					allocator_cds_linear const &__r) pf_attr_noexcept
 			{
+				if (&__r == this) return *this;
 				this->buf_ = __r.buf_;
 				this->off_.store(this->buf_.begin(), std::memory_order::release);
 				return *this;
@@ -855,6 +862,7 @@ namespace pul
 			allocator_cds_linear &operator=(
 					allocator_cds_linear &&__r) pf_attr_noexcept
 			{
+				if (&__r == this) return *this;
 				this->buf_ = __r.buf_;
 				this->off_.store(__r.off_.exchange(nullptr, std::memory_order::acq_rel), std::memory_order::release);
 				return *this;
@@ -1151,6 +1159,7 @@ namespace pul
 			allocator_cds_pool &operator=(
 					allocator_cds_pool const &__r) pf_attr_noexcept
 			{
+				if (&__r == this) return *this;
 				this->buf_			 = __r.buf_;
 				this->elemsize_	 = __r.elemsize_;
 				this->elemcount_ = __r.elemcount_;
@@ -1166,6 +1175,7 @@ namespace pul
 			allocator_cds_pool &operator=(
 					allocator_cds_pool &&__r) pf_attr_noexcept
 			{
+				if (&__r == this) return *this;
 				this->buf_			 = std::move(__r.buf_);
 				this->list_			 = std::move(__r.list_);
 				this->elemsize_	 = __r.elemsize_;
@@ -1289,6 +1299,7 @@ namespace pul
 			pf_decl_constexpr allocator_wrapper<_Ty, _Allocator> &operator=(
 					allocator_wrapper<_Ty, _Allocator> const &__allwrp) pf_attr_noexcept requires(std::is_copy_assignable_v<_Allocator>)
 			{
+				if (&__allwrp == this) return *this;
 				this->all_ = __allwrp.all_;
 				return *this;
 			}
@@ -1300,6 +1311,7 @@ namespace pul
 			pf_decl_constexpr allocator_wrapper<_Ty, _Allocator> &operator=(
 					allocator_wrapper<_Ty, _Allocator> &&__allwrp) pf_attr_noexcept requires(std::is_move_assignable_v<_Allocator>)
 			{
+				if (&__allwrp == this) return *this;
 				this->all_ = std::move(__allwrp.all_);
 				return *this;
 			}

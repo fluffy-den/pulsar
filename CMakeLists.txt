@@ -76,7 +76,21 @@ option(BUILD_TESTING "Build tests?" On)
 if(MSVC)
   add_compile_options(/W4)
 else()
-  add_compile_options(-Wall -Wextra -pedantic -Wno-unknown-pragmas -fvisibility=hidden)
+  add_compile_options(
+    -Wall
+    -Wextra
+    -pedantic
+    -Wno-unknown-pragmas
+    -fvisibility=hidden
+    -msse
+    -msse2
+    -mssse3
+    -msse3
+    -msse4.1
+    -msse4.2
+    -mavx
+    -mavx2
+  )
 endif()
 # Release
 if(CMAKE_BUILD_TYPE STREQUAL Release)
