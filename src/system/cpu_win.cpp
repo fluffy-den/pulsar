@@ -10,12 +10,12 @@
 
 // Include: Pulsar
 #include "pulsar/debug.hpp"
+#include "pulsar/intrin.hpp"
 #include "pulsar/system.hpp"
 
 // Include: Windows
 #ifdef PF_OS_WINDOWS
 #	include <windows.h>
-#	include <intrin.h>
 #	include <sysinfoapi.h>
 
 // Include: C++

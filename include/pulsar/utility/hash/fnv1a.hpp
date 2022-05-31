@@ -1,23 +1,25 @@
-/**
- * @file    fnv1a.hpp
- * @author  Fluffy (noe.louis-quentin@hotmail.fr)
- * @brief
- * @date    26-11-2021
+/*! @file   fnv1a.hpp
+ *  @author Fluffy (noe.louis-quentin@hotmail.fr)
+ *  @brief
+ *  @date   26-11-2021
  *
- * @copyright Copyright (c) 2021 - Pulsar Software
+ *  @copyright Copyright (c) 2021 - Pulsar Software
  *
+ *  @since 0.1.1
  */
 
-#ifndef PULSAR_MATHEMATICS_HASH_FNV1A_HPP
-#define PULSAR_MATHEMATICS_HASH_FNV1A_HPP 1
+#ifndef PULSAR_UTILITY_HASH_FNV1A_HPP
+#define PULSAR_UTILITY_HASH_FNV1A_HPP 1
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
 
-// Pulsar
-namespace pulsar
-{
+// Include: C++
+#include <functional>
 
+// Pulsar
+namespace pul
+{
 	// Hash
 	namespace hash
 	{
@@ -113,7 +115,7 @@ namespace pulsar
 	 *  @tparam _Key
 	 */
 	template <typename _Key>
-	class hash_fnv1a: public std::hash
+	class hash_fnv1a: public std::hash<_Key>
 	{
 	public:
 		/// Operator()
@@ -134,4 +136,4 @@ namespace pulsar
 	};
 
 } // Pulsar
-#endif // !PULSAR_MATHEMATICS_HASH_FNV1A_HPP
+#endif // !PULSAR_UTILITY_HASH_FNV1A_HPP

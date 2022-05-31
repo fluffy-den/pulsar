@@ -17,9 +17,9 @@ execute_process(
   OUTPUT_VARIABLE VERSION_STRING
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
-string(REGEX REPLACE "v([0-9]+).*" "\\1" VERSION_MAJOR "${VERSION_STRING}")
-string(REGEX REPLACE "v[0-9]+\\.([0-9]+).*" "\\1" VERSION_MINOR "${VERSION_STRING}")
-string(REGEX REPLACE "v[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" VERSION_PATCH "${VERSION_STRING}")
+string(REGEX REPLACE "([0-9]+).*" "\\1" VERSION_MAJOR "${VERSION_STRING}")
+string(REGEX REPLACE "[0-9]+\\.([0-9]+).*" "\\1" VERSION_MINOR "${VERSION_STRING}")
+string(REGEX REPLACE "[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" VERSION_PATCH "${VERSION_STRING}")
 set(VERSION_STRING_SHORT "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
 #
@@ -46,9 +46,9 @@ configure_file(
 # CPM
 #
 if(NOT EXISTS CPM_DOWNLOAD_VERSION)
-  set(CPM_DOWNLOAD_VERSION 0.34.2)
+  set(CPM_DOWNLOAD_VERSION 0.35.1)
 endif()
-set(CPM_DOWNLOAD_LOCATION "${CMAKE_SOURCE_DIR}/cmake/cpm/cpm_${CPM_DOWNLOAD_VERSION}.cmake")
+set(CPM_DOWNLOAD_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cpm/cpm_${CPM_DOWNLOAD_VERSION}.cmake")
 if(NOT (EXISTS ${CPM_DOWNLOAD_LOCATION}))
   file(DOWNLOAD
        https://github.com/TheLartians/CPM.cmake/releases/download/v${CPM_DOWNLOAD_VERSION}/CPM.cmake
@@ -62,7 +62,7 @@ include("cmake/cpm/cpm_${CPM_DOWNLOAD_VERSION}.cmake")
 #
 include(GNUInstallDirs)
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  set(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}/../")
+  set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../")
 endif()
 
 #
@@ -82,6 +82,7 @@ else()
     -pedantic
     -Wno-unknown-pragmas
     -fvisibility=hidden
+    -mmmx
     -msse
     -msse2
     -mssse3
@@ -159,12 +160,12 @@ target_include_directories(
 #
 # CPM Package
 #
-CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.8.0")
+CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.9.0")
 PackageProject(
   NAME ${PROJECT_NAME}
   VERSION ${PROJECT_VERSION}
   BINARY_DIR ${PROJECT_BINARY_DIR}
-  INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include"
+  INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include"
   INCLUDE_DESTINATION "include/pulsar"
   VERSION_HEADER "${VERSION_HEADER_PATH}"
   COMPATIBILITY SameMajorVersion

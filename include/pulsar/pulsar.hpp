@@ -1,20 +1,19 @@
-/**
- * @file    pulsar.hpp
- * @author  Fluffy (noe.louis-quentin@hotmail.fr)
- * @brief   This file verifies that compilation is possible, by the presence of compatible
+/*! @file    pulsar.hpp
+ * 	@author  Fluffy (noe.louis-quentin@hotmail.fr)
+ * 	@brief   This file verifies that compilation is possible, by the presence of compatible
  * 					operating systems and compilers and defines all the macros, types, of these for their
  * 					use through the pulsar framework. Pulsar framework requires at least C++20!
- * @date    23-11-2021
+ * 	@date    23-11-2021
  *
- * @copyright Copyright (c) 2021 - Pulsar Software
+ * 	@copyright Copyright (c) 2021 - Pulsar Software
  *
- * @since 0.1.0
+ * 	@since 0.1.0
  */
 
 #ifndef PULSAR_HPP
 #define PULSAR_HPP 1
 
-// C++ 17 is required!
+// C++20 is required!
 #if !defined(__cplusplus) || __cplusplus < 201703L
 #	error "[PULSAR]: At least C++ 20 is required!"
 #endif // !__cplusplus || __cplusplus < 201703L
@@ -65,7 +64,7 @@
 #endif // _DEBUG
 
 // Static Assert
-#define pf_static_assert(val, message) static_assert(val, message)
+#define pf_static_assert(...) static_assert(__VA_ARGS__)
 
 // Assert
 #ifdef PF_DEBUG
@@ -73,6 +72,9 @@
 #else
 #	define pf_assert(val, message)
 #endif
+
+// Include: C
+#include <cstdint>
 
 // Pulsar
 namespace pul
@@ -99,16 +101,13 @@ namespace pul
 	using byte_t = unsigned char;
 
 	// Varying
-#ifdef PF_64BIT
-	using size_t = uint64_t;
-	using diff_t = int64_t;
-#else	 // ^^^ PF_64BIT ^^^ / vvv PF_32BIT vvv
-	using size_t = uint32_t;
-	using diff_t = int32_t;
-#endif // PF_64BIT
-
-	// Align
+	using size_t			= std::size_t;
 	using align_val_t = std::align_val_t;
+#ifdef PF_64BIT
+	using diff_t = int64_t;
+#else	 // ^^^ PF_64_BIT ^^^ / vvv PF_32_BIT vvv
+	using diff_t = int32_t;
+#endif // PF_64_BIT
 
 	// GNU / MSVC compiler
 #if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)

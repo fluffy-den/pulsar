@@ -158,7 +158,7 @@ namespace pul
 			__m.measure([&conclifo]
 									{ return conclifo.remove_head(); });
 		};
-		/* TODO: Multithreading benchmarking for LIFO
+		/* NOTE: Multithreading benchmarking for LIFO
 		BENCHMARK_ADVANCED("MTInsertHead")
 		(Catch::Benchmark::Chronometer __m)
 		{
@@ -205,7 +205,7 @@ namespace pul
 			__m.measure([&concfifo]
 									{ return concfifo.remove_head(); });
 		};
-		/* TODO: Multithreading benchmarking for FIFO
+		/* NOTE: Multithreading benchmarking for FIFO
 		BENCHMARK_ADVANCED("MTInsertHead")
 		(Catch::Benchmark::Chronometer __m)
 		{

@@ -9,7 +9,7 @@
  */
 
 // Include: Pulsar
-#include "pulsar/memory.hpp"
+#include "pulsar/system.hpp"
 
 // Include: Catch2
 #include "catch2/catch_all.hpp"
@@ -17,15 +17,31 @@
 // Pulsar
 namespace pul
 {
-	/// RAM: Test
+	/// CPU: Test Unit
+	TEST_CASE("CPUInfoTest")
+	{
+		cpu_info_t info = cpu_info();
+	}
+	TEST_CASE("CPUNameTest")
+	{
+		std::string name = cpu_name();
+		REQUIRE(!name.empty());
+	}
+	TEST_CASE("CPUVendorTest")
+	{
+		std::string vendor = cpu_vendor();
+		REQUIRE(!vendor.empty());
+	}
+
+	/// RAM: Test Unit
 	TEST_CASE("MemoryRAMProcessInfoTest")
 	{
-		auto info		= memory::ram_process_info();
+		auto info		= ram_process_info();
 		std::ignore = info;
 	}
 	TEST_CASE("MemoryRAMSystemInfoTest")
 	{
-		auto info		= memory::ram_system_info();
+		auto info		= ram_system_info();
 		std::ignore = info;
 	}
 }

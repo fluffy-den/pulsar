@@ -1,0 +1,144 @@
+/*! @file   vector5_benchmark.cpp
+ *  @author Fluffy (noe.louis-quentin@hotmail.fr)
+ *  @brief	Benchmark for size 8 vectors.
+ *  @date   27-05-2022
+ *
+ *  @copyright Copyright (c) 2022 - Pulsar Software
+ *
+ *  @since 0.1.1
+ */
+
+// Include: Pulsar
+#include "pulsar/mathematics.hpp"
+
+// Include: Catch2
+#include "catch2/catch_all.hpp"
+
+// Include: C++
+#include <numeric>
+#include <random>
+
+// Pulsar
+namespace pul
+{
+	// Math
+	namespace math
+	{
+		/// MATH: Vec8 Benchmark
+		TEST_CASE("MathVec8Benchmarks")
+		{
+			BENCHMARK_ADVANCED("ColSumBenchmark")
+			(Catch::Benchmark::Chronometer __m)
+			{
+				const size_t n = __m.runs() * 2;
+				std::random_device rd;
+				std::mt19937 gen(rd());
+				std::uniform_real_distribution<float32_t> r(
+						std::numeric_limits<float32_t>::min(),
+						std::numeric_limits<float32_t>::max());
+				auto buf = std::make_unique<math::cvec<float32_t, 8, SIMD_UNALIGNED>[]>(n);
+				for (auto b = &buf[0], e = &buf[n - 1]; b != e; ++b)
+				{
+					*b = { r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen) };
+				}
+				__m.measure([&buf](int32_t __index)
+										{ return buf[2 * __index] + buf[2 * __index + 1]; });
+			};
+			BENCHMARK_ADVANCED("ColSumBenchmarkSIMD")
+			(Catch::Benchmark::Chronometer __m)
+			{
+				const size_t n = __m.runs() * 2;
+				std::random_device rd;
+				std::mt19937 gen(rd());
+				std::uniform_real_distribution<float32_t> r(
+						std::numeric_limits<float32_t>::min(),
+						std::numeric_limits<float32_t>::max());
+				auto buf = std::make_unique<math::cvec<float32_t, 8, SIMD_ALIGNED>[]>(n);
+				for (auto b = &buf[0], e = &buf[n - 1]; b != e; ++b)
+				{
+					*b = { r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen) };
+				}
+				__m.measure([&buf](int32_t __index)
+										{ return buf[2 * __index] + buf[2 * __index + 1]; });
+			};
+			BENCHMARK_ADVANCED("RowSumBenchmark")
+			(Catch::Benchmark::Chronometer __m)
+			{
+				const size_t n = __m.runs() * 2;
+				std::random_device rd;
+				std::mt19937 gen(rd());
+				std::uniform_real_distribution<float32_t> r(
+						std::numeric_limits<float32_t>::min(),
+						std::numeric_limits<float32_t>::max());
+				auto buf = std::make_unique<math::rvec<float32_t, 8, SIMD_UNALIGNED>[]>(n);
+				for (auto b = &buf[0], e = &buf[n - 1]; b != e; ++b)
+				{
+					*b = { r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen) };
+				}
+				__m.measure([&buf](int32_t __index)
+										{ return buf[2 * __index] + buf[2 * __index + 1]; });
+			};
+			BENCHMARK_ADVANCED("RowSumBenchmarkSIMD")
+			(Catch::Benchmark::Chronometer __m)
+			{
+				const size_t n = __m.runs() * 2;
+				std::random_device rd;
+				std::mt19937 gen(rd());
+				std::uniform_real_distribution<float32_t> r(
+						std::numeric_limits<float32_t>::min(),
+						std::numeric_limits<float32_t>::max());
+				auto buf = std::make_unique<math::rvec<float32_t, 8, SIMD_ALIGNED>[]>(n);
+				for (auto b = &buf[0], e = &buf[n - 1]; b != e; ++b)
+				{
+					*b = { r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen) };
+				}
+				__m.measure([&buf](int32_t __index)
+										{ return buf[2 * __index] + buf[2 * __index + 1]; });
+			};
+			BENCHMARK_ADVANCED("MulBenchmark")
+			(Catch::Benchmark::Chronometer __m)
+			{
+				const size_t n = __m.runs();
+				std::random_device rd;
+				std::mt19937 gen(rd());
+				std::uniform_real_distribution<float32_t> r(
+						std::numeric_limits<float32_t>::min(),
+						std::numeric_limits<float32_t>::max());
+				auto rbuf = std::make_unique<math::rvec<float32_t, 8, SIMD_UNALIGNED>[]>(n);
+				auto cbuf = std::make_unique<math::cvec<float32_t, 8, SIMD_UNALIGNED>[]>(n);
+				for (auto b = &rbuf[0], e = &rbuf[n - 1]; b != e; ++b)
+				{
+					*b = { r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen) };
+				}
+				for (auto b = &cbuf[0], e = &cbuf[n - 1]; b != e; ++b)
+				{
+					*b = { r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen) };
+				}
+				__m.measure([&rbuf, &cbuf](int32_t __index)
+										{ return rbuf[__index] * cbuf[__index]; });
+			};
+			BENCHMARK_ADVANCED("MulBenchmarkSIMD")
+			(Catch::Benchmark::Chronometer __m)
+			{
+				const size_t n = __m.runs();
+				std::random_device rd;
+				std::mt19937 gen(rd());
+				std::uniform_real_distribution<float32_t> r(
+						std::numeric_limits<float32_t>::min(),
+						std::numeric_limits<float32_t>::max());
+				auto rbuf = std::make_unique<math::rvec<float32_t, 8, SIMD_ALIGNED>[]>(n);
+				auto cbuf = std::make_unique<math::cvec<float32_t, 8, SIMD_ALIGNED>[]>(n);
+				for (auto b = &rbuf[0], e = &rbuf[n - 1]; b != e; ++b)
+				{
+					*b = { r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen) };
+				}
+				for (auto b = &cbuf[0], e = &cbuf[n - 1]; b != e; ++b)
+				{
+					*b = { r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen), r(gen) };
+				}
+				__m.measure([&rbuf, &cbuf](int32_t __index)
+										{ return rbuf[__index] * cbuf[__index]; });
+			};
+		}
+	}
+}

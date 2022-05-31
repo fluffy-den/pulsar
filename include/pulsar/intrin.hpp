@@ -8,8 +8,11 @@
  *  @since 0.1.1
  */
 
+#ifndef PULSAR_INTRIN_HPP
+#define PULSAR_INTRIN_HPP 1
+
 // Include: Pulsar
-#include "pulsar.hpp"
+#include "pulsar/pulsar.hpp"
 
 // Include: C++
 #include <algorithm>
@@ -22,262 +25,90 @@
 namespace pul
 {
 
-	/// SIMD: Types
-	using m64_t		= __m64;
-	using m128_t	= __m128;
-	using m128i_t = __m128i;
-	using m128d_t = __m128d;
-	using m256_t	= __m256;
-	using m256i_t = __m256i;
-	using m256d_t = __m256d;
-
+	/// SIMD: Align Type
+	enum simd_align_t : bool
+	{
+		SIMD_UNALIGNED,
+		SIMD_ALIGNED
+	};
+	template <typename _Ty, size_t _Num, simd_align_t _SIMD = SIMD_ALIGNED>
+	class simd_alignment_of;
 	/// SIMD: Alignment
 	/*! @brief
 	 *
-	 *  @param[in] __elemsize
-	 *  @param[in] __num
-	 *  @return pf_decl_constexpr
+	 *  @tparam _Ty
+	 *  @tparam _Num
+	 *  @tparam _SIMD
 	 */
-	pf_hint_nodiscard pf_decl_constexpr align_val_t simd_alignof(
-			size_t __elemsize,
-			size_t __num) pf_attr_noexcept
+	template <typename _Ty, size_t _Num, simd_align_t _SIMD>
+		requires(_Num > 1 && _SIMD == SIMD_ALIGNED)
+	class simd_alignment_of<_Ty, _Num, _SIMD>
 	{
-		if (__num > 4)
-			__num = 4;
-		__elemsize *= __num;
-		while (__elemsize & (__elemsize - 1))
+	private:
+		pf_hint_nodiscard pf_decl_static pf_decl_constexpr size_t __cal_align() pf_attr_noexcept
 		{
-			__elemsize = __elemsize & (__elemsize - 1);
+			size_t s = _Num * alignof(_Ty);
+			if (s < 8 || (s & (s - 1)))
+				return alignof(_Ty);
+			return std::min<size_t>(std::max<size_t>(s, 8), 64);
 		}
-		return align_val_t(std::max<size_t>(__elemsize, 16));
-	}
 
-	/// REGISTER: Selector
+	public:
+		pf_decl_static pf_decl_constexpr size_t value = __cal_align();
+	};
+	/*! @brief
+	 *
+	 *  @tparam _Ty
+	 *  @tparam _Num
+	 */
+	template <typename _Ty, size_t _Num, simd_align_t _SIMD>
+		requires(_Num == 1 || _SIMD == SIMD_UNALIGNED)
+	class simd_alignment_of<_Ty, _Num, _SIMD>
+	{
+	public:
+		pf_decl_static pf_decl_constexpr size_t value = alignof(_Ty);
+	};
+	/*! @brief
+	 *
+	 *  @tparam _Ty
+	 *  @tparam _Num
+	 *  @tparam _SIMD
+	 */
+	template <typename _Ty, size_t _Num, simd_align_t _SIMD>
+	pf_decl_static pf_decl_constexpr size_t simd_alignment_of_v = simd_alignment_of<_Ty, _Num, _SIMD>::value;
+
+	/// SIMD: Alignable
 	template <typename _Ty, size_t _Num>
-	class register_pack
+	struct is_simd_alignable: public std::integral_constant<bool, (alignof(_Ty) * _Num & (alignof(_Ty) * _Num - 1)) == 0 && (alignof(_Ty) * _Num >= 8)>
 	{};
-
-	// -> _Num = 1
-	template <typename _Ty>
-	class register_pack<_Ty, 1>
-	{
-		using type = _Ty;
-	};
-
-	// -> _Num = 2
-	template <typename _Ty>
-	class register_pack<_Ty, 2>
-	{
-		using type = m64_t;
-	};
-	template <>
-	class register_pack<int64_t, 2>
-	{
-		using type = m128i_t;
-	};
-	template <>
-	class register_pack<uint64_t, 2>
-	{
-		using type = m128i_t;
-	};
-	template <>
-	class register_pack<float64_t, 2>
-	{
-		using type = m128d_t;
-	};
-
-	// -> _Num = 3
-	template <typename _Ty>
-	class register_pack<_Ty, 3>
-	{
-		using type = m64_t;
-	};
-	template <>
-	class register_pack<int32_t, 3>
-	{
-		using type = m128_t;
-	};
-	template <>
-	class register_pack<int64_t, 3>
-	{
-		using type = m256i_t;
-	};
-	template <>
-	class register_pack<uint32_t, 3>
-	{
-		using type = m128_t;
-	};
-	template <>
-	class register_pack<uint64_t, 3>
-	{
-		using type = m256i_t;
-	};
-	template <>
-	class register_pack<float32_t, 3>
-	{
-		using type = m128_t;
-	};
-	template <>
-	class register_pack<float64_t, 3>
-	{
-		using type = m256d_t;
-	};
-
-	// -> _Num = 4
-	template <typename _Ty>
-	class register_pack<_Ty, 4>
-	{
-		using type = m64_t;
-	};
-	template <>
-	class register_pack<int32_t, 4>
-	{
-		using type = m128i_t;
-	};
-	template <>
-	class register_pack<int64_t, 4>
-	{
-		using type = m256i_t;
-	};
-	template <>
-	class register_pack<uint32_t, 4>
-	{
-		using type = m128i_t;
-	};
-	template <>
-	class register_pack<uint64_t, 4>
-	{
-		using type = m256i_t;
-	};
-	template <>
-	class register_pack<float32_t, 4>
-	{
-		using type = m128_t;
-	};
-	template <>
-	class register_pack<float64_t, 4>
-	{
-		using type = m256d_t;
-	};
-
-	// -> Type
 	template <typename _Ty, size_t _Num>
-	using register_pack_t = typename register_pack<_Ty, _Num>::type;
+	pf_decl_static pf_decl_constexpr bool is_simd_alignable_v = is_simd_alignable<_Ty, _Num>::value;
 
-	/// REGISTER: Cast
-	template <typename _RegTy, typename _Ty>
-	class register_cast;
-	// -> m64_t
-	template <typename _Ty>
-	class register_cast<m64_t, _Ty>
-	{
-		using type = m64_t;
-	};
-	// -> m128_t
-	template <typename _Ty>
-		requires(!std::is_integral_v<_Ty>)
-	class register_cast<m128_t, _Ty>
-	{
-		using type = m128_t;
-	};
-	template <typename _Ty>
-		requires(!std::is_integral_v<_Ty>)
-	class register_cast<m128i_t, _Ty>
-	{
-		using type = m128_t;
-	};
-	template <typename _Ty>
-		requires(!std::is_integral_v<_Ty>)
-	class register_cast<m128d_t, _Ty>
-	{
-		using type = m128_t;
-	};
-	template <typename _Ty>
-		requires(std::is_integral_v<_Ty>)
-	class register_cast<m128_t, _Ty>
-	{
-		using type = m128i_t;
-	};
-	template <typename _Ty>
-		requires(std::is_integral_v<_Ty>)
-	class register_cast<m128i_t, _Ty>
-	{
-		using type = m128i_t;
-	};
-	template <typename _Ty>
-		requires(std::is_integral_v<_Ty>)
-	class register_cast<m128d_t, _Ty>
-	{
-		using type = m128i_t;
-	};
-	template <>
-	class register_cast<m128_t, float64_t>
-	{
-		using type = m128d_t;
-	};
-	template <>
-	class register_cast<m128i_t, float64_t>
-	{
-		using type = m128d_t;
-	};
-	template <>
-	class register_cast<m128d_t, float64_t>
-	{
-		using type = m128d_t;
-	};
-	// -> m256_t
-	template <typename _Ty>
-		requires(!std::is_integral_v<_Ty>)
-	class register_cast<m256_t, _Ty>
-	{
-		using type = m256_t;
-	};
-	template <typename _Ty>
-		requires(!std::is_integral_v<_Ty>)
-	class register_cast<m256i_t, _Ty>
-	{
-		using type = m256_t;
-	};
-	template <typename _Ty>
-		requires(!std::is_integral_v<_Ty>)
-	class register_cast<m256d_t, _Ty>
-	{
-		using type = m256_t;
-	};
-	template <typename _Ty>
-		requires(std::is_integral_v<_Ty>)
-	class register_cast<m256_t, _Ty>
-	{
-		using type = m256i_t;
-	};
-	template <typename _Ty>
-		requires(std::is_integral_v<_Ty>)
-	class register_cast<m256i_t, _Ty>
-	{
-		using type = m256i_t;
-	};
-	template <typename _Ty>
-		requires(std::is_integral_v<_Ty>)
-	class register_cast<m256d_t, _Ty>
-	{
-		using type = m256i_t;
-	};
-	template <>
-	class register_cast<m256_t, float64_t>
-	{
-		using type = m256d_t;
-	};
-	template <>
-	class register_cast<m256i_t, float64_t>
-	{
-		using type = m256d_t;
-	};
-	template <>
-	class register_cast<m256d_t, float64_t>
-	{
-		using type = m256d_t;
-	};
-	// -> Type
-	template <typename _RegTy, typename _Ty>
-	using register_cast_t = typename register_cast<_RegTy, _Ty>::type;
+	/// SIMD: Select
+	/*! @brief
+	 *
+	 *  @tparam _Ty
+	 *  @tparam _Num
+	 */
+	template <typename _Ty, size_t _Num>
+	struct simd_select: public std::integral_constant<simd_align_t, SIMD_UNALIGNED>
+	{};
+	/*! @brief
+	 *
+	 *  @tparam _Ty
+	 *  @tparam _Num
+	 */
+	template <typename _Ty, size_t _Num>
+		requires(simd_alignment_of_v<_Ty, _Num, SIMD_ALIGNED> != alignof(_Ty))
+	struct simd_select<_Ty, _Num>: public std::integral_constant<simd_align_t, SIMD_ALIGNED>
+	{};
+	/*! @brief
+	 *
+	 *  @tparam _Ty
+	 *  @tparam _Num
+	 */
+	template <typename _Ty, size_t _Num>
+	pf_decl_static pf_decl_constexpr simd_align_t simd_select_v = simd_select<_Ty, _Num>::value;
 }
+
+#endif // !PULSAR_INTRIN_HPP

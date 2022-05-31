@@ -17,13 +17,17 @@
 #include "pulsar/utility.hpp"
 
 // Include: C++
+#include <algorithm>
+#include <atomic>
 #include <memory>
 #include <type_traits>
+
+// Include: C
+#include <cstring>
 
 // Pulsar
 namespace pul
 {
-
 	// Memory
 	namespace memory
 	{
@@ -1081,9 +1085,9 @@ namespace pul
 				};
 				as_byte = this->buf_.begin();
 				as_byte += padding_of(as_addr + sizeof(__node_t), this->elemalign_);
-				iterator_sequence b(as_node, this->elemsize_);
+				iterator b(as_node, this->elemsize_);
 				as_byte += this->elemsize_ * this->elemcount_;
-				iterator_sequence e(as_node, this->elemsize_);
+				iterator e(as_node, this->elemsize_);
 				this->list_.insert_tail_bulk(b, e);
 			}
 
@@ -1473,7 +1477,7 @@ pf_hint_nodiscard pf_decl_inline void *operator new[](
 template <typename _Allocator>
 pf_decl_inline void operator delete(
 		void *__ptr,
-		_Allocator &__all)pf_attr_noexcept
+		_Allocator &__all) pf_attr_noexcept
 {
 	__all.deallocate(__ptr);
 }

@@ -33,14 +33,14 @@ namespace pul
 		pf_hint_nodiscard pf_decl_constexpr uint32_t __virtual_access_to_win_cast(
 				uint32_t __access) pf_attr_noexcept
 		{
-			bool bexec	 = __access & VIRTUAL_ACC_EXECUTE_BIT == VIRTUAL_ACC_EXECUTE_BIT;
-			bool bread	 = __access & VIRTUAL_ACC_READ_BIT == VIRTUAL_ACC_READ_BIT;
-			bool bwrite	 = __access & VIRTUAL_ACC_WRITE_BIT == VIRTUAL_ACC_WRITE_BIT;
+			bool bexec	 = (__access & VIRTUAL_ACC_EXECUTE_BIT) == VIRTUAL_ACC_EXECUTE_BIT;
+			bool bread	 = (__access & VIRTUAL_ACC_READ_BIT) == VIRTUAL_ACC_READ_BIT;
+			bool bwrite	 = (__access & VIRTUAL_ACC_WRITE_BIT) == VIRTUAL_ACC_WRITE_BIT;
 			// Additionnal
 			uint32_t val = 0;
-			if (__access & VIRTUAL_ACC_GUARD_BIT == VIRTUAL_ACC_GUARD_BIT)
+			if ((__access & VIRTUAL_ACC_GUARD_BIT) == VIRTUAL_ACC_GUARD_BIT)
 				val |= PAGE_GUARD;
-			if (__access & VIRTUAL_ACC_NOCACHE_BIT == VIRTUAL_ACC_NOCACHE_BIT)
+			if ((__access & VIRTUAL_ACC_NOCACHE_BIT) == VIRTUAL_ACC_NOCACHE_BIT)
 				val |= PAGE_NOCACHE;
 			// Access
 			if (bexec)
@@ -108,9 +108,9 @@ namespace pul
 					break;
 			};
 			// Additionnal
-			if (__access & PAGE_GUARD == PAGE_GUARD)
+			if ((__access & PAGE_GUARD) == PAGE_GUARD)
 				a |= VIRTUAL_ACC_GUARD_BIT;
-			if (__access & PAGE_NOCACHE == PAGE_NOCACHE)
+			if ((__access & PAGE_NOCACHE) == PAGE_NOCACHE)
 				a |= VIRTUAL_ACC_NOCACHE_BIT;
 			return a;
 		}

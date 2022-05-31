@@ -13,7 +13,7 @@
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
-#include "pulsar/utility.hpp"
+#include "pulsar/utility/utility.hpp"
 
 // Include: C++
 #include <atomic>

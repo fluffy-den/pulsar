@@ -286,8 +286,12 @@ namespace pul
 	class device_mouse
 	{};
 
-	/// DEVICES: Headphones
-	class device_headphones
+	/// DEVICES: Phones
+	class device_audio_out
+	{};
+
+	/// DEVICES: Microphone
+	class device_audio_in
 	{};
 
 	/// DEVICES: Controller
