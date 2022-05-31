@@ -56,10 +56,17 @@ namespace pul
 			std::uniform_int_distribution<int32_t> r(
 					std::numeric_limits<int32_t>::min(),
 					std::numeric_limits<int32_t>::max());
-			i32mat2x2_t mat = {
-				{{ r(gen), r(gen) },
-					{ r(gen), r(gen) }}
+			i32mat2x3u_t mat = {
+				{{ r(gen), r(gen), r(gen) },
+					{ r(gen), r(gen), r(gen) }}
 			};
+			auto trp = transpose(mat);
+			REQUIRE(mat[0][0] == trp[0][0]);
+			REQUIRE(mat[0][1] == trp[1][0]);
+			REQUIRE(mat[0][2] == trp[2][0]);
+			REQUIRE(mat[1][0] == trp[0][1]);
+			REQUIRE(mat[1][1] == trp[1][1]);
+			REQUIRE(mat[1][2] == trp[2][1]);
 		}
 	}
 }

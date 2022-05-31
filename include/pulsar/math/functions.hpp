@@ -73,12 +73,12 @@ namespace pul
 		pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _ColNum, _RowNum, _SIMD> transpose(
 				matrix<_Ty, _RowNum, _ColNum, _SIMD> const &__m) pf_attr_noexcept
 		{
-			matrix<_Ty, _RowNum, _ColNum, _SIMD> tmp;
-			for (size_t i = 0; i < _RowNum; ++i)
+			matrix<_Ty, _ColNum, _RowNum, _SIMD> tmp;
+			for (size_t i = 0; i < _ColNum; ++i)
 			{
 				for (size_t j = 0; j < _RowNum; ++j)
 				{
-					tmp[i][j] = __m[i][j];
+					tmp[i][j] = __m[j][i];
 				}
 			}
 			return tmp;
