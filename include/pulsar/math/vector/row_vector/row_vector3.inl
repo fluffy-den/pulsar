@@ -18,6 +18,10 @@
 #include <array>
 #include <type_traits>
 
+// Anonymous structs -> Disable warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 // Pulsar
 namespace pul
 {
@@ -325,5 +329,8 @@ namespace pul
 		using f64rvec3u_t = row_vector<float64_t, 3, SIMD_UNALIGNED>;
 	}
 }
+
+// Anonymous structs
+#pragma GCC diagnostic pop
 
 #endif // !PULSAR_MATH_ROW_VECTOR3_INL

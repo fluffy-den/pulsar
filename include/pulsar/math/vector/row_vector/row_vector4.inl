@@ -18,6 +18,10 @@
 #include <array>
 #include <type_traits>
 
+// Anonymous structs -> Disable warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 // Pulsar
 namespace pul
 {
@@ -99,7 +103,7 @@ namespace pul
 
 			/// Operator+=
 			template <simd_align_t _RSIMD>
-			pf_hint_nodiscard pf_decl_constexpr row_vector<_Ty, 4, _SIMD> &operator+=(
+			pf_decl_constexpr row_vector<_Ty, 4, _SIMD> &operator+=(
 					row_vector<_Ty, 4, _RSIMD> const &__r) pf_attr_noexcept
 			{
 				this->x += __r.x;
@@ -363,5 +367,8 @@ namespace pul
 		using f64rvec4u_t = row_vector<float64_t, 4, SIMD_UNALIGNED>;
 	}
 }
+
+// Anonymous structs
+#pragma GCC diagnostic pop
 
 #endif // !PULSAR_MATH_ROW_VECTOR4_INL

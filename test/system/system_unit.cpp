@@ -21,6 +21,7 @@ namespace pul
 	TEST_CASE("CPUInfoTest")
 	{
 		cpu_info_t info = cpu_info();
+		std::ignore			= info;
 	}
 	TEST_CASE("CPUNameTest")
 	{
