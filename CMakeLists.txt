@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.18)
 #
 find_package(Git)
 if(NOT GIT_FOUND)
-  message(FATAL_ERROR "Need git installed on this machine!")
+  message(FATAL_ERROR "Need git installed on this computer!")
 endif()
 
 #
@@ -21,6 +21,16 @@ string(REGEX REPLACE "([0-9]+).*" "\\1" VERSION_MAJOR "${VERSION_STRING}")
 string(REGEX REPLACE "[0-9]+\\.([0-9]+).*" "\\1" VERSION_MINOR "${VERSION_STRING}")
 string(REGEX REPLACE "[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" VERSION_PATCH "${VERSION_STRING}")
 set(VERSION_STRING_SHORT "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
+
+#
+# Include Guard
+#
+if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
+  message(
+    FATAL_ERROR
+      "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there."
+  )
+endif()
 
 #
 # Project
@@ -138,37 +148,24 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
 #
 # Library
 #
-add_library(${PROJECT_NAME} SHARED ${SOURCES})
+add_library(${PROJECT_NAME} SHARED ${HEADERS} ${SOURCES})
 target_compile_definitions(${PROJECT_NAME} PRIVATE PULSAR_CONSTRUCT=1)
 set_target_properties(
   ${PROJECT_NAME}
   PROPERTIES VERSION ${PROJECT_VERSION}
              LINKER_LANGUAGE CXX
-             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/bin/${OUTPUT_SYSTEM}/
-             ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/bin/${OUTPUT_SYSTEM}/
-             LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/bin/${OUTPUT_SYSTEM}/
+             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${OUTPUT_SYSTEM}/
+             ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${OUTPUT_SYSTEM}/
+             LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${OUTPUT_SYSTEM}/
              OUTPUT_NAME ${PROJECT_NAME}${OUTPUT_SUFFIX}
              PREFIX ""
 )
 target_link_libraries(${PROJECT_NAME} PRIVATE dbghelp)
 target_include_directories(
   ${PROJECT_NAME}
-  PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include>
+  PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include> 
+         $<INSTALL_INTERFACE:include/${PROJECT_NAME}>
   PRIVATE src
-)
-
-#
-# CPM Package
-#
-CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.9.0")
-PackageProject(
-  NAME ${PROJECT_NAME}
-  VERSION ${PROJECT_VERSION}
-  BINARY_DIR ${PROJECT_BINARY_DIR}
-  INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include"
-  INCLUDE_DESTINATION "include/pulsar"
-  VERSION_HEADER "${VERSION_HEADER_PATH}"
-  COMPATIBILITY SameMajorVersion
 )
 
 #
@@ -203,8 +200,23 @@ if(BUILD_TESTING)
     )
     set_target_properties(
       ${BINARY_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
-                                ${CMAKE_CURRENT_LIST_DIR}/bin/${OUTPUT_SYSTEM}/
+                                ${PROJECT_BINARY_DIR}/test/${OUTPUT_SYSTEM}/
     )
     add_test(NAME ${BINARY_NAME} COMMAND ${BINARY_NAME})
   endforeach()
 endif()
+
+#
+# CPM Package Project
+#
+CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.9.0")
+PackageProject(
+  NAME ${PROJECT_NAME}
+  VERSION ${PROJECT_VERSION}
+  BINARY_DIR ${PROJECT_BINARY_DIR}
+  INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include"
+  INCLUDE_DESTINATION "include/pulsar"
+  VERSION_HEADER "include/pulsar/pulsar_version.hpp"
+  COMPATIBILITY SameMajorVersion
+  DEPENDENCIES "dbghelp"
+)

@@ -9,6 +9,7 @@
  */
 
 // Include: Pulsar
+#include "pulsar/mathematics.hpp"
 #include "pulsar/pulsar.hpp"
 
 // Include: C++
@@ -274,31 +275,4 @@ namespace pul
 			size_t __size,
 			size_t __access);
 
-	/// DEVICES: Monitor
-	class device_monitor
-	{};
-
-	/// DEVICES: Keyboard
-	class device_keyboard
-	{};
-
-	/// DEVICES: Mouse
-	class device_mouse
-	{};
-
-	/// DEVICES: Phones
-	class device_audio_out
-	{};
-
-	/// DEVICES: Microphone
-	class device_audio_in
-	{};
-
-	/// DEVICES: Controller
-	class device_controller
-	{};
-
-	/// SURFACE: System
-	class surface
-	{};
 }
