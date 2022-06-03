@@ -18,5 +18,6 @@
 #include "pulsar/utility/iterator.hpp"
 #include "pulsar/utility/linked_list.hpp"
 #include "pulsar/utility/string.hpp"
+#include "pulsar/utility/string_win.hpp"
 
 #endif // !PULSAR_UTILITY_HPP

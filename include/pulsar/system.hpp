@@ -1,6 +1,6 @@
 /*! @file   system.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief  Introduces the operating functions of the operating system.
+ *  @brief  Introduces functions allowing to manage the system.
  *  @date   15-05-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software

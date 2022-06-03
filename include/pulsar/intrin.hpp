@@ -1,6 +1,6 @@
 /*! @file   intrin.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief	Defines the intrinsic functions with its utilities.
  *  @date   17-05-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
@@ -34,11 +34,11 @@ namespace pul
 	template <typename _Ty, size_t _Num, simd_align_t _SIMD = SIMD_ALIGNED>
 	class simd_alignment_of;
 	/// SIMD: Alignment
-	/*! @brief
+	/*! @brief Determines the required alignment of @a _Num of @a _Ty to use SIMD.
 	 *
-	 *  @tparam _Ty
-	 *  @tparam _Num
-	 *  @tparam _SIMD
+	 *  @tparam _Ty		Type to be SIMD aligned.
+	 *  @tparam _Num	Number to be SIMD aligned.
+	 *  @tparam _SIMD	(optional) Activate SIMD alignment. Default to SIMD_ALIGNED.
 	 */
 	template <typename _Ty, size_t _Num, simd_align_t _SIMD>
 		requires(_Num > 1 && _SIMD == SIMD_ALIGNED)
@@ -56,11 +56,6 @@ namespace pul
 	public:
 		pf_decl_static pf_decl_constexpr size_t value = __cal_align();
 	};
-	/*! @brief
-	 *
-	 *  @tparam _Ty
-	 *  @tparam _Num
-	 */
 	template <typename _Ty, size_t _Num, simd_align_t _SIMD>
 		requires(_Num == 1 || _SIMD == SIMD_UNALIGNED)
 	class simd_alignment_of<_Ty, _Num, _SIMD>
@@ -68,16 +63,15 @@ namespace pul
 	public:
 		pf_decl_static pf_decl_constexpr size_t value = alignof(_Ty);
 	};
-	/*! @brief
-	 *
-	 *  @tparam _Ty
-	 *  @tparam _Num
-	 *  @tparam _SIMD
-	 */
 	template <typename _Ty, size_t _Num, simd_align_t _SIMD>
 	pf_decl_static pf_decl_constexpr size_t simd_alignment_of_v = simd_alignment_of<_Ty, _Num, _SIMD>::value;
 
 	/// SIMD: Alignable
+	/*! @brief Checks if @a _Ty of number @a _Num is SIMD alignable.
+	 *
+	 *  @tparam _Ty  Type to be SIMD aligned.
+	 *  @tparam _Num Number to be SIMD aligned.
+	 */
 	template <typename _Ty, size_t _Num>
 	struct is_simd_alignable: public std::integral_constant<bool, (alignof(_Ty) * _Num & (alignof(_Ty) * _Num - 1)) == 0 && (alignof(_Ty) * _Num >= 8)>
 	{};
@@ -85,28 +79,18 @@ namespace pul
 	pf_decl_static pf_decl_constexpr bool is_simd_alignable_v = is_simd_alignable<_Ty, _Num>::value;
 
 	/// SIMD: Select
-	/*! @brief
+	/*! @brief Select best alignment (SIMD or not) for @a _Ty and @a _Num.
 	 *
-	 *  @tparam _Ty
-	 *  @tparam _Num
+	 *  @tparam _Ty  Type to be SIMD aligned.
+	 *  @tparam _Num Number to be SIMD aligned.
 	 */
 	template <typename _Ty, size_t _Num>
 	struct simd_select: public std::integral_constant<simd_align_t, SIMD_UNALIGNED>
 	{};
-	/*! @brief
-	 *
-	 *  @tparam _Ty
-	 *  @tparam _Num
-	 */
 	template <typename _Ty, size_t _Num>
 		requires(simd_alignment_of_v<_Ty, _Num, SIMD_ALIGNED> != alignof(_Ty))
 	struct simd_select<_Ty, _Num>: public std::integral_constant<simd_align_t, SIMD_ALIGNED>
 	{};
-	/*! @brief
-	 *
-	 *  @tparam _Ty
-	 *  @tparam _Num
-	 */
 	template <typename _Ty, size_t _Num>
 	pf_decl_static pf_decl_constexpr simd_align_t simd_select_v = simd_select<_Ty, _Num>::value;
 }

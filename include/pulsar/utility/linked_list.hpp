@@ -1,6 +1,6 @@
 /*! @file   linked_list.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief  Adds the linked lists.
  *  @date   24-05-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software

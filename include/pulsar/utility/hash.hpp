@@ -1,7 +1,7 @@
-/*! @file hash.hpp
+/*! @file   hash.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
- *  @date 24-05-2022
+ *  @brief  Adds the hashing functions.
+ *  @date   24-05-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
  *

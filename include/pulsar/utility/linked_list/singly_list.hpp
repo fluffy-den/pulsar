@@ -1,6 +1,6 @@
 /*! @file   singly_list.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief	Defines singly linked lists.
  *  @date   24-05-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
@@ -1913,7 +1913,7 @@ namespace pul
 			while (!this->head_.compare_exchange_weak(
 					h,
 					__n,
-					std::memory_order::consume,
+					std::memory_order::acquire,
 					std::memory_order::release))
 				;
 			__n->next_ = h;
@@ -1922,7 +1922,7 @@ namespace pul
 			if (!__n->next_) this->head_.compare_exchange_strong(
 					t,
 					__n,
-					std::memory_order::consume,
+					std::memory_order::acquire,
 					std::memory_order::release);
 			return __n;
 		}
@@ -1959,7 +1959,7 @@ namespace pul
 			while (!this->head_.compare_exchange_weak(
 					h,
 					e,
-					std::memory_order::consume,
+					std::memory_order::acquire,
 					std::memory_order::release))
 				;
 			// Tail
@@ -1969,7 +1969,7 @@ namespace pul
 				this->tail_.compare_exchange_strong(
 						t,
 						e,
-						std::memory_order::consume,
+						std::memory_order::acquire,
 						std::memory_order::release);
 			}
 			else
@@ -1996,13 +1996,13 @@ namespace pul
 			} while (!this->head_.compare_exchange_weak(
 					h,
 					h->next_,
-					std::memory_order::consume,
+					std::memory_order::acquire,
 					std::memory_order::release));
 			// Tail
 			if (!h->next_) this->tail_.compare_exchange_strong(
 					h,
 					nullptr,
-					std::memory_order::consume,
+					std::memory_order::acquire,
 					std::memory_order::release);
 			if (h) h->__unlink();
 			return h;
@@ -2042,13 +2042,13 @@ namespace pul
 			} while (!this->head_.compare_exchange_weak(
 					h,
 					e->next_,
-					std::memory_order::consume,
+					std::memory_order::acquire,
 					std::memory_order::release));
 			// Tail
 			this->tail_.compare_exchange_strong(
 					e->next_,
 					nullptr,
-					std::memory_order::consume,
+					std::memory_order::acquire,
 					std::memory_order::release);
 			// Copy
 			while (__beg != __end && b != e)

@@ -1,6 +1,6 @@
 /*! @file	 	string.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief	Defines utility functions for string manipulation.
  *  @date 	23-05-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
@@ -91,7 +91,7 @@ namespace pul
 	 *
 	 *  @return Formatted string.
 	 */
-	pf_decl_inline std::string strfmt(
+	pf_hint_nodiscard pf_decl_inline std::string strfmt(
 			std::string_view __format,
 			...)
 	{
@@ -147,7 +147,7 @@ namespace pul
 	 *  @param[in] __tm  		Calendar time.
 	 *  @return Character string containing a formatted time.
 	 */
-	pf_decl_inline std::string strfmt(
+	pf_hint_nodiscard pf_decl_inline std::string strfmt(
 			std::string_view __format,
 			const std::tm &__tm)
 	{

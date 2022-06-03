@@ -1,6 +1,6 @@
 /*! @file   fun_ptr.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief	Adds function pointer utility.
  *  @date   23-05-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software

@@ -1,6 +1,6 @@
 /*! @file   mathematics.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief  Adds mathematical objects and functions.
  *  @date   24-05-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
