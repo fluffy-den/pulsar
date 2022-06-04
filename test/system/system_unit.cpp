@@ -18,32 +18,23 @@
 namespace pul
 {
 	/// CPU: Test Unit
-	TEST_CASE("CPUInfoTest")
+	TEST_CASE("SystemCPUInfoTest")
 	{
 		cpu_info_t info = cpu_info();
-		std::ignore			= info;
-	}
-	TEST_CASE("CPUNameTest")
-	{
+		REQUIRE(info.nPhysical > 0);
 		std::string name = cpu_name();
 		REQUIRE(!name.empty());
-	}
-	TEST_CASE("CPUVendorTest")
-	{
 		std::string vendor = cpu_vendor();
 		REQUIRE(!vendor.empty());
 	}
 
 	/// RAM: Test Unit
-	TEST_CASE("MemoryRAMProcessInfoTest")
+	TEST_CASE("SystemMemoryRAMInfoTest")
 	{
-		auto info		= ram_process_info();
-		std::ignore = info;
-	}
-	TEST_CASE("MemoryRAMSystemInfoTest")
-	{
-		auto info		= ram_system_info();
-		std::ignore = info;
+		auto pi = ram_process_info();
+		REQUIRE(pi.sPhysUsage > 0);
+		auto si = ram_system_info();
+		REQUIRE(si.sPhysTotal > 0);
 	}
 
 	/// VIRTUAL: Test Unit
@@ -59,19 +50,20 @@ namespace pul
 			void *as_void;
 			int32_t *as_int;
 		};
-		void *a = virtual_alloc(b, sysinfo.pageSize, VIRTUAL_ACC_WRITE_BIT);
-		REQUIRE(a == b);
-		std::random_device rd;
-		std::mt19937 gen(rd());
-		std::uniform_int_distribution<int32_t> r(
-				std::numeric_limits<int32_t>::min(),
-				std::numeric_limits<int32_t>::max());
-		int32_t n = r(gen);
-		std::memset(a, n, sysinfo.allocationGranularity);
-		uint32_t f = virtual_access(a, sysinfo.pageSize, VIRTUAL_ACC_WRITE_BIT | VIRTUAL_ACC_READ_BIT);
-		REQUIRE(f == VIRTUAL_ACC_WRITE_BIT);
-		REQUIRE(*as_int == n);
-		virtual_free(a, sysinfo.pageSize);
+		const uint32_t access = VIRTUAL_ACC_WRITE_BIT
+													| VIRTUAL_ACC_READ_BIT
+													| VIRTUAL_ACC_EXECUTE_BIT;
+		as_void = virtual_alloc(
+				b,
+				sysinfo.pageSize,
+				access);
+		REQUIRE(as_void == b);
+		uint32_t f = virtual_access(
+				as_void,
+				sysinfo.pageSize,
+				VIRTUAL_ACC_WRITE_BIT | VIRTUAL_ACC_READ_BIT);
+		REQUIRE(f == access);
+		virtual_free(as_void, sysinfo.pageSize);
 		virtual_release(b);
 	}
 }

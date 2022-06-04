@@ -70,7 +70,7 @@ namespace pul
 	}
 
 	/// CPU: Info
-	pulsar_api cpu_info_t cpu_info()
+	pf_hint_nodiscard pulsar_api cpu_info_t cpu_info()
 	{
 		DWORD len;
 		cpu_info_t info;

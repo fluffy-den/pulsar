@@ -8,6 +8,9 @@
  *  @since 0.1.1
  */
 
+#ifndef PULSAR_SYSTEM_HPP
+#define PULSAR_SYSTEM_HPP 1
+
 // Include: Pulsar
 #include "pulsar/mathematics.hpp"
 #include "pulsar/pulsar.hpp"
@@ -36,9 +39,9 @@ namespace pul
 		size_t lL3;
 	};
 
-	/*! @brief
+	/*! @brief Imports a structure containing the characteristics of the CPU.
 	 *
-	 *  @return pulsar_api
+	 *  @return cpu_info_t containing CPU information.
 	 */
 	pf_hint_nodiscard pulsar_api cpu_info_t cpu_info();
 
@@ -294,3 +297,5 @@ namespace pul
 	 */
 	pulsar_api pf_hint_nodiscard system_info_t system_info() pf_attr_noexcept;
 }
+
+#endif // !PULSAR_SYSTEM_HPP

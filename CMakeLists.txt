@@ -154,9 +154,9 @@ set_target_properties(
   ${PROJECT_NAME}
   PROPERTIES VERSION ${PROJECT_VERSION}
              LINKER_LANGUAGE CXX
-             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${OUTPUT_SYSTEM}/
-             ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${OUTPUT_SYSTEM}/
-             LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin/${OUTPUT_SYSTEM}/
+             RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${OUTPUT_SYSTEM}/
+             ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${OUTPUT_SYSTEM}/
+             LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin/${OUTPUT_SYSTEM}/
              OUTPUT_NAME ${PROJECT_NAME}${OUTPUT_SUFFIX}
              PREFIX ""
 )
@@ -176,7 +176,7 @@ if(BUILD_TESTING)
   CPMAddPackage(
     NAME catch2
     GITHUB_REPOSITORY catchorg/Catch2
-    GIT_TAG v3.0.0-preview5
+    GIT_TAG v3.0.1
     OPTIONS "CATCH_BUILD_TESTING OFF" "gtest_force_shared_crt"
   )
 
@@ -200,10 +200,18 @@ if(BUILD_TESTING)
     )
     set_target_properties(
       ${BINARY_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
-                                ${PROJECT_BINARY_DIR}/test/${OUTPUT_SYSTEM}/
+                                ${CMAKE_BINARY_DIR}/test/${OUTPUT_SYSTEM}/
     )
     add_test(NAME ${BINARY_NAME} COMMAND ${BINARY_NAME})
   endforeach()
+
+  # Copy library to test build directory
+  add_custom_command(
+    TARGET ${PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_CURRENT_SOURCE_DIR}/bin/${OUTPUT_SYSTEM}/${PROJECT_NAME}${OUTPUT_SUFFIX}.dll
+    ${CMAKE_BINARY_DIR}/test/${OUTPUT_SYSTEM}/${PROJECT_NAME}${OUTPUT_SUFFIX}.dll
+  )
 endif()
 
 #
