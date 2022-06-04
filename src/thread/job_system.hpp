@@ -8,8 +8,8 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_JOB_SYSTEM_HPP
-#define PULSAR_JOB_SYSTEM_HPP 1
+#ifndef SRC_PULSAR_JOB_SYSTEM_HPP
+#define SRC_PULSAR_JOB_SYSTEM_HPP 1
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
@@ -89,4 +89,4 @@ namespace pulsar
 	}
 }
 
-#endif // PULSAR_JOB_SYSTEM_HPP
+#endif // SRC_PULSAR_JOB_SYSTEM_HPP

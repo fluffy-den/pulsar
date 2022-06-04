@@ -241,10 +241,10 @@ namespace pul
 	 *  @param[in] __access Memory access flags to be granted.
 	 *  @return Base address of the page file.
 	 */
-	pulsar_api void virtual_alloc(
+	pulsar_api void *virtual_alloc(
 			void *__where,
 			size_t __size,
-			size_t __access);
+			uint32_t __access);
 	/*! @brief Decommit memory from a reserved page file at address @a __where of size @a __size in
 	 *				 bytes.
 	 *
@@ -270,9 +270,27 @@ namespace pul
 	 *  @param[in] __access New access flags.
 	 *  @return Old access flags.
 	 */
-	pulsar_api pf_hint_nodiscard size_t virtual_access(
+	pulsar_api pf_hint_nodiscard uint32_t virtual_access(
 			void *__where,
 			size_t __size,
-			size_t __access);
+			uint32_t __access);
 
+
+	/// SYSTEM: Info
+	/*! @brief Structure containing the essential system information.
+	 */
+	struct system_info_t
+	{
+		size_t pageSize;
+		size_t numProcessors;
+		size_t allocationGranularity;
+		void *minAllocationAddress;
+		void *maxAllocationAddress;
+	};
+
+	/*! @brief Returns essential system information.
+	 *
+	 *  @return Essential system information.
+	 */
+	pulsar_api pf_hint_nodiscard system_info_t system_info() pf_attr_noexcept;
 }

@@ -573,7 +573,7 @@ namespace pul
 					"",
 					debug_flags::default_flags | debug_flags::dump_with_handle_data));
 	}
-	pulsar_api pf_hint_nodiscard size_t virtual_access(
+	pulsar_api pf_hint_nodiscard uint32_t virtual_access(
 			void *__where,
 			size_t __size,
 			uint32_t __access)
@@ -591,6 +591,20 @@ namespace pul
 					"",
 					debug_flags::default_flags | debug_flags::dump_with_handle_data));
 		return __virtual_access_to_pul_cast(a);
+	}
+
+	/// SYSTEM: Info
+	pulsar_api pf_hint_nodiscard system_info_t system_info() pf_attr_noexcept
+	{
+		SYSTEM_INFO sysinfo;
+		GetSystemInfo(&sysinfo);
+		return {
+			static_cast<size_t>(sysinfo.dwPageSize),
+			static_cast<size_t>(sysinfo.dwNumberOfProcessors),
+			static_cast<size_t>(sysinfo.dwAllocationGranularity),
+			sysinfo.lpMinimumApplicationAddress,
+			sysinfo.lpMaximumApplicationAddress
+		};
 	}
 }
 

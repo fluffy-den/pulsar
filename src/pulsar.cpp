@@ -1,6 +1,6 @@
-/*! @file   dllmain_win.cpp
+/*! @file   pulsar.cpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief	Pulsar entry file.
  *  @date   09-02-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software

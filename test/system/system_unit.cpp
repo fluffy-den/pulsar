@@ -45,4 +45,33 @@ namespace pul
 		auto info		= ram_system_info();
 		std::ignore = info;
 	}
+
+	/// VIRTUAL: Test Unit
+	TEST_CASE("VirtualMemoryTest")
+	{
+		system_info_t sysinfo = system_info();
+		REQUIRE(sysinfo.allocationGranularity >= 65536);
+		REQUIRE(sysinfo.pageSize >= 4096);
+		void *b = virtual_reserve(sysinfo.allocationGranularity);
+		REQUIRE(b != nullptr);
+		union
+		{
+			void *as_void;
+			int32_t *as_int;
+		};
+		void *a = virtual_alloc(b, sysinfo.pageSize, VIRTUAL_ACC_WRITE_BIT);
+		REQUIRE(a == b);
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_int_distribution<int32_t> r(
+				std::numeric_limits<int32_t>::min(),
+				std::numeric_limits<int32_t>::max());
+		int32_t n = r(gen);
+		std::memset(a, n, sysinfo.allocationGranularity);
+		uint32_t f = virtual_access(a, sysinfo.pageSize, VIRTUAL_ACC_WRITE_BIT | VIRTUAL_ACC_READ_BIT);
+		REQUIRE(f == VIRTUAL_ACC_WRITE_BIT);
+		REQUIRE(*as_int == n);
+		virtual_free(a, sysinfo.pageSize);
+		virtual_release(b);
+	}
 }
