@@ -45,7 +45,7 @@ namespace pul
 				sn,
 				__sv.data(),
 				sn);
-		if (sn > 0 && err == std::numeric_limits<size_t>::max())
+		if (sn > 0 && err == std::numeric_limits<errno_t>::max())
 			throw(exception(std::generic_category(), err));
 		return s;
 	}
@@ -65,7 +65,7 @@ namespace pul
 				sn,
 				__sv.data(),
 				sn);
-		if (sn > 0 && err == std::numeric_limits<size_t>::max())
+		if (sn > 0 && err == std::numeric_limits<errno_t>::max())
 			throw(exception(std::generic_category(), err));
 		return s;
 	}
