@@ -208,9 +208,9 @@ if(BUILD_TESTING)
   # Copy library to test build directory
   add_custom_command(
     TARGET ${PROJECT_NAME} POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_CURRENT_SOURCE_DIR}/bin/${OUTPUT_SYSTEM}/${PROJECT_NAME}${OUTPUT_SUFFIX}.dll
-    ${CMAKE_BINARY_DIR}/test/${OUTPUT_SYSTEM}/${PROJECT_NAME}${OUTPUT_SUFFIX}.dll
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/bin/${OUTPUT_SYSTEM}/
+    ${CMAKE_BINARY_DIR}/test/${OUTPUT_SYSTEM}/
   )
 endif()
 

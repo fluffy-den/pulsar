@@ -17,6 +17,7 @@
 #include "pulsar/utility/hash.hpp"
 #include "pulsar/utility/iterator.hpp"
 #include "pulsar/utility/linked_list.hpp"
+#include "pulsar/utility/signals.hpp"
 #include "pulsar/utility/string.hpp"
 #include "pulsar/utility/string_win.hpp"
 

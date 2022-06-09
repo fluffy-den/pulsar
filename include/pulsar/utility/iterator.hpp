@@ -187,7 +187,7 @@ namespace pul
 		 *
 		 *  @return Ref-value of encapsulated pointer.
 		 */
-		pf_decl_constexpr _Ty &operator*() const pf_attr_noexcept
+		pf_hint_nodiscard pf_decl_constexpr _Ty &operator*() const pf_attr_noexcept
 		{
 			return *this->ptr_;
 		}
@@ -197,7 +197,7 @@ namespace pul
 		 *
 		 *  @return Encapsulated pointer.
 		 */
-		pf_decl_constexpr _Ty *operator->() const pf_attr_noexcept
+		pf_hint_nodiscard pf_decl_constexpr _Ty *operator->() const pf_attr_noexcept
 		{
 			return this->ptr_;
 		}
@@ -211,7 +211,7 @@ namespace pul
 		 *  @return False otherwise.
 		 */
 		template <typename _OtherTy>
-		pf_decl_constexpr bool operator==(
+		pf_hint_nodiscard pf_decl_constexpr bool operator==(
 				iterator<_OtherTy> const &__r) const pf_attr_noexcept
 		{
 			union
@@ -237,7 +237,7 @@ namespace pul
 		 *  @return std::strong_ordering.
 		 */
 		template <typename _OtherTy>
-		pf_decl_constexpr std::strong_ordering operator<=>(
+		pf_hint_nodiscard pf_decl_constexpr std::strong_ordering operator<=>(
 				iterator<_OtherTy> const &__r) const pf_attr_noexcept
 		{
 			union
@@ -461,7 +461,7 @@ namespace pul
 		 *
 		 *  @return Ref-value of encapsulated pointer.
 		 */
-		pf_decl_constexpr const _Ty &operator*() const pf_attr_noexcept
+		pf_hint_nodiscard pf_decl_constexpr const _Ty &operator*() const pf_attr_noexcept
 		{
 			return *this->ptr_;
 		}
@@ -471,7 +471,7 @@ namespace pul
 		 *
 		 *  @return Encapsulated pointer.
 		 */
-		pf_decl_constexpr const _Ty *operator->() const pf_attr_noexcept
+		pf_hint_nodiscard pf_decl_constexpr const _Ty *operator->() const pf_attr_noexcept
 		{
 			return this->ptr_;
 		}
@@ -484,7 +484,7 @@ namespace pul
 		 *  @return pf_decl_constexpr
 		 */
 		template <typename _OtherTy>
-		pf_decl_constexpr bool operator==(
+		pf_hint_nodiscard pf_decl_constexpr bool operator==(
 				iterator<_OtherTy> const &__r) const pf_attr_noexcept
 		{
 			union
@@ -509,7 +509,7 @@ namespace pul
 		 *  @return False otherwise.
 		 */
 		template <typename _OtherTy>
-		pf_decl_constexpr bool operator==(
+		pf_hint_nodiscard pf_decl_constexpr bool operator==(
 				const _Ty *__r) const pf_attr_noexcept
 		{
 			union
@@ -535,7 +535,7 @@ namespace pul
 		 *  @return std::strong_ordering.
 		 */
 		template <typename _OtherTy>
-		pf_decl_constexpr std::strong_ordering operator<=>(
+		pf_hint_nodiscard pf_decl_constexpr std::strong_ordering operator<=>(
 				iterator<const _Ty> const &__r) const pf_attr_noexcept
 		{
 			union
@@ -598,7 +598,7 @@ namespace pul
 	 *  @return __it + __i as copy.
 	 */
 	template <typename _Ty>
-	pf_decl_constexpr iterator<_Ty> operator+(
+	pf_hint_nodiscard pf_decl_constexpr iterator<_Ty> operator+(
 			iterator<_Ty> __it,
 			diff_t __i) pf_attr_noexcept
 	{
@@ -615,7 +615,7 @@ namespace pul
 	 *  @return __it - __i as copy.
 	 */
 	template <typename _Ty>
-	pf_decl_constexpr iterator<_Ty> operator-(
+	pf_hint_nodiscard pf_decl_constexpr iterator<_Ty> operator-(
 			iterator<_Ty> __it,
 			diff_t __i) pf_attr_noexcept
 	{

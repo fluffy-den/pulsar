@@ -37,7 +37,7 @@ namespace pul
 	pf_hint_nodiscard pf_decl_inline std::string strUNItoANSI(
 			std::wstring_view __sv)
 	{
-		size_t sn = __sv.size();
+		size_t sn = __sv.length();
 		std::string s(sn, '\0');
 		errno_t err = wcstombs_s(
 				&sn,
@@ -45,7 +45,7 @@ namespace pul
 				sn,
 				__sv.data(),
 				sn);
-		if (!err)
+		if (sn > 0 && err == std::numeric_limits<size_t>::max())
 			throw(exception(std::generic_category(), err));
 		return s;
 	}
@@ -57,7 +57,7 @@ namespace pul
 	pf_hint_nodiscard pf_decl_inline std::wstring strANSItoUNI(
 			std::string_view __sv)
 	{
-		size_t sn = __sv.size();
+		size_t sn = __sv.length();
 		std::wstring s(sn, L'\0');
 		errno_t err = mbstowcs_s(
 				&sn,
@@ -65,7 +65,7 @@ namespace pul
 				sn,
 				__sv.data(),
 				sn);
-		if (!err)
+		if (sn > 0 && err == std::numeric_limits<size_t>::max())
 			throw(exception(std::generic_category(), err));
 		return s;
 	}
