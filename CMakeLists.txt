@@ -223,7 +223,7 @@ PackageProject(
   VERSION ${PROJECT_VERSION}
   BINARY_DIR ${PROJECT_BINARY_DIR}
   INCLUDE_DIR "${PROJECT_SOURCE_DIR}/include"
-  INCLUDE_DESTINATION "include/pulsar"
+  INCLUDE_DESTINATION "include/${CMAKE_PROJECT_NAME}"
   VERSION_HEADER "include/pulsar/pulsar_version.hpp"
   COMPATIBILITY SameMajorVersion
   DEPENDENCIES "dbghelp"
