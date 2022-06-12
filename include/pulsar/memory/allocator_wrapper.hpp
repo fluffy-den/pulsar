@@ -20,14 +20,31 @@ namespace pul
 	// Memory
 	namespace memory
 	{
-		/// MEMORY: Allocator Wrapper
+		/// MEMORY: Allocator -> Concept
+		template <typename _Allocator>
+		concept allocator_concept = requires(
+				_Allocator _all,
+				size_t __size,
+				align_val_t __align,
+				size_t __offset,
+				void *__ptr)
+		{
+			{
+				_all.allocate(__size, __align, __offset)
+				} -> std::same_as<void *>;
+			{
+				_all.deallocate(__ptr)
+				} -> std::same_as<void>;
+		};
+
+		/// MEMORY: Allocator -> Wrapper
 		/*! @brief Type of allocator acting as an interface to the standard library. Takes as parameter
 		 *				 another allocator.
 		 *
 		 *  @tparam _Ty				 Type of object to allocate.
 		 *  @tparam _Allocator Type of allocator.
 		 */
-		template <typename _Ty, typename _Allocator>
+		template <typename _Ty, allocator_concept _Allocator>
 		class allocator_wrapper
 		{
 		public:
@@ -134,6 +151,7 @@ namespace pul
 		private:
 			_Allocator all_;
 		};
+
 	}
 }
 

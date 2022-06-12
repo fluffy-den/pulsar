@@ -100,7 +100,6 @@ namespace pul
 
 			return padding_of(as_addr + __offset, __align) == 0;
 		}
-
 	}
 }
 
@@ -113,7 +112,6 @@ namespace pul
 #include "pulsar/memory/allocator/allocator_pool.hpp"
 #include "pulsar/memory/allocator/allocator_ring.hpp"
 #include "pulsar/memory/allocator/allocator_stack.hpp"
-
 
 // Include: Pulsar -> Memory CDS Allocators
 #include "pulsar/memory/cds_allocator/allocator_cds_linear.hpp"
@@ -131,7 +129,7 @@ namespace pul
  *  @param[in] __all  Allocator instance.
  *  @return @ref __all.allocate(__size).
  */
-template <typename _Allocator>
+template <pul::memory::allocator_concept _Allocator>
 pf_hint_nodiscard pf_decl_inline void *operator new(
 		pul::size_t __size,
 		_Allocator &__all) pf_attr_noexcept
@@ -146,7 +144,7 @@ pf_hint_nodiscard pf_decl_inline void *operator new(
  *  @param[in] __all   Allocator instance.
  *  @return @ref __all.allocate(__size, __align).
  */
-template <typename _Allocator>
+template <pul::memory::allocator_concept _Allocator>
 pf_hint_nodiscard pf_decl_inline void *operator new(
 		pul::size_t __size,
 		pul::align_val_t __align,
@@ -163,7 +161,7 @@ pf_hint_nodiscard pf_decl_inline void *operator new(
  *  @param[in] __all    Allocator instance.
  *  @return @ref __all.allocate(__size, __align, __offset).
  */
-template <typename _Allocator>
+template <pul::memory::allocator_concept _Allocator>
 pf_hint_nodiscard pf_decl_inline void *operator new(
 		pul::size_t __size,
 		pul::align_val_t __align,
@@ -179,7 +177,7 @@ pf_hint_nodiscard pf_decl_inline void *operator new(
  *  @param[in] __all  Allocator instance.
  *  @return @ref __all.allocate(__size).
  */
-template <typename _Allocator>
+template <pul::memory::allocator_concept _Allocator>
 pf_hint_nodiscard pf_decl_inline void *operator new[](
 		pul::size_t __size,
 		_Allocator &__all) pf_attr_noexcept
@@ -194,7 +192,7 @@ pf_hint_nodiscard pf_decl_inline void *operator new[](
  *  @param[in] __all   Allocator instance.
  *  @return @ref __all.allocate(__size, __align).
  */
-template <typename _Allocator>
+template <pul::memory::allocator_concept _Allocator>
 pf_hint_nodiscard pf_decl_inline void *operator new[](
 		pul::size_t __size,
 		pul::align_val_t __align,
@@ -211,7 +209,7 @@ pf_hint_nodiscard pf_decl_inline void *operator new[](
  *  @param[in] __all    Allocator instance.
  *  @return @ref __all.allocate(__size, __align, __offset).
  */
-template <typename _Allocator>
+template <pul::memory::allocator_concept _Allocator>
 pf_hint_nodiscard pf_decl_inline void *operator new[](
 		pul::size_t __size,
 		pul::align_val_t __align,
@@ -229,7 +227,7 @@ pf_hint_nodiscard pf_decl_inline void *operator new[](
  *  @param[in] __all Allocator instance.
  *  @return @ref __all.deallocate(__ptr).
  */
-template <typename _Allocator>
+template <pul::memory::allocator_concept _Allocator>
 pf_decl_inline void operator delete(
 		void *__ptr,
 		_Allocator &__all) pf_attr_noexcept
@@ -243,7 +241,7 @@ pf_decl_inline void operator delete(
  *  @param[in] __all Allocator instance.
  *  @return @ref __all.deallocate(__ptr).
  */
-template <typename _Allocator>
+template <pul::memory::allocator_concept _Allocator>
 pf_decl_inline void operator delete[](
 		void *__ptr,
 		_Allocator &__all) pf_attr_noexcept
