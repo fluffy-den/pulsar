@@ -111,7 +111,9 @@ namespace pul
 // Include: Pulsar -> Memory Allocators
 #include "pulsar/memory/allocator/allocator_linear.hpp"
 #include "pulsar/memory/allocator/allocator_pool.hpp"
+#include "pulsar/memory/allocator/allocator_ring.hpp"
 #include "pulsar/memory/allocator/allocator_stack.hpp"
+
 
 // Include: Pulsar -> Memory CDS Allocators
 #include "pulsar/memory/cds_allocator/allocator_cds_linear.hpp"

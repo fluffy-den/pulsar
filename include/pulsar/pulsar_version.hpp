@@ -15,6 +15,6 @@
 #define PULSAR_VERSION_MAJOR 0
 #define PULSAR_VERSION_MINOR 1
 #define PULSAR_VERSION_PATCH 1
-#define PULSAR_VERSION       "0.1.1-dev12"
+#define PULSAR_VERSION       "0.1.1-dev13"
 
 #endif // !PULSAR_VERSION_HPP

@@ -26,6 +26,7 @@ namespace pul
 		class allocator_linear
 		{
 			pf_decl_friend class allocator_stack;
+			pf_decl_friend class allocator_ring;
 
 		public:
 			using propagate_on_container_copy_assignment = std::true_type;
