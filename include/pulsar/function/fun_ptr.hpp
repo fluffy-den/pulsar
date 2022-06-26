@@ -8,8 +8,8 @@
  *  @since 0.1.0
  */
 
-#ifndef PULSAR_UTILITY_FUN_PTR_HPP
-#define PULSAR_UTILITY_FUN_PTR_HPP 1
+#ifndef PULSAR_FUN_PTR_HPP
+#define PULSAR_FUN_PTR_HPP 1
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
@@ -55,48 +55,17 @@ namespace pul
 				_Ret (*__ptr)(_Args...)) pf_attr_noexcept
 				: ptr_(__ptr)
 		{}
-		/*! @brief Constructor for functors.
+		/*! @brief Copy constructor for Functors / Lambdas types.
 		 *
-		 *  @tparam _Fun Functor type.
-		 *  @param[in] __ptr Function to copy.
-		 */
-		template <typename _Fun>
-		pf_decl_constexpr fun_ptr(
-				_Fun &&__ptr) pf_attr_noexcept
-				: ptr_(std::move(__ptr))
-		{}
-		/*! @brief Copy constructor.
-		 *
-		 *  @param[in] __r Other function pointer.
-		 */
-		pf_decl_constexpr fun_ptr(
-				fun_ptr<_Ret(_Args...)> const &__r) pf_attr_noexcept
-				: ptr_(__r.ptr_)
-		{}
-
-		/// Operator=
-		/*! @brief Assignment operator for functors.
-		 *
-		 *  @tparam _Fun Functor type.
+		 *  @tparam _Fun Functor / Lambda type.
 		 *  @param[in] __ptr Function to copy.
 		 *  @return This function pointer.
 		 */
 		template <typename _Fun>
-		pf_decl_constexpr fun_ptr<_Ret(_Args...)> &operator=(
-				_Fun &&__ptr) pf_attr_noexcept
+		pf_decl_constexpr fun_ptr(
+				_Fun __ptr) pf_attr_noexcept
 		{
 			this->ptr_ = __ptr;
-		}
-		/*! @brief Copy assignment operator.
-		 *
-		 *  @param[in] __r Other function pointer.
-		 *  @return This function pointer.
-		 */
-		pf_decl_constexpr fun_ptr<_Ret(_Args...)> &operator=(
-				fun_ptr<_Ret(_Args...)> const &__r) pf_attr_noexcept
-		{
-			this->ptr_ = __r.ptr_;
-			return *this;
 		}
 
 		/// Operator()
@@ -105,8 +74,10 @@ namespace pul
 		 *  @param[in] __args Parameters to be sent to the encapsulated function pointer.
 		 *  @return Value returned by the encapsulated function pointer.
 		 */
-		pf_decl_constexpr _Ret operator()(
-				_Args &&...__args) const pf_attr_noexcept
+		template <typename... _InArgs>
+			requires(std::is_invocable_v<_Ret(_Args...), _InArgs...>)
+		pf_hint_nodiscard pf_decl_constexpr _Ret operator()(
+				_InArgs &&...__args)
 		{
 			return this->ptr_(std::forward<_Args>(__args)...);
 		}
@@ -229,4 +200,4 @@ namespace pul
 	fun_ptr(_Functor) -> fun_ptr<_Signature>;
 }
 
-#endif // !PULSAR_UTILITY_FUN_PTR_HPP
+#endif // !PULSAR_FUN_PTR_HPP

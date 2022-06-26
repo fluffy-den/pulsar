@@ -33,6 +33,11 @@ namespace pul
 			using propagate_on_container_swap						 = std::true_type;
 
 			/// Constructors
+			/*! @brief Default constructor.
+			 */
+			pf_decl_constexpr allocator_cds_linear() pf_attr_noexcept
+					: off_(0)
+			{}
 			/*! @brief Constructor.
 			 *
 			 *  @param[in] __size 		Size of the memory buffer.
@@ -51,7 +56,7 @@ namespace pul
 			allocator_cds_linear(
 					allocator_cds_linear const &__r) pf_attr_noexcept
 					: buf_(__r.buf_)
-					, off_(__r.off_.load(std::memory_order_acquire))
+					, off_(__r.off_.load(std::memory_order::acquire))
 			{}
 			/*! @brief Copy constructor.
 			 *
@@ -62,7 +67,7 @@ namespace pul
 					allocator_cds_linear const &__r,
 					align_val_t __bufalign) pf_attr_noexcept
 					: buf_(__r.buf_, __bufalign)
-					, off_(__r.off_.load(std::memory_order_acquire))
+					, off_(__r.off_.load(std::memory_order::acquire))
 			{}
 			/*! @brief Move constructor.
 			 *
@@ -168,13 +173,10 @@ namespace pul
 			 *  @warning Must not be used with types using this memory that use dynamic allocations
 			 *  				 themselves!
 			 */
-			size_t clear(
+			void clear(
 					std::memory_order __order = std::memory_order::relaxed) pf_attr_noexcept
 			{
-				this->buf_.fill();
-				return std::distance(
-						this->buf_.begin(),
-						this->off_.exchange(this->buf_.begin(), __order));
+				this->off_.exchange(this->buf_.begin(), __order);
 			}
 
 		private:

@@ -1,4 +1,4 @@
-/*! @file   signals.hpp
+/*! @file   fun_signal.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
  *  @brief
  *  @date   05-06-2022
@@ -8,8 +8,8 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_UTILITY_SIGNALS_HPP
-#define PULSAR_UTILITY_SIGNALS_HPP 1
+#ifndef PULSAR_UTILITY_SIGNAL_HPP
+#define PULSAR_UTILITY_SIGNAL_HPP 1
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
@@ -20,4 +20,4 @@ namespace pul
 
 }
 
-#endif // !PULSAR_UTILITY_SIGNALS_HPP
+#endif // !PULSAR_UTILITY_SIGNAL_HPP

@@ -12,6 +12,7 @@
 #define PULSAR_MEMORY_ALLOCATOR_CDS_POOL_HPP 1
 
 // Include: Pulsar
+#include "pulsar/iterator.hpp"
 #include "pulsar/memory.hpp"
 
 // Pulsar
@@ -53,13 +54,20 @@ namespace pul
 			using propagate_on_container_swap						 = std::true_type;
 
 			/// Constructors
+			/*! @brief Default constructor.
+			 */
+			pf_decl_constexpr allocator_cds_pool() pf_attr_noexcept
+					: elemsize_(0)
+					, elemcount_(0)
+					, elemalign_(align_val_t(0))
+			{}
 			/*! @brief Constructor.
 			 *
 			 *  @param[in] __elemsize	 Maximum size of an element.
 			 *  @param[in] __elemcount Maximum allocator's element number.
 			 *  @param[in] __maxalign  Maximum alignment of an allocation.
 			 */
-			pf_decl_constexpr allocator_cds_pool(
+			allocator_cds_pool(
 					size_t __elemsize,
 					size_t __elemcount,
 					align_val_t __maxalign = MAX_ALIGN)
@@ -76,7 +84,7 @@ namespace pul
 			 *
 			 *  @param[in] __r Other pool allocator to copy from.
 			 */
-			pf_decl_constexpr allocator_cds_pool(
+			allocator_cds_pool(
 					allocator_cds_pool const &__r) pf_attr_noexcept
 					: allocator_cds_pool(__r.elemsize_, __r.elemcount_, __r.elemalign_)
 			{}

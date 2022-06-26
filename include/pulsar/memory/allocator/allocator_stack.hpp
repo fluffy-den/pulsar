@@ -36,6 +36,11 @@ namespace pul
 			using propagate_on_container_swap						 = std::true_type;
 
 			/// Constructors
+
+			/*! @brief Default constructor.
+			 */
+			pf_decl_constexpr allocator_stack() pf_attr_noexcept
+			{}
 			/*! @brief Constructor.
 			 *
 			 *  @param[in] __size		  Size of the memory buffer.

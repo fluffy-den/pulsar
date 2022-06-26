@@ -1,15 +1,15 @@
-/*! @file   allocator_ring.hpp
+/*! @file   allocator_cds_ring.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
  *  @brief
- *  @date   12-06-2022
+ *  @date   13-06-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
  *
  *  @since 0.1.0
  */
 
-#ifndef PULSAR_ALLOCATOR_RING_HPP
-#define PULSAR_ALLOCATOR_RING_HPP 1
+#ifndef PULSAR_ALLOCATOR_CDS_RING_HPP
+#define PULSAR_ALLOCATOR_CDS_RING_HPP 1
 
 // Include: Pulsar
 #include "pulsar/memory.hpp"
@@ -20,10 +20,10 @@ namespace pul
 	// Memory
 	namespace memory
 	{
-		/// MEMORY: Allocator Ring
-		/*! @brief Ring memory allocator.
+		/// MEMORY: Allocator CDS Ring
+		/*! @brief Concurrent ring memory allocator.
 		 */
-		class allocator_ring: public allocator_linear
+		class allocator_cds_ring: public allocator_cds_linear
 		{
 			using propagate_on_container_copy_assignment = std::true_type;
 			using propagate_on_container_move_assignment = std::false_type;
@@ -33,43 +33,43 @@ namespace pul
 			/// Constructors
 			/*! @brief Default constructor.
 			 */
-			pf_decl_constexpr allocator_ring() pf_attr_noexcept
+			pf_decl_constexpr allocator_cds_ring() pf_attr_noexcept
 			{}
 			/*! @brief Constructor.
 			 *
 			 *  @param[in] __size 		Size of the memory buffer.
 			 *  @param[in] __bufalign Alignment of the memory buffer.
 			 */
-			pf_decl_constexpr allocator_ring(
+			pf_decl_constexpr allocator_cds_ring(
 					size_t __size,
-					align_val_t __bufalign = MAX_ALIGN) pf_attr_noexcept
-					: allocator_linear(__size, __bufalign)
+					align_val_t __bufalign = MAX_ALIGN)
+					: allocator_cds_linear(__size, __bufalign)
 			{}
 			/*! @brief Copy constructor.
 			 *
 			 *  @param[in] __r Other linear allocator to copy from.
 			 */
-			pf_decl_constexpr allocator_ring(
-					allocator_linear const &__r) pf_attr_noexcept
-					: allocator_linear(__r)
+			allocator_cds_ring(
+					allocator_cds_linear const &__r) pf_attr_noexcept
+					: allocator_cds_linear(__r)
 			{}
 			/*! @brief Copy constructor.
 			 *
 			 *  @param[in] __r 				Other linear allocator to copy from.
 			 *  @param[in] __bufalign Alignment of the buffer.
 			 */
-			pf_decl_constexpr allocator_ring(
-					allocator_linear const &__r,
+			allocator_cds_ring(
+					allocator_cds_linear const &__r,
 					align_val_t __bufalign) pf_attr_noexcept
-					: allocator_linear(__r, __bufalign)
+					: allocator_cds_linear(__r, __bufalign)
 			{}
 			/*! @brief Move constructor.
 			 *
 			 *	@param[in] __r Other linear allocator to copy from.
 			 */
-			pf_decl_constexpr allocator_ring(
-					allocator_linear &&__r) pf_attr_noexcept
-					: allocator_linear(std::move(__r))
+			allocator_cds_ring(
+					allocator_cds_linear &&__r) pf_attr_noexcept
+					: allocator_cds_linear(std::move(__r))
 			{}
 
 			/// Allocate
@@ -81,16 +81,16 @@ namespace pul
 			 *  @param[in] __offset	Offset to alignment.
 			 *  @return Pointer on a allocated memory.
 			 */
-			pf_hint_nodiscard pf_decl_constexpr void *allocate(
+			pf_hint_nodiscard void *allocate(
 					size_t __size,
 					align_val_t __align = MAX_ALIGN,
-					size_t __offset			= 0) pf_attr_noexcept
+					size_t __offset			= 0)
 			{
-				void *all = allocator_linear::allocate(__size, __align, __offset);
+				void *all = allocator_cds_linear::allocate(__size, __align, __offset);
 				if (!all)
 				{
-					allocator_linear::clear();
-					all = allocator_linear::allocate(__size, __align, __offset);
+					allocator_cds_linear::clear(std::memory_order::release);
+					all = allocator_cds_linear::allocate(__size, __align, __offset);
 				}
 				return all;
 			}
@@ -98,4 +98,4 @@ namespace pul
 	}
 }
 
-#endif // !PULSAR_ALLOCATOR_RING_HPP
+#endif // !PULSAR_ALLOCATOR_CDS_RING_HPP

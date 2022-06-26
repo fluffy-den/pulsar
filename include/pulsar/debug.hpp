@@ -254,7 +254,7 @@ namespace pul
 		 *
 		 *  @param[in] __r Another instance from wich to copy.
 		 */
-		exception(exception const &__r) pf_attr_noexcept = delete;
+		exception(exception const &__r) pf_attr_noexcept = default;
 
 		/// Operator=
 		/*! @brief Copy assignment operator.
@@ -262,7 +262,7 @@ namespace pul
 		 *  @param[in] __r Another instance from wich to copy.
 		 *  @return Reference on this instance.
 		 */
-		exception &operator=(exception const &__r) pf_attr_noexcept = delete;
+		exception &operator=(exception const &__r) pf_attr_noexcept = default;
 
 		/// Code
 		/*! @brief Gets the associated error_code with this exception.

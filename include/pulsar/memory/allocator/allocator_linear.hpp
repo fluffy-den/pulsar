@@ -34,6 +34,11 @@ namespace pul
 			using propagate_on_container_swap						 = std::true_type;
 
 			/// Constructors
+			/*! @brief Default constructor.
+			 */
+			pf_decl_constexpr allocator_linear() pf_attr_noexcept
+					: off_(0)
+			{}
 			/*! @brief Constructor.
 			 *
 			 *  @param[in] __size 		Size of the memory buffer.
@@ -159,14 +164,13 @@ namespace pul
 			}
 
 			/// Clear
-			/*! @brief Resets the allocator to zero.
+			/*! @brief Resets the allocator.
 			 *
 			 *  @warning Must not be used with types using this memory that use dynamic allocations
 			 *  				 themselves!
 			 */
 			pf_decl_constexpr void clear() pf_attr_noexcept
 			{
-				this->buf_.fill();
 				this->off_ = this->buf_.begin();
 			}
 

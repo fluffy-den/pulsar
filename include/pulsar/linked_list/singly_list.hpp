@@ -8,8 +8,8 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_UTILITY_SINGLY_LINKED_LIST_HPP
-#define PULSAR_UTILITY_SINGLY_LINKED_LIST_HPP 1
+#ifndef PULSAR_SINGLY_LINKED_LIST_HPP
+#define PULSAR_SINGLY_LINKED_LIST_HPP 1
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
@@ -59,6 +59,14 @@ namespace pul
 		pf_decl_friend class singly_cds_linked_lifo<_Ty>;
 		pf_decl_friend class singly_cds_linked_fifo<_Ty>;
 
+		template <typename _InIterator>
+		pf_decl_friend pf_decl_constexpr auto singly_link(
+				_InIterator __beg,
+				_InIterator __end);
+		template <typename _InIterator>
+		pf_decl_friend pf_decl_constexpr auto singly_last(
+				_InIterator __beg);
+
 		/// Unlink
 		/*! @brief Removes the links to other nodes.
 		 */
@@ -81,7 +89,7 @@ namespace pul
 		 */
 		template <typename... _Args>
 		pf_decl_constexpr singly_node(
-				_Args &&...__args) requires(std::is_constructible_v<_Ty, _Args...>)
+				_Args &&...__args)
 				: next_(nullptr)
 				, store_(std::forward<_Args>(__args)...)
 		{}
@@ -208,6 +216,16 @@ namespace pul
 			return this->store_ <=> __r->store_;
 		}
 
+		/// Operator (Cast)
+		pf_hint_nodiscard pf_decl_constexpr operator _Ty &() pf_attr_noexcept
+		{
+			return this->store_;
+		}
+		pf_hint_nodiscard pf_decl_constexpr operator const _Ty &() const pf_attr_noexcept
+		{
+			return this->store_;
+		}
+
 		/// Next
 		/*! @brief Get a pointer to the next node.
 		 *
@@ -256,7 +274,7 @@ namespace pul
 		 *  @param[in] __n Pointer to a singly linked node.
 		 */
 		pf_decl_constexpr singly_iterator(
-				node *__n) pf_attr_noexcept
+				node *__n = nullptr) pf_attr_noexcept
 				: ptr_(__n)
 		{}
 		/*! @brief Copy constructor.
@@ -348,7 +366,7 @@ namespace pul
 		 */
 		pf_hint_nodiscard pf_decl_constexpr _Ty *operator->() const pf_attr_noexcept
 		{
-			return this->base()->store_;
+			return &this->base()->store_;
 		}
 
 		/// Operator cast: node*
@@ -390,6 +408,42 @@ namespace pul
 		node *ptr_;
 	};
 
+	/// SINGLY: Link list of Nodes
+	template <typename _InIterator>
+	pf_decl_constexpr auto singly_link(
+			_InIterator __beg,
+			_InIterator __end)
+	{
+		pf_assert(__beg != nullptr, "__beg is nullptr!");
+		pf_assert(__end != nullptr, "__end is nullptr!");
+		// Init List
+		singly_iterator b = &*__beg;
+		++__beg;
+		for (;;)
+		{
+			if (__beg == __end)
+			{
+				return b.base();
+			}
+			b.base()->next_ = &*__beg;
+			++__beg;
+			++b;
+		}
+	}
+	template <typename _InIterator>
+	pf_decl_constexpr auto singly_last(
+			_InIterator __beg)
+	{
+		singly_iterator b = &*__beg;
+		pf_assert(!__beg, "__beg is nullptr!");
+		while (b.base()->next_)
+		{
+			b = b.base()->next_;
+		}
+		return b.base();
+	}
+
+
 	/// SINGLY: Const Iterator
 	/*! @brief Specialization of a singly iterator with the type @a _Ty = const _Ty (const iterator).
 	 *
@@ -410,7 +464,7 @@ namespace pul
 		 *  @param[in] __n Const pointer to a singly linked node.
 		 */
 		pf_decl_constexpr singly_iterator(
-				node *__n) pf_attr_noexcept
+				node *__n = nullptr) pf_attr_noexcept
 				: ptr_(__n)
 		{}
 		/*! @brief Copy constructor.
@@ -1404,664 +1458,6 @@ namespace pul
 		node *head_;
 		node *tail_;
 	};
-
-	/// SINGLY: CDS List
-	/*! @brief Base of a thread-safe linked list. Can't do anything on its own.
-	 *
-	 *  @tparam _Ty Type of the object encapsulated in the list nodes.
-	 *
-	 *  @remark Thread-safe
-	 */
-	template <typename _Ty>
-	class alignas(2 * sizeof(std::atomic<void *>)) singly_cds_linked_list
-	{
-	public:
-		using node					 = singly_node<_Ty>;
-		using iterator			 = singly_iterator<_Ty>;
-		using const_iterator = singly_const_iterator<_Ty>;
-
-		/// Constructors
-		/*! @brief Default constructor.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		pf_decl_explicit singly_cds_linked_list() pf_attr_noexcept
-				: head_(nullptr)
-				, tail_(nullptr)
-		{}
-		/*! @brief Move constructor.
-		 *
-		 *  @param[in] __r Another list instance to copy from.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		singly_cds_linked_list(
-				singly_cds_linked_list<_Ty> &&__r) pf_attr_noexcept
-				: head_(__r.head_.exchange(nullptr, std::memory_order::acq_rel))
-				, tail_(__r.tail_.exchange(nullptr, std::memory_order::acq_rel))
-		{}
-
-		/// Operator=
-		/*! @brief Move assignment operator.
-		 *
-		 *  @param[in] __r Another list instance to copy from.
-		 *  @return Reference on this list.
-		 *
-		 *  @remark Thread_safe.
-		 */
-		singly_cds_linked_list<_Ty> &operator=(
-				singly_cds_linked_list<_Ty> &&__r) pf_attr_noexcept
-		{
-			if (!this->empty()) this->clear();
-			this->tail_.store(__r.tail_.exchange(nullptr, std::memory_order::acq_rel), std::memory_order::release);
-			this->head_.store(__r.head_.exchange(nullptr, std::memory_order::acq_rel), std::memory_order::release);
-			return *this;
-		}
-
-		/// Destructor
-		/*! @brief Destructor.
-		 *
-		 *  @remark Thread_safe.
-		 */
-		~singly_cds_linked_list() pf_attr_noexcept
-		{
-			this->clear();
-		}
-
-		/// Head
-		/*! @brief Get a pointer on the head of the list.
-		 *
-		 *  @param[in] __order Atomic memory barrier to be applied.
-		 *  @return Pointer to the head of the list.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		pf_hint_nodiscard node *head(
-				std::memory_order __order = std::memory_order::relaxed) pf_attr_noexcept
-		{
-			return this->head_.load(__order);
-		}
-		/*! @brief Get a constant pointer on the head of the list.
-		 *
-		 *  @param[in] __order Atomic memory barrier to be applied.
-		 *  @return Constant pointer on the head of the list.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		pf_hint_nodiscard const node *head(
-				std::memory_order __order = std::memory_order::relaxed) const pf_attr_noexcept
-		{
-			return this->head_.load(__order);
-		}
-
-		/// Begin
-		/*! @brief
-		 *
-		 *  @return pf_hint_nodiscard
-		 */
-		pf_hint_nodiscard pf_decl_constexpr iterator begin(
-				std::memory_order __order = std::memory_order::relaxed) pf_attr_noexcept
-		{
-			return this->head(__order);
-		}
-		/*! @brief
-		 *
-		 *  @return pf_hint_nodiscard
-		 */
-		pf_hint_nodiscard pf_decl_constexpr const_iterator cbegin(
-				std::memory_order __order = std::memory_order::relaxed) const pf_attr_noexcept
-		{
-			return this->head(__order);
-		}
-		/*! @brief
-		 *
-		 *  @return pf_hint_nodiscard
-		 */
-		pf_hint_nodiscard pf_decl_constexpr const_iterator begin(
-				std::memory_order __order = std::memory_order::relaxed) const pf_attr_noexcept
-		{
-			return this->cbegin(__order);
-		}
-
-		/// Tail
-		/*! @brief Get a pointer on the tail of the list.
-		 *
-		 *  @param[in] __order Atomic memory barrier to be applied.
-		 *  @return Pointer on the tail of the list.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		pf_hint_nodiscard node *tail(
-				std::memory_order __order = std::memory_order::relaxed) pf_attr_noexcept
-		{
-			return this->tail_.load(__order);
-		}
-		/*! @brief Get a constant pointer on the head of the list.
-		 *
-		 *  @param[in] __order Atomic memory barrier to be applied.
-		 *  @return Constant pointer on the tail of the list.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		pf_hint_nodiscard const node *tail(
-				std::memory_order __order = std::memory_order::relaxed) const pf_attr_noexcept
-		{
-			return this->tail_.load(__order);
-		}
-
-		/// End
-		/*! @brief
-		 *
-		 *  @return pf_hint_nodiscard
-		 */
-		pf_hint_nodiscard pf_decl_constexpr iterator end() pf_attr_noexcept
-		{
-			return nullptr;
-		}
-		/*! @brief
-		 *
-		 *  @return pf_hint_nodiscard
-		 */
-		pf_hint_nodiscard pf_decl_constexpr const_iterator cend() const pf_attr_noexcept
-		{
-			return nullptr;
-		}
-		/*! @brief
-		 *
-		 *  @return pf_hint_nodiscard
-		 */
-		pf_hint_nodiscard pf_decl_constexpr const_iterator end() const pf_attr_noexcept
-		{
-			return nullptr;
-		}
-
-		/// Empty
-		/*! @brief Checks if this list is empty.
-		 *
-		 *  @param[in] __order Atomic memory barrier to be applied.
-		 *  @return True if this list is empty.
-		 *  @return False if this list isn't empty.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		pf_hint_nodiscard bool empty(
-				std::memory_order __order = std::memory_order::relaxed) const pf_attr_noexcept
-		{
-			return !this->head(__order);
-		}
-
-		/// Contains
-		/*! @brief Check if @a __n is contained in this list.
-		 *
-		 *  @param[in] __n Pointer on a node.
-		 *  @param[in] __order Atomic memory barrier to be applied.
-		 *  @return True if @a __n is contained in this list.
-		 *  @return False otherwise.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		pf_hint_nodiscard bool contains(
-				node *__n,
-				std::memory_order __order = std::memory_order::relaxed) pf_attr_noexcept
-		{
-			for (node *b = this->head(__order), *e = nullptr; b != e; ++b)
-			{
-				if (b == __n) return true;
-			}
-			return false;
-		}
-
-		/// Size
-		/*! @brief Retrieves the size of the list.
-		 *
-		 *  @param[in] __order Atomic memory barrier to be applied.
-		 *  @return The size of this list. 0 if empty.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		pf_hint_nodiscard size_t size(
-				std::memory_order __order = std::memory_order::relaxed) const pf_attr_noexcept
-		{
-			iterator b = this->head(__order), e = nullptr;
-			return std::distance(b, e);
-		}
-
-		/// Clear
-		/*! @brief Unlink all the nodes associated with this list.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		void clear() pf_attr_noexcept
-		{
-			this->tail_.exchange(nullptr, std::memory_order::release);
-			node *h = this->head_.exchange(nullptr, std::memory_order::acq_rel);
-			std::atomic_thread_fence(std::memory_order::acq_rel);
-			while (h)
-			{
-				node *n = h->next_;
-				h->__unlink();
-				h = n;
-			}
-			std::atomic_thread_fence(std::memory_order::relaxed);
-		}
-
-	protected:
-		std::atomic<node *> head_;
-		std::atomic<node *> tail_;
-	};
-
-	/// SINGLY: CDS LIFO
-	/*! @brief LIFO style linked-list. Thread-safe guarantee.
-	 *
-	 *  @tparam _Ty Type of the object encapsulated in nodes.
-	 *
-	 *  @remark Thread-safe
-	 */
-	template <typename _Ty>
-	class singly_cds_linked_lifo: public singly_cds_linked_list<_Ty>
-	{
-	public:
-		using node					 = singly_node<_Ty>;
-		using iterator			 = singly_iterator<_Ty>;
-		using const_iterator = singly_const_iterator<_Ty>;
-
-		/// Constructor
-		/*! @brief Default constructor.
-		 */
-		pf_decl_constexpr singly_cds_linked_lifo() pf_attr_noexcept
-				: singly_cds_linked_list<_Ty>()
-		{}
-		/*! @brief Constructor.
-		 *
-		 *  @tparam _InIterator Input iterator.
-		 *  @param[in] __beg Start of the initialization list.
-		 *  @param[in] __end End of the initialization list.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		template <typename _InIterator>
-		singly_cds_linked_lifo(
-				_InIterator __beg,
-				_InIterator __end) pf_attr_noexcept
-				: singly_cds_linked_list<_Ty>()
-		{
-			this->insert_tail_bulk(__beg, __end);
-		}
-
-		/// Insert
-		/*! @brief Link @a __n in the place of the tail of this list.
-		 *
-		 *  @param[in] __n Pointer on a node to link.
-		 *  @return Pointer on the linked node.
-		 *
-		 *  @remark Thread-safe
-		 */
-		node *insert_tail(
-				node *__n) pf_attr_noexcept
-		{
-			pf_assert(__n != nullptr, "__n is nullptr!");
-			pf_assert(!this->contains(__n), "__n is already contained in this list!");
-			pf_assert(!__n->is_linked(), "__n is already linked!");
-			// Tail
-			node *t = this->tail_.load(std::memory_order::relaxed);
-			while (!this->tail_.compare_exchange_weak(
-					t,
-					__n,
-					std::memory_order::acquire,
-					std::memory_order::release))
-				;
-			if (t) t->next_ = __n;
-			// Head
-			node *h = nullptr;
-			if (!t) this->head_.compare_exchange_strong(
-					h,
-					__n,
-					std::memory_order::acquire,
-					std::memory_order::release);
-			return __n;
-		}
-		/*! @brief Link a list of node in the place of the tail of this list.
-		 *
-		 *  @tparam _InIterator Input iterator.
-		 *  @param[in] __beg Start of the initialization list.
-		 *  @param[in] __end End of the initialization list.
-		 *  @return Number of inserted nodes of the initialization list.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		template <typename _InIterator>
-		size_t insert_tail_bulk(
-				_InIterator __beg,
-				_InIterator __end) pf_attr_noexcept
-		{
-			pf_assert(__beg != nullptr, "__beg is nullptr!");
-			pf_assert(__end != nullptr, "__end is nullptr!");
-			// Init List
-			node *b	 = &*__beg;
-			node *e	 = b;
-			size_t c = 1;
-			++__beg;
-			while (__beg != __end)
-			{
-				e->next_ = &*__beg;
-				e				 = e->next_;
-				++__beg;
-				++c;
-			}
-			// Tail
-			node *t = this->tail_.load(std::memory_order::relaxed);
-			while (!this->tail_.compare_exchange_weak(
-					t,
-					e,
-					std::memory_order::acquire,
-					std::memory_order::release))
-				;
-			if (!t)
-			{
-				node *h = nullptr;
-				this->head_.compare_exchange_strong(
-						h,
-						b,
-						std::memory_order::acquire,
-						std::memory_order::release);
-			}
-			// Head
-			else
-			{
-				t->next_ = b;
-			}
-			return c;
-		}
-
-		/// Remove
-		/*! @brief Unlink the head of this list.
-		 *
-		 *  @return Pointer on the unlinked node.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		node *remove_head() pf_attr_noexcept
-		{
-			// Head
-			node *h = this->head_.load(std::memory_order::relaxed);
-			do
-			{
-				if (!h) return nullptr;
-			} while (!this->head_.compare_exchange_weak(
-					h,
-					h->next_,
-					std::memory_order::acquire,
-					std::memory_order::release));
-			// Tail
-			if (!h->next_) this->tail_.compare_exchange_strong(
-					h,
-					nullptr,
-					std::memory_order::acquire,
-					std::memory_order::release);
-			if (h) h->__unlink();
-			return h;
-		}
-		/*! @brief Unlink a range of element from the head of this list and insert them to an output
-		 *				 list.
-		 *
-		 *  @tparam _OutIterator Output iterator.
-		 *  @param[in] __beg Start of the initialization list.
-		 *  @param[in] __end End of the initialization list.
-		 *  @return size_t Number of removed elements.
-		 */
-		template <typename _OutIterator>
-		size_t remove_head_bulk(
-				_OutIterator __beg,
-				_OutIterator __end) pf_attr_noexcept
-		{
-			pf_assert(__beg != nullptr, "__beg is nullptr!");
-			pf_assert(__end != nullptr, "__end is nullptr!");
-			const size_t num = std::distance(__beg, __end);
-			// Head
-			node *h = this->head_.load(std::memory_order::relaxed), *b = nullptr, *e = nullptr;
-			size_t rnum = 0;
-			do
-			{
-				if (!h) return 0;
-				rnum = 0;
-				b		 = h;
-				e		 = h;
-				while (e && rnum < num)
-				{
-					node *c = b->next_;
-					if (!c) break;
-					e = c;
-					++rnum;
-				}
-			} while (!this->head_.compare_exchange_weak(
-					h,
-					e->next_,
-					std::memory_order::acquire,
-					std::memory_order::release));
-			// Tail
-			this->tail_.compare_exchange_strong(
-					e->next_,
-					nullptr,
-					std::memory_order::acquire,
-					std::memory_order::release);
-			// Copy
-			while (__beg != __end && b != e)
-			{
-				*__beg	= b;
-				node *c = b;
-				b				= b->next_;
-				c->__unlink();
-				++__beg;
-			}
-			return rnum;
-		}
-	};
-
-	/// SINGLY: CDS FIFO
-	/*! @brief FIFO style linked-list. Thread-safe guarantee.
-	 *
-	 *  @tparam _Ty Type of the object encapsulated in the nodes.
-	 *
-	 *  @remark Thread-safe
-	 */
-	template <typename _Ty>
-	class singly_cds_linked_fifo: public singly_cds_linked_list<_Ty>
-	{
-	public:
-		using node					 = singly_node<_Ty>;
-		using iterator			 = singly_iterator<_Ty>;
-		using const_iterator = singly_const_iterator<_Ty>;
-
-		/// Constructor
-		/*! @brief Default constructor.
-		 */
-		singly_cds_linked_fifo() pf_attr_noexcept
-				: singly_cds_linked_list<_Ty>()
-		{}
-		/*! @brief Constructor.
-		 *
-		 *  @tparam _InIterator Input iterator.
-		 *  @param __beg Start of the initialization list.
-		 *  @param __end End of the initialization list.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		template <typename _InIterator>
-		singly_cds_linked_fifo(
-				_InIterator __beg,
-				_InIterator __end) pf_attr_noexcept
-		{
-			this->insert_tail_bulk(__beg, __end);
-		}
-
-		/// Insert
-		/*! @brief Link @a __n in the place of the head of this list.
-		 *
-		 *  @param[in] __n Pointer on a node to link.
-		 *  @return Pointer on the linked node.
-		 *
-		 *  @remark Thread-safe
-		 */
-		node *insert_head(
-				node *__n) pf_attr_noexcept
-		{
-			pf_assert(__n != nullptr, "__n is nullptr!");
-			pf_assert(!this->contains(__n), "__n is already contained in this list!");
-			pf_assert(!__n->is_linked(), "__n is already linked!");
-			// Head
-			node *h = this->head_.load(std::memory_order::relaxed);
-			while (!this->head_.compare_exchange_weak(
-					h,
-					__n,
-					std::memory_order::acquire,
-					std::memory_order::release))
-				;
-			__n->next_ = h;
-			// Tail
-			node *t		 = nullptr;
-			if (!__n->next_) this->head_.compare_exchange_strong(
-					t,
-					__n,
-					std::memory_order::acquire,
-					std::memory_order::release);
-			return __n;
-		}
-		/*! @brief Link a list of node in the place of the head of this list.
-		 *
-		 *  @tparam _InIterator Input iterator.
-		 *  @param[in] __beg Start of the initialization list.
-		 *  @param[in] __end End of the initialization list.
-		 *  @return Number of inserted nodes of the initialization list.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		template <typename _InIterator>
-		size_t insert_head_bulk(
-				_InIterator __beg,
-				_InIterator __end) pf_attr_noexcept
-		{
-			pf_assert(__beg != nullptr, "__beg is nullptr!");
-			pf_assert(__end != nullptr, "__end is nullptr!");
-			// Init List
-			const node *b = *__beg;
-			node *e				= b;
-			size_t c			= 1;
-			++__beg;
-			while (__beg != __end)
-			{
-				e->next_ = *__beg;
-				e				 = e->next_;
-				++__beg;
-				++c;
-			}
-			// Head
-			node *h = this->head_.load(std::memory_order::relaxed);
-			while (!this->head_.compare_exchange_weak(
-					h,
-					e,
-					std::memory_order::acquire,
-					std::memory_order::release))
-				;
-			// Tail
-			if (!h)
-			{
-				node *t = nullptr;
-				this->tail_.compare_exchange_strong(
-						t,
-						e,
-						std::memory_order::acquire,
-						std::memory_order::release);
-			}
-			else
-			{
-				e->next_ = h;
-			}
-			return c;
-		}
-
-		/// Remove
-		/*! @brief Unlink the head of this list.
-		 *
-		 *  @return Pointer on the unlinked node.
-		 *
-		 *  @remark Thread-safe.
-		 */
-		node *remove_head() pf_attr_noexcept
-		{
-			// Head
-			node *h = this->head_.load(std::memory_order::relaxed);
-			do
-			{
-				if (!h) return nullptr;
-			} while (!this->head_.compare_exchange_weak(
-					h,
-					h->next_,
-					std::memory_order::acquire,
-					std::memory_order::release));
-			// Tail
-			if (!h->next_) this->tail_.compare_exchange_strong(
-					h,
-					nullptr,
-					std::memory_order::acquire,
-					std::memory_order::release);
-			if (h) h->__unlink();
-			return h;
-		}
-		/*! @brief Unlink a range of element from the head of this list and insert them to an output
-		 *				 list.
-		 *
-		 *  @tparam _OutIterator Output iterator.
-		 *  @param[in] __beg Start of the initialization list.
-		 *  @param[in] __end End of the initialization list.
-		 *  @return size_t Number of removed elements.
-		 */
-		template <typename _OutIterator>
-		size_t remove_head_bulk(
-				_OutIterator __beg,
-				_OutIterator __end) pf_attr_noexcept
-		{
-			pf_assert(__beg != nullptr, "__beg is nullptr!");
-			pf_assert(__end != nullptr, "__end is nullptr!");
-			const size_t num = std::distance(__beg, __end);
-			// Head
-			node *h = this->head_.load(std::memory_order::relaxed), *b = nullptr, *e = nullptr;
-			size_t rnum = 0;
-			do
-			{
-				if (!h) return 0;
-				rnum = 0;
-				b		 = h;
-				e		 = h;
-				while (e && rnum < num)
-				{
-					node *c = b->next_;
-					if (!c) break;
-					e = c;
-					++rnum;
-				}
-			} while (!this->head_.compare_exchange_weak(
-					h,
-					e->next_,
-					std::memory_order::acquire,
-					std::memory_order::release));
-			// Tail
-			this->tail_.compare_exchange_strong(
-					e->next_,
-					nullptr,
-					std::memory_order::acquire,
-					std::memory_order::release);
-			// Copy
-			while (__beg != __end && b != e)
-			{
-				*__beg	= b;
-				node *c = b;
-				b				= b->next_;
-				c->__unlink();
-				++__beg;
-			}
-			return rnum;
-		}
-	};
 }
 
-#endif // !PULSAR_UTILITY_SINGLY_LIST_HPP
+#endif // !PULSAR_SINGLY_LINKED_LIST_HPP

@@ -10,7 +10,7 @@
 
 // Include: Pulsar
 #include "pulsar/debug.hpp"
-#include "pulsar/utility.hpp"
+#include "pulsar/string.hpp"
 
 // Include: Windows
 #ifdef PF_OS_WINDOWS

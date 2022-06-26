@@ -8,14 +8,16 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_UTILITY_DOUBLY_LINKED_LIST_HPP
-#define PULSAR_UTILITY_DOUBLY_LINKED_LIST_HPP 1
+#ifndef PULSAR_DOUBLY_LINKED_LIST_HPP
+#define PULSAR_DOUBLY_LINKED_LIST_HPP 1
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
 
 // Include: C++
+#include <iterator>
 #include <type_traits>
+#include <utility>
 
 // Pulsar
 namespace pul
@@ -47,6 +49,14 @@ namespace pul
 		pf_decl_friend doubly_reverse_iterator<const std::remove_const_t<_Ty>>;
 		pf_decl_friend doubly_linked_list<_Ty>;
 		pf_decl_friend doubly_rotative_linked_list<_Ty>;
+
+		template <typename _InIterator>
+		pf_decl_friend pf_decl_constexpr auto doubly_link(
+				_InIterator __beg,
+				_InIterator __end);
+		template <typename _InIterator>
+		pf_decl_friend pf_decl_constexpr auto doubly_last(
+				_InIterator __beg);
 
 		/// Unlink
 		/*! @brief Removes the links to other nodes.
@@ -1117,6 +1127,42 @@ namespace pul
 		return __it -= __i;
 	}
 
+	/// DOUBLY: Link list of Nodes
+	template <typename _InIterator>
+	pf_decl_constexpr auto doubly_link(
+			_InIterator __beg,
+			_InIterator __end)
+	{
+		pf_assert(__beg != nullptr, "__beg is nullptr!");
+		pf_assert(__end != nullptr, "__end is nullptr!");
+		// Init List
+		doubly_iterator b = &*__beg;
+		++__beg;
+		for (;;)
+		{
+			if (__beg == __end)
+			{
+				return b.base();
+			}
+			b.base()->next_				 = &*__beg;
+			b.base()->next_->prev_ = b;
+			++__beg;
+			++b;
+		}
+	}
+	template <typename _InIterator>
+	pf_decl_constexpr auto doubly_last(
+			_InIterator __beg)
+	{
+		doubly_iterator b = &*__beg;
+		pf_assert(!__beg, "__beg is nullptr!");
+		while (b.base()->next_)
+		{
+			b = b.base()->next_;
+		}
+		return b.base();
+	}
+
 	/*! @brief Alias of a constant doubly iterator.
 	 *
 	 *  @tparam _Ty Type of the encapsulated object.
@@ -2022,6 +2068,7 @@ namespace pul
 		node *head_;
 		node *tail_;
 	};
+
 }
 
-#endif // PULSAR_UTILITY_DOUBLY_LIST_HPP
+#endif // PULSAR_DOUBLY_LINKED_LIST_HPP

@@ -14,7 +14,6 @@
 // Include: Pulsar
 #include "pulsar/debug.hpp"
 #include "pulsar/pulsar.hpp"
-#include "pulsar/utility.hpp"
 
 // Include: C++
 #include <algorithm>
@@ -116,6 +115,7 @@ namespace pul
 // Include: Pulsar -> Memory CDS Allocators
 #include "pulsar/memory/cds_allocator/allocator_cds_linear.hpp"
 #include "pulsar/memory/cds_allocator/allocator_cds_pool.hpp"
+#include "pulsar/memory/cds_allocator/allocator_cds_ring.hpp"
 #include "pulsar/memory/cds_allocator/allocator_cds_stack.hpp"
 
 // Include: Pulsar -> Memory Allocator Wrapper

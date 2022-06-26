@@ -11,7 +11,8 @@
 #ifndef PULSAR_UTILITY_LINKED_LIST_HPP
 #define PULSAR_UTILITY_LINKED_LIST_HPP 1
 
-#include "pulsar/utility/linked_list/doubly_list.hpp"
-#include "pulsar/utility/linked_list/singly_list.hpp"
+#include "pulsar/linked_list/doubly_list.hpp"
+#include "pulsar/linked_list/singly_cds_list.hpp"
+#include "pulsar/linked_list/singly_list.hpp"
 
 #endif // !PULSAR_UTILITY_LINKED_LIST_HPP

@@ -12,6 +12,7 @@
 #define PULSAR_MEMORY_ALLOCATOR_POOL_HPP 1
 
 // Include: Pulsar
+#include "pulsar/linked_list.hpp"
 #include "pulsar/memory.hpp"
 
 // Pulsar
@@ -54,6 +55,13 @@ namespace pul
 			using propagate_on_container_swap						 = std::true_type;
 
 			/// Constructors
+			/*! @brief Default constructor.
+			 */
+			pf_decl_constexpr allocator_pool() pf_attr_noexcept
+					: elemsize_(0)
+					, elemcount_(0)
+					, elemalign_(align_val_t(0))
+			{}
 			/*! @brief Constructor.
 			 *
 			 *  @param[in] __elemsize	 Maximum size of an element.

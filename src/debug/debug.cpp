@@ -12,7 +12,7 @@
 #include "pulsar/debug.hpp"
 
 #include "pulsar/memory.hpp"
-#include "pulsar/utility.hpp"
+#include "pulsar/string.hpp"
 
 
 // Pulsar
