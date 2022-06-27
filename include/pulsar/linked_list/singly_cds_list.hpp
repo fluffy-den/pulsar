@@ -75,16 +75,16 @@ namespace pul
 		node *insert_tail(
 				node *__n) pf_attr_noexcept
 		{
-			// Barrier
-			std::atomic_thread_fence(std::memory_order::release);
 			// Tail
 			node *t = this->tail_.load(std::memory_order::relaxed);
 			while (!this->tail_.compare_exchange_weak(
 					t,
 					__n,
 					std::memory_order::relaxed,
-					std::memory_order::acquire))
+					std::memory_order::consume))
 				;
+			// Barrier
+			std::atomic_thread_fence(std::memory_order::release);
 			if (t)
 			{
 				t->next_ = __n;
@@ -106,8 +106,6 @@ namespace pul
 				_InIterator __beg,
 				_InIterator __end) pf_attr_noexcept
 		{
-			// Barrier
-			std::atomic_thread_fence(std::memory_order::release);
 			// Tail
 			node *e = singly_link(__beg, __end);
 			node *t = this->tail_.load(std::memory_order::relaxed);
@@ -115,8 +113,10 @@ namespace pul
 					t,
 					e,
 					std::memory_order::relaxed,
-					std::memory_order::acquire))
+					std::memory_order::consume))
 				;
+			// Barrier
+			std::atomic_thread_fence(std::memory_order::release);
 			if (t)
 			{
 				t->next_ = &(*__beg);
@@ -137,8 +137,6 @@ namespace pul
 		/// Remove
 		pf_hint_nodiscard node *remove_head() pf_attr_noexcept
 		{
-			// Barrier
-			std::atomic_thread_fence(std::memory_order::acquire);
 			// Head
 			node *h = this->head_.load(std::memory_order::relaxed);
 			do
@@ -151,7 +149,9 @@ namespace pul
 					h,
 					h->next_,
 					std::memory_order::relaxed,
-					std::memory_order::acquire));
+					std::memory_order::consume));
+			// Barrier
+			std::atomic_thread_fence(std::memory_order::acquire);
 			// Tail
 			if (!h->next_)
 			{
@@ -168,8 +168,6 @@ namespace pul
 		/// Clear
 		node *clear() pf_attr_noexcept
 		{
-			// Barrier
-			std::atomic_thread_fence(std::memory_order::acquire);
 			// Head
 			node *h = this->head_.load(std::memory_order::relaxed);
 			do
@@ -182,7 +180,7 @@ namespace pul
 					h,
 					nullptr,
 					std::memory_order::relaxed,
-					std::memory_order::acquire));
+					std::memory_order::consume));
 			// Tail
 			node *t = this->tail_.load(std::memory_order::relaxed);
 			this->tail_.compare_exchange_strong(
@@ -283,7 +281,7 @@ namespace pul
 					h,
 					__n,
 					std::memory_order::release,
-					std::memory_order::relaxed));
+					std::memory_order::consume));
 			return h;
 		}
 		template <typename _InIterator>
@@ -301,7 +299,7 @@ namespace pul
 					h,
 					b,
 					std::memory_order::release,
-					std::memory_order::relaxed));
+					std::memory_order::consume));
 			return h;
 		}
 
@@ -313,7 +311,7 @@ namespace pul
 					h,
 					h ? h->next_ : nullptr,
 					std::memory_order::release,
-					std::memory_order::relaxed))
+					std::memory_order::consume))
 				;
 			return h;
 		}

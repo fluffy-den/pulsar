@@ -8,8 +8,8 @@
  *  @since 0.1.2
  */
 
-// Include: Pulsar -> Job System
-#include "pulsar/job_system.hpp"
+// Include: Pulsar
+#include "pulsar/thread.hpp"
 
 // Include: Iostream
 #include <iostream>

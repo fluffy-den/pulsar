@@ -8,8 +8,8 @@
  *  @since 0.1.2
  */
 
-// Include: Pulsar -> Thread
-#include "pulsar/job_system.hpp"
+// Include: Pulsar
+#include "pulsar/thread.hpp"
 
 // Include: Catch2
 #include "catch2/catch_all.hpp"
@@ -27,14 +27,8 @@
 namespace pul
 {
 	/// JOB-SYSTEM: Steal tests
-	TEST_CASE("JobSystemStealTest1")
-	{
-		job_system::init();
-		job_system::terminate();
-	}
 	TEST_CASE("JobSystemStealTest2")
 	{
-		job_system::init();
 		fun_ptr fun1 = [](void *) -> void {};
 		for (size_t i = 0; i < 1024; ++i)
 		{
@@ -42,21 +36,17 @@ namespace pul
 		}
 		job_system::process_with_workers();
 		job_system::process_0();
-		job_system::terminate();
 	}
 	TEST_CASE("JobSystemStealTest3")
 	{
-		job_system::init();
 		job_future<void> fut1;
 		fun_ptr fun1 = [](void *) -> void {};
 		job_system::submit(fut1, { fun1 });
 		job_system::process_0();
 		job_system::process_with_workers();
-		job_system::terminate();
 	}
 	TEST_CASE("JobSystemStealTest4")
 	{
-		job_system::init();
 		job j;
 		fun_ptr fun1 = [](void *) -> void {};
 		for (size_t i = 0; i < 1024; ++i)
@@ -68,11 +58,9 @@ namespace pul
 			job_system::process_0();
 			job_system::process_with_workers();
 		}
-		job_system::terminate();
 	}
 	TEST_CASE("JobSystemStealTest5")
 	{
-		job_system::init();
 		fun_ptr fun1 = [](void *) -> void {};
 		job_future<void> f1, f2;
 		job_system::submit({
@@ -84,11 +72,9 @@ namespace pul
 			job_system::process_0();
 			job_system::process_with_workers();
 		}
-		job_system::terminate();
 	}
 	TEST_CASE("JobSystemStealTest6")
 	{
-		job_system::init();
 		fun_ptr fun1 = [](int32_t a, int32_t b) -> int32_t
 		{
 			return a + b;
@@ -111,31 +97,25 @@ namespace pul
 		}
 		REQUIRE(f1.value() == a + b);
 		REQUIRE(f2.value() == c + d);
-		job_system::terminate();
 	}
 
 	/// JOB-SYSTEM: Main tests
 	TEST_CASE("JobSystemMainTest1")
 	{
-		job_system::init();
 		fun_ptr fun1 = [](void *) -> void {};
 		fun_ptr fun2 = [](void *) -> void {};
 		job_system::submit_0({ { fun1 }, { fun2 } });
 		job_system::process_0();
-		job_system::terminate();
 	}
 	TEST_CASE("JobSystemMainTest2")
 	{
-		job_system::init();
 		fun_ptr fun1 = [](void *) -> void {};
 		job_future<void> fut1;
 		job_system::submit_0(fut1, { fun1 });
 		job_system::process_0();
-		job_system::terminate();
 	}
 	TEST_CASE("JobSystemMainTest3")
 	{
-		job_system::init();
 		job j;
 		fun_ptr fun1 = [](void *) -> void {};
 		for (size_t i = 0; i < 16; ++i)
@@ -143,11 +123,9 @@ namespace pul
 			job_system::submit_0(j, { { fun1 } });
 		}
 		job_system::process_0();
-		job_system::terminate();
 	}
 	TEST_CASE("JobSystemMainTest4")
 	{
-		job_system::init();
 		job j;
 		fun_ptr fun1 = [](void *) -> void {};
 		job_future<void> fut1, fut2;
@@ -156,11 +134,9 @@ namespace pul
 				{ fut2, fun1, nullptr}
 		});
 		job_system::process_0();
-		job_system::terminate();
 	}
 	TEST_CASE("JobSystemMainTest5")
 	{
-		job_system::init();
 		fun_ptr fun1 = [](int32_t a, int32_t b) -> int32_t
 		{
 			return a + b;
@@ -179,6 +155,5 @@ namespace pul
 		job_system::process_0();
 		REQUIRE(f1.value() == a + b);
 		REQUIRE(f2.value() == c + d);
-		job_system::terminate();
 	}
 }

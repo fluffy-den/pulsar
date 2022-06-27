@@ -75,9 +75,8 @@ namespace pul
 		 *  @return Value returned by the encapsulated function pointer.
 		 */
 		template <typename... _InArgs>
-			requires(std::is_invocable_v<_Ret(_Args...), _InArgs...>)
 		pf_hint_nodiscard pf_decl_constexpr _Ret operator()(
-				_InArgs &&...__args)
+				_InArgs &&...__args) const
 		{
 			return this->ptr_(std::forward<_Args>(__args)...);
 		}

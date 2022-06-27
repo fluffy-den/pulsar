@@ -30,7 +30,7 @@ namespace pul
 	pf_decl_constexpr uint32_t MAX_NAME_LEN		= 1024;
 
 	// Debug Trace
-	pulsar_api pf_hint_nodiscard std::vector<debug_trace_t> debug_stacktrace(
+	pf_hint_nodiscard pulsar_api std::vector<debug_trace_t> debugger::stacktrace(
 			uint32_t __ignoreNum)
 	{
 		// for now, stacktrace is used only on this process
@@ -130,7 +130,7 @@ namespace pul
 			DWORD64 sd = 0;
 			std::string name(MAX_NAME_LEN, ' '), undname(MAX_NAME_LEN, ' ');
 			if (!SymGetSymFromAddr64(phdl, sf.AddrPC.Offset, &sd, &s.as_symbol))
-				debug_logger::write(
+				debugger::log(
 						debug_level::warning,
 						debug_filter::detail,
 						exception::format(
@@ -139,7 +139,7 @@ namespace pul
 								strfmt("SymGetSymFromAddr64 failed for addr=0x%llx", sf.AddrPC.Offset)));
 			// undecorated Name
 			if (!UnDecorateSymbolName(&s.as_symbol.Name[0], name.data(), name.length(), UNDNAME_NAME_ONLY))
-				debug_logger::write(
+				debugger::log(
 						debug_level::warning,
 						debug_filter::detail,
 						exception::format(
@@ -151,7 +151,7 @@ namespace pul
 			strtolower(name);
 			// fully Undecorated Name
 			if (!UnDecorateSymbolName(&s.as_symbol.Name[0], undname.data(), undname.length(), UNDNAME_COMPLETE))
-				debug_logger::write(
+				debugger::log(
 						debug_level::warning,
 						debug_filter::detail,
 						exception::format(
@@ -163,7 +163,7 @@ namespace pul
 			strtolower(undname);
 			// module name
 			if (!SymGetModuleInfo64(phdl, sf.AddrPC.Offset, &m))
-				debug_logger::write(
+				debugger::log(
 						debug_level::warning,
 						debug_filter::detail,
 						exception::format(
@@ -177,7 +177,7 @@ namespace pul
 			// line
 			DWORD ld = 0;
 			if (!SymGetLineFromAddr64(phdl, sf.AddrPC.Offset, &ld, &l))
-				debug_logger::write(
+				debugger::log(
 						debug_level::warning,
 						debug_filter::detail,
 						exception::format(
@@ -205,7 +205,7 @@ namespace pul
 	}
 
 	/// DumpBin
-	pulsar_api pf_hint_nodiscard std::filesystem::path debug_gendumpbin(
+	pulsar_api pf_hint_nodiscard std::filesystem::path debugger::generate_dumpbin(
 			std::filesystem::path const &__p,
 			uint32_t __flags)
 	{
@@ -213,7 +213,7 @@ namespace pul
 		if (__p.has_extension())
 			throw exception(
 					std::generic_category(),
-					generic_code(std::errc::not_a_directory),
+					debugger::generic_code(std::errc::not_a_directory),
 					"__p must be a directory!");
 		// What flags to generate the dumpbin?
 		union
@@ -314,7 +314,7 @@ namespace pul
 	}
 
 	/// Debug Message box
-	pulsar_api void debug_messagebox(
+	pulsar_api void debugger::generate_messagebox(
 			debug_level __level,
 			std::string_view __title,
 			std::string_view __message)

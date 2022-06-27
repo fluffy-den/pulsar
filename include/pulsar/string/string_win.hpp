@@ -16,6 +16,7 @@
 #include "pulsar/pulsar.hpp"
 
 // Include: C++
+#include <numeric>
 #include <string>
 #include <string_view>
 

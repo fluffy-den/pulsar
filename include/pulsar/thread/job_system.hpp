@@ -1,21 +1,26 @@
-/*! @file   thread.hpp
+/*! @file   job_system.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
  *  @brief
- *  @date   14-06-2022
+ *  @date   27-06-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
  *
  *  @since 0.1.2
  */
 
-#ifndef PULSAR_THREAD_HPP
-#define PULSAR_THREAD_HPP 1
+#ifndef PULSAR_THREAD_JOB_SYSTEM
+#define PULSAR_THREAD_JOB_SYSTEM 1
 
 // Include: Pulsar
+#include "pulsar/debug.hpp"
 #include "pulsar/function.hpp"
 #include "pulsar/linked_list.hpp"
 #include "pulsar/memory.hpp"
+#include "pulsar/static_initializer.hpp"
 #include "pulsar/tuple.hpp"
+
+// Include: Pulsar -> Thread
+#include "pulsar/thread/thread_identifier.hpp"
 
 // Include: C++
 #include <atomic>
@@ -29,12 +34,22 @@
 // Pulsar
 namespace pul
 {
-	/// JOB: Thread ID
-	using job_thread_id = size_t;
+/// JOB: Constant -> Main
+#ifndef PULSAR_JOB_SYSTEM_MAIN_ALLOCATOR_SIZE
+#	define PULSAR_JOB_SYSTEM_MAIN_ALLOCATOR_SIZE 4194304
+#endif // !PULSAR_JOB_SYSTEM_MAIN_ALLOCATOR_SIZE
+
+/// JOB: Constant -> Worker
+#ifndef PULSAR_JOB_SYSTEM_WORKER_ALLOCATOR_SIZE
+#	define PULSAR_JOB_SYSTEM_WORKER_ALLOCATOR_SIZE 1048576
+#endif // !PULSAR_JOB_SYSTEM_WORKER_ALLOCATOR_SIZE
 
 	/// JOB: System
 	class job_system pf_attr_final
 	{
+		/// Initializer
+		pf_decl_friend static_initializer<job_system>;
+
 		/// Types
 		struct __thread_storage;
 		struct __internal;
@@ -104,7 +119,6 @@ namespace pul
 		{
 			singly_cds_linked_lifo<__job> list_;
 			memory::allocator_ring allocator_;
-			job_thread_id id_;
 
 			/// Constructors
 			__thread_storage() pf_attr_noexcept
@@ -119,10 +133,8 @@ namespace pul
 		struct __internal
 		{
 			/// Constructors
-			__internal(
-					size_t __mcs,
-					size_t __wcs)
-					: store_(__mcs)
+			__internal()
+					: store_(PULSAR_JOB_SYSTEM_MAIN_ALLOCATOR_SIZE)
 					, cacheline1_{ '\0' }
 					, running_(true)
 					, cacheline2_{ '\0' }
@@ -130,9 +142,9 @@ namespace pul
 					, cacheline3_{ '\0' }
 			{
 				// Thread -> Main
-				localstore_				= &(*this->store_);
-				this->store_->id_ = 0;
-				const size_t n		= std::thread::hardware_concurrency() - 1;
+				localstore_			 = &(*this->store_);
+				this_thread::id_ = 0;
+				const size_t n	 = std::thread::hardware_concurrency() - 1;
 				this->traveler_.insert_tail(&this->store_);
 				// Thread -> Workers
 				this->workers_ = std::make_unique<singly_node<__worker>[]>(n);
@@ -144,7 +156,10 @@ namespace pul
 						singly_node<__worker> *as_worker;
 					};
 					as_worker = &this->workers_[i];
-					::new (as_void) singly_node<__worker>(__wcs, this, i + 1);
+					::new (as_void) singly_node<__worker>(
+							PULSAR_JOB_SYSTEM_WORKER_ALLOCATOR_SIZE,
+							this,
+							i + 1);
 					singly_iterator it = as_worker;
 					this->traveler_.insert_tail(&it->store_);
 				}
@@ -394,13 +409,13 @@ namespace pul
 				});
 			}
 			/// Process -> Work on jobs
-			pf_decl_static job_thread_id __proc(
+			pf_decl_static thread_id_t __proc(
 					__worker *__w,
 					__internal *__i,
-					job_thread_id __id)
+					thread_id_t __id)
 			{
 				localstore_			 = &(*__w->store_);
-				__w->store_->id_ = __id;
+				this_thread::id_ = __id;
 				while (__i->running_.test(std::memory_order::relaxed))
 				{
 					if (__i->numJobs_.load(std::memory_order::relaxed) == 0)
@@ -430,7 +445,7 @@ namespace pul
 								std::make_exception_ptr(__e));
 					}
 				}
-				return localstore_->id_;
+				return this_thread::ID();
 			}
 
 			/// Constructors
@@ -440,7 +455,7 @@ namespace pul
 			__worker(
 					size_t __wcs,
 					__internal *__i,
-					job_thread_id __id)
+					thread_id_t __id)
 					: store_(__wcs)
 					, pos_(&this->store_)
 					, thread_(&__worker::__proc, this, __i, __id)
@@ -467,11 +482,11 @@ namespace pul
 			/// Internal -> Set
 			void __set_unfinished()
 			{
-				this->ID_ = std::numeric_limits<job_thread_id>::max();
+				this->ID_ = std::numeric_limits<thread_id_t>::max();
 				this->finished_.clear(std::memory_order::relaxed);
 			}
 			void __set_finished(
-					job_thread_id __ID)
+					thread_id_t __ID)
 			{
 				this->ID_ = __ID;
 				this->finished_.test_and_set(std::memory_order::relaxed);
@@ -483,14 +498,14 @@ namespace pul
 				if (!this->is_finished())
 					throw(exception(
 							std::generic_category(),
-							generic_code(std::errc::operation_not_permitted),
+							debugger::generic_code(std::errc::operation_not_permitted),
 							"Isn't processed!"));
 			}
 
 		public:
 			/// Constructors
 			__future()
-					: ID_(std::numeric_limits<job_thread_id>::max())
+					: ID_(std::numeric_limits<thread_id_t>::max())
 					, cacheline1_{ '\0' }
 					, finished_(false)
 					, cacheline2_{ '\0' }
@@ -505,14 +520,14 @@ namespace pul
 			}
 
 			/// ID
-			pf_hint_nodiscard job_thread_id processed_by() const
+			pf_hint_nodiscard thread_id_t processed_by() const
 			{
 				this->__throw_if_not_finished();
 				return this->ID_;
 			}
 
 		private:
-			job_thread_id ID_;
+			thread_id_t ID_;
 			byte_t cacheline1_[64];
 			std::atomic_flag finished_;
 			byte_t cacheline2_[64];
@@ -629,7 +644,7 @@ namespace pul
 					as_void = __pack_args;
 					tuple_apply(as_pack->fun, as_pack->args);
 					pf_assert(!__fut.is_finished(), "Future shouldn't be finished!");
-					as_pack->future->__set_finished(localstore_->id_);
+					as_pack->future->__set_finished(this_thread::ID());
 					std::destroy_at(as_pack);
 				};
 				// Args
@@ -670,7 +685,7 @@ namespace pul
 					as_void = __pack_args;
 					pf_assert(!as_pack->future.is_finished(), "Future shouldn't be finished!");
 					as_pack->future->__set_ret_val(tuple_apply(as_pack->fun, as_pack->args));
-					as_pack->future->__set_finished(localstore_->id_);
+					as_pack->future->__set_finished(this_thread::ID());
 					std::destroy_at(as_pack);
 				};
 				// Args
@@ -786,7 +801,7 @@ namespace pul
 					this->beg_->__run();
 					++this->beg_;
 				}
-				this->future_->__set_finished(localstore_->id_);
+				this->future_->__set_finished(this_thread::ID());
 			}
 
 			/// Job -> Task
@@ -822,7 +837,7 @@ namespace pul
 					c->__run();
 					++c;
 				}
-				this->future_.__set_finished(localstore_->id_);
+				this->future_.__set_finished(this_thread::ID());
 			}
 
 			/// Insert
@@ -931,6 +946,20 @@ namespace pul
 			__job *job_;
 		};
 
+		/// Initializers
+		pf_decl_static void init()
+		{
+			if (instance_)
+				return;
+			instance_ = std::make_unique<__internal>();
+		}
+		pf_decl_static void terminate()
+		{
+			if (!instance_)
+				return;
+			instance_.reset();
+		}
+
 	public:
 		/// External -> Types
 		template <typename _RetTy>
@@ -941,22 +970,6 @@ namespace pul
 
 		/// Constructors
 		job_system() = delete;
-
-		/// Initializers
-		pf_decl_static void init(
-				size_t __mcs = 4194304,
-				size_t __wcs = 1048576)
-		{
-			if (instance_)
-				return;
-			instance_ = std::make_unique<__internal>(__mcs, __wcs);
-		}
-		pf_decl_static void terminate()
-		{
-			if (!instance_)
-				return;
-			instance_.reset();
-		}
 
 		/// Submit -> Unique
 		pf_decl_static void submit(
@@ -1008,15 +1021,24 @@ namespace pul
 			instance_->__process_with_workers();
 		}
 
-		/// ID
-		pf_decl_static job_thread_id local_ID() pf_attr_noexcept
+		/// Initialized
+		pf_hint_nodiscard pf_decl_static bool is_initialized()
 		{
-			return localstore_->id_;
+			return instance_ != nullptr;
+		}
+
+		/// Num Workers
+		pf_hint_nodiscard pf_decl_static size_t num_workers()
+		{
+			return std::thread::hardware_concurrency() - 1;
 		}
 
 	private:
 		pf_decl_static pf_decl_inline std::unique_ptr<__internal> instance_;
+		pf_decl_static pf_decl_inline static_initializer<job_system> initializer_;
+#ifndef PULSAR_JOB_SYSTEM_DONT_INITIALIZE
 		pf_decl_static pf_decl_inline pf_decl_thread_local __thread_storage *localstore_ = nullptr;
+#endif // !PULSAR_JOB_SYSTEM_DONT_INITIALIZE
 	};
 
 	/// JOB: External -> Selector
@@ -1040,4 +1062,4 @@ namespace pul
 	using job									 = job_system::job;
 }
 
-#endif // !PULSAR_THREAD_HPP
+#endif // !PULSAR_THREAD_JOB_SYSTEM
