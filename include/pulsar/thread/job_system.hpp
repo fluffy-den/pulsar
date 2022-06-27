@@ -1033,7 +1033,9 @@ namespace pul
 	private:
 		pf_decl_static pf_decl_inline std::unique_ptr<__internal> instance_;
 		pf_decl_static pf_decl_inline pf_decl_thread_local __thread_storage *localstore_ = nullptr;
+#ifndef PF_DONT_STATIC_INITIALIZE
 		pf_decl_static pf_decl_inline static_initializer<job_system> initializer_;
+#endif // !PF_DONT_STATIC_INITIALIZE
 	};
 
 	/// JOB: External -> Selector
