@@ -47,9 +47,6 @@ namespace pul
 	/// JOB: System
 	class job_system pf_attr_final
 	{
-		/// Initializer
-		pf_decl_friend static_initializer<job_system>;
-
 		/// Types
 		struct __thread_storage;
 		struct __internal;
@@ -946,20 +943,6 @@ namespace pul
 			__job *job_;
 		};
 
-		/// Initializers
-		pf_decl_static void init()
-		{
-			if (instance_)
-				return;
-			instance_ = std::make_unique<__internal>();
-		}
-		pf_decl_static void terminate()
-		{
-			if (!instance_)
-				return;
-			instance_.reset();
-		}
-
 	public:
 		/// External -> Types
 		template <typename _RetTy>
@@ -1033,12 +1016,24 @@ namespace pul
 			return std::thread::hardware_concurrency() - 1;
 		}
 
+		/// Initializers
+		pf_decl_static void init()
+		{
+			if (instance_)
+				return;
+			instance_ = std::make_unique<__internal>();
+		}
+		pf_decl_static void terminate()
+		{
+			if (!instance_)
+				return;
+			instance_.reset();
+		}
+
 	private:
 		pf_decl_static pf_decl_inline std::unique_ptr<__internal> instance_;
-		pf_decl_static pf_decl_inline static_initializer<job_system> initializer_;
-#ifndef PULSAR_JOB_SYSTEM_DONT_INITIALIZE
 		pf_decl_static pf_decl_inline pf_decl_thread_local __thread_storage *localstore_ = nullptr;
-#endif // !PULSAR_JOB_SYSTEM_DONT_INITIALIZE
+		pf_static_initializer(job_system)
 	};
 
 	/// JOB: External -> Selector
