@@ -41,15 +41,6 @@ namespace pul
 			_Ty::terminate();
 		}
 	};
-
-	/// STATIC-INITIALIZER: Handle
-#ifndef PF_DONT_STATIC_INITIALIZE
-#	define pf_static_initializer(_Ty) pf_decl_static pf_decl_inline static_initializer<_Ty> initializer_;
-#else // ^^^ PF_ALLOW_STATIC_INITIALIZE ^^^ / vvv !PF_ALLOW_STATIC_INITIALIZE vvv
-#	define pf_static_initializer(_Ty)
-#endif // !PF_ALLOW_STATIC_INITIALIZE
 }
-
-
 
 #endif // !PULSAR_STATIC_INITIALIZER_HPP

@@ -520,7 +520,7 @@ namespace pul
 
 	private:
 		pf_decl_static pf_decl_inline std::unique_ptr<__internal> instance_;
-		pf_static_initializer(debugger)
+		pf_decl_static pf_decl_inline static_initializer<debugger> initializer_;
 	};
 
 	/// DEBUG: Exception
