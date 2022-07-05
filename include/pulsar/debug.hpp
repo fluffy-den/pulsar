@@ -107,6 +107,8 @@ namespace pul
 	/// Debugger
 	class debugger
 	{
+		pf_static_initializer_allow(debugger);
+
 		/// Internal
 		struct __internal
 		{
@@ -401,6 +403,16 @@ namespace pul
 			uint32_t flags_;
 		};
 
+		/// Initializers
+		pf_decl_static void __init()
+		{
+			instance_ = std::make_unique<__internal>();
+		}
+		pf_decl_static void __terminate()
+		{
+			instance_.reset();
+		}
+
 	public:
 		using exception = __exception;
 
@@ -504,25 +516,9 @@ namespace pul
 			return instance_ != nullptr;
 		}
 
-		/// Initializers
-		pf_decl_static void init()
-		{
-			if (instance_)
-				return;
-			instance_ = std::make_unique<__internal>();
-		}
-		pf_decl_static void terminate()
-		{
-			if (!instance_)
-				return;
-			instance_.reset();
-		}
-
 	private:
 		pf_decl_static pf_decl_inline std::unique_ptr<__internal> instance_;
-#ifndef PF_DONT_STATIC_INITIALIZE
-		pf_decl_static pf_decl_inline static_initializer<debugger> initializer_;
-#endif // !PF_DONT_STATIC_INITIALIZE
+		pf_static_initializer(debugger)
 	};
 
 	/// DEBUG: Exception

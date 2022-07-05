@@ -47,6 +47,8 @@ namespace pul
 	/// JOB: System
 	class job_system pf_attr_final
 	{
+		pf_static_initializer_allow(job_system);
+
 		/// Types
 		struct __thread_storage;
 		struct __internal;
@@ -70,18 +72,15 @@ namespace pul
 		{
 		public:
 			/// Constructor
-			__task_initializer_iterator(
-					const __task_initializer *__p) pf_attr_noexcept
-					: ptr_(__p)
-			{}
-			__task_initializer_iterator(
-					__task_initializer_iterator const &__r)
+			__task_initializer_iterator(const __task_initializer *__p)
+					pf_attr_noexcept: ptr_(__p) {}
+			__task_initializer_iterator(__task_initializer_iterator const &__r)
 					: ptr_(__r.ptr_)
 			{}
 
 			/// Operator=
-			__task_initializer_iterator &operator=(
-					__task_initializer_iterator const &__r)
+			__task_initializer_iterator &
+			operator=(__task_initializer_iterator const &__r)
 			{
 				this->ptr_ = __r.ptr_;
 				return *this;
@@ -101,8 +100,8 @@ namespace pul
 			}
 
 			/// Operator==
-			bool operator==(
-					__task_initializer_iterator const &__r) pf_attr_noexcept
+			bool operator==(__task_initializer_iterator const &__r)
+					pf_attr_noexcept
 			{
 				return this->ptr_ == __r.ptr_;
 			}
@@ -943,6 +942,16 @@ namespace pul
 			__job *job_;
 		};
 
+		/// Initializers
+		pf_decl_static void __init()
+		{
+			instance_ = std::make_unique<__internal>();
+		}
+		pf_decl_static void __terminate()
+		{
+			instance_.reset();
+		}
+
 	public:
 		/// External -> Types
 		template <typename _RetTy>
@@ -1016,26 +1025,10 @@ namespace pul
 			return std::thread::hardware_concurrency() - 1;
 		}
 
-		/// Initializers
-		pf_decl_static void init()
-		{
-			if (instance_)
-				return;
-			instance_ = std::make_unique<__internal>();
-		}
-		pf_decl_static void terminate()
-		{
-			if (!instance_)
-				return;
-			instance_.reset();
-		}
-
 	private:
 		pf_decl_static pf_decl_inline std::unique_ptr<__internal> instance_;
 		pf_decl_static pf_decl_inline pf_decl_thread_local __thread_storage *localstore_ = nullptr;
-#ifndef PF_DONT_STATIC_INITIALIZE
-		pf_decl_static pf_decl_inline static_initializer<job_system> initializer_;
-#endif // !PF_DONT_STATIC_INITIALIZE
+		pf_static_initializer(job_system)
 	};
 
 	/// JOB: External -> Selector

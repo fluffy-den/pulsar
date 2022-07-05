@@ -12,6 +12,7 @@
 #define PULSAR_FUNCTION_HPP 1
 
 // Include: Pulsar -> Function
+#include "pulsar/function/fun_buf.hpp"
 #include "pulsar/function/fun_ptr.hpp"
 #include "pulsar/function/fun_signal.hpp"
 

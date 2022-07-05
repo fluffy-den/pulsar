@@ -31,16 +31,26 @@ namespace pul
 		/// Constructor
 		static_initializer()
 		{
-			_Ty::init();
+			_Ty::__init();
 		}
 		static_initializer(static_initializer<_Ty> const &) = delete;
 
 		/// Destructor
 		~static_initializer()
 		{
-			_Ty::terminate();
+			_Ty::__terminate();
 		}
 	};
+
+	/// STATIC-INITIALIZER: Macro -> Initializer
+#ifndef PF_DONT_STATIC_INITIALIZE
+#	define pf_static_initializer(_Ty, name) pf_decl_static pf_decl_inline static_initializer<_Ty> initializer_;
+#else // ^^^ !PF_DONT_STATIC_INITIALIZE ^^^ / vvv PF_DONT_STATIC_INITIALIZE vvv
+#	define pf_static_initializer(_Ty)
+#endif // PF_DONT_STATIC_INITIALIZE
+
+/// STATIC-INITIALIZER: Macro -> Friendship
+#define pf_static_initializer_allow(_Ty) pf_decl_friend static_initializer<_Ty>
 }
 
 #endif // !PULSAR_STATIC_INITIALIZER_HPP

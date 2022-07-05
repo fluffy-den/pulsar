@@ -46,7 +46,6 @@ namespace pul
 		pf_decl_constexpr fun_ptr() pf_attr_noexcept
 				: ptr_(nullptr)
 		{}
-
 		/*! @brief Constructor.
 		 *
 		 *  @param[in] __ptr Pointer of function.
@@ -55,17 +54,33 @@ namespace pul
 				_Ret (*__ptr)(_Args...)) pf_attr_noexcept
 				: ptr_(__ptr)
 		{}
-		/*! @brief Copy constructor for Functors / Lambdas types.
+		/*! @brief Copy constructor for Functors / Empty Lambdas types.
 		 *
 		 *  @tparam _Fun Functor / Lambda type.
 		 *  @param[in] __ptr Function to copy.
-		 *  @return This function pointer.
 		 */
 		template <typename _Fun>
 		pf_decl_constexpr fun_ptr(
 				_Fun __ptr) pf_attr_noexcept
+				: ptr_(__ptr)
+		{}
+		/*! @brief Copy constructor.
+		 *
+		 *  @param[in] __r Other function pointer.
+		 */
+		pf_decl_constexpr fun_ptr(
+				fun_ptr<_Ret(_Args...)> const &__r) pf_attr_noexcept
+				: ptr_(__r.ptr_)
+		{}
+		/*! @brief Move constructor.
+		 *
+		 *  @param[in] __r Other function pointer.
+		 */
+		pf_decl_constexpr fun_ptr(
+				fun_ptr<_Ret(_Args...)> &&__r) pf_attr_noexcept
+				: ptr_(__r.ptr_)
 		{
-			this->ptr_ = __ptr;
+			__r.ptr_ = nullptr;
 		}
 
 		/// Operator()
@@ -103,7 +118,7 @@ namespace pul
 	 */
 	template <
 			typename>
-	struct __fun_ptr_helper
+	struct __fun_helper
 	{};
 
 	/*! @brief Deduction specialization for non-constant non-referred methods.
@@ -118,7 +133,7 @@ namespace pul
 			typename _Tp,
 			bool _Nx,
 			typename... _Args>
-	struct __fun_ptr_helper<
+	struct __fun_helper<
 			_Res (_Tp::*)(_Args...) noexcept(_Nx)>
 	{
 		using type = _Res(_Args...);
@@ -136,7 +151,7 @@ namespace pul
 			typename _Tp,
 			bool _Nx,
 			typename... _Args>
-	struct __fun_ptr_helper<
+	struct __fun_helper<
 			_Res (_Tp::*)(_Args...) &noexcept(_Nx)>
 	{
 		using type = _Res(_Args...);
@@ -154,7 +169,7 @@ namespace pul
 			typename _Tp,
 			bool _Nx,
 			typename... _Args>
-	struct __fun_ptr_helper<
+	struct __fun_helper<
 			_Res (_Tp::*)(_Args...) const noexcept(_Nx)>
 	{
 		using type = _Res(_Args...);
@@ -172,7 +187,7 @@ namespace pul
 			typename _Tp,
 			bool _Nx,
 			typename... _Args>
-	struct __fun_ptr_helper<
+	struct __fun_helper<
 			_Res (_Tp::*)(_Args...) const &noexcept(_Nx)>
 	{
 		using type = _Res(_Args...);
@@ -195,7 +210,7 @@ namespace pul
 	 */
 	template <
 			typename _Functor,
-			typename _Signature = typename __fun_ptr_helper<decltype(&_Functor::operator())>::type>
+			typename _Signature = typename __fun_helper<decltype(&_Functor::operator())>::type>
 	fun_ptr(_Functor) -> fun_ptr<_Signature>;
 }
 
