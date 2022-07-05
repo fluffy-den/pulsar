@@ -347,8 +347,7 @@ namespace pul
 
 		/// Operator=
 		pf_decl_inline pf_decl_constexpr tuple<_Ts...> &operator=(tuple<_Ts...> const &__r) = default;
-		pf_decl_inline pf_decl_constexpr tuple<_Ts...> &operator=(
-				tuple<_Ts...> &&__r) = default;
+		pf_decl_inline pf_decl_constexpr tuple<_Ts...> &operator=(tuple<_Ts...> &&__r)			= default;
 	};
 
 	/// TUPLE: Get

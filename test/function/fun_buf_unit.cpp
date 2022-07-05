@@ -20,13 +20,14 @@ namespace pul
 	// Function Buffer Tests
 	TEST_CASE("FunctionBufferTest")
 	{
+		int64_t j		= 2;
 		auto lambda = [&](int64_t __i)
-		{ return __i + 1; };
+		{ return __i + j + 1; };
 		fun_buf p = lambda;
 		auto task = [](void *)
 		{ return; };
 		fun_buf t = task;
 		t(nullptr);
-		REQUIRE(p(1) == 2);
+		REQUIRE(p(1) == 4);
 	}
 }
