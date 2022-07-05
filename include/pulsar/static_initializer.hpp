@@ -44,7 +44,7 @@ namespace pul
 
 	/// STATIC-INITIALIZER: Macro -> Initializer
 #ifndef PF_DONT_STATIC_INITIALIZE
-#	define pf_static_initializer(_Ty, name) pf_decl_static pf_decl_inline static_initializer<_Ty> initializer_;
+#	define pf_static_initializer(_Ty) pf_decl_static pf_decl_inline static_initializer<_Ty> initializer_;
 #else // ^^^ !PF_DONT_STATIC_INITIALIZE ^^^ / vvv PF_DONT_STATIC_INITIALIZE vvv
 #	define pf_static_initializer(_Ty)
 #endif // PF_DONT_STATIC_INITIALIZE
