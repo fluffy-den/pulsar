@@ -18,6 +18,7 @@
 // Include: C++
 #	include <tuple>
 
+// Win -> DllMain
 BOOL APIENTRY DllMain(
 		HANDLE __module,
 		DWORD __reason,

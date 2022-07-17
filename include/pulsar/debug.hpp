@@ -15,7 +15,6 @@
 #include "pulsar/function.hpp"
 #include "pulsar/memory.hpp"
 #include "pulsar/pulsar.hpp"
-#include "pulsar/static_initializer.hpp"
 
 // Include: Pulsar -> Thread ID
 #include "pulsar/thread/thread_identifier.hpp"
@@ -36,7 +35,6 @@ namespace pul
 	 */
 	namespace debug_flags
 	{
-
 		pf_decl_constexpr uint32_t none					 = 0x00000000;
 		pf_decl_constexpr uint32_t write_in_logs = 0x00000001; // Write in logs when exception is called.
 
@@ -104,320 +102,109 @@ namespace pul
 		detail,
 	};
 
-	/// Debugger
-	class debugger
+	/// Exception
+	/*! @brief Class defining unexpected errors.
+	 */
+	class pulsar_api exception pf_attr_final: public std::exception
 	{
-		pf_static_initializer_allow(debugger);
+		/// Message -> Initializer
+		pf_decl_static std::string __exception_message(
+				std::error_category const &__cat,
+				int32_t __code,
+				std::string_view __message) pf_attr_noexcept;
 
-		/// Internal
-		struct __internal
-		{
-			/// Constructor
-			__internal() pf_attr_noexcept
-					: loggerDefaultReceiver_(__default_writter)
-					, dumpbinpath_(std::filesystem::current_path())
-					, loggerStart_(std::chrono::high_resolution_clock::now())
-					, loggerFilter_(debug_filter::detail)
-			{
-				// Transmitter
-				this->loggerTransmitter_.add_signal(this->loggerDefaultReceiver_);
-				// Exception not handled function
-				auto lbd = []() pf_attr_noexcept
-				{
-					std::exception_ptr ep = std::current_exception();
-					if (ep)
-					{
-						std::string cat, msg;
-						uint32_t flags = 0;
-						// get the last exception, and process it.
-						try
-						{
-							std::rethrow_exception(ep);
-						}
-						catch (__exception const &e)
-						{
-							msg		= e.what();
-							flags = e.get_flags();
-						}
-						catch (std::exception const &e)
-						{
-							msg		= e.what();
-							flags = debug_flags::generate_dumpfile;
-						}
-						// then generate a dumpbin with exception information
-						try
-						{
-							auto dbp = generate_dumpbin(instance_->dumpbinpath_, flags);
-							generate_messagebox(
-									debug_level::error,
-									"Pulsar - Framework",
-									strfmt("Unexpected error! %s\n\nGenerated dumbfile"
-												 "code=%u, at path=%s\n"
-												 "Press ok to terminate the process...",
-												 msg.c_str(),
-												 flags,
-												 dbp.string().c_str()));
-						}
-						catch (__exception const &e)
-						{
-							// ignore to avoid creating an error loop
-							std::ignore = e;
-							return;
-						}
-					}
-					// using the standard c abort function
-					std::abort();
-				};
-				// using the standard library for error handling
-				std::set_terminate(lbd);
-			}
-
-			/// Writter -> Default
-			pf_decl_static void __default_writter(
-					std::string_view __message) pf_attr_noexcept
-			{
-				std::puts(__message.data());
-			}
-
-			/// Writter -> Write
-			void __log_write(
-					debug_level __level,
-					debug_filter __filter,
-					std::string_view __message = "")
-			{
-				// checks if message isn't filtered (displayable)
-				if (this->loggerFilter_ <= __filter)
-					return;
-				// reservation
-				const size_t headersize = 27;
-				std::string msg;
-				msg.reserve(headersize + 5
-										+ __message.length() + (__message.length() / headersize + 1) * headersize);
-				// chrono header
-				auto now			= std::chrono::high_resolution_clock::now() - this->loggerStart_;
-				const auto h	= std::chrono::duration_cast<std::chrono::hours>(now);
-				const auto m	= std::chrono::duration_cast<std::chrono::minutes>(now - h);
-				const auto s	= std::chrono::duration_cast<std::chrono::seconds>(now - h - m);
-				const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - h - m - s);
-				// fmt chrono
-				strfmt(
-						"[%c] - [%.4lli:%.2lli:%.2lli:%.4lli] - T%.2zu -> ",
-						msg,
-						msg.end(),
-						__level,
-						h.count(),
-						m.count(),
-						s.count(),
-						ms.count(),
-						this_thread::ID());
-				// fmt msg
-				if (__message.empty())
-				{
-					msg = "No message.";
-				}
-				else
-				{
-					for (auto i : __message)
-					{
-						msg += i;
-						if (i == '\n')
-						{
-							msg.append(headersize, ' ');
-						}
-					}
-				}
-				// write
-				this->loggerTransmitter_(msg);
-			}
-
-			fun_receiver<void(std::string_view)> loggerDefaultReceiver_;
-			fun_transmitter<void(std::string_view)> loggerTransmitter_;
-			std::filesystem::path dumpbinpath_;
-			std::chrono::high_resolution_clock::time_point loggerStart_;
-			debug_filter loggerFilter_;
-		};
-
-		/// Exception
-		/*! @brief Class defining unexpected errors.
-		 */
-		class __exception pf_attr_final: public std::exception
-		{
-			/// Message -> Initializer
-			pf_decl_static std::string __exception_message(
-					std::error_category const &__cat,
-					int32_t __code,
-					std::string_view __message) pf_attr_noexcept
-			{
-				std::vector<debug_trace_t> dtl = debugger::stacktrace(2);
-				std::string msg;
-				size_t rsv = __message.length() * 2
-									 + dtl.size() * (4 * 1024 + 32);
-				rsv += memory::padding_of(rsv, memory::MAX_ALIGN);
-				msg.reserve(rsv);
-				msg += __exception::format(__cat, __code, __message);
-				msg += '\n';
-				for (auto &tr : dtl)
-				{
-					msg += "at file=";
-					msg += tr.filename;
-					if (tr.fileline != 0)
-					{
-						msg += ':';
-						msg += std::to_string(tr.fileline);
-					}
-					msg += " in module=";
-					msg += tr.modulename;
-					msg += ", func=";
-					msg += tr.undname;
-					msg += '\n';
-				}
-				return msg;
-			}
-
-			// Message -> Add end point
-			pf_decl_static std::string &__add_end_point_to_message(
-					std::string &__str) pf_attr_noexcept
-			{
-				if (__str.back() != '.')
-					__str += '.';
-				return __str;
-			}
-
-		public:
-			/// Constructors
-			/*! @brief Constructor.
-			 *
-			 *  @param[in] __cat		 Category of the error.
-			 *  @param[in] __code		 Code of the error.
-			 *  @param[in] __message (optional) Message explaining the error.
-			 *  @param[in] __flags	 (optional) @see debug_flags.
-			 */
-			__exception(
-					std::error_category const &__cat,
-					int32_t __code,
-					std::string_view __message = "",
-					uint32_t __flags					 = debug_flags::default_flags) pf_attr_noexcept
-					: code_(__code, __cat)
-					, message_(__exception_message(__cat, __code, __message))
-					, flags_(__flags)
-			{
-				if ((this->flags_ & debug_flags::write_in_logs) == debug_flags::write_in_logs)
-				{
-					debugger::log(
-							debug_level::error,
-							debug_filter::important,
-							this->message_);
-				}
-			}
-			/*! @brief Copy constructor.
-			 *
-			 *  @param[in] __r Another instance from wich to copy.
-			 */
-			__exception(__exception const &__r) pf_attr_noexcept = default;
-
-			/// Operator=
-			/*! @brief Copy assignment operator.
-			 *
-			 *  @param[in] __r Another instance from wich to copy.
-			 *  @return Reference on this instance.
-			 */
-			__exception &operator=(__exception const &__r) pf_attr_noexcept = default;
-
-			/// Code
-			/*! @brief Gets the associated error_code with this exception.
-			 *
-			 *  @return Constant reference on this associated error_code.
-			 */
-			pf_hint_nodiscard const std::error_code &code() const pf_attr_noexcept
-			{
-				return this->code_;
-			}
-
-			/// What
-			/*! @brief Gets the formatted message explaining the exception.
-			 *
-			 *  @return Constant pointer on this associated formatted message explaining the error.
-			 */
-			pf_hint_nodiscard const char *what() const pf_attr_noexcept pf_attr_override
-			{
-				return this->message_.c_str();
-			}
-
-			/// Flags
-			/*! @brief Gets the current associated flags with this exception.
-			 *
-			 *  @return @see debug_flags.
-			 */
-			pf_hint_nodiscard uint32_t get_flags() const pf_attr_noexcept
-			{
-				return this->flags_;
-			}
-
-			/*! @brief Set the new flags for this exception.
-			 *
-			 *  @param[in] __flags @see debug_flags.
-			 *  @return Old flags of this exception.
-			 */
-			void set_flags(
-					uint32_t __flags) pf_attr_noexcept
-			{
-				this->flags_ = __flags;
-			}
-
-			/// Formatters
-			/*! @brief Generates a formatted message of an error.
-			 *
-			 *  @param[in] __cat	   Category of the error.
-			 *  @param[in] __code		 Code of the error.
-			 *  @param[in] __message (optional) Message explaining the error.
-			 *  @return Formatted error message.
-			 */
-			pf_hint_nodiscard pf_decl_static std::string format(
-					std::error_category const &__cat,
-					int32_t __code,
-					std::string_view __message = "") pf_attr_noexcept
-			{
-				std::string catmsg = __cat.message(__code).c_str();
-				__add_end_point_to_message(catmsg);
-				strtriml(catmsg);
-				strtrimr(catmsg);
-				std::string fmtmsg;
-				fmtmsg.resize(__message.size());
-				__message.copy(fmtmsg.data(), fmtmsg.size());
-				strtriml(fmtmsg);
-				strtrimr(fmtmsg);
-				__add_end_point_to_message(fmtmsg);
-				return strfmt(
-						__message.empty()
-								? "category=%s, code=%i, message=%s"
-								: "category=%s, code=%i, message=%s %s",
-						__cat.name(),
-						__code,
-						catmsg.data(),
-						fmtmsg.data());
-			}
-
-		private:
-			std::error_code code_;
-			std::string message_;
-			uint32_t flags_;
-		};
-
-		/// Initializers
-		pf_decl_static void __init()
-		{
-			instance_ = std::make_unique<__internal>();
-		}
-		pf_decl_static void __terminate()
-		{
-			instance_.reset();
-		}
+		// Message -> Add end point
+		pf_decl_static std::string &__add_end_point_to_message(
+				std::string &__str) pf_attr_noexcept;
 
 	public:
-		using exception = __exception;
+		/// Constructors
+		/*! @brief Constructor.
+		 *
+		 *  @param[in] __cat		 Category of the error.
+		 *  @param[in] __code		 Code of the error.
+		 *  @param[in] __message (optional) Message explaining the error.
+		 *  @param[in] __flags	 (optional) @see debug_flags.
+		 */
+		exception(
+				std::error_category const &__cat,
+				int32_t __code,
+				std::string_view __message = "",
+				uint32_t __flags					 = debug_flags::default_flags) pf_attr_noexcept;
+		/*! @brief Copy constructor.
+		 *
+		 *  @param[in] __r Another instance from wich to copy.
+		 */
+		exception(exception const &__r) pf_attr_noexcept = default;
+
+		/// Operator=
+		/*! @brief Copy assignment operator.
+		 *
+		 *  @param[in] __r Another instance from wich to copy.
+		 *  @return Reference on this instance.
+		 */
+		exception &operator=(exception const &__r) pf_attr_noexcept = default;
+
+		/// Code
+		/*! @brief Gets the associated error_code with this exception.
+		 *
+		 *  @return Constant reference on this associated error_code.
+		 */
+		pf_hint_nodiscard const std::error_code &code() const pf_attr_noexcept;
+
+		/// What
+		/*! @brief Gets the formatted message explaining the exception.
+		 *
+		 *  @return Constant pointer on this associated formatted message explaining the error.
+		 */
+		pf_hint_nodiscard const char *what() const pf_attr_noexcept pf_attr_override;
+
+		/// Flags
+		/*! @brief Gets the current associated flags with this exception.
+		 *
+		 *  @return @see debug_flags.
+		 */
+		pf_hint_nodiscard uint32_t get_flags() const pf_attr_noexcept;
+
+		/*! @brief Set the new flags for this exception.
+		 *
+		 *  @param[in] __flags @see debug_flags.
+		 *  @return Old flags of this exception.
+		 */
+		void set_flags(uint32_t __flags) pf_attr_noexcept;
+
+		/// Formatters
+		/*! @brief Generates a formatted message of an error.
+		 *
+		 *  @param[in] __cat	   Category of the error.
+		 *  @param[in] __code		 Code of the error.
+		 *  @param[in] __message (optional) Message explaining the error.
+		 *  @return Formatted error message.
+		 */
+		pf_hint_nodiscard pf_decl_static std::string format(
+				std::error_category const &__cat,
+				int32_t __code,
+				std::string_view __message = "") pf_attr_noexcept;
+
+	private:
+		std::error_code code_;
+		std::string message_;
+		uint32_t flags_;
+	};
+
+	/// DEBUGGER: Debugger
+	class pulsar_api debugger
+	{
+	public:
+		using exception = exception;
 
 		/// Constructors
-		debugger() = delete;
+		debugger();
+		debugger(debugger const &) = delete;
+		debugger(debugger &&)			 = delete;
+
+		/// Destructor
+		~debugger();
 
 		/// StackTrace -> Get List
 		/*! @brief Generates the current call stack trace and ignores the first @a __numToIgnore traces.
@@ -425,40 +212,48 @@ namespace pul
 		 *  @param[in] __numToIgnore Number of trace to ignore.
 		 *  @return Trace list of the call stack.
 		 */
-		pf_hint_nodiscard pulsar_api pf_decl_static debug_trace_list_t stacktrace(
+		pf_hint_nodiscard pf_decl_static debug_trace_list_t stacktrace(
 				uint32_t __numToIgnore = 1);
 
 		/// Writter -> Signals
-		pf_decl_static void add_log_receiver(fun_receiver<void(std::string_view)> &__wr)
-				pf_attr_noexcept
-		{
-			instance_->loggerTransmitter_.add_signal(__wr);
-		}
-		pf_decl_static void rem_log_receiver(
-				fun_receiver<void(std::string_view)> &__wr) pf_attr_noexcept
-		{
-			instance_->loggerTransmitter_.rem_signal(__wr);
-		}
+		/*! @brief Add signal receiver to logger. (Function that receives next message to write)
+		 *
+		 *  @param[in] __wr Signal receiver to add.
+		 */
+		pf_decl_static void add_log_signal(
+				shared_isignal<void(std::string_view)> &__wr) pf_attr_noexcept;
+		/*! @brief Remove signal receiver from logger.
+		 *
+		 *  @param[in] __wr Signal receiver to remove.
+		 */
+		pf_decl_static void rem_log_signal(
+				shared_isignal<void(std::string_view)> &__wr)
+				pf_attr_noexcept;
 
 		/// Writter -> Filters
-		pf_hint_nodiscard pf_decl_static debug_filter log_filter() pf_attr_noexcept
-		{
-			return instance_->loggerFilter_;
-		}
+		/*! @brief Gets the current log filters.
+		 *
+		 *  @return Log Filter.
+		 */
+		pf_hint_nodiscard pf_decl_static debug_filter log_filter() pf_attr_noexcept;
+		/*! @brief Set the log filters.
+		 *
+		 *  @param[in] __f New log filters.
+		 */
 		pf_decl_static void set_log_filter(
-				debug_filter __f) pf_attr_noexcept
-		{
-			instance_->loggerFilter_ = __f;
-		}
+				debug_filter __f) pf_attr_noexcept;
 
 		/// Writter -> Write
+		/*! @brief Writes a message.
+		 *
+		 *  @param[in] __level   Level.
+		 *  @param[in] __filter  Importance.
+		 *  @param[in] __message Message.
+		 */
 		pf_decl_static void log(
 				debug_level __level,
 				debug_filter __filter,
-				std::string_view __message)
-		{
-			instance_->__log_write(__level, __filter, __message);
-		}
+				std::string_view __message);
 
 		/// Generic -> Code Cast
 		/*! @brief Converts a generic error code to an integer.
@@ -484,45 +279,47 @@ namespace pul
 		 *
 		 *  @return Reference on the path.
 		 */
-		pf_hint_nodiscard pf_decl_static std::filesystem::path &dumpfile_creation_path() pf_attr_noexcept
-		{
-			return instance_->dumpbinpath_;
-		}
-		/*! @brief Changes the path of the directory where the dump files are generated.
+		pf_hint_nodiscard pf_decl_static std::filesystem::path &dumpfile_creation_path() pf_attr_noexcept;
+		/*! @brief Changes the path of the directory where the dump files are generated when an error
+		 *				 is caught.
 		 *
 		 *  @param[in] __p New directory.
 		 *  @return Old path.
 		 */
 		pf_decl_static void set_dumpfile_creation_path(
-				std::filesystem::path &&__p) pf_attr_noexcept
-		{
-			instance_->dumpbinpath_ = std::move(__p);
-		}
+				std::filesystem::path &&__p) pf_attr_noexcept;
 
 		/// Dumpbin -> Generate
+		/*! @brief Generates a dumpbin.
+		 *
+		 *  @param[in] __p		 Filepath where the dumpbin should be generated.
+		 *  @param[in] __flags Dumpbin flags.
+		 *  @return Path to the dumpbin.
+		 */
 		pf_hint_nodiscard pulsar_api pf_decl_static std::filesystem::path generate_dumpbin(
 				std::filesystem::path const &__p,
 				uint32_t __flags);
 
 		/// Message -> Box
+		/*! @brief Generates a message box according to @a __level argument.
+		 *
+		 *  @param[in] __level	 Level of the message.
+		 *  @param[in] __title	 Title of the box.
+		 *  @param[in] __message Message.
+		 *
+		 *  @warning Blocks the main thread.
+		 */
 		pulsar_api pf_decl_static void generate_messagebox(
 				debug_level __level,
 				std::string_view __title,
 				std::string_view __message);
-
-		/// Initialized
-		pf_decl_static bool is_initialized() pf_attr_noexcept
-		{
-			return instance_ != nullptr;
-		}
-
-	private:
-		pf_decl_static pf_decl_inline std::unique_ptr<__internal> instance_;
-		pf_static_initializer(debugger)
 	};
 
 	/// DEBUG: Exception
 	using exception = debugger::exception;
+
+	/// DEBUG: Initializer
+	pulsar_api pf_decl_extern const debugger __debugger;
 }
 
 // Include: Pulsar -> Thread

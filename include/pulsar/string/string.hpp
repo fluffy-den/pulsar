@@ -184,6 +184,8 @@ namespace pul
 		__str.insert(__w, buf.data(), buf.data() + n);
 		return __str;
 	}
+
+	// TODO: In constexpr
 }
 
 #endif // !PULSAR_UTILITY_STRING_HPP

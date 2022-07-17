@@ -23,20 +23,12 @@ namespace pul
 	/// This_Thread
 	class this_thread
 	{
-		pf_decl_friend class job_system;
-
 	public:
 		/// Constructor
 		this_thread() = delete;
 
 		/// ID
-		pf_decl_inline pf_decl_static thread_id_t ID() pf_attr_noexcept
-		{
-			return id_;
-		}
-
-	private:
-		pf_decl_static pf_decl_inline pf_decl_thread_local thread_id_t id_ = 0;
+		pulsar_api pf_decl_static thread_id_t ID() pf_attr_noexcept;
 	};
 }
 

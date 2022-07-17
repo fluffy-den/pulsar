@@ -34,8 +34,8 @@ namespace pul
 		{
 			job_system::submit({ fun1 });
 		}
-		job_system::process_with_workers();
 		job_system::process_0();
+		job_system::process();
 	}
 	TEST_CASE("JobSystemStealTest3")
 	{
@@ -43,7 +43,7 @@ namespace pul
 		fun_ptr fun1 = [](void *) -> void {};
 		job_system::submit(fut1, { fun1 });
 		job_system::process_0();
-		job_system::process_with_workers();
+		job_system::process();
 	}
 	TEST_CASE("JobSystemStealTest4")
 	{
@@ -56,7 +56,7 @@ namespace pul
 		while (!j->future().is_finished())
 		{
 			job_system::process_0();
-			job_system::process_with_workers();
+			job_system::process();
 		}
 	}
 	TEST_CASE("JobSystemStealTest5")
@@ -70,7 +70,7 @@ namespace pul
 		while (!f1.is_finished() || !f2.is_finished())
 		{
 			job_system::process_0();
-			job_system::process_with_workers();
+			job_system::process();
 		}
 	}
 	TEST_CASE("JobSystemStealTest6")
@@ -93,7 +93,7 @@ namespace pul
 		while (!f1.is_finished() || !f2.is_finished())
 		{
 			job_system::process_0();
-			job_system::process_with_workers();
+			job_system::process();
 		}
 		REQUIRE(f1.value() == a + b);
 		REQUIRE(f2.value() == c + d);

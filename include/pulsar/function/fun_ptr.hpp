@@ -24,9 +24,9 @@ namespace pul
 	/// FUNCTION: Pointer
 	/*! @brief Function pointer.
 	 *
-	 *  @tparam _Fun Encapsulated function type.
+	 *  @tparam _FunTy Encapsulated function type.
 	 */
-	template <typename _Fun>
+	template <typename _FunTy>
 	class fun_ptr;
 
 	/*! @brief Function pointer specialization.
@@ -56,12 +56,12 @@ namespace pul
 		{}
 		/*! @brief Copy constructor for Functors / Empty Lambdas types.
 		 *
-		 *  @tparam _Fun Functor / Lambda type.
+		 *  @tparam _FunTy Functor / Lambda type.
 		 *  @param[in] __ptr Function to copy.
 		 */
-		template <typename _Fun>
+		template <typename _FunTy>
 		pf_decl_constexpr fun_ptr(
-				_Fun __ptr) pf_attr_noexcept
+				_FunTy __ptr) pf_attr_noexcept
 				: ptr_(__ptr)
 		{}
 		/*! @brief Copy constructor.
@@ -81,6 +81,31 @@ namespace pul
 				: ptr_(__r.ptr_)
 		{
 			__r.ptr_ = nullptr;
+		}
+
+		/// Operator=
+		/*! @brief Copy assignment operator.
+		 *
+		 *  @param[in] __r Other function pointer.
+		 *  @return Reference on this function pointer.
+		 */
+		pf_decl_constexpr fun_ptr<_Ret(_Args...)> &operator=(
+				fun_ptr<_Ret(_Args...)> const &__r) pf_attr_noexcept
+		{
+			this->ptr_ = __r.ptr_;
+			return *this;
+		}
+		/*! @brief Move assignment operator.
+		 *
+		 *  @param[in] __r Other function pointer.
+		 *  @return Reference on this function pointer.
+		 */
+		pf_decl_constexpr fun_ptr<_Ret(_Args...)> &operator=(
+				fun_ptr<_Ret(_Args...)> &&__r) pf_attr_noexcept
+		{
+			this->ptr_ = __r.ptr_;
+			__r.ptr_	 = nullptr;
+			return *this;
 		}
 
 		/// Operator()

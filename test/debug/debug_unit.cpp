@@ -18,21 +18,21 @@
 namespace pul
 {
 	// Debug Logger
-	TEST_CASE("DebugLoggerInfoTest", "[debug]")
+	TEST_CASE("DebugLoggerInfoTest")
 	{
 		debugger::log(
 				debug_level::info,
 				debug_filter::important,
 				"This is an info message...");
 	}
-	TEST_CASE("DebugLoggerWarningTest", "[debug]")
+	TEST_CASE("DebugLoggerWarningTest")
 	{
 		debugger::log(
 				debug_level::warning,
 				debug_filter::important,
 				"This is a warning message...");
 	}
-	TEST_CASE("DebugLoggerErrorTest", "[debug]")
+	TEST_CASE("DebugLoggerErrorTest")
 	{
 		debugger::log(
 				debug_level::error,
@@ -40,33 +40,33 @@ namespace pul
 				"This is an error message...");
 	}
 
+	// Debug StackTrace
+	TEST_CASE("DebugStacktraceTest")
+	{
+		auto stl = debugger::stacktrace(0);
+		REQUIRE(!stl.empty());
+	}
+
 	// Debug Message Box
-	TEST_CASE("DebugMessageBoxInfo", "[debug]")
+	TEST_CASE("DebugMessageBoxInfo")
 	{
 		debugger::generate_messagebox(
 				debug_level::info,
 				"Info message box",
 				"This is an info message box.");
 	}
-	TEST_CASE("DebugMessageBoxWarning", "[debug]")
+	TEST_CASE("DebugMessageBoxWarning")
 	{
 		debugger::generate_messagebox(
 				debug_level::warning,
 				"Warning message box",
 				"This is a warning message box.");
 	}
-	TEST_CASE("DebugMessageBoxError", "[debug]")
+	TEST_CASE("DebugMessageBoxError")
 	{
 		debugger::generate_messagebox(
 				debug_level::error,
 				"Error message box",
 				"This is an error message box.");
-	}
-
-	// Debug StackTrace
-	TEST_CASE("DebugStacktraceTest", "[debug]")
-	{
-		auto stl = debugger::stacktrace(0);
-		REQUIRE(!stl.empty());
 	}
 }
