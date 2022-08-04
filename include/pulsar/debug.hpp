@@ -113,7 +113,7 @@ namespace pul
 				int32_t __code,
 				std::string_view __message) pf_attr_noexcept;
 
-		// Message -> Add end point
+		/// Message -> Add end point
 		pf_decl_static std::string &__add_end_point_to_message(
 				std::string &__str) pf_attr_noexcept;
 

@@ -364,13 +364,13 @@ namespace pul
 	}
 
 	// Job System -> Submit -> Unique with Future
-	void job_system::submit(
+	pf_decl_inline void job_system::submit(
 			future &__f,
 			std::initializer_list<task_initializer> const &__il)
 	{
 		__job_sys_internal::instance_->__submit(__f, __il);
 	}
-	void job_system::submit_0(
+	pf_decl_inline void job_system::submit_0(
 			future &__f,
 			std::initializer_list<task_initializer> const &__il)
 	{
@@ -378,13 +378,13 @@ namespace pul
 	}
 
 	// Job System -> Submit -> Shared
-	void job_system::submit(
+	pf_decl_inline void job_system::submit(
 			job &__j,
 			std::initializer_list<task_initializer> const &__il)
 	{
 		__job_sys_internal::instance_->__submit(__j, __il);
 	}
-	void job_system::submit_0(
+	pf_decl_inline void job_system::submit_0(
 			job &__j,
 			std::initializer_list<task_initializer> const &__il)
 	{
@@ -392,11 +392,11 @@ namespace pul
 	}
 
 	// Job System -> Process Local
-	void job_system::process()
+	pf_decl_inline void job_system::process()
 	{
 		__job_sys_internal::instance_->__process();
 	}
-	void job_system::process_0()
+	pf_decl_inline void job_system::process_0()
 	{
 		__job_sys_internal::instance_->__process_0();
 	}

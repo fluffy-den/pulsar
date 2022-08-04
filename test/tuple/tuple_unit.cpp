@@ -10,14 +10,16 @@
 
 // Include: Pulsar
 #include "pulsar/function.hpp"
+#include "pulsar/hash.hpp"
+#include "pulsar/mathematics.hpp"
 #include "pulsar/tuple.hpp"
-
 
 // Include: Catch2
 #include "catch2/catch_all.hpp"
 
 // Include: C++
 #include <string>
+#include <tuple>
 
 // Pulsar
 namespace pul
@@ -26,6 +28,7 @@ namespace pul
 	TEST_CASE("TupleUnit1")
 	{
 		tuple t0 = { 0 };
+		REQUIRE(get<0>(t0) == 0);
 		tuple t1 = { 1, 2 };
 		REQUIRE(get<0>(t1) == 1);
 		REQUIRE(get<1>(t1) == 2);
@@ -35,13 +38,14 @@ namespace pul
 		REQUIRE(get<2>(t2) == 2);
 		tuple<int32_t, char, char, std::string, char, char> t3;
 		REQUIRE(sizeof(t3) == sizeof(int32_t) + 4 * sizeof(char) + sizeof(std::string));
-		REQUIRE(alignof(t3) == 8);
+		REQUIRE(alignof(tuple<int32_t, char, char, std::string, char, char>) == 8);
 	}
 	TEST_CASE("TupleUnit2")
 	{
 		fun_ptr fun = [](uint32_t i, uint64_t j) -> uint64_t
 		{ return i + j; };
 		tuple t1 = { 1u, 3ull };
+		REQUIRE(sizeof(t1) == 2 * sizeof(uint64_t));
 		REQUIRE(tuple_apply(fun, t1) == 4ull);
 	}
 }

@@ -87,11 +87,11 @@ namespace pul
 		/// Operator()
 		template <typename... _InArgs>
 		pf_decl_constexpr void operator()(
-				_InArgs const &...__args) const pf_attr_noexcept
+				_InArgs &...__args) const pf_attr_noexcept
 		{
 			for (auto b = this->list_.begin(), e = this->list_.end(); b != e; ++b)
 			{
-				b->fun_(__args...);
+				b->fun_(std::forward<_InArgs>(__args)...);
 			}
 		}
 

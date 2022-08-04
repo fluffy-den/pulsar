@@ -197,7 +197,7 @@ namespace pul
 		struct __task pf_attr_final
 		{
 			/// Constructors
-			pf_decl_inline __task(
+			pf_decl_constexpr pf_decl_inline __task(
 					fun_ptr<void(void *)> __fun,
 					void *__args)
 					: fun_(__fun)
@@ -211,7 +211,7 @@ namespace pul
 				as_void = __args;
 			}
 			template <typename _RetTy, typename... _Args, typename... _InArgs>
-			pf_decl_inline __task(
+			pf_decl_constexpr __task(
 					fun_ptr<_RetTy(_Args...)> __fun,
 					_InArgs &&...__args)
 					: fun_(nullptr)
@@ -242,11 +242,11 @@ namespace pul
 					pack *as_pack;
 				};
 				as_task = this + 1;
-				::new (&as_pack->fun) fun_ptr<_RetTy(_Args...)>(__fun);
-				::new (&as_pack->args) tuple<_InArgs...>(std::forward<_InArgs>(__args)...);
+				std::construct_at<fun_ptr<_RetTy(_Args...)>>(&as_pack->fun, __fun);
+				std::construct_at<tuple<_InArgs...>>(&as_pack->args, std::forward<_InArgs>(__args)...);
 			}
 			template <typename... _Args, typename... _InArgs>
-			pf_decl_inline __task(
+			pf_decl_constexpr __task(
 					__future &__fut,
 					fun_ptr<void(_Args...)> __fun,
 					_InArgs &&...__args)
@@ -284,11 +284,11 @@ namespace pul
 				};
 				as_task					= this + 1;
 				as_pack->future = &__fut;
-				::new (&as_pack->fun) fun_ptr<void(_Args...)>(__fun);
-				::new (&as_pack->args) tuple<_InArgs...>(std::forward<_InArgs>(__args)...);
+				std::construct_at<fun_ptr<void(_Args...)>>(&as_pack->fun, __fun);
+				std::construct_at<tuple<_InArgs...>>(&as_pack->args, std::forward<_InArgs>(__args)...);
 			}
 			template <typename _RetTy, typename... _Args, typename... _InArgs>
-			pf_decl_inline __task(
+			pf_decl_constexpr __task(
 					__future_with_value<_RetTy> &__fut,
 					fun_ptr<_RetTy(_Args...)> __fun,
 					_InArgs &&...__args)
@@ -325,10 +325,10 @@ namespace pul
 				};
 				as_task					= this + 1;
 				as_pack->future = &__fut;
-				::new (&as_pack->fun) fun_ptr<_RetTy(_Args...)>(__fun);
-				::new (&as_pack->args) tuple<_InArgs...>(std::forward<_InArgs>(__args)...);
+				std::construct_at<fun_ptr<_RetTy(_Args...)>>(&as_pack->fun, __fun);
+				std::construct_at<tuple<_InArgs...>>(&as_pack->args, std::forward<_InArgs>(__args)...);
 			}
-			pf_decl_inline __task(
+			__task(
 					__task const &) = delete;
 
 			/// Run

@@ -118,7 +118,7 @@ namespace pul
 		pf_hint_nodiscard pf_decl_constexpr _Ret operator()(
 				_InArgs &&...__args) const
 		{
-			return this->ptr_(std::forward<_Args>(__args)...);
+			return this->ptr_(__args...);
 		}
 
 		/// Operator==

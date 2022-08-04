@@ -1,6 +1,6 @@
 /*! @file   tuple.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief	Tuple definition header.
  *  @date   16-06-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
@@ -12,7 +12,7 @@
 #define PULSAR_TUPLE_HPP 1
 
 // Include: Pulsar
-#include "pulsar/pulsar.hpp"
+#include "pulsar/hash.hpp"
 
 // Include: C++
 #include <functional>
@@ -21,8 +21,14 @@
 namespace pul
 {
 	/// TUPLE: Definition
-	template <typename...>
+	template <typename... _Ts>
 	struct tuple;
+
+	/// TUPLE: SFINAE
+	template <typename _TyA, typename _TyB>
+	struct __tuple_descending_order_alignment;
+	template <typename _Tuple, template <typename, typename> typename _Comparator>
+	struct __tuple_selection_sort;
 
 	/// TUPLE: Parameter Pack -> Index
 	template <typename _Ty, size_t _Index>
@@ -75,7 +81,7 @@ namespace pul
 	struct alignas(alignof(_Ty)) __tuple_base<_Ty, _Ts...>
 	{
 	public:
-		/// Constructor
+		/// Constructors
 		pf_decl_inline pf_decl_constexpr __tuple_base() pf_attr_noexcept
 		{}
 		template <typename... _InTs>
@@ -101,13 +107,15 @@ namespace pul
 		pf_decl_inline pf_decl_constexpr __tuple_base<_Ty, _Ts...> &operator=(
 				__tuple_base<_Ty, _Ts...> &&__r) = default;
 
+		/// Store
 		_Ty elem_;
 		__tuple_base<_Ts...> rest_;
 	};
+
 	template <typename _Ty>
 	struct __tuple_base<_Ty>
 	{
-		/// Constructor
+		/// Constructors
 		pf_decl_inline pf_decl_constexpr __tuple_base() pf_attr_noexcept
 		{}
 		template <typename... _InTs>
@@ -130,8 +138,10 @@ namespace pul
 		pf_decl_inline pf_decl_constexpr __tuple_base<_Ty> &operator=(
 				__tuple_base<_Ty> &&__r) = default;
 
+		/// Store
 		_Ty elem_;
 	};
+
 	template <>
 	struct __tuple_base<>
 	{};
@@ -146,10 +156,9 @@ namespace pul
 	struct tuple_size<tuple<_Ts...>>: std::integral_constant<size_t, sizeof...(_Ts)>
 	{};
 	template <typename _Tuple>
-	pf_decl_static pf_decl_constexpr size_t tuple_size_v =
-			tuple_size<std::remove_cvref_t<_Tuple>>::value;
+	pf_decl_static pf_decl_constexpr size_t tuple_size_v = tuple_size<std::remove_cvref_t<_Tuple>>::value;
 
-	/// TUPPLE: Make -> Indexed Sequence
+	/// TUPLE: Make -> Indexed Sequence
 	template <typename... _Ts>
 	struct __tuple_make_indexed_sequence
 	{
@@ -166,41 +175,59 @@ namespace pul
 		using tuple_type = __make_indexed_tuple<make_index_sequence<sizeof...(_Ts)>>::tuple_type;
 	};
 
-	/// TUPPLE: Parameter Pack -> Index At
+	/// TUPLE: Parameter Pack -> At
+	/// Move by position not element value!
 	template <typename _Tuple, size_t _Index>
-	struct __tuple_index_at;
+	struct tuple_at;
 	template <typename _Ty, typename... _Ts>
-	struct __tuple_index_at<__tuple_base<_Ty, _Ts...>, 0>
+	struct tuple_at<__tuple_base<_Ty, _Ts...>, 0>
 	{
 		using type = _Ty;
 	};
-	template <size_t _Index, typename _Ty, typename... _Ts>
-	struct __tuple_index_at<__tuple_base<_Ty, _Ts...>, _Index>: __tuple_index_at<__tuple_base<_Ts...>, _Index - 1>
+	template <typename _Ty, typename... _Ts, size_t _Index>
+	struct tuple_at<__tuple_base<_Ty, _Ts...>, _Index>
+			: tuple_at<__tuple_base<_Ts...>, _Index - 1>
 	{};
 
-	/// TUPPLE: Parameter Pack -> Element
+	/// TUPLE: Parameter Pack -> At Index
+	template <typename _Tuple, size_t _Index>
+	struct tuple_at_index;
+	template <typename _Ty, typename... _Ts, size_t _Index>
+		requires(_Ty::index == _Index)
+	struct tuple_at_index<__tuple_base<_Ty, _Ts...>, _Index>
+	{
+		using type = _Ty;
+	};
+	template <typename _Ty, typename... _Ts, size_t _Index>
+	struct tuple_at_index<__tuple_base<_Ty, _Ts...>, _Index>
+			: tuple_at_index<__tuple_base<_Ts...>, _Index>
+	{};
+
+	/// TUPLE: Parameter Pack -> Element
 	template <typename _Tuple, size_t _Index>
 	struct tuple_element
 	{
-		using type = __tuple_index_at<_Tuple, _Index>::type::type;
+		using type = tuple_at<_Tuple, _Index>::type::type;
 	};
 	template <typename _Tuple, size_t _Index>
 	using tuple_element_t = tuple_element<_Tuple, _Index>::type;
 
-	/// TUPPLE: Parameter Pack -> Concatenate
+	/// TUPLE: Parameter Pack -> Concatenate Linear
 	template <typename _TupleA, typename _TupleB>
 	struct tuple_conc;
 	template <typename... _TsA, typename... _TsB>
 	struct tuple_conc<__tuple_base<_TsA...>, __tuple_base<_TsB...>>
 	{
-		using tuple_type = __tuple_base<_TsA..., _TsB...>;
+		using tuple_type = __tuple_selection_sort<
+				__tuple_base<_TsA..., __tuple_index<typename _TsB::type, _TsB::index + sizeof...(_TsA)>...>,
+				__tuple_descending_order_alignment>::tuple_type;
 	};
 	template <typename _TupleA, typename _TupleB>
 	using tuple_conc_t = typename tuple_conc<_TupleA, _TupleB>::tuple_type;
 
-	/// TUPPLE: Parameter Pack -> Extract
+	/// TUPLE: Parameter Pack -> Extract Linear
 	template <typename _Tuple, size_t _Start, size_t _End>
-	struct tuple_extract
+	struct __tuple_extract_without_reordering
 	{
 	private:
 		template <typename _SequenceTy>
@@ -208,48 +235,62 @@ namespace pul
 		template <size_t... _Is>
 		struct __extract_from_index_sequence<index_sequence<_Is...>>
 		{
-			using tuple_type = __tuple_base<typename __tuple_index_at<_Tuple, _Is + _Start>::type...>;
+			using tuple_type = __tuple_base<typename tuple_at<_Tuple, _Is + _Start>::type...>;
 		};
 
 	public:
 		using tuple_type = typename __extract_from_index_sequence<make_index_sequence<_End - _Start + 1>>::tuple_type;
 	};
-	template <typename _Tuple, size_t _Start, size_t _End>
-	using tuple_extract_t = typename tuple_extract<_Tuple, _Start, _End>::tuple_type;
 
-	/// TUPPLE: Parameter Pack -> Remove
+	/// TUPLE: Parameter Pack -> Decrement if equal to Index
+	template <typename _Tuple, size_t _Index>
+	struct __tuple_decrement_if_greater_equal_to_index;
+	template <typename... _Ts, size_t _Index>
+	struct __tuple_decrement_if_greater_equal_to_index<
+			__tuple_base<_Ts...>,
+			_Index>
+	{
+		using tuple_type = __tuple_base<__tuple_index<
+				typename _Ts::type,
+				(_Ts::index > _Index) ? _Ts::index - 1 : _Ts::index>...>;
+	};
+
+	/// TUPLE: Parameter Pack -> Remove
 	template <typename _Tuple, size_t _Index>
 	struct tuple_remove
 	{
-		using tuple_type = typename tuple_conc<
-				typename tuple_extract<_Tuple, 0, _Index - 1>::tuple_type,
-				typename tuple_extract<_Tuple, _Index + 1, tuple_size<_Tuple>::value - 1>::tuple_type>::tuple_type;
+	public:
+		using tuple_type = __tuple_decrement_if_greater_equal_to_index<
+				tuple_conc_t<
+						typename __tuple_extract_without_reordering<_Tuple, 0, _Index - 1>::tuple_type,
+						typename __tuple_extract_without_reordering<_Tuple, _Index + 1, tuple_size<_Tuple>::value - 1>::tuple_type>,
+				_Index>::tuple_type;
 	};
 	template <typename _Tuple, size_t _Index>
 		requires(_Index == 0)
 	struct tuple_remove<_Tuple, _Index>
 	{
-		using tuple_type =
-				typename tuple_extract<_Tuple, 1, tuple_size<_Tuple>::value - 1>::tuple_type;
+		using tuple_type = typename __tuple_decrement_if_greater_equal_to_index<
+				typename __tuple_extract_without_reordering<_Tuple, 1, tuple_size<_Tuple>::value - 1>::tuple_type,
+				_Index>::tuple_type;
 	};
 	template <typename _Tuple, size_t _Index>
 		requires(_Index == tuple_size<_Tuple>::value - 1)
 	struct tuple_remove<_Tuple, _Index>
 	{
-		using tuple_type =
-				typename tuple_extract<_Tuple, 0, _Index - 1>::tuple_type;
+		using tuple_type = typename __tuple_extract_without_reordering<_Tuple, 0, _Index - 1>::tuple_type;
 	};
 	template <typename _Tuple, size_t _Index>
 	using tuple_remove_t = typename tuple_remove<_Tuple, _Index>::tuple_type;
 
-	/// TUPPLE: Parameter Pack -> Order by Alignment type
+	/// TUPLE: Parameter Pack -> Order by Alignment type
 	template <typename _TyA, typename _TyB>
 	struct __tuple_descending_order_alignment: std::conditional_t<(alignof(_TyA) <= alignof(_TyB)), std::true_type, std::false_type>
 	{};
 
-	/// TUPPLE: Parameter Pack -> Swap Elements
+	/// TUPLE: Parameter Pack -> Swap Elements
 	template <typename _Tuple, size_t _I, size_t _J>
-	struct tuple_swap
+	struct __tuple_swap
 	{
 	private:
 		template <typename _IndexSequence>
@@ -258,7 +299,7 @@ namespace pul
 		struct element_swap<index_sequence<_Is...>>
 		{
 			using tuple_type = __tuple_base<
-					typename __tuple_index_at<
+					typename tuple_at<
 							_Tuple,
 							_Is != _I && _Is != _J ? _Is : _Is == _I ? _J
 																											 : _I>::type...>;
@@ -269,9 +310,9 @@ namespace pul
 				make_index_sequence<tuple_size<_Tuple>::value>>::tuple_type;
 	};
 	template <typename _Tuple, size_t _I, size_t _J>
-	using tuple_swap_t = typename tuple_swap<_Tuple, _I, _J>::tuple_type;
+	using tuple_swap_t = typename __tuple_swap<_Tuple, _I, _J>::tuple_type;
 
-	/// TUPPLE: Parameter Pack -> Sort
+	/// TUPLE: Parameter Pack -> Sort
 	template <typename _Tuple, template <typename, typename> typename _Comparator>
 	struct __tuple_selection_sort
 	{
@@ -284,7 +325,7 @@ namespace pul
 					_Comparator<
 							typename tuple_element<_TupleLoop, _I>::type,
 							typename tuple_element<_TupleLoop, _J>::type>::value,
-					typename tuple_swap<_TupleLoop, _I, _J>::tuple_type,
+					typename __tuple_swap<_TupleLoop, _I, _J>::tuple_type,
 					_TupleLoop>;
 
 		public:
@@ -317,24 +358,22 @@ namespace pul
 				1>::tuple_type;
 	};
 
-	/// TUPPLE: Sorted Base
+	/// TUPLE: Parameter Pack -> Sorted Base
 	template <typename... _Ts>
 	using __tuple_sorted_base = typename __tuple_selection_sort<
 			typename __tuple_make_indexed_sequence<_Ts...>::tuple_type,
 			__tuple_descending_order_alignment>::tuple_type;
 
 	template <size_t _Index, typename... _Ts>
-	struct __tuple_index_at<tuple<_Ts...>, _Index>
+	struct tuple_at<tuple<_Ts...>, _Index>
 	{
-		using type = __tuple_index_at<__tuple_sorted_base<_Ts...>, _Index>::type;
+		using type = tuple_at<__tuple_sorted_base<_Ts...>, _Index>::type;
 	};
 
-	/// TUPPLE: Implementation
+	/// TUPLE: Implementation
 	template <typename... _Ts>
 	struct tuple: public __tuple_sorted_base<_Ts...>
 	{
-		using base = __tuple_sorted_base<_Ts...>;
-
 		/// Constructors
 		pf_decl_inline pf_decl_constexpr tuple()
 		{}
@@ -350,9 +389,22 @@ namespace pul
 		pf_decl_inline pf_decl_constexpr tuple<_Ts...> &operator=(tuple<_Ts...> &&__r)			= default;
 	};
 
+	/// TUPLE: Is Tuple
+	template <typename _TupleTy>
+	struct is_tuple: std::false_type
+	{};
+	template <typename... _Ts>
+	struct is_tuple<tuple<_Ts...>>: std::true_type
+	{};
+	template <typename... _Ts>
+	struct is_tuple<__tuple_base<_Ts...>>: std::true_type
+	{};
+	template <typename _TupleTy>
+	pf_decl_static pf_decl_constexpr bool is_tuple_v = is_tuple<_TupleTy>::value;
+
 	/// TUPLE: Get
 	template <size_t _Index, typename _Tuple>
-		requires((_Index == __tuple_index_at<_Tuple, 0>::type::index))
+		requires((_Index == tuple_at<_Tuple, 0>::type::index))
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &get(
 			_Tuple &__tuple)
 
@@ -360,7 +412,7 @@ namespace pul
 		return __tuple.elem_.data_;
 	}
 	template <size_t _Index, typename _Tuple>
-		requires((_Index != __tuple_index_at<_Tuple, 0>::type::index))
+		requires((_Index != tuple_at<_Tuple, 0>::type::index))
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &get(
 			_Tuple &__tuple)
 
@@ -389,6 +441,7 @@ namespace pul
 				std::forward<_Tuple>(__args),
 				make_index_sequence<tuple_size_v<_Tuple>>{});
 	}
+
 }
 
 #endif // !PULSAR_TUPLE_HPP

@@ -41,6 +41,7 @@ namespace pul
 		shared_osignal<void(std::string_view)> loggerSignal_;
 		std::filesystem::path dumpbinpath_;
 		std::chrono::high_resolution_clock::time_point loggerStart_;
+		job loggerJob_;
 		debug_filter loggerFilter_;
 
 		pf_decl_static pf_decl_inline std::unique_ptr<__debugger_internal> instance_ = nullptr;

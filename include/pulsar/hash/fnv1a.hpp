@@ -36,12 +36,14 @@ namespace pul
 			 *  @return The hashed data pointed by @a __ptr of size @a __size in
 			 * bytes.
 			 */
-			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(const void *__ptr, size_t __size) pf_attr_noexcept
+			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(
+					const void *__ptr,
+					size_t __size) pf_attr_noexcept
 			{
 				uint32_t val = 0x811c9dc5u;
 				union
 				{
-					const byte_t *as_byte = nullptr;
+					const byte_t *as_byte;
 					const void *as_void;
 				};
 
@@ -82,7 +84,7 @@ namespace pul
 
 				union
 				{
-					const byte_t *as_byte = nullptr;
+					const byte_t *as_byte;
 					const void *as_void;
 				};
 
@@ -105,35 +107,83 @@ namespace pul
 				return hash64(&__arr[0], _Len * sizeof(_Ty));
 			}
 
+			/// Auto
+			pf_hint_nodiscard pf_decl_constexpr size_t hash(
+					const void *__ptr,
+					size_t __size) pf_attr_noexcept
+			{
+#ifdef PF_64BIT
+				return hash64(__ptr, __size);
+#else	 // ^^^ PF_64BIT ^^^ / vvv PF_32BIT vvv
+				return hash32(__ptr, __size);
+#endif // PF_64BIT
+			}
+			template <typename _Ty, size_t _Len>
+			pf_hint_nodiscard pf_decl_constexpr size_t hash(
+					const _Ty (&__arr)[_Len]) pf_attr_noexcept
+			{
+#ifdef PF_64BIT
+				return hash64(__arr);
+#else	 // ^^^ PF_64BIT ^^^ / vvv PF_32BIT vvv
+				return hash32(__arr);
+#endif // PF_64BIT
+			}
+
 		} // Fnv1-a
 
 	} // Hash
 
-	/// STD: Fnv1a impl
-	/*! @brief
+	/// STD: Fnv1a impl -> 32 bits
+	/*! @brief Fnv1a 32 bits functor.
 	 *
-	 *  @tparam _Key
+	 *  @tparam _Key Type of the value to be hashed.
 	 */
 	template <typename _Key>
-	class hash_fnv1a: public std::hash<_Key>
+	class hash32_fnv1a: public std::hash<_Key>
 	{
 	public:
 		/// Operator()
-		/*! @brief
+		/*! @brief Applies Fnv1a on @a __key.
 		 *
-		 *  @param[in] __key
-		 *  @return pf_hint_nodiscard
+		 *  @param[in] __key Value to be hashed.
+		 *  @return Hashed value.
 		 */
-		pf_hint_nodiscard pf_decl_constexpr size_t operator()(
+		pf_hint_nodiscard pf_decl_constexpr uint32_t operator()(
 				_Key __key) const pf_attr_noexcept
 		{
-#ifdef PF_64BIT
-			return hash::fnv1a::hash64(&__key, sizeof(_Key));
-#else
-			return hash::fnv1a::hash32(&__key, sizeof(_Key));
-#endif // PF_64BIT
+			return hash::fnv1a::hash32(&__key, sizeof(__key));
 		}
 	};
+
+	/// STD: Fnv1a impl -> 64 bits
+	/*! @brief Fnv1a 64 bits functor.
+	 *
+	 *  @tparam _Key Type of the value to be hashed.
+	 */
+	template <typename _Key>
+	class hash64_fnv1a: public std::hash<_Key>
+	{
+	public:
+		/// Operator()
+		/*! @brief Applies Fnv1a on @a __key.
+		 *
+		 *  @param[in] __key Value to be hashed.
+		 *  @return Hashed value.
+		 */
+		pf_hint_nodiscard pf_decl_constexpr uint64_t operator()(
+				_Key __key) const pf_attr_noexcept
+		{
+			return hash::fnv1a::hash64(&__key, sizeof(__key));
+		}
+	};
+
+	/// STD: Fnv1a impl -> Auto
+	template <typename _Key>
+#ifdef PF_64BIT
+	using hash_fnv1a = hash64_fnv1a<_Key>;
+#else	 // ^^^ PF_64BIT ^^^ / vvv PF_32BIT vvv
+	using hash_fnv1a = hash32_fnv1a<_Key>;
+#endif // PF_64BIT
 
 } // Pulsar
 #endif // !PULSAR_UTILITY_HASH_FNV1A_HPP

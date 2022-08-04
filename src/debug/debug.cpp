@@ -56,8 +56,9 @@ namespace pul
 					debugger::generate_messagebox(
 							debug_level::error,
 							"Pulsar - Framework",
-							strfmt("Unexpected error! %s\n\nGenerated dumbfile"
+							strfmt("Unexpected error! %s\n\n"
 										 "code=%u, at path=%s\n"
+										 "A dump file has been generated."
 										 "Press ok to terminate the process...",
 										 msg.c_str(),
 										 flags,
@@ -131,8 +132,17 @@ namespace pul
 				}
 			}
 		}
-		// write
-		this->loggerSignal_(msg);
+		// logger task
+		fun_ptr wt = [](std::string_view __message) -> void
+		{
+			__debugger_internal::instance_->loggerSignal_(__message);
+		};
+		// logger job
+		job_system::submit(
+				this->loggerJob_,
+				{
+						{wt, std::move(msg)}
+		 });
 	}
 
 	/// Exception -> Message
