@@ -18,7 +18,6 @@
 #include <array>
 #include <functional>
 
-
 // Pulsar
 namespace pul
 {
@@ -80,10 +79,10 @@ namespace pul
 			union
 			{
 				byte_t *as_byte;
-				void *as_void;
+				__fun_buf_base_impl<std::decay_t<_Fun>, _Ret, _Args...> *as_fun_base;
 			};
 			as_byte = this->base_.data();
-			::new (as_void) __fun_buf_base_impl<std::decay_t<_Fun>, _Ret, _Args...>(std::move(__f));
+			std::construct_at(as_fun_base, std::move(__f));
 		}
 		pf_decl_constexpr fun_buf(
 				fun_buf<_Ret(_Args...)> const &__r) pf_attr_noexcept
@@ -137,7 +136,7 @@ namespace pul
 		}
 
 	private:
-		std::array<byte_t, sizeof(__fun_buf_base<_Ret, _Args...>)> base_;
+		std::array<byte_t, 2 * sizeof(__fun_buf_base<_Ret, _Args...>)> base_;
 	};
 
 	/*! @brief Deduction guide for function pointers.
