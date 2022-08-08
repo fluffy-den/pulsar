@@ -134,39 +134,70 @@ namespace pul
 #endif	 // _MSC_VER || defined(__MINGW32__) || defined(__MINGW64__)
 
 // CPP decl
-#define pf_decl_constexpr																										constexpr
-#define pf_decl_consteval																										consteval
-#define pf_decl_friend																											friend
-#define pf_decl_extern																											extern
-#define pf_decl_static																											static
-#define pf_decl_inline																											inline
-#define pf_decl_virtual																											virtual
-#define pf_decl_explicit																										explicit
-#define pf_decl_thread_local																								thread_local
+#define pf_decl_constexpr																																										 constexpr
+#define pf_decl_consteval																																										 consteval
+#define pf_decl_friend																																											 friend
+#define pf_decl_extern																																											 extern
+#define pf_decl_static																																											 static
+#define pf_decl_inline																																											 inline
+#define pf_decl_virtual																																											 virtual
+#define pf_decl_explicit																																										 explicit
+#define pf_decl_thread_local																																								 thread_local
 
 // Calls
-#define pf_defcall																													__cdecl
-#define pf_fastcall																													__fastcall
+#define pf_defcall																																													 __cdecl
+#define pf_fastcall																																													 __fastcall
 
 // Attribs
-#define pf_attr_noexcept																										noexcept
-#define pf_attr_override																										override
-#define pf_attr_final																												final
+#define pf_attr_noexcept																																										 noexcept
+#define pf_attr_override																																										 override
+#define pf_attr_final																																												 final
 
 // Hints
-#define pf_hint_likely																											[[likely]]
-#define pf_hint_unlikely																										[[unlikely]]
-#define pf_hint_fallthrough																									[[fallthrough]]
-#define pf_hint_nodiscard																										[[nodiscard]]
-#define pf_hint_deprecated																									[[deprecated]]
-
+#define pf_hint_likely																																											 [[likely]]
+#define pf_hint_unlikely																																										 [[unlikely]]
+#define pf_hint_fallthrough																																									 [[fallthrough]]
+#define pf_hint_nodiscard																																										 [[nodiscard]]
+#define pf_hint_deprecated																																									 [[deprecated]]
 // Tools
-#define pf_stringize_helper(token)																					#token;
-#define pf_stringize(str)																										pf_stringize_helper(str)
-#define pf_join_helper(x, y)																								x##y
-#define pf_join(x, y)																												pf_join_helper(x, y)
-#define pf_va_args_counter(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10, N, ...) N
-#define pf_va_args_num(...)																									pf_va_args_counter(__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)
+#define pf_stringize_helper(token)																																					 #token;
+#define pf_stringize(str)																																										 pf_stringize_helper(str)
+#define pf_nargs_pass4(x)																																										 x
+#define pf_nargs_pass3(_unused, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _13, _14, _15, _val, ...) _val
+#define pf_nargs_pass2(...)																																									 pf_nargs_pass4(pf_nargs_pass3(__VA_ARGS__, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0))
+#define pf_nargs_pass1(...)																																									 unused, __VA_ARGS__
+#define pf_nargs(...)																																												 pf_nargs_pass2(pf_nargs_pass1(__VA_ARGS__))
+#define pf_cat_tokens(x, y)																																									 pf_cat_pass1((x, y))
+#define pf_primitive_cat(x, y)																																							 x##y
+#define pf_pass1(x)																																													 pf_primitive_cat x
+#define pf_rem(...)																																													 __VA_ARGS__
+#define pf_eat(...)
+#define pf_arg_pair(x)						pf_rem x
+#define pf_arg_type_pass4(x, ...) pf_rem x
+#define pf_arg_type_pass3(x)			pf_arg_type_pass4 x
+#define pf_arg_type_pass2(...)		pf_arg_type_pass3((__VA_ARGS__))
+#define pf_arg_type_pass1(...)		(__VA_ARGS__)
+#define pf_arg_type(x)						pf_arg_type_pass2(pf_arg_type_pass1 x, )
+#define pf_arg_name(x)						pf_stringize(x)
+
+// Tools -> Do For Each Semicolon
+#define pf_do_for_each_semicolon_0(m)
+#define pf_do_for_each_semicolon_1(m, x1)																																 , m(x1)
+#define pf_do_for_each_semicolon_2(m, x1, x2)																														 , m(x1), m(x2)
+#define pf_do_for_each_semicolon_3(m, x1, x2, x3)																												 , m(x1), m(x2), m(x3)
+#define pf_do_for_each_semicolon_4(m, x1, x2, x3, x4)																										 , m(x1), m(x2), m(x3), m(x4)
+#define pf_do_for_each_semicolon_5(m, x1, x2, x3, x4, x5)																								 , m(x1), m(x2), m(x3), m(x4), m(x5)
+#define pf_do_for_each_semicolon_6(m, x1, x2, x3, x4, x5, x6)																						 , m(x1), m(x2), m(x3), m(x4), m(x5), m(x6)
+#define pf_do_for_each_semicolon_7(m, x1, x2, x3, x4, x5, x6, x7)																				 , m(x1), m(x2), m(x3), m(x4), m(x5), m(x6), m(x7)
+#define pf_do_for_each_semicolon_8(m, x1, x2, x3, x4, x5, x6, x7, x8)																		 , m(x1), m(x2), m(x3), m(x4), m(x5), m(x6), m(x7), m(x8)
+#define pf_do_for_each_semicolon_9(m, x1, x2, x3, x4, x5, x6, x7, x8, x9)																 , m(x1), m(x2), m(x3), m(x4), m(x5), m(x6), m(x7), m(x8), m(x9)
+#define pf_do_for_each_semicolon_10(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10)													 , m(x1), m(x2), m(x3), m(x4), m(x5), m(x6), m(x7), m(x8), m(x9), m(x10)
+#define pf_do_for_each_semicolon_11(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11)										 , m(x1), m(x2), m(x3), m(x4), m(x5), m(x6), m(x7), m(x8), m(x9), m(x10), m(x11)
+#define pf_do_for_each_semicolon_12(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12)								 , m(x1), m(x2), m(x3), m(x4), m(x5), m(x6), m(x7), m(x8), m(x9), m(x10), m(x11), m(x12)
+#define pf_do_for_each_semicolon_13(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13)					 , m(x1), m(x2), m(x3), m(x4), m(x5), m(x6), m(x7), m(x8), m(x9), m(x10), m(x11), m(x12), m(x13)
+#define pf_do_for_each_semicolon_14(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14)			 , m(x1), m(x2), m(x3), m(x4), m(x5), m(x6), m(x7), m(x8), m(x9), m(x10), m(x11), m(x12), m(x13), m(x14)
+#define pf_do_for_each_semicolon_15(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15) , m(x1), m(x2), m(x3), m(x4), m(x5), m(x6), m(x7), m(x8), m(x9), m(x10), m(x11), m(x12), m(x13), m(x14), m(x15)
+#define pf_do_for_each_semicolon(macro, ...)																														 pf_do_for_each_pass1(pf_cat_tokens(pf_do_for_each_semicolon_, pf_nargs(__VA_ARGS__)), (macro, __VA_ARGS__))
 }
 
 // Version
