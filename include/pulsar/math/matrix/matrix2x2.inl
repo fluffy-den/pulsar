@@ -28,35 +28,35 @@ namespace pul
 		union alignas(simd_alignment_of_v<_Ty, _ColNum, _SIMD>) matrix;
 
 		/// MATH: bmat2x2u_t
-		using bmat2x2u_t = matrix<bool, 2, 2, SIMD_UNALIGNED>;
+		using bmat2u_t = matrix<bool, 2, 2, SIMD_UNALIGNED>;
 
 		/// MATH: umat2x2_t
-		using u32mat2x2_t = matrix<uint32_t, 2, 2, SIMD_ALIGNED>;
-		using u64mat2x2_t = matrix<uint64_t, 2, 2, SIMD_ALIGNED>;
+		using u32mat2_t = matrix<uint32_t, 2, 2, SIMD_ALIGNED>;
+		using u64mat2_t = matrix<uint64_t, 2, 2, SIMD_ALIGNED>;
 
 		/// MATH: umat2x2u_t
-		using u8mat2x2u_t	 = matrix<uint8_t, 2, 2, SIMD_UNALIGNED>;
-		using u16mat2x2u_t = matrix<uint16_t, 2, 2, SIMD_UNALIGNED>;
-		using u32mat2x2u_t = matrix<uint32_t, 2, 2, SIMD_UNALIGNED>;
-		using u64mat2x2u_t = matrix<uint64_t, 2, 2, SIMD_UNALIGNED>;
+		using u8mat2u_t	 = matrix<uint8_t, 2, 2, SIMD_UNALIGNED>;
+		using u16mat2u_t = matrix<uint16_t, 2, 2, SIMD_UNALIGNED>;
+		using u32mat2u_t = matrix<uint32_t, 2, 2, SIMD_UNALIGNED>;
+		using u64mat2u_t = matrix<uint64_t, 2, 2, SIMD_UNALIGNED>;
 
 		/// MATH: imat2x2_t
-		using i32mat2x2_t = matrix<int32_t, 2, 2, SIMD_ALIGNED>;
-		using i64mat2x2_t = matrix<int64_t, 2, 2, SIMD_ALIGNED>;
+		using i32mat2_t = matrix<int32_t, 2, 2, SIMD_ALIGNED>;
+		using i64mat2_t = matrix<int64_t, 2, 2, SIMD_ALIGNED>;
 
 		/// MATH: imat2x2u_t
-		using i8mat2x2u_t	 = matrix<int8_t, 2, 2, SIMD_UNALIGNED>;
-		using i16mat2x2u_t = matrix<int16_t, 2, 2, SIMD_UNALIGNED>;
-		using i32mat2x2u_t = matrix<int32_t, 2, 2, SIMD_UNALIGNED>;
-		using i64mat2x2u_t = matrix<int64_t, 2, 2, SIMD_UNALIGNED>;
+		using i8mat2u_t	 = matrix<int8_t, 2, 2, SIMD_UNALIGNED>;
+		using i16mat2u_t = matrix<int16_t, 2, 2, SIMD_UNALIGNED>;
+		using i32mat2u_t = matrix<int32_t, 2, 2, SIMD_UNALIGNED>;
+		using i64mat2u_t = matrix<int64_t, 2, 2, SIMD_UNALIGNED>;
 
 		/// MATH: fmat2x2_t
-		using f32mat2x2_t = matrix<float32_t, 2, 2, SIMD_ALIGNED>;
-		using f64mat2x2_t = matrix<float64_t, 2, 2, SIMD_ALIGNED>;
+		using f32mat2_t = matrix<float32_t, 2, 2, SIMD_ALIGNED>;
+		using f64mat2_t = matrix<float64_t, 2, 2, SIMD_ALIGNED>;
 
 		/// MATH: fmat2x2u_t
-		using f32mat2x2u_t = matrix<float32_t, 2, 2, SIMD_UNALIGNED>;
-		using f64mat2x2u_t = matrix<float64_t, 2, 2, SIMD_UNALIGNED>;
+		using f32mat2u_t = matrix<float32_t, 2, 2, SIMD_UNALIGNED>;
+		using f64mat2u_t = matrix<float64_t, 2, 2, SIMD_UNALIGNED>;
 	}
 }
 

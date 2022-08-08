@@ -16,7 +16,7 @@
 namespace pul
 {
 	/// MEMORY: Allocator Linear Benchmark
-	TEST_CASE("AllocatorLinearBenchmark", "[allocator][memory]")
+	TEST_CASE("AllocatorLinearBenchmark")
 	{
 		BENCHMARK_ADVANCED("Allocation")
 		(Catch::Benchmark::Chronometer __m)
@@ -29,7 +29,7 @@ namespace pul
 	}
 
 	/// MEMORY: Allocator Stack Benchmark
-	TEST_CASE("AllocatorStackBenchmark", "[allocator][memory]")
+	TEST_CASE("AllocatorStackBenchmark")
 	{
 		BENCHMARK_ADVANCED("Allocation")
 		(Catch::Benchmark::Chronometer __m)
@@ -55,7 +55,7 @@ namespace pul
 	}
 
 	/// MEMORY: Allocator Pool Benchmark
-	TEST_CASE("AllocatorPoolBenchmark", "[allocator][memory]")
+	TEST_CASE("AllocatorPoolBenchmark")
 	{
 		BENCHMARK_ADVANCED("Allocation")
 		(Catch::Benchmark::Chronometer __m)
@@ -87,7 +87,7 @@ namespace pul
 	}
 
 	/// MEMORY: Allocator CDS Linear Benchmark
-	TEST_CASE("AllocatorCDSLinearBenchmark", "[allocator][memory][cds]")
+	TEST_CASE("AllocatorCDSLinearBenchmark")
 	{
 		BENCHMARK_ADVANCED("Allocation")
 		(Catch::Benchmark::Chronometer __m)
@@ -100,7 +100,7 @@ namespace pul
 	}
 
 	/// MEMORY: Allocator CDS Stack Benchmark
-	TEST_CASE("AllocatorCDSStackBenchmark", "[allocator][memory][cds]")
+	TEST_CASE("AllocatorCDSStackBenchmark")
 	{
 		BENCHMARK_ADVANCED("Allocation")
 		(Catch::Benchmark::Chronometer __m)
@@ -126,7 +126,7 @@ namespace pul
 	}
 
 	/// MEMORY: Allocator CDS Pool Benchmark
-	TEST_CASE("AllocatorCDSPoolBenchmark", "[allocator][memory][cds]")
+	TEST_CASE("AllocatorCDSPoolBenchmark")
 	{
 		BENCHMARK_ADVANCED("Allocation")
 		(Catch::Benchmark::Chronometer __m)

@@ -309,7 +309,7 @@ namespace pul
 		};
 
 		/// MATH: bcvec3u_t
-		using bcvec3_t = col_vector<bool, 3, SIMD_UNALIGNED>;
+		using bcvec3u_t = col_vector<bool, 3, SIMD_UNALIGNED>;
 
 		/// MATH: ucvec3u_t
 		using u8cvec3u_t	= col_vector<uint8_t, 3, SIMD_UNALIGNED>;

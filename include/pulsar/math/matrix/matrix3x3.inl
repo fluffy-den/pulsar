@@ -28,23 +28,23 @@ namespace pul
 		union alignas(simd_alignment_of_v<_Ty, _ColNum, _SIMD>) matrix;
 
 		/// MATH: bmat3x3u_t
-		using bmat3x3u_t = matrix<bool, 3, 3, SIMD_UNALIGNED>;
+		using bmat3u_t = matrix<bool, 3, 3, SIMD_UNALIGNED>;
 
 		/// MATH: umat3x3u_t
-		using u8mat3x3u_t	 = matrix<uint8_t, 3, 3, SIMD_UNALIGNED>;
-		using u16mat3x3u_t = matrix<uint16_t, 3, 3, SIMD_UNALIGNED>;
-		using u32mat3x3u_t = matrix<uint32_t, 3, 3, SIMD_UNALIGNED>;
-		using u64mat3x3u_t = matrix<uint64_t, 3, 3, SIMD_UNALIGNED>;
+		using u8mat3u_t	 = matrix<uint8_t, 3, 3, SIMD_UNALIGNED>;
+		using u16mat3u_t = matrix<uint16_t, 3, 3, SIMD_UNALIGNED>;
+		using u32mat3u_t = matrix<uint32_t, 3, 3, SIMD_UNALIGNED>;
+		using u64mat3u_t = matrix<uint64_t, 3, 3, SIMD_UNALIGNED>;
 
 		/// MATH: imat3x3u_t
-		using i8mat3x3u_t	 = matrix<int8_t, 3, 3, SIMD_UNALIGNED>;
-		using i16mat3x3u_t = matrix<int16_t, 3, 3, SIMD_UNALIGNED>;
-		using i32mat3x3u_t = matrix<int32_t, 3, 3, SIMD_UNALIGNED>;
-		using i64mat3x3u_t = matrix<int64_t, 3, 3, SIMD_UNALIGNED>;
+		using i8mat3u_t	 = matrix<int8_t, 3, 3, SIMD_UNALIGNED>;
+		using i16mat3u_t = matrix<int16_t, 3, 3, SIMD_UNALIGNED>;
+		using i32mat3u_t = matrix<int32_t, 3, 3, SIMD_UNALIGNED>;
+		using i64mat3u_t = matrix<int64_t, 3, 3, SIMD_UNALIGNED>;
 
 		/// MATH: fmat3x3u_t
-		using f32mat3x3u_t = matrix<float32_t, 3, 3, SIMD_UNALIGNED>;
-		using f64mat3x3u_t = matrix<float64_t, 3, 3, SIMD_UNALIGNED>;
+		using f32mat3u_t = matrix<float32_t, 3, 3, SIMD_UNALIGNED>;
+		using f64mat3u_t = matrix<float64_t, 3, 3, SIMD_UNALIGNED>;
 	}
 }
 
