@@ -21,14 +21,14 @@ namespace pul
 	TEST_CASE("SIMDAlignmentTestInt8")
 	{
 		REQUIRE(simd_alignment_of_v<int8_t, 1, SIMD_ALIGNED> == alignof(int8_t));
-		REQUIRE(simd_alignment_of_v<int8_t, 2, SIMD_ALIGNED> == 8);
+		REQUIRE(simd_alignment_of_v<int8_t, 2, SIMD_ALIGNED> == alignof(int8_t));
 		REQUIRE(simd_alignment_of_v<int8_t, 3, SIMD_ALIGNED> == alignof(int8_t));
-		REQUIRE(simd_alignment_of_v<int8_t, 4, SIMD_ALIGNED> == 8);
+		REQUIRE(simd_alignment_of_v<int8_t, 4, SIMD_ALIGNED> == alignof(int8_t));
 	}
 	TEST_CASE("SIMDAlignmentTestInt16")
 	{
 		REQUIRE(simd_alignment_of_v<int16_t, 1, SIMD_ALIGNED> == alignof(int16_t));
-		REQUIRE(simd_alignment_of_v<int16_t, 2, SIMD_ALIGNED> == 8);
+		REQUIRE(simd_alignment_of_v<int16_t, 2, SIMD_ALIGNED> == alignof(int16_t));
 		REQUIRE(simd_alignment_of_v<int16_t, 3, SIMD_ALIGNED> == alignof(int16_t));
 		REQUIRE(simd_alignment_of_v<int16_t, 4, SIMD_ALIGNED> == 8);
 	}

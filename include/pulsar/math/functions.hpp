@@ -89,7 +89,7 @@ namespace pul
 
 		/// MATH: Cast -> Vector
 		template <typename _ToTy, typename _InTy>
-			requires(is_vector_v<_ToTy> &&is_vector_v<_InTy> &&num_of_row_elem_v<_ToTy> == num_of_row_elem_v<_InTy> && num_of_col_elem_v<_ToTy> == num_of_col_elem_v<_InTy>)
+			requires(is_vector_v<_ToTy> &&is_vector_v<_InTy> &&_ToTy::num == _InTy::num)
 		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline _ToTy cast(
 				_InTy const &__r)
 		pf_attr_noexcept

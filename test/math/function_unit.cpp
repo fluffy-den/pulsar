@@ -71,7 +71,7 @@ namespace pul
 		TEST_CASE("CastTest")
 		{
 			auto v1 = f32cvec4_t(1.0f, 1.0f, 2.0f, 0.2149f);
-			auto v2 = cast<i32cvec4u_t>(v1);
+			auto v2 = cast<i32rvec4u_t>(v1);
 			REQUIRE(v2.x == 1);
 			REQUIRE(v2.y == 1);
 			REQUIRE(v2.z == 2);

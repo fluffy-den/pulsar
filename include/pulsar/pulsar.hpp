@@ -1,8 +1,8 @@
 /*! @file    pulsar.hpp
  * 	@author  Fluffy (noe.louis-quentin@hotmail.fr)
  * 	@brief   This file verifies that compilation is possible, by the presence of compatible
- * 					operating systems and compilers and defines all the macros, types, of these for their
- * 					use through the pulsar framework. Pulsar framework requires at least C++20!
+ * 					 operating systems and compilers and defines all the macros, types, of these for their
+ * 					 use through the pulsar framework. Pulsar framework requires at least C++20!
  * 	@date    23-11-2021
  *
  * 	@copyright Copyright (c) 2021 - Pulsar Software
@@ -134,33 +134,35 @@ namespace pul
 #endif	 // _MSC_VER || defined(__MINGW32__) || defined(__MINGW64__)
 
 // CPP decl
-#define pf_decl_constexpr																																										 constexpr
-#define pf_decl_consteval																																										 consteval
-#define pf_decl_friend																																											 friend
-#define pf_decl_extern																																											 extern
-#define pf_decl_static																																											 static
-#define pf_decl_inline																																											 inline
-#define pf_decl_virtual																																											 virtual
-#define pf_decl_explicit																																										 explicit
-#define pf_decl_thread_local																																								 thread_local
+#define pf_decl_constexpr		 constexpr
+#define pf_decl_consteval		 consteval
+#define pf_decl_friend			 friend
+#define pf_decl_extern			 extern
+#define pf_decl_static			 static
+#define pf_decl_inline			 inline
+#define pf_decl_virtual			 virtual
+#define pf_decl_explicit		 explicit
+#define pf_decl_thread_local thread_local
 
 // Calls
-#define pf_defcall																																													 __cdecl
-#define pf_fastcall																																													 __fastcall
+#define pf_defcall					 __cdecl
+#define pf_fastcall					 __fastcall
 
 // Attribs
-#define pf_attr_noexcept																																										 noexcept
-#define pf_attr_override																																										 override
-#define pf_attr_final																																												 final
+#define pf_attr_noexcept		 noexcept
+#define pf_attr_override		 override
+#define pf_attr_final				 final
 
 // Hints
-#define pf_hint_likely																																											 [[likely]]
-#define pf_hint_unlikely																																										 [[unlikely]]
-#define pf_hint_fallthrough																																									 [[fallthrough]]
-#define pf_hint_nodiscard																																										 [[nodiscard]]
-#define pf_hint_deprecated																																									 [[deprecated]]
+#define pf_hint_likely			 [[likely]]
+#define pf_hint_unlikely		 [[unlikely]]
+#define pf_hint_fallthrough	 [[fallthrough]]
+#define pf_hint_nodiscard		 [[nodiscard]]
+#define pf_hint_deprecated	 [[deprecated]]
 
 // Tools
+#define pf_eat(...)
+#define pf_rem(...)																																													 __VA_ARGS__
 #define pf_stringize_helper(token)																																					 #token;
 #define pf_stringize(str)																																										 pf_stringize_helper(str)
 #define pf_nargs_pass4(x)																																										 x
@@ -172,21 +174,18 @@ namespace pul
 #define pf_cat_pass1(x)																																											 pf_primitive_cat x
 #define pf_cat_tokens(x, y)																																									 pf_cat_pass1((x, y))
 #define pf_pass1(x)																																													 pf_primitive_cat x
-#define pf_rem(...)																																													 __VA_ARGS__
-#define pf_eat(...)
-#define pf_arg_pair(x)								pf_rem x
-#define pf_arg_type_pass4(x, ...)			pf_rem x
-#define pf_arg_type_pass3(x)					pf_arg_type_pass4 x
-#define pf_arg_type_pass2(...)				pf_arg_type_pass3((__VA_ARGS__))
-#define pf_arg_type_pass1(...)				(__VA_ARGS__),
-#define pf_arg_type(x)								pf_arg_type_pass2(pf_arg_type_pass1 x, )
-#define pf_arg_name(x)								pf_eat x
-#define pf_offset_of(type, member)		pf_offset_of(type, member)
-#define pf_member_size(type, member)	sizeof(((type *)0)->member)
-#define pf_offset_after(type, member) pf_offset_of(type, member) + pf_member_size(type, member)
+#define pf_arg_pair(x)																																											 pf_rem x
+#define pf_arg_type_pass4(x, ...)																																						 pf_rem x
+#define pf_arg_type_pass3(x)																																								 pf_arg_type_pass4 x
+#define pf_arg_type_pass2(...)																																							 pf_arg_type_pass3((__VA_ARGS__))
+#define pf_arg_type_pass1(...)																																							 (__VA_ARGS__),
+#define pf_arg_type(x)																																											 pf_arg_type_pass2(pf_arg_type_pass1 x, )
+#define pf_arg_name(x)																																											 pf_eat x
+#define pf_offset_of(type, member)																																					 offsetof(type, member)
+#define pf_member_size(type, member)																																				 sizeof(((type *)0)->member)
+#define pf_offset_after(type, member)																																				 pf_offset_of(type, member) + pf_member_size(type, member)
 
 // Tools -> Do For Each
-#define pf_do_for_each_pass1(m, x)		m x
 #define pf_do_for_each_0(m)
 #define pf_do_for_each_1(m, x1) \
 	m(x1);
@@ -323,6 +322,7 @@ namespace pul
 	m(x13);                                                                                      \
 	m(x14);                                                                                      \
 	m(x15);
+#define pf_do_for_each_pass1(m, x) m x
 #define pf_do_for_each(macro, ...) pf_do_for_each_pass1(pf_cat_tokens(pf_do_for_each_, pf_nargs(__VA_ARGS__)), (macro, __VA_ARGS__))
 }
 
