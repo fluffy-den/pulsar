@@ -35,7 +35,10 @@ namespace pul
 			pf_decl_friend union matrix;
 
 		public:
-			using type = _Ty;
+			using type																			 = _Ty;
+			pf_decl_static pf_decl_constexpr size_t row_num	 = _RowNum;
+			pf_decl_static pf_decl_constexpr size_t col_num	 = _ColNum;
+			pf_decl_static pf_decl_constexpr bool simd_value = _SIMD;
 
 			/// Constructors
 			pf_decl_constexpr matrix(

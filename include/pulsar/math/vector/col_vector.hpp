@@ -111,6 +111,10 @@ namespace pul
 			template <typename _TyF, size_t _NumF, simd_align_t _SIMDF>
 			pf_decl_friend union col_vector;
 
+			using type																			 = _Ty;
+			pf_decl_static pf_decl_constexpr size_t num			 = _Num;
+			pf_decl_static pf_decl_constexpr bool simd_value = _SIMD;
+
 		private:
 			template <typename _InTy>
 			pf_decl_constexpr void __init_rec(

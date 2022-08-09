@@ -86,6 +86,42 @@ namespace pul
 
 		/// MATH: Determinant
 		// TODO: Determinant
+
+		/// MATH: Cast -> Vector
+		template <typename _ToTy, typename _InTy>
+			requires(is_vector_v<_ToTy> &&is_vector_v<_InTy> &&num_of_row_elem_v<_ToTy> == num_of_row_elem_v<_InTy> && num_of_col_elem_v<_ToTy> == num_of_col_elem_v<_InTy>)
+		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline _ToTy cast(
+				_InTy const &__r)
+		pf_attr_noexcept
+		{
+			_ToTy tmp;
+			for (size_t i = 0,
+									m = std::max<size_t>(num_of_row_elem_v<_ToTy>, num_of_col_elem_v<_ToTy>);
+					 i < m;
+					 ++i)
+			{
+				tmp[i] = static_cast<_ToTy::type>(__r[i]);
+			}
+			return tmp;
+		}
+
+		/// MATH: Cast -> Matrix
+		template <typename _ToTy, typename _InTy>
+			requires(is_matrix_v<_ToTy> &&is_matrix_v<_InTy> &&_ToTy::row_num == _InTy::row_num && _ToTy::col_num == _ToTy::col_num)
+		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline _ToTy cast(
+				_InTy const &__r)
+		pf_attr_noexcept
+		{
+			_ToTy tmp;
+			for (size_t i = 0; i < _ToTy::row_num; ++i)
+			{
+				for (size_t j = 0; j < _ToTy::col_num; ++j)
+				{
+					tmp[i][j] = static_cast<_ToTy::type>(__r[i][j]);
+				}
+			}
+			return tmp;
+		}
 	}
 }
 

@@ -36,7 +36,7 @@ namespace pul
 					std::numeric_limits<int32_t>::max());
 			// Constructor
 			int32_t i1 = r(gen), i2 = r(gen), i3 = r(gen), i4 = r(gen);
-			i32mat2x2_t m1 = {
+			i32mat2_t m1 = {
 				{{ i1, i2 },
 					{ i3, i4 }}
 			};
@@ -45,7 +45,7 @@ namespace pul
 			REQUIRE(i3 == m1[1][0]);
 			REQUIRE(i4 == m1[1][1]);
 			// Assignment
-			i32mat2x2_t m2;
+			i32mat2_t m2;
 			m2 = m1;
 			REQUIRE(i1 == m2[0][0]);
 			REQUIRE(i2 == m2[0][1]);
@@ -59,11 +59,11 @@ namespace pul
 			std::uniform_int_distribution<int32_t> r(
 					std::numeric_limits<int32_t>::min(),
 					std::numeric_limits<int32_t>::max());
-			i32mat2x2_t m1 = {
+			i32mat2_t m1 = {
 				{{ r(gen), r(gen) },
 					{ r(gen), r(gen) }}
 			};
-			i32mat2x2_t m2 = {
+			i32mat2_t m2 = {
 				{{ r(gen), r(gen) },
 					{ r(gen), r(gen) }}
 			};
@@ -190,11 +190,11 @@ namespace pul
 			std::uniform_int_distribution<int32_t> r(
 					std::numeric_limits<int32_t>::min(),
 					std::numeric_limits<int32_t>::max());
-			i32mat2x2_t m1 = {
+			i32mat2_t m1 = {
 				{{ r(gen), r(gen) },
 					{ r(gen), r(gen) }}
 			};
-			i32mat2x2u_t m2 = {
+			i32mat2u_t m2 = {
 				{{ r(gen), r(gen) },
 					{ r(gen), r(gen) }}
 			};

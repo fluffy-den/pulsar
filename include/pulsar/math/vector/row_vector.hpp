@@ -79,10 +79,14 @@ namespace pul
 			requires(
 					std::is_arithmetic_v<_Ty> &&_Num > 1
 					&& (((is_simd_alignable_v<_Ty, _Num>)&&_SIMD == SIMD_ALIGNED) || (_SIMD == SIMD_UNALIGNED)))
-		union alignas(simd_alignment_of_v<_Ty, _Num, _SIMD>) row_vector
+		union alignas(simd_alignment_of_v<_Ty, _Num, _SIMD>) row_vector pf_attr_final
 		{
 			template <typename _TyF, size_t _NumF, simd_align_t _SIMDF>
 			pf_decl_friend union row_vector;
+
+			using type																			 = _Ty;
+			pf_decl_static pf_decl_constexpr size_t num			 = _Num;
+			pf_decl_static pf_decl_constexpr bool simd_value = _SIMD;
 
 		private:
 			template <typename _InTy>

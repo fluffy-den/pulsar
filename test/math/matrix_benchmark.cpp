@@ -36,7 +36,7 @@ namespace pul
 				std::uniform_real_distribution<float32_t> r(
 						std::numeric_limits<float32_t>::min(),
 						std::numeric_limits<float32_t>::max());
-				auto buf = std::make_unique<f32mat4x4u_t[]>(n);
+				auto buf = std::make_unique<f32mat4u_t[]>(n);
 				for (auto b = &buf[0], e = &buf[n - 1]; b != e; ++b)
 				{
 					*b = {
@@ -58,7 +58,7 @@ namespace pul
 				std::uniform_real_distribution<float32_t> r(
 						std::numeric_limits<float32_t>::min(),
 						std::numeric_limits<float32_t>::max());
-				auto buf = std::make_unique<f32mat4x4_t[]>(n);
+				auto buf = std::make_unique<f32mat4_t[]>(n);
 				for (auto b = &buf[0], e = &buf[n - 1]; b != e; ++b)
 				{
 					*b = {
@@ -80,7 +80,7 @@ namespace pul
 				std::uniform_real_distribution<float32_t> r(
 						std::numeric_limits<float32_t>::min(),
 						std::numeric_limits<float32_t>::max());
-				auto buf = std::make_unique<f32mat4x4u_t[]>(n);
+				auto buf = std::make_unique<f32mat4u_t[]>(n);
 				for (auto b = &buf[0], e = &buf[n - 1]; b != e; ++b)
 				{
 					*b = {
@@ -102,7 +102,7 @@ namespace pul
 				std::uniform_real_distribution<float32_t> r(
 						std::numeric_limits<float32_t>::min(),
 						std::numeric_limits<float32_t>::max());
-				auto buf = std::make_unique<f32mat4x4_t[]>(n);
+				auto buf = std::make_unique<f32mat4_t[]>(n);
 				for (auto b = &buf[0], e = &buf[n - 1]; b != e; ++b)
 				{
 					*b = {

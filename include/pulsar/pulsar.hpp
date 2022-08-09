@@ -174,16 +174,19 @@ namespace pul
 #define pf_pass1(x)																																													 pf_primitive_cat x
 #define pf_rem(...)																																													 __VA_ARGS__
 #define pf_eat(...)
-#define pf_arg_pair(x)						 pf_rem x
-#define pf_arg_type_pass4(x, ...)	 pf_rem x
-#define pf_arg_type_pass3(x)			 pf_arg_type_pass4 x
-#define pf_arg_type_pass2(...)		 pf_arg_type_pass3((__VA_ARGS__))
-#define pf_arg_type_pass1(...)		 (__VA_ARGS__),
-#define pf_arg_type(x)						 pf_arg_type_pass2(pf_arg_type_pass1 x, )
-#define pf_arg_name(x)						 pf_eat x
+#define pf_arg_pair(x)								pf_rem x
+#define pf_arg_type_pass4(x, ...)			pf_rem x
+#define pf_arg_type_pass3(x)					pf_arg_type_pass4 x
+#define pf_arg_type_pass2(...)				pf_arg_type_pass3((__VA_ARGS__))
+#define pf_arg_type_pass1(...)				(__VA_ARGS__),
+#define pf_arg_type(x)								pf_arg_type_pass2(pf_arg_type_pass1 x, )
+#define pf_arg_name(x)								pf_eat x
+#define pf_offset_of(type, member)		pf_offset_of(type, member)
+#define pf_member_size(type, member)	sizeof(((type *)0)->member)
+#define pf_offset_after(type, member) pf_offset_of(type, member) + pf_member_size(type, member)
 
 // Tools -> Do For Each
-#define pf_do_for_each_pass1(m, x) m x
+#define pf_do_for_each_pass1(m, x)		m x
 #define pf_do_for_each_0(m)
 #define pf_do_for_each_1(m, x1) \
 	m(x1);
@@ -320,7 +323,7 @@ namespace pul
 	m(x13);                                                                                      \
 	m(x14);                                                                                      \
 	m(x15);
-#define pf_do_for_each(macro, ...) pf_do_for_each_pass1(pf_cat_tokens(pf_do_for_each_, pf_nargs(__VA_ARGS__)), (macro, __VA_ARGS__)) pf_do_for_each_pass1(pf_cat_tokens(pf_do_for_each_semicolon_, pf_nargs(__VA_ARGS__)), (macro, __VA_ARGS__))
+#define pf_do_for_each(macro, ...) pf_do_for_each_pass1(pf_cat_tokens(pf_do_for_each_, pf_nargs(__VA_ARGS__)), (macro, __VA_ARGS__))
 }
 
 // Version

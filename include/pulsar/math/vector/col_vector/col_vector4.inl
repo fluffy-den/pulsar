@@ -44,7 +44,9 @@ namespace pul
 			template <typename _TyF, size_t _NumF, simd_align_t _SIMDF>
 			pf_decl_friend union col_vector;
 
-			using type = _Ty;
+			using type																			 = _Ty;
+			pf_decl_static pf_decl_constexpr size_t num			 = 4;
+			pf_decl_static pf_decl_constexpr bool simd_value = _SIMD;
 
 			/// Constructors
 			pf_decl_constexpr col_vector(
