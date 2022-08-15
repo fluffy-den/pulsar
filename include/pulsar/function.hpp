@@ -1,6 +1,6 @@
 /*! @file   function.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief  Adds function utilities.
  *  @date   16-06-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software

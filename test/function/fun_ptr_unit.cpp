@@ -1,6 +1,6 @@
 /*! @file   fun_ptr_unit.cpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief	Test function pointers.
  *  @date   16-06-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software

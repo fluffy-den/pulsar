@@ -49,28 +49,28 @@ namespace pul
 			pf_decl_static pf_decl_constexpr bool simd_value = _SIMD;
 
 			/// Constructors
-			pf_decl_constexpr row_vector(
+			pf_decl_inline pf_decl_constexpr row_vector(
 					_Ty __val = static_cast<_Ty>(0)) pf_attr_noexcept
 					: store_{ __val }
 			{}
-			pf_decl_constexpr row_vector(
+			pf_decl_inline pf_decl_constexpr row_vector(
 					_Ty __val1,
 					_Ty __val2) pf_attr_noexcept
 					: store_{ __val1, __val2 }
 			{}
 			template <simd_align_t _RSIMD>
-			pf_decl_constexpr row_vector(
+			pf_decl_inline pf_decl_constexpr row_vector(
 					row_vector<_Ty, 2, _RSIMD> const &__r) pf_attr_noexcept
 					: store_(__r.store_)
 			{}
 
 			/// Operator[]
-			pf_hint_nodiscard pf_decl_constexpr _Ty &operator[](
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _Ty &operator[](
 					size_t __index) pf_attr_noexcept
 			{
 				return this->store_[__index];
 			}
-			pf_hint_nodiscard pf_decl_constexpr const _Ty &operator[](
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const _Ty &operator[](
 					size_t __index) const pf_attr_noexcept
 			{
 				return this->store_[__index];
@@ -78,7 +78,7 @@ namespace pul
 
 			/// Operator+=
 			template <simd_align_t _RSIMD>
-			pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator+=(
+			pf_decl_inline pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator+=(
 					row_vector<_Ty, 2, _RSIMD> const &__r) pf_attr_noexcept
 			{
 				this->x += __r.x;
@@ -88,7 +88,7 @@ namespace pul
 
 			/// Operator-=
 			template <simd_align_t _RSIMD>
-			pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator-=(
+			pf_decl_inline pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator-=(
 					row_vector<_Ty, 2, _RSIMD> const &__r) pf_attr_noexcept
 			{
 				this->x -= __r.x;
@@ -97,7 +97,7 @@ namespace pul
 			}
 
 			/// Operator*=
-			pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator*=(
+			pf_decl_inline pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator*=(
 					_Ty __val) pf_attr_noexcept
 			{
 				this->x *= __val;
@@ -106,7 +106,7 @@ namespace pul
 			}
 
 			/// Operator/=
-			pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator/=(
+			pf_decl_inline pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator/=(
 					_Ty __val) pf_attr_noexcept
 			{
 				this->x /= __val;
@@ -116,7 +116,7 @@ namespace pul
 
 			/// Operator%=
 			template <simd_align_t _RSIMD>
-			pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator%=(
+			pf_decl_inline pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator%=(
 					row_vector<_Ty, 2, _RSIMD> const &__r) pf_attr_noexcept requires(std::is_integral_v<_Ty>)
 			{
 				this->x %= __r.x;
@@ -126,7 +126,7 @@ namespace pul
 
 			/// Operator&=
 			template <simd_align_t _RSIMD>
-			pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator&=(
+			pf_decl_inline pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator&=(
 					row_vector<_Ty, 2, _RSIMD> const &__r) pf_attr_noexcept requires(std::is_integral_v<_Ty>)
 			{
 				this->x &= __r.x;
@@ -136,7 +136,7 @@ namespace pul
 
 			/// Operator|=
 			template <simd_align_t _RSIMD>
-			pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator|=(
+			pf_decl_inline pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator|=(
 					row_vector<_Ty, 2, _RSIMD> const &__r) pf_attr_noexcept requires(std::is_integral_v<_Ty>)
 			{
 				this->x |= __r.x;
@@ -146,7 +146,7 @@ namespace pul
 
 			/// Operator^=
 			template <simd_align_t _RSIMD>
-			pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator^=(
+			pf_decl_inline pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator^=(
 					row_vector<_Ty, 2, _RSIMD> const &__r) pf_attr_noexcept requires(std::is_integral_v<_Ty>)
 			{
 				this->x ^= __r.x;
@@ -156,7 +156,7 @@ namespace pul
 
 			/// Operator<<=
 			template <simd_align_t _RSIMD>
-			pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator<<=(
+			pf_decl_inline pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator<<=(
 					row_vector<_Ty, 2, _RSIMD> const &__r) pf_attr_noexcept requires(std::is_integral_v<_Ty>)
 			{
 				this->x <<= __r.x;
@@ -166,7 +166,7 @@ namespace pul
 
 			/// Operator>>=
 			template <simd_align_t _RSIMD>
-			pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator>>=(
+			pf_decl_inline pf_decl_constexpr row_vector<_Ty, 2, _SIMD> &operator>>=(
 					row_vector<_Ty, 2, _RSIMD> const &__r) pf_attr_noexcept requires(std::is_integral_v<_Ty>)
 			{
 				this->x >>= __r.x;
@@ -176,7 +176,7 @@ namespace pul
 
 			/// Operator==
 			template <simd_align_t _RSIMD>
-			pf_hint_nodiscard pf_decl_constexpr bool operator==(
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr bool operator==(
 					row_vector<_Ty, 2, _RSIMD> const &__r) pf_attr_noexcept
 			{
 				return this->x == __r.x
@@ -185,7 +185,7 @@ namespace pul
 
 			/// Compare
 			template <simd_align_t _RSIMD>
-			pf_hint_nodiscard pf_decl_constexpr row_vector<bool, 2> vals_equal(
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr row_vector<bool, 2> vals_equal(
 					row_vector<_Ty, 2, _RSIMD> const &__r) const pf_attr_noexcept
 			{
 				return row_vector<bool, 2, simd_select_v<bool, 2>>(
@@ -193,7 +193,7 @@ namespace pul
 						this->y == __r.y);
 			}
 			template <simd_align_t _RSIMD>
-			pf_hint_nodiscard pf_decl_constexpr row_vector<bool, 2, simd_select_v<bool, 2>> vals_greater(
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr row_vector<bool, 2, simd_select_v<bool, 2>> vals_greater(
 					row_vector<_Ty, 2, _RSIMD> const &__r) const pf_attr_noexcept
 			{
 				return row_vector<bool, 2, simd_select_v<bool, 2>>(
@@ -201,7 +201,7 @@ namespace pul
 						this->y > __r.y);
 			}
 			template <simd_align_t _RSIMD>
-			pf_hint_nodiscard pf_decl_constexpr row_vector<bool, 2, simd_select_v<bool, 2>> vals_greater_equal(
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr row_vector<bool, 2, simd_select_v<bool, 2>> vals_greater_equal(
 					row_vector<_Ty, 2, _RSIMD> const &__r) const pf_attr_noexcept
 			{
 				return row_vector<bool, 2, simd_select_v<bool, 2>>(
@@ -209,7 +209,7 @@ namespace pul
 						this->y >= __r.y);
 			}
 			template <simd_align_t _RSIMD>
-			pf_hint_nodiscard pf_decl_constexpr row_vector<bool, 2, simd_select_v<bool, 2>> vals_smaller(
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr row_vector<bool, 2, simd_select_v<bool, 2>> vals_smaller(
 					row_vector<_Ty, 2, _RSIMD> const &__r) const pf_attr_noexcept
 			{
 				return row_vector<bool, 2, simd_select_v<bool, 2>>(
@@ -217,7 +217,7 @@ namespace pul
 						this->y < __r.y);
 			}
 			template <simd_align_t _RSIMD>
-			pf_hint_nodiscard pf_decl_constexpr row_vector<bool, 2, simd_select_v<bool, 2>> vals_smaller_equal(
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr row_vector<bool, 2, simd_select_v<bool, 2>> vals_smaller_equal(
 					row_vector<_Ty, 2, _RSIMD> const &__r) const pf_attr_noexcept
 			{
 				return row_vector<bool, 2, simd_select_v<bool, 2>>(
@@ -225,7 +225,7 @@ namespace pul
 						this->y <= __r.y);
 			}
 			template <simd_align_t _RSIMD>
-			pf_hint_nodiscard pf_decl_constexpr row_vector<bool, 2, simd_select_v<bool, 2>> vals_not_equal(
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr row_vector<bool, 2, simd_select_v<bool, 2>> vals_not_equal(
 					row_vector<_Ty, 2, _RSIMD> const &__r) const pf_attr_noexcept
 			{
 				return row_vector<bool, 2, simd_select_v<bool, 2>>(
@@ -234,23 +234,23 @@ namespace pul
 			}
 
 			/// Data
-			pf_hint_nodiscard pf_decl_constexpr _Ty *data() pf_attr_noexcept
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _Ty *data() pf_attr_noexcept
 			{
 				return this->store_.data();
 			}
-			pf_hint_nodiscard pf_decl_constexpr const _Ty *data() const pf_attr_noexcept
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const _Ty *data() const pf_attr_noexcept
 			{
 				return this->store_.data();
 			}
 
 			/// Num of elem
-			pf_hint_nodiscard pf_decl_static pf_decl_constexpr size_t num_elem() pf_attr_noexcept
+			pf_hint_nodiscard pf_decl_static pf_decl_inline pf_decl_constexpr size_t num_elem() pf_attr_noexcept
 			{
 				return 2;
 			}
 
 			/// Is SIMD aligned?
-			pf_hint_nodiscard pf_decl_static pf_decl_constexpr bool is_simd_aligned() pf_attr_noexcept
+			pf_hint_nodiscard pf_decl_static pf_decl_inline pf_decl_constexpr bool is_simd_aligned() pf_attr_noexcept
 			{
 				return _SIMD == SIMD_ALIGNED;
 			}

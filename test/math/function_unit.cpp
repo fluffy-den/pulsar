@@ -9,7 +9,7 @@
  */
 
 // Include: Pulsar
-#include "pulsar/math/functions.hpp"
+#include "pulsar/math/algorithm.hpp"
 
 // Include: Catch2
 #include "catch2/catch_all.hpp"

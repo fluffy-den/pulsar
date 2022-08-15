@@ -34,7 +34,7 @@ namespace pul
 
 		/// MATH: Vector -> Operator*
 		template <typename _Ty, size_t _Num, simd_align_t _LSIMD, simd_align_t _RSIMD>
-		pf_hint_nodiscard pf_decl_constexpr _Ty operator*(
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _Ty operator*(
 				row_vector<_Ty, _Num, _LSIMD> const &__l,
 				col_vector<_Ty, _Num, _RSIMD> const &__r) pf_attr_noexcept
 		{
@@ -48,7 +48,7 @@ namespace pul
 
 		/// MATH: Vector -> Operator/
 		template <typename _Ty, size_t _Num, simd_align_t _LSIMD, simd_align_t _RSIMD>
-		pf_hint_nodiscard pf_decl_constexpr _Ty operator/(
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _Ty operator/(
 				row_vector<_Ty, _Num, _LSIMD> const &__l,
 				col_vector<_Ty, _Num, _RSIMD> const &__r) pf_attr_noexcept
 		{

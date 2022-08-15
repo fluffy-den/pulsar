@@ -1,6 +1,6 @@
-/*! @file   buffer.hpp
+/*! @file   memory_buffer.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief	Definition of memory buffer.
  *  @date   11-06-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
@@ -12,7 +12,17 @@
 #define PULSAR_MEMORY_BUFFER_HPP 1
 
 // Include: Pulsar
+#include "pulsar/pulsar.hpp"
+
+// Include: Pulsar -> Memory
 #include "pulsar/memory.hpp"
+#include "pulsar/memory/memory_utils.hpp"
+
+// Include: C++
+#include <iterator>
+
+// Include: C
+#include <cstring>
 
 // Pulsar
 namespace pul
@@ -29,7 +39,7 @@ namespace pul
 			/// Constructors
 			/*! @brief Constructor. Does not build dynamic memory.
 			 */
-			pf_decl_constexpr buffer() pf_attr_noexcept
+			pf_decl_inline pf_decl_constexpr buffer() pf_attr_noexcept
 					: align_(std::align_val_t(0))
 					, beg_(nullptr)
 					, end_(nullptr)
@@ -39,9 +49,9 @@ namespace pul
 			 *  @param[in] __size			Size of the memory to build.
 			 *  @param[in] __bufalign Alignment of this memory.
 			 */
-			pf_decl_constexpr buffer(
+			pf_decl_inline pf_decl_constexpr buffer(
 					size_t __size,
-					align_val_t __bufalign = MAX_ALIGN) pf_attr_noexcept
+					align_val_t __bufalign = max_align) pf_attr_noexcept
 					: align_(std::align_val_t(__bufalign))
 					, beg_(new (align_) byte_t[(__size += padding_of(__size, __bufalign))])
 					, end_(this->beg_ + __size)
@@ -57,7 +67,7 @@ namespace pul
 			 *
 			 *  @param[in] __r				Other memory buffer to copy from.
 			 */
-			pf_decl_constexpr buffer(
+			pf_decl_inline pf_decl_constexpr buffer(
 					buffer const &__r) pf_attr_noexcept
 					: buffer(__r.capacity(), __r.align_)
 			{}
@@ -68,7 +78,7 @@ namespace pul
 			 *  @param[in] __r				Other memory buffer to copy from.
 			 *  @param[in] __bufalign New alignment of this buffer.
 			 */
-			pf_decl_constexpr buffer(
+			pf_decl_inline pf_decl_constexpr buffer(
 					buffer const &__r,
 					align_val_t __bufalign) pf_attr_noexcept
 					: buffer(__r.capacity(), __bufalign)
@@ -77,7 +87,7 @@ namespace pul
 			 *
 			 *  @param[in] __r Other memory buffer to move from.
 			 */
-			pf_decl_constexpr buffer(
+			pf_decl_inline pf_decl_constexpr buffer(
 					buffer &&__r) pf_attr_noexcept
 					: align_(__r.align_)
 					, beg_(__r.beg_)
@@ -91,7 +101,7 @@ namespace pul
 			/// Destructor
 			/*! @brief Destructor. Free the memory.
 			 */
-			pf_decl_constexpr ~buffer() pf_attr_noexcept
+			pf_decl_inline pf_decl_constexpr ~buffer() pf_attr_noexcept
 			{
 				this->__free();
 			}
@@ -104,11 +114,11 @@ namespace pul
 			 *  @param[in] __r Other memory buffer to copy from.
 			 *  @return Reference on this memory buffer.
 			 */
-			pf_decl_constexpr buffer &operator=(
+			pf_decl_inline pf_decl_constexpr buffer &operator=(
 					buffer const &__r) pf_attr_noexcept
 			{
 				if (&__r == this) return *this;
-				this->resize(__r.capacity(), MAX_ALIGN);
+				this->resize(__r.capacity(), max_align);
 				return *this;
 			}
 			/*! @brief Move assignment operator. Moves a buffer memory. Cleans owned memory before
@@ -117,7 +127,7 @@ namespace pul
 			 *  @param[in] __r Other memory buffer to move from.
 			 *  @return Reference on this memory buffer.
 			 */
-			pf_decl_constexpr buffer &operator=(
+			pf_decl_inline pf_decl_constexpr buffer &operator=(
 					buffer &&__r) pf_attr_noexcept
 			{
 				if (&__r == this) return *this;
@@ -136,7 +146,7 @@ namespace pul
 			 *
 			 *  @return Capacity in bytes of this buffer.
 			 */
-			pf_decl_constexpr size_t capacity() const pf_attr_noexcept
+			pf_decl_inline pf_decl_constexpr size_t capacity() const pf_attr_noexcept
 			{
 				return std::distance(this->beg_, this->end_);
 			}
@@ -152,9 +162,9 @@ namespace pul
 			 *  @param[in] __val			The filled value of the new memory.
 			 *  @return Difference of size between the last memory size and the new one.
 			 */
-			pf_decl_constexpr diff_t resize(
+			pf_decl_inline pf_decl_constexpr diff_t resize(
 					size_t __newsize,
-					align_val_t __newalign = MAX_ALIGN,
+					align_val_t __newalign = max_align,
 					int32_t __val					 = '\0') pf_attr_noexcept
 			{
 				size_t s = this->capacity();
@@ -181,7 +191,7 @@ namespace pul
 			 *
 			 *  @return Alignment in power of two of this buffer.
 			 */
-			pf_decl_constexpr align_val_t alignment() const pf_attr_noexcept
+			pf_decl_inline pf_decl_constexpr align_val_t alignment() const pf_attr_noexcept
 			{
 				return this->align_;
 			}
@@ -191,7 +201,7 @@ namespace pul
 			 *
 			 *  @param[in] __val Value to fill with.
 			 */
-			pf_decl_constexpr void fill(
+			pf_decl_inline pf_decl_constexpr void fill(
 					int32_t __val = '\0') const pf_attr_noexcept
 			{
 				std::memset(this->beg_, __val, this->capacity());
@@ -202,7 +212,7 @@ namespace pul
 			 *
 			 *  @return Pointer on the beginning of the memory sequence.
 			 */
-			pf_decl_constexpr byte_t *begin() pf_attr_noexcept
+			pf_decl_inline pf_decl_constexpr byte_t *begin() pf_attr_noexcept
 			{
 				return this->beg_;
 			}
@@ -212,7 +222,7 @@ namespace pul
 			 *
 			 *  @return Pointer on the end of the memory sequence.
 			 */
-			pf_decl_constexpr byte_t *end() pf_attr_noexcept
+			pf_decl_inline pf_decl_constexpr byte_t *end() pf_attr_noexcept
 			{
 				return this->end_;
 			}
@@ -221,7 +231,7 @@ namespace pul
 			/// Free
 			/*! @brief Free the memory buffer.
 			 */
-			pf_decl_constexpr void __free() pf_attr_noexcept
+			pf_decl_inline pf_decl_constexpr void __free() pf_attr_noexcept
 			{
 				if (this->beg_)
 				{

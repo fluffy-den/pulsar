@@ -907,8 +907,8 @@ namespace pul
 		{
 			pf_assert(__n != nullptr, "__n is nullptr!");
 			pf_assert(this->contains(__n), "__n isn't contained in the list!");
-			if (__n == head_) return this->remove_head();
-			if (__n == tail_) return this->remove_tail();
+			if (__n == this->head_) return this->remove_head();
+			if (__n == this->tail_) return this->remove_tail();
 			node *p	 = this->parent_of(__n);
 			p->next_ = __n->next_;
 			__n->__unlink();

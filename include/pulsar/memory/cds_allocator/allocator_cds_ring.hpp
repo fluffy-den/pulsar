@@ -14,6 +14,9 @@
 // Include: Pulsar
 #include "pulsar/memory.hpp"
 
+// Include: C++
+#include <tuple>
+
 // Pulsar
 namespace pul
 {
@@ -33,23 +36,23 @@ namespace pul
 			/// Constructors
 			/*! @brief Default constructor.
 			 */
-			pf_decl_constexpr allocator_cds_ring() pf_attr_noexcept
+			pf_decl_inline pf_decl_constexpr allocator_cds_ring() pf_attr_noexcept
 			{}
 			/*! @brief Constructor.
 			 *
 			 *  @param[in] __size 		Size of the memory buffer.
 			 *  @param[in] __bufalign Alignment of the memory buffer.
 			 */
-			pf_decl_constexpr allocator_cds_ring(
+			pf_decl_inline pf_decl_constexpr allocator_cds_ring(
 					size_t __size,
-					align_val_t __bufalign = MAX_ALIGN)
+					align_val_t __bufalign = max_align)
 					: allocator_cds_linear(__size, __bufalign)
 			{}
 			/*! @brief Copy constructor.
 			 *
 			 *  @param[in] __r Other linear allocator to copy from.
 			 */
-			allocator_cds_ring(
+			pf_decl_inline allocator_cds_ring(
 					allocator_cds_linear const &__r) pf_attr_noexcept
 					: allocator_cds_linear(__r)
 			{}
@@ -58,7 +61,7 @@ namespace pul
 			 *  @param[in] __r 				Other linear allocator to copy from.
 			 *  @param[in] __bufalign Alignment of the buffer.
 			 */
-			allocator_cds_ring(
+			pf_decl_inline allocator_cds_ring(
 					allocator_cds_linear const &__r,
 					align_val_t __bufalign) pf_attr_noexcept
 					: allocator_cds_linear(__r, __bufalign)
@@ -67,7 +70,7 @@ namespace pul
 			 *
 			 *	@param[in] __r Other linear allocator to copy from.
 			 */
-			allocator_cds_ring(
+			pf_decl_inline allocator_cds_ring(
 					allocator_cds_linear &&__r) pf_attr_noexcept
 					: allocator_cds_linear(std::move(__r))
 			{}
@@ -81,9 +84,9 @@ namespace pul
 			 *  @param[in] __offset	Offset to alignment.
 			 *  @return Pointer on a allocated memory.
 			 */
-			pf_hint_nodiscard void *allocate(
+			pf_hint_nodiscard pf_decl_inline void *allocate(
 					size_t __size,
-					align_val_t __align = MAX_ALIGN,
+					align_val_t __align = max_align,
 					size_t __offset			= 0)
 			{
 				void *all = allocator_cds_linear::allocate(__size, __align, __offset);

@@ -1,4 +1,4 @@
-/*! @file   functions.hpp
+/*! @file   algorithm.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
  *  @brief
  *  @date   31-05-2022
@@ -8,8 +8,8 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_MATH_FUNCTIONS_HPP
-#define PULSAR_MATH_FUNCTIONS_HPP 1
+#ifndef PULSAR_MATH_ALGORITHM_HPP
+#define PULSAR_MATH_ALGORITHM_HPP 1
 
 // Include: Pulsar
 #include "pulsar/math/matrix.hpp"
@@ -31,7 +31,7 @@ namespace pul
 		 *  @return Transposed row vector.
 		 */
 		template <typename _Ty, size_t _Num, simd_align_t _SIMD>
-		pf_hint_nodiscard pf_decl_constexpr row_vector<_Ty, _Num, _SIMD> transpose(
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr row_vector<_Ty, _Num, _SIMD> transpose(
 				col_vector<_Ty, _Num, _SIMD> const &__v) pf_attr_noexcept
 		{
 			row_vector<_Ty, _Num, _SIMD> tmp;
@@ -50,7 +50,7 @@ namespace pul
 		 *  @return Transposed column vector.
 		 */
 		template <typename _Ty, size_t _Num, simd_align_t _SIMD>
-		pf_hint_nodiscard pf_decl_constexpr col_vector<_Ty, _Num, _SIMD> transpose(
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr col_vector<_Ty, _Num, _SIMD> transpose(
 				row_vector<_Ty, _Num, _SIMD> const &__v) pf_attr_noexcept
 		{
 			col_vector<_Ty, _Num, _SIMD> tmp;
@@ -70,7 +70,7 @@ namespace pul
 		 *  @return Transposed matrix.
 		 */
 		template <typename _Ty, size_t _RowNum, size_t _ColNum, simd_align_t _SIMD>
-		pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _ColNum, _RowNum, _SIMD> transpose(
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _ColNum, _RowNum, _SIMD> transpose(
 				matrix<_Ty, _RowNum, _ColNum, _SIMD> const &__m) pf_attr_noexcept
 		{
 			matrix<_Ty, _ColNum, _RowNum, _SIMD> tmp;
@@ -90,7 +90,7 @@ namespace pul
 		/// MATH: Cast -> Vector
 		template <typename _ToTy, typename _InTy>
 			requires(is_vector_v<_ToTy> &&is_vector_v<_InTy> &&_ToTy::num == _InTy::num)
-		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline _ToTy cast(
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _ToTy cast(
 				_InTy const &__r)
 		pf_attr_noexcept
 		{
@@ -108,7 +108,7 @@ namespace pul
 		/// MATH: Cast -> Matrix
 		template <typename _ToTy, typename _InTy>
 			requires(is_matrix_v<_ToTy> &&is_matrix_v<_InTy> &&_ToTy::row_num == _InTy::row_num && _ToTy::col_num == _ToTy::col_num)
-		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline _ToTy cast(
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _ToTy cast(
 				_InTy const &__r)
 		pf_attr_noexcept
 		{
@@ -125,4 +125,4 @@ namespace pul
 	}
 }
 
-#endif // !PULSAR_MATH_FUNCTIONS_HPP
+#endif // !PULSAR_MATH_ALGORITHM_HPP

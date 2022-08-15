@@ -14,6 +14,9 @@
 // Include: Pulsar
 #include "pulsar/memory.hpp"
 
+// Include: C++
+#include <tuple>
+
 // Pulsar
 namespace pul
 {
@@ -36,26 +39,25 @@ namespace pul
 			using propagate_on_container_swap						 = std::true_type;
 
 			/// Constructors
-
 			/*! @brief Default constructor.
 			 */
-			pf_decl_constexpr allocator_stack() pf_attr_noexcept
+			pf_decl_inline pf_decl_constexpr allocator_stack() pf_attr_noexcept
 			{}
 			/*! @brief Constructor.
 			 *
 			 *  @param[in] __size		  Size of the memory buffer.
 			 *  @param[in] __bufalign Alignment of the memory buffer.
 			 */
-			pf_decl_constexpr allocator_stack(
+			pf_decl_inline pf_decl_constexpr allocator_stack(
 					size_t __size,
-					align_val_t __bufalign = MAX_ALIGN) pf_attr_noexcept
+					align_val_t __bufalign = max_align) pf_attr_noexcept
 					: allocator_linear(__size, __bufalign)
 			{}
 			/*! @brief Copy constructor.
 			 *
 			 *  @param[in] __r Other stack allocator to copy from.
 			 */
-			pf_decl_constexpr allocator_stack(
+			pf_decl_inline pf_decl_constexpr allocator_stack(
 					allocator_stack const &__r) pf_attr_noexcept
 					: allocator_linear(__r)
 			{}
@@ -64,7 +66,7 @@ namespace pul
 			 *  @param[in] __r 				Other stack allocator to copy from.
 			 * 	@param[in] __bufalign Alignment of the memory buffer.
 			 */
-			pf_decl_constexpr allocator_stack(
+			pf_decl_inline pf_decl_constexpr allocator_stack(
 					allocator_stack const &__r,
 					align_val_t __bufalign) pf_attr_noexcept
 					: allocator_linear(__r, __bufalign)
@@ -73,7 +75,7 @@ namespace pul
 			 *
 			 *  @param[in] __r Other stack allocator to move from.
 			 */
-			pf_decl_constexpr allocator_stack(
+			pf_decl_inline pf_decl_constexpr allocator_stack(
 					allocator_stack &&__r) pf_attr_noexcept
 					: allocator_linear(std::move(__r))
 			{}
@@ -87,9 +89,9 @@ namespace pul
 			 *  @param[in] __offset	Offset to alignment.
 			 *  @return Pointer on a allocated memory.
 			 */
-			pf_decl_constexpr void *allocate(
+			pf_decl_inline pf_decl_constexpr void *allocate(
 					size_t __size,
-					align_val_t __align = MAX_ALIGN,
+					align_val_t __align = max_align,
 					size_t __offset			= 0) pf_attr_noexcept
 			{
 				__size += padding_of(__size + __offset, __align);
@@ -115,7 +117,7 @@ namespace pul
 			 *
 			 *  @param[in] __ptr Pointer referring to a memory to be deallocated.
 			 */
-			pf_decl_constexpr void deallocate(
+			pf_decl_inline pf_decl_constexpr void deallocate(
 					void *__ptr) pf_attr_noexcept
 			{
 				if (!__ptr) return;

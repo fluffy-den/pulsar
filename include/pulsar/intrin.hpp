@@ -1,11 +1,11 @@
 /*! @file   intrin.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief	Defines the intrinsic functions with its utilities.
- *  @date   17-05-2022
+ *  @brief  Implementation of intrin utilitaries.
+ *  @date   14-08-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
  *
- *  @since 0.1.1
+ *  @since 0.1.2
  */
 
 #ifndef PULSAR_INTRIN_HPP
@@ -93,6 +93,7 @@ namespace pul
 	{};
 	template <typename _Ty, size_t _Num>
 	pf_decl_static pf_decl_constexpr simd_align_t simd_select_v = simd_select<_Ty, _Num>::value;
+
 }
 
 #endif // !PULSAR_INTRIN_HPP

@@ -15,6 +15,9 @@
 #include "pulsar/linked_list.hpp"
 #include "pulsar/memory.hpp"
 
+// Include: C++
+#include <tuple>
+
 // Pulsar
 namespace pul
 {
@@ -57,7 +60,7 @@ namespace pul
 			/// Constructors
 			/*! @brief Default constructor.
 			 */
-			pf_decl_constexpr allocator_pool() pf_attr_noexcept
+			pf_decl_inline pf_decl_constexpr allocator_pool() pf_attr_noexcept
 					: elemsize_(0)
 					, elemcount_(0)
 					, elemalign_(align_val_t(0))
@@ -68,10 +71,10 @@ namespace pul
 			 *  @param[in] __elemcount Maximum allocator's element number.
 			 *  @param[in] __maxalign  Maximum alignment of an allocation.
 			 */
-			pf_decl_constexpr allocator_pool(
+			pf_decl_inline pf_decl_constexpr allocator_pool(
 					size_t __elemsize,
 					size_t __elemcount,
-					align_val_t __maxalign = MAX_ALIGN)
+					align_val_t __maxalign = max_align)
 					: buf_(
 							(padding_of(sizeof(__node_t), __maxalign) + (__elemsize += padding_of(sizeof(__node_t) + __elemsize, __maxalign) + sizeof(__node_t))) * __elemcount,
 							__maxalign)
@@ -85,7 +88,7 @@ namespace pul
 			 *
 			 *  @param[in] __r Other pool allocator to copy from.
 			 */
-			pf_decl_constexpr allocator_pool(
+			pf_decl_inline pf_decl_constexpr allocator_pool(
 					allocator_pool const &__r) pf_attr_noexcept
 					: allocator_pool(__r.elemsize_, __r.elemcount_, __r.elemalign_)
 			{}
@@ -94,7 +97,7 @@ namespace pul
 			 *  @param[in] __r 				Other pool allocator to copy from.
 			 *  @param[in] __bufalign Alignment of the buffer.
 			 */
-			pf_decl_constexpr allocator_pool(
+			pf_decl_inline pf_decl_constexpr allocator_pool(
 					allocator_pool const &__r,
 					align_val_t __maxalign) pf_attr_noexcept
 					: allocator_pool(__r.elemsize_, __r.elemcount_, __maxalign)
@@ -103,7 +106,7 @@ namespace pul
 			 *
 			 *	@param[in] __r Other pool allocator to move from.
 			 */
-			pf_decl_constexpr allocator_pool(
+			pf_decl_inline pf_decl_constexpr allocator_pool(
 					allocator_pool &&__r) pf_attr_noexcept
 					: buf_(std::move(__r.buf_))
 					, list_(std::move(__r.list_))
@@ -115,7 +118,7 @@ namespace pul
 			/// Destructor
 			/*! @brief Destructor.
 			 */
-			pf_decl_constexpr ~allocator_pool() pf_attr_noexcept
+			pf_decl_inline pf_decl_constexpr ~allocator_pool() pf_attr_noexcept
 			{
 				this->list_.clear();
 			}
@@ -126,7 +129,7 @@ namespace pul
 			 *  @param[in] __r Other pool allocator to copy from.
 			 *  @return Reference on this allocator.
 			 */
-			pf_decl_constexpr allocator_pool &operator=(
+			pf_decl_inline pf_decl_constexpr allocator_pool &operator=(
 					allocator_pool const &__r) pf_attr_noexcept
 			{
 				if (&__r == this) return *this;
@@ -142,7 +145,7 @@ namespace pul
 			 *  @param[in] __r Other linear allocator to move from.
 			 *  @return Reference on this allocator.
 			 */
-			pf_decl_constexpr allocator_pool &operator=(
+			pf_decl_inline pf_decl_constexpr allocator_pool &operator=(
 					allocator_pool &&__r) pf_attr_noexcept
 			{
 				if (&__r == this) return *this;
@@ -161,7 +164,7 @@ namespace pul
 			 *  @return False, can't be equal with any allocator (unique memory).
 			 */
 			template <typename _Allocator>
-			pf_decl_constexpr bool operator==(
+			pf_decl_inline pf_decl_constexpr bool operator==(
 					_Allocator const &__r) pf_attr_noexcept
 			{
 				return false;
@@ -176,9 +179,9 @@ namespace pul
 			 *  @param[in] __offset	Offset to alignment.
 			 *  @return Pointer on a allocated memory.
 			 */
-			pf_hint_nodiscard pf_decl_constexpr void *allocate(
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr void *allocate(
 					size_t __size,
-					align_val_t __align = MAX_ALIGN,
+					align_val_t __align = max_align,
 					size_t __offset			= 0) pf_attr_noexcept
 			{
 				std::ignore = __size;
@@ -193,7 +196,7 @@ namespace pul
 			 *
 			 *  @param[in] __ptr Pointer referring to a memory to be deallocated.
 			 */
-			pf_decl_constexpr void deallocate(
+			pf_decl_inline pf_decl_constexpr void deallocate(
 					void *__ptr) pf_attr_noexcept
 			{
 				if (!__ptr) return;

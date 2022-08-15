@@ -1,4 +1,4 @@
-/*! @file   geometrics.hpp
+/*! @file   geometric.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
  *  @brief
  *  @date   23-05-2022
@@ -8,8 +8,8 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_MATH_GEOMETRICS_HPP
-#define PULSAR_MATH_GEOMETRICS_HPP 1
+#ifndef PULSAR_MATH_GEOMETRIC_HPP
+#define PULSAR_MATH_GEOMETRIC_HPP 1
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
@@ -24,4 +24,4 @@ namespace pul
 	}
 }
 
-#endif // PULSAR_MATH_GEOMETRICS_HPP
+#endif // PULSAR_MATH_GEOMETRIC_HPP

@@ -10,7 +10,6 @@
 
 // Include: Pulsar
 #include "pulsar/debug.hpp"
-#include "pulsar/intrin.hpp"
 #include "pulsar/system.hpp"
 
 // Include: Windows

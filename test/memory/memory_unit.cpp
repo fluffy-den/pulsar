@@ -20,7 +20,7 @@ namespace pul
 	/// MEMORY: Buffer
 	TEST_CASE("MemoryBufferTest1")
 	{
-		memory::buffer buf1(1024, memory::MAX_ALIGN);
+		memory::buffer buf1(1024, memory::max_align);
 		REQUIRE(buf1.capacity() == 1024);
 		memory::buffer buf2 = buf1;
 		REQUIRE(buf2.capacity() == 1024);
@@ -35,9 +35,9 @@ namespace pul
 	}
 	TEST_CASE("MemoryBufferTest2")
 	{
-		memory::buffer buf1(1024, memory::MAX_ALIGN);
+		memory::buffer buf1(1024, memory::max_align);
 		REQUIRE(buf1.capacity() == 1024);
-		buf1.resize(2048, memory::MAX_ALIGN);
+		buf1.resize(2048, memory::max_align);
 		REQUIRE(buf1.capacity() == 2048);
 	}
 

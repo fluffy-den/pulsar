@@ -9,7 +9,7 @@
  */
 
 // Include: Pulsar
-#include "pulsar/thread.hpp"
+#include "pulsar/job_system.hpp"
 
 // Include: Catch2
 #include "catch2/catch_all.hpp"

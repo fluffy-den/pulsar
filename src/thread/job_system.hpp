@@ -9,7 +9,7 @@
  */
 
 // Include: Pulsar
-#include "pulsar/thread/job_system.hpp"
+#include "pulsar/job_system/job_system.hpp"
 
 // Pulsar
 namespace pul

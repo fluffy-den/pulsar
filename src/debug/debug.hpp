@@ -1,6 +1,6 @@
 /*! @file   debug.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief	Implements debug.
  *  @date   16-07-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
@@ -11,11 +11,11 @@
 #ifndef PULSAR_INTERNAL_DEBUG_HPP
 #define PULSAR_INTERNAL_DEBUG_HPP 1
 
-// Include: Debugger
-
+// Include: Pulsar -> Debug
+#include "pulsar/debug.hpp"
 
 // Include: Pulsar
-#include "pulsar/debug.hpp"
+#include "pulsar/job_system.hpp"
 
 // Pulsar
 namespace pul
@@ -44,6 +44,7 @@ namespace pul
 		job loggerJob_;
 		debug_filter loggerFilter_;
 
+		/// Internal -> Instance
 		pf_decl_static pf_decl_inline std::unique_ptr<__debugger_internal> instance_ = nullptr;
 	};
 }

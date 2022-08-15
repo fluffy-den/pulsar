@@ -12,6 +12,6 @@
 #define PULSAR_UTILITY_HASH_HPP 1
 
 // Include: Pulsar
-#include "pulsar/hash/fnv1a.hpp"
+#include "pulsar/hash/fnv1a/fnv1a.hpp"
 
 #endif // !PULSAR_UTILITY_HASH_HPP

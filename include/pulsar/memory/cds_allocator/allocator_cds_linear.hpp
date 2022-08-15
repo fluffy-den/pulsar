@@ -14,6 +14,9 @@
 // Include: Pulsar
 #include "pulsar/memory.hpp"
 
+// Include: C++
+#include <tuple>
+
 // Pulsar
 namespace pul
 {
@@ -35,7 +38,7 @@ namespace pul
 			/// Constructors
 			/*! @brief Default constructor.
 			 */
-			pf_decl_constexpr allocator_cds_linear() pf_attr_noexcept
+			pf_decl_inline pf_decl_constexpr allocator_cds_linear() pf_attr_noexcept
 					: off_(0)
 			{}
 			/*! @brief Constructor.
@@ -43,9 +46,9 @@ namespace pul
 			 *  @param[in] __size 		Size of the memory buffer.
 			 *  @param[in] __bufalign Alignment of the memory buffer.
 			 */
-			pf_decl_constexpr allocator_cds_linear(
+			pf_decl_inline pf_decl_constexpr allocator_cds_linear(
 					size_t __size,
-					align_val_t __bufalign = MAX_ALIGN) pf_attr_noexcept
+					align_val_t __bufalign = max_align) pf_attr_noexcept
 					: buf_(__size, __bufalign)
 					, off_(this->buf_.begin())
 			{}
@@ -53,7 +56,7 @@ namespace pul
 			 *
 			 *  @param[in] __r Other linear allocator to copy from.
 			 */
-			allocator_cds_linear(
+			pf_decl_inline allocator_cds_linear(
 					allocator_cds_linear const &__r) pf_attr_noexcept
 					: buf_(__r.buf_)
 					, off_(__r.off_.load(std::memory_order::acquire))
@@ -63,7 +66,7 @@ namespace pul
 			 *  @param[in] __r Other linear allocator to copy from.
 			 *  @param[in] __bufalign Alignment of the buffer.
 			 */
-			allocator_cds_linear(
+			pf_decl_inline allocator_cds_linear(
 					allocator_cds_linear const &__r,
 					align_val_t __bufalign) pf_attr_noexcept
 					: buf_(__r.buf_, __bufalign)
@@ -73,7 +76,7 @@ namespace pul
 			 *
 			 *	@param[in] __r Other linear allocator to copy from.
 			 */
-			allocator_cds_linear(
+			pf_decl_inline allocator_cds_linear(
 					allocator_cds_linear &&__r) pf_attr_noexcept
 					: buf_(std::move(__r.buf_))
 					, off_(__r.off_.exchange(nullptr, std::memory_order::acq_rel))
@@ -85,7 +88,7 @@ namespace pul
 			 *  @param[in] __r Other linear allocator to copy from.
 			 *  @return Reference on this allocator.
 			 */
-			allocator_cds_linear &operator=(
+			pf_decl_inline allocator_cds_linear &operator=(
 					allocator_cds_linear const &__r) pf_attr_noexcept
 			{
 				if (&__r == this) return *this;
@@ -98,7 +101,7 @@ namespace pul
 			 *  @param[in] __r Other linear allocator to move from.
 			 *  @return Reference on this allocator.
 			 */
-			allocator_cds_linear &operator=(
+			pf_decl_inline allocator_cds_linear &operator=(
 					allocator_cds_linear &&__r) pf_attr_noexcept
 			{
 				if (&__r == this) return *this;
@@ -114,7 +117,7 @@ namespace pul
 			 *  @return False, can't be equal with any allocator (unique memory).
 			 */
 			template <typename _Allocator>
-			pf_decl_constexpr bool operator==(
+			pf_decl_inline pf_decl_constexpr bool operator==(
 					_Allocator const &__r) pf_attr_noexcept
 			{
 				return false;
@@ -131,7 +134,7 @@ namespace pul
 			 */
 			pf_hint_nodiscard void *allocate(
 					size_t __size,
-					align_val_t __align = MAX_ALIGN,
+					align_val_t __align = max_align,
 					size_t __offset			= 0) pf_attr_noexcept
 			{
 				__size += padding_of(__size + __offset, __align);
@@ -161,7 +164,7 @@ namespace pul
 			 *
 			 *  @param[in] __ptr Pointer referring to a memory to be deallocated.
 			 */
-			void deallocate(
+			pf_decl_inline void deallocate(
 					void *__ptr) pf_attr_noexcept
 			{
 				std::ignore = __ptr;
@@ -173,7 +176,7 @@ namespace pul
 			 *  @warning Must not be used with types using this memory that use dynamic allocations
 			 *  				 themselves!
 			 */
-			void clear(
+			pf_decl_inline void clear(
 					std::memory_order __order = std::memory_order::relaxed) pf_attr_noexcept
 			{
 				this->off_.exchange(this->buf_.begin(), __order);

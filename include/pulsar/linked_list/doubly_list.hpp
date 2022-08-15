@@ -408,7 +408,7 @@ namespace pul
 		 */
 		pf_hint_nodiscard pf_decl_constexpr _Ty *operator->() const pf_attr_noexcept
 		{
-			return this->base()->store_;
+			return &this->base()->store_;
 		}
 
 		/// Operator Cast: node *

@@ -1,6 +1,6 @@
 /*! @file   fun_ptr.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief	Adds function pointer utility.
+ *  @brief	Definition of function pointer.
  *  @date   23-05-2022
  *
  *  @copyright Copyright (c) 2022 - Pulsar Software
@@ -31,57 +31,50 @@ namespace pul
 
 	/*! @brief Function pointer specialization.
 	 *
-	 *  @tparam _Ret  Type of return
+	 *  @tparam _RetTy  Type of return
 	 *  @tparam _Args Type of arguments.
 	 */
-	template <typename _Ret, typename... _Args>
-	class fun_ptr<_Ret(_Args...)>
+	template <typename _RetTy, typename... _Args>
+	class fun_ptr<_RetTy(_Args...)>
 	{
 	public:
-		using return_t = _Ret;
+		using return_t = _RetTy;
 
 		/// Constructors
 		/*! @brief Default constructor.
 		 */
-		pf_decl_constexpr fun_ptr() pf_attr_noexcept
-				: ptr_(nullptr)
-		{}
+		pf_decl_inline pf_decl_constexpr fun_ptr() pf_attr_noexcept;
+		/*! @brief Nullptr constructor.
+		 */
+		pf_decl_inline pf_decl_constexpr fun_ptr(
+				std::nullptr_t) pf_attr_noexcept;
 		/*! @brief Constructor.
 		 *
 		 *  @param[in] __ptr Pointer of function.
 		 */
-		pf_decl_constexpr fun_ptr(
-				_Ret (*__ptr)(_Args...)) pf_attr_noexcept
-				: ptr_(__ptr)
-		{}
+		pf_decl_inline pf_decl_constexpr fun_ptr(
+				_RetTy (*__ptr)(_Args...)) pf_attr_noexcept;
 		/*! @brief Copy constructor for Functors / Empty Lambdas types.
 		 *
 		 *  @tparam _FunTy Functor / Lambda type.
 		 *  @param[in] __ptr Function to copy.
 		 */
 		template <typename _FunTy>
-		pf_decl_constexpr fun_ptr(
-				_FunTy __ptr) pf_attr_noexcept
-				: ptr_(__ptr)
-		{}
+		pf_decl_inline pf_decl_constexpr fun_ptr(
+				_FunTy &&__ptr) pf_attr_noexcept
+				requires(std::is_convertible_v<_FunTy, _RetTy (*)(_Args...)>);
 		/*! @brief Copy constructor.
 		 *
 		 *  @param[in] __r Other function pointer.
 		 */
-		pf_decl_constexpr fun_ptr(
-				fun_ptr<_Ret(_Args...)> const &__r) pf_attr_noexcept
-				: ptr_(__r.ptr_)
-		{}
+		pf_decl_inline pf_decl_constexpr fun_ptr(
+				fun_ptr<_RetTy(_Args...)> const &__r) pf_attr_noexcept;
 		/*! @brief Move constructor.
 		 *
 		 *  @param[in] __r Other function pointer.
 		 */
-		pf_decl_constexpr fun_ptr(
-				fun_ptr<_Ret(_Args...)> &&__r) pf_attr_noexcept
-				: ptr_(__r.ptr_)
-		{
-			__r.ptr_ = nullptr;
-		}
+		pf_decl_inline pf_decl_constexpr fun_ptr(
+				fun_ptr<_RetTy(_Args...)> &&__r) pf_attr_noexcept;
 
 		/// Operator=
 		/*! @brief Copy assignment operator.
@@ -89,24 +82,15 @@ namespace pul
 		 *  @param[in] __r Other function pointer.
 		 *  @return Reference on this function pointer.
 		 */
-		pf_decl_constexpr fun_ptr<_Ret(_Args...)> &operator=(
-				fun_ptr<_Ret(_Args...)> const &__r) pf_attr_noexcept
-		{
-			this->ptr_ = __r.ptr_;
-			return *this;
-		}
+		pf_decl_inline pf_decl_constexpr fun_ptr<_RetTy(_Args...)> &operator=(
+				fun_ptr<_RetTy(_Args...)> const &__r) pf_attr_noexcept;
 		/*! @brief Move assignment operator.
 		 *
 		 *  @param[in] __r Other function pointer.
 		 *  @return Reference on this function pointer.
 		 */
-		pf_decl_constexpr fun_ptr<_Ret(_Args...)> &operator=(
-				fun_ptr<_Ret(_Args...)> &&__r) pf_attr_noexcept
-		{
-			this->ptr_ = __r.ptr_;
-			__r.ptr_	 = nullptr;
-			return *this;
-		}
+		pf_decl_inline pf_decl_constexpr fun_ptr<_RetTy(_Args...)> &operator=(
+				fun_ptr<_RetTy(_Args...)> &&__r) pf_attr_noexcept;
 
 		/// Operator()
 		/*! @brief Call operator.
@@ -115,11 +99,8 @@ namespace pul
 		 *  @return Value returned by the encapsulated function pointer.
 		 */
 		template <typename... _InArgs>
-		pf_hint_nodiscard pf_decl_constexpr _Ret operator()(
-				_InArgs &&...__args) const
-		{
-			return this->ptr_(__args...);
-		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _RetTy operator()(
+				_InArgs &&...__args) const;
 
 		/// Operator==
 		/*! @brief Equality operator.
@@ -128,14 +109,11 @@ namespace pul
 		 *  @return True If both pointer are equals.
 		 *  @return False Otherwise.
 		 */
-		pf_decl_constexpr bool operator==(
-				fun_ptr<_Ret(_Args...)> const &__r) const pf_attr_noexcept
-		{
-			return this->ptr_ = __r.ptr_;
-		}
+		pf_decl_inline pf_decl_constexpr bool operator==(
+				fun_ptr<_RetTy(_Args...)> const &__r) const pf_attr_noexcept;
 
 	private:
-		_Ret (*ptr_)(_Args...);
+		_RetTy (*ptr_)(_Args...);
 	};
 
 	/// FUNCTION: Pointer Deduction Guide (Based on std::function)
@@ -238,5 +216,8 @@ namespace pul
 			typename _Signature = typename __fun_helper<decltype(&_Functor::operator())>::type>
 	fun_ptr(_Functor) -> fun_ptr<_Signature>;
 }
+
+// Include: Pulsar -> Function -> Impl
+#include "pulsar/function/fun_ptr.inl"
 
 #endif // !PULSAR_FUN_PTR_HPP

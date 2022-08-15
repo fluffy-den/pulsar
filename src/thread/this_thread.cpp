@@ -9,7 +9,7 @@
  */
 
 // Include: Pulsar
-#include "pulsar/thread/thread_identifier.hpp"
+#include "pulsar/job_system/thread_identifier.hpp"
 
 // Include: Src
 #include "thread/job_system.hpp"

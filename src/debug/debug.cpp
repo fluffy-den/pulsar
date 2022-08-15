@@ -8,8 +8,11 @@
  *  @since 0.1.2
  */
 
-// Include: Pulsar
+// Include: Pulsar -> Debug
 #include "pulsar/debug.hpp"
+
+// Include: Pulsar
+#include "pulsar/string.hpp"
 
 // Include: Src
 #include "debug/debug.hpp"
@@ -25,7 +28,7 @@ namespace pul
 			, loggerFilter_(debug_filter::detail)
 	{
 		// Transmitter
-		this->loggerSignal_.add_signal(this->loggerDefaultReceiver_);
+		this->loggerSignal_.signal_add(this->loggerDefaultReceiver_);
 		// Exception not handled function
 		auto lbd = []() pf_attr_noexcept
 		{
@@ -155,7 +158,7 @@ namespace pul
 		std::string msg;
 		size_t rsv = __message.length() * 2
 							 + dtl.size() * (4 * 1024 + 32);
-		rsv += memory::padding_of(rsv, memory::MAX_ALIGN);
+		rsv += memory::padding_of(rsv, memory::max_align);
 		msg.reserve(rsv);
 		msg += exception::format(__cat, __code, __message);
 		msg += '\n';
@@ -264,7 +267,7 @@ namespace pul
 	}
 
 	/// Debugger -> Destructor
-	debugger::~debugger()
+	debugger::~debugger() pf_attr_noexcept
 	{
 		__debugger_internal::instance_.reset();
 	}
@@ -274,12 +277,12 @@ namespace pul
 			shared_isignal<void(std::string_view)> &__wr)
 			pf_attr_noexcept
 	{
-		__debugger_internal::instance_->loggerSignal_.add_signal(__wr);
+		__debugger_internal::instance_->loggerSignal_.signal_add(__wr);
 	}
 	void debugger::rem_log_signal(
 			shared_isignal<void(std::string_view)> &__wr) pf_attr_noexcept
 	{
-		__debugger_internal::instance_->loggerSignal_.rem_signal(__wr);
+		__debugger_internal::instance_->loggerSignal_.signal_rem(__wr);
 	}
 
 	/// Writter -> Filters

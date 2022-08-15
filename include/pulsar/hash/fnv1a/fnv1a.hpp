@@ -1,6 +1,6 @@
 /*! @file   fnv1a.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief
+ *  @brief	Definition of Fnv1-a hash function.
  *  @date   26-11-2021
  *
  *  @copyright Copyright (c) 2021 - Pulsar Software
@@ -8,8 +8,8 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_UTILITY_HASH_FNV1A_HPP
-#define PULSAR_UTILITY_HASH_FNV1A_HPP 1
+#ifndef PULSAR_HASH_FNV1A_HPP
+#define PULSAR_HASH_FNV1A_HPP 1
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
@@ -38,25 +38,7 @@ namespace pul
 			 */
 			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(
 					const void *__ptr,
-					size_t __size) pf_attr_noexcept
-			{
-				uint32_t val = 0x811c9dc5u;
-				union
-				{
-					const byte_t *as_byte;
-					const void *as_void;
-				};
-
-				as_void = __ptr;
-
-				for (size_t i = 0; i < __size; ++i)
-				{
-					val = (val ^ *as_byte) * 0x01000193u;
-					as_byte++;
-				}
-
-				return val;
-			}
+					size_t __size) pf_attr_noexcept;
 			/*! @brief Does the same thing as hash32 function.
 			 *
 			 *  @tparam _Ty  Type of @a __arr array.
@@ -64,11 +46,8 @@ namespace pul
 			 *  @param __arr Reference to an array structure.
 			 */
 			template <typename _Ty, size_t _Len>
-			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(
-					const _Ty (&__arr)[_Len]) pf_attr_noexcept
-			{
-				return hash32(&__arr[0], _Len * sizeof(_Ty));
-			}
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr uint32_t hash32(
+					const _Ty (&__arr)[_Len]) pf_attr_noexcept;
 
 			/// 64 bits
 			/*! @brief Calculates the 64 bits version of the fnv1-a hash function.
@@ -78,56 +57,20 @@ namespace pul
 			 */
 			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(
 					const void *__ptr,
-					size_t __size) pf_attr_noexcept
-			{
-				uint64_t val = 0xcbf29ce484222325ull;
-
-				union
-				{
-					const byte_t *as_byte;
-					const void *as_void;
-				};
-
-				as_void = __ptr;
-
-				for (size_t i = 0; i < __size; ++i)
-				{
-					val = (val ^ *as_byte) * 0xcbf29ce484222325ull;
-					as_byte++;
-				}
-
-				return val;
-			}
+					size_t __size) pf_attr_noexcept;
 			/*! @see hash64.
 			 */
 			template <typename _Ty, size_t _Len>
-			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(
-					const _Ty (&__arr)[_Len]) pf_attr_noexcept
-			{
-				return hash64(&__arr[0], _Len * sizeof(_Ty));
-			}
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr uint64_t hash64(
+					const _Ty (&__arr)[_Len]) pf_attr_noexcept;
 
 			/// Auto
-			pf_hint_nodiscard pf_decl_constexpr size_t hash(
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t hash(
 					const void *__ptr,
-					size_t __size) pf_attr_noexcept
-			{
-#ifdef PF_64BIT
-				return hash64(__ptr, __size);
-#else	 // ^^^ PF_64BIT ^^^ / vvv PF_32BIT vvv
-				return hash32(__ptr, __size);
-#endif // PF_64BIT
-			}
+					size_t __size) pf_attr_noexcept;
 			template <typename _Ty, size_t _Len>
-			pf_hint_nodiscard pf_decl_constexpr size_t hash(
-					const _Ty (&__arr)[_Len]) pf_attr_noexcept
-			{
-#ifdef PF_64BIT
-				return hash64(__arr);
-#else	 // ^^^ PF_64BIT ^^^ / vvv PF_32BIT vvv
-				return hash32(__arr);
-#endif // PF_64BIT
-			}
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t hash(
+					const _Ty (&__arr)[_Len]) pf_attr_noexcept;
 
 		} // Fnv1-a
 
@@ -148,11 +91,8 @@ namespace pul
 		 *  @param[in] __key Value to be hashed.
 		 *  @return Hashed value.
 		 */
-		pf_hint_nodiscard pf_decl_constexpr uint32_t operator()(
-				_Key __key) const pf_attr_noexcept
-		{
-			return hash::fnv1a::hash32(&__key, sizeof(__key));
-		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr uint32_t operator()(
+				_Key __key) const pf_attr_noexcept;
 	};
 
 	/// STD: Fnv1a impl -> 64 bits
@@ -170,11 +110,8 @@ namespace pul
 		 *  @param[in] __key Value to be hashed.
 		 *  @return Hashed value.
 		 */
-		pf_hint_nodiscard pf_decl_constexpr uint64_t operator()(
-				_Key __key) const pf_attr_noexcept
-		{
-			return hash::fnv1a::hash64(&__key, sizeof(__key));
-		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr uint64_t operator()(
+				_Key __key) const pf_attr_noexcept;
 	};
 
 	/// STD: Fnv1a impl -> Auto
@@ -186,4 +123,8 @@ namespace pul
 #endif // PF_64BIT
 
 } // Pulsar
-#endif // !PULSAR_UTILITY_HASH_FNV1A_HPP
+
+// Include: Pulsar -> Hash -> Fnv1a Impl
+#include "pulsar/hash/fnv1a/fnv1a.inl"
+
+#endif // !PULSAR_HASH_FNV1A_HPP

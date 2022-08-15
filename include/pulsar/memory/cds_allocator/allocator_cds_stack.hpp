@@ -9,10 +9,13 @@
  */
 
 #ifndef PULSAR_MEMORY_ALLOCATOR_CDS_STACK_HPP
-#define PULSAR_MEMORY_ALLOCATOR_CDS_STACK_HPP
+#define PULSAR_MEMORY_ALLOCATOR_CDS_STACK_HPP 1
 
 // Include: Pulsar
 #include "pulsar/memory.hpp"
+
+// Include: C++
+#include <tuple>
 
 // Pulsar
 namespace pul
@@ -38,23 +41,23 @@ namespace pul
 			/// Constructors
 			/*! @brief Default constructor.
 			 */
-			pf_decl_constexpr allocator_cds_stack() pf_attr_noexcept
+			pf_decl_inline pf_decl_constexpr allocator_cds_stack() pf_attr_noexcept
 			{}
 			/*! @brief Constructor.
 			 *
 			 *  @param[in] __size		  Size of the memory buffer.
 			 *  @param[in] __bufalign Alignment of the memory buffer.
 			 */
-			pf_decl_constexpr allocator_cds_stack(
+			pf_decl_inline pf_decl_constexpr allocator_cds_stack(
 					size_t __size,
-					align_val_t __bufalign = MAX_ALIGN) pf_attr_noexcept
+					align_val_t __bufalign = max_align) pf_attr_noexcept
 					: allocator_cds_linear(__size, __bufalign)
 			{}
 			/*! @brief Copy constructor.
 			 *
 			 *  @param[in] __r Other stack allocator to copy from.
 			 */
-			allocator_cds_stack(
+			pf_decl_inline allocator_cds_stack(
 					allocator_cds_stack const &__r) pf_attr_noexcept
 					: allocator_cds_linear(__r)
 			{}
@@ -63,7 +66,7 @@ namespace pul
 			 *  @param[in] __r Other stack allocator to copy from.
 			 *  @param[in] __bufalign Alignment of the memory buffer.
 			 */
-			allocator_cds_stack(
+			pf_decl_inline allocator_cds_stack(
 					allocator_cds_stack const &__r,
 					align_val_t __bufalign) pf_attr_noexcept
 					: allocator_cds_linear(__r, __bufalign)
@@ -72,7 +75,7 @@ namespace pul
 			 *
 			 *  @param[in] __r Other stack allocator to move from.
 			 */
-			allocator_cds_stack(
+			pf_decl_inline allocator_cds_stack(
 					allocator_cds_stack &&__r) pf_attr_noexcept
 					: allocator_cds_linear(std::move(__r))
 			{}
@@ -86,9 +89,9 @@ namespace pul
 			 *  @param[in] __offset	Offset to alignment.
 			 *  @return Pointer on a allocated memory.
 			 */
-			pf_hint_nodiscard void *allocate(
+			pf_hint_nodiscard pf_decl_inline void *allocate(
 					size_t __size,
-					align_val_t __align = MAX_ALIGN,
+					align_val_t __align = max_align,
 					size_t __offset			= 0) pf_attr_noexcept
 			{
 				__size += padding_of(__size + __offset, __align);
@@ -120,7 +123,7 @@ namespace pul
 			 *
 			 *  @param[in] __ptr Pointer referring to a memory to be deallocated.
 			 */
-			pf_decl_constexpr void deallocate(
+			pf_decl_inline pf_decl_constexpr void deallocate(
 					void *__ptr) pf_attr_noexcept
 			{
 				if (!__ptr) return;

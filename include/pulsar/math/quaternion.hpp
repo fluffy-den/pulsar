@@ -12,8 +12,7 @@
 #define PULSAR_MATH_QUATERNION_HPP 1
 
 // Include: Pulsar
-#include "pulsar/intrin.hpp"
-#include "pulsar/pulsar.hpp"
+#include "pulsar/system.hpp"
 
 // Pulsar
 namespace pul

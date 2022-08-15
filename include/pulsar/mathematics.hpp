@@ -12,8 +12,8 @@
 #define PULSAR_MATHEMATICS_HPP 1
 
 // Include: Pulsar
-#include "pulsar/math/functions.hpp"
-#include "pulsar/math/geometrics.hpp"
+#include "pulsar/math/algorithm.hpp"
+#include "pulsar/math/geometric.hpp"
 #include "pulsar/math/matrix.hpp"
 #include "pulsar/math/quaternion.hpp"
 #include "pulsar/math/vector.hpp"
