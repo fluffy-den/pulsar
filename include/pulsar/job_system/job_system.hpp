@@ -615,7 +615,7 @@ namespace pul
 		 *
 		 *  @return pulsar_api
 		 */
-		pulsar_api ~job_system();
+		pulsar_api ~job_system() pf_attr_noexcept;
 
 		/// Submit -> Unique
 		/*! @brief

@@ -340,7 +340,7 @@ namespace pul
 	}
 
 	// Job System -> Destructor
-	job_system::~job_system()
+	job_system::~job_system() pf_attr_noexcept
 	{
 		__job_sys_internal::instance_.reset();
 	}
