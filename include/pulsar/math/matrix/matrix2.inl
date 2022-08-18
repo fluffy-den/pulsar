@@ -1,4 +1,4 @@
-/*! @file   matrix2x2.inl
+/*! @file   matrix2.inl
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
  *  @brief	Specialization for square matrices of size 2.
  *  @date   31-05-2022
@@ -8,8 +8,8 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_MATH_MATRIX2X2_INL
-#define PULSAR_MATH_MATRIX2X2_INL 1
+#ifndef PULSAR_MATH_MATRIX2_INL
+#define PULSAR_MATH_MATRIX2_INL 1
 
 // Include: Pulsar
 #include "pulsar/intrin.hpp"
@@ -60,4 +60,4 @@ namespace pul
 	}
 }
 
-#endif // !PULSAR_MATH_MATRIX2X2_INL
+#endif // !PULSAR_MATH_MATRIX2_INL

@@ -1,4 +1,4 @@
-/*! @file   matrix4x4.inl
+/*! @file   matrix4.inl
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
  *  @brief	Specialization for square matrices of size 4.
  *  @date   31-05-2022
@@ -8,8 +8,8 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_MATH_MATRIX4X4_INL
-#define PULSAR_MATH_MATRIX4X4_INL 1
+#ifndef PULSAR_MATH_MATRIX4_INL
+#define PULSAR_MATH_MATRIX4_INL 1
 
 // Include: Pulsar
 #include "pulsar/intrin.hpp"
@@ -62,4 +62,4 @@ namespace pul
 	}
 }
 
-#endif // !PULSAR_MATH_MATRIX4X4_INL
+#endif // !PULSAR_MATH_MATRIX4_INL

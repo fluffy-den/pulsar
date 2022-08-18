@@ -701,15 +701,14 @@ namespace pul
 }
 
 // Pulsar: Math -> Matrix Specializations
-#include "pulsar/math/matrix/matrix2x2.inl"
+#include "pulsar/math/matrix/matrix2.inl"
 #include "pulsar/math/matrix/matrix2x3.inl"
 #include "pulsar/math/matrix/matrix2x4.inl"
+#include "pulsar/math/matrix/matrix3.inl"
 #include "pulsar/math/matrix/matrix3x2.inl"
-#include "pulsar/math/matrix/matrix3x3.inl"
 #include "pulsar/math/matrix/matrix3x4.inl"
+#include "pulsar/math/matrix/matrix4.inl"
 #include "pulsar/math/matrix/matrix4x2.inl"
 #include "pulsar/math/matrix/matrix4x3.inl"
-#include "pulsar/math/matrix/matrix4x4.inl"
-
 
 #endif // !PULSAR_MATH_MATRIX_HPP
