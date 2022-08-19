@@ -53,3 +53,7 @@
         - Microphone
         - Networking Card
     - GPU ? (Or only renderer will use display info on it)
+
+# TODO
+- Find an hash algorithm with fast compute speed for big data and low probability of collision (none).
+
