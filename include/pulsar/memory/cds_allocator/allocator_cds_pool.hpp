@@ -205,7 +205,6 @@ namespace pul
 				};
 				as_void = __ptr;
 				--as_node;
-				pf_assert(!this->list_.contains(as_node), "Pool allocator cannot deallocate a free block!");
 				this->list_.insert_tail(as_node);
 			}
 

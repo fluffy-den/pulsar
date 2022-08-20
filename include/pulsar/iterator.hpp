@@ -42,7 +42,7 @@ namespace pul
 				: ptr_(__ptr)
 				, off_(__off)
 		{
-			pf_assert(this->off_ >= sizeof(_Ty), "__off isn't greater or equal than sizeof(_Ty)");
+			pf_assert(static_cast<size_t>(this->off_) >= sizeof(_Ty), "__off isn't greater or equal than sizeof(_Ty)");
 		}
 		/*! @brief Copy constructor.
 		 *
@@ -53,7 +53,7 @@ namespace pul
 				: ptr_(__r.ptr_)
 				, off_(__r.off_)
 		{
-			pf_assert(this->off_ >= sizeof(_Ty), "__off isn't greater or equal than sizeof(_Ty)");
+			pf_assert(static_cast<size_t>(this->off_) >= sizeof(_Ty), "__off isn't greater or equal than sizeof(_Ty)");
 		}
 		/*! @brief Copy constructor.
 		 *
@@ -66,7 +66,7 @@ namespace pul
 				: ptr_(__r.ptr_)
 				, off_(__off)
 		{
-			pf_assert(this->off_ >= sizeof(_Ty), "__off isn't greater or equal than sizeof(_Ty)");
+			pf_assert(static_cast<size_t>(this->off_) >= sizeof(_Ty), "__off isn't greater or equal than sizeof(_Ty)");
 		}
 
 		/// Operator=

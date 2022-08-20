@@ -414,8 +414,6 @@ namespace pul
 			_InIterator __beg,
 			_InIterator __end)
 	{
-		pf_assert(__beg != nullptr, "__beg is nullptr!");
-		pf_assert(__end != nullptr, "__end is nullptr!");
 		// Init List
 		singly_iterator b = &*__beg;
 		++__beg;
@@ -435,7 +433,6 @@ namespace pul
 			_InIterator __beg)
 	{
 		singly_iterator b = &*__beg;
-		pf_assert(!__beg, "__beg is nullptr!");
 		while (b.base()->next_)
 		{
 			b = b.base()->next_;

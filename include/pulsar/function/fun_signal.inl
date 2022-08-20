@@ -120,7 +120,7 @@ namespace pul
 			this->list_.remove_head();
 			b = n;
 		}
-		pf_assert(this->list.empty(), "Internal linked list must be empty!");
+		pf_assert(this->list_.empty(), "Internal linked list must be empty!");
 	}
 
 

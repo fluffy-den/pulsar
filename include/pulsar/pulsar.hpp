@@ -73,7 +73,8 @@
 
 // Assert
 #ifdef PF_DEBUG
-#	define pf_assert(val, message) assert(val &&message)
+#	include <cassert>
+#	define pf_assert(val, message) assert((val && "message"))
 #else
 #	define pf_assert(val, message)
 #endif

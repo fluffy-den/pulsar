@@ -272,7 +272,7 @@ namespace pul
 					};
 					as_void = __pack_args;
 					tuple_apply(as_pack->fun, as_pack->args);
-					pf_assert(!__fut.is_finished(), "Future shouldn't be finished!");
+					pf_assert(!as_pack->future->is_finished(), "Future shouldn't be finished!");
 					as_pack->future->__set_finished(this_thread::ID());
 					std::destroy_at(as_pack);
 				};
@@ -312,9 +312,9 @@ namespace pul
 						pack *as_pack;
 					};
 					as_void = __pack_args;
-					pf_assert(!as_pack->future.is_finished(), "Future shouldn't be finished!");
 					as_pack->future->__set_ret_val(tuple_apply(as_pack->fun, as_pack->args));
 					as_pack->future->__set_finished(this_thread::ID());
+					pf_assert(!as_pack->future.is_finished(), "Future shouldn't be finished!");
 					std::destroy_at(as_pack);
 				};
 				// Args

@@ -56,7 +56,7 @@ namespace pul
 					, beg_(new (align_) byte_t[(__size += padding_of(__size, __bufalign))])
 					, end_(this->beg_ + __size)
 			{
-				pf_assert(this->size() % __bufalign == 0,
+				pf_assert(this->capacity() % static_cast<size_t>(__bufalign) == 0,
 									"Buffer size isn't aligned to __bufalign!");
 				pf_assert(is_aligned(this->beg_, __bufalign),
 									"Buffer starting address isn't aligned to __bufalign!");
@@ -179,7 +179,7 @@ namespace pul
 				this->beg_	 = new (this->align_) byte_t[__newsize];
 				this->end_	 = this->beg_ + __newsize;
 				this->fill(__val);
-				pf_assert(this->size() % __newalign == 0,
+				pf_assert(this->capacity() % static_cast<size_t>(__newalign) == 0,
 									"Buffer size isn't aligned to __newalign!");
 				pf_assert(is_aligned(this->beg_, __newalign),
 									"Buffer starting address isn't aligned to __newalign!");
