@@ -59,9 +59,14 @@
 #endif // ^^^ Architecture ^^^
 
 // Debug
-#ifdef _DEBUG
+#ifndef NDEBUG
 #	define PF_DEBUG 1
-#endif // _DEBUG
+#endif // !NDEBUG
+
+// Release
+#ifndef PF_DEBUG
+#	define PF_RELEASE 1
+#endif // !PF_DEBUG
 
 // Static Assert
 #define pf_static_assert(...) static_assert(__VA_ARGS__)
