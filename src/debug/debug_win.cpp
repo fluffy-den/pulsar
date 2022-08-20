@@ -281,7 +281,7 @@ namespace pul
 		// generate filename
 		std::time_t t = std::chrono::high_resolution_clock::to_time_t(
 				std::chrono::high_resolution_clock::now());
-		std::filesystem::path p = __p / (strfmt("%d%b%y-%H%M%S", std::gmtime(&t)) + ".dmp");
+		std::filesystem::path p = __p / (strfmt("%d%b%y-%H%M%S", *std::gmtime(&t)) + ".dmp");
 		// generate file
 		HANDLE fhdl							= CreateFileW(
 				p.wstring().c_str(),
