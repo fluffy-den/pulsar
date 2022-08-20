@@ -120,10 +120,7 @@ namespace pul
 		/// Destructor
 		/*! @brief Destructor.
 		 */
-		pf_decl_constexpr ~singly_node() pf_attr_noexcept
-		{
-			pf_assert(!this->is_linked(), "Destroying a linked node!");
-		}
+		pf_decl_constexpr ~singly_node() pf_attr_noexcept = default;
 
 		/// Operator=
 		/*! @brief Assignment operator. Move an @a __Ty into this node.
@@ -1417,6 +1414,8 @@ namespace pul
 		{
 			pf_assert(__n != nullptr, "__n is nullptr");
 			node *c = this->head_;
+			if (!c)
+				return false;
 			do
 			{
 				if (c == __n) return true;

@@ -116,10 +116,7 @@ namespace pul
 		/// Destructor
 		/*! @brief Destructor.
 		 */
-		pf_decl_constexpr ~doubly_node() pf_attr_noexcept
-		{
-			pf_assert(!this->is_linked(), "Destroying a linked node!");
-		}
+		pf_decl_constexpr ~doubly_node() pf_attr_noexcept = default;
 
 		/// Operator=
 		/*! @brief Assignment operator. Move an @a __Ty into this node.
@@ -1133,8 +1130,6 @@ namespace pul
 			_InIterator __beg,
 			_InIterator __end)
 	{
-		pf_assert(__beg != nullptr, "__beg is nullptr!");
-		pf_assert(__end != nullptr, "__end is nullptr!");
 		// Init List
 		doubly_iterator b = &*__beg;
 		++__beg;
@@ -1155,7 +1150,7 @@ namespace pul
 			_InIterator __beg)
 	{
 		doubly_iterator b = &*__beg;
-		pf_assert(!__beg, "__beg is nullptr!");
+		pf_assert(__beg, "__beg is nullptr!");
 		while (b.base()->next_)
 		{
 			b = b.base()->next_;
@@ -1385,9 +1380,8 @@ namespace pul
 		pf_decl_constexpr node *insert_head(
 				node *__n) pf_attr_noexcept
 		{
-			pf_assert(__n != nullptr, "__n is nullptr!");
+			pf_assert(__n, "__n is nullptr!");
 			pf_assert(!this->contains(__n), "__n is already linked to this list!");
-			pf_assert(!__n->is_linked(), "__n is already linked!");
 			if (!this->head_)
 			{
 				this->head_ = __n;
@@ -1412,7 +1406,6 @@ namespace pul
 		{
 			pf_assert(__n != nullptr, "__n is nullptr!");
 			pf_assert(!this->contains(__n), "__n is already linked to this list!");
-			pf_assert(!__n->is_linked(), "__n is already linked!");
 			if (!this->tail_)
 			{
 				this->head_ = __n;
@@ -1441,7 +1434,6 @@ namespace pul
 			if (__w == this->tail_) return this->insert_tail(__n);
 			pf_assert(__n != nullptr, "__n is nullptr!");
 			pf_assert(!this->contains(__n), "__n is already linked to this list!");
-			pf_assert(!__n->is_linked(), "__n is already linked!");
 			__n->next_				= __w->next_;
 			__n->next_->prev_ = __n;
 			__w->next_				= __n;
@@ -1459,11 +1451,10 @@ namespace pul
 				node *__w,
 				node *__n) pf_attr_noexcept
 		{
+			pf_assert(__n, "__n is nullptr!");
+			pf_assert(!this->contains(__n), "__n is already linked to this list!");
 			if (!__w) return this->insert_tail(__n);
 			if (__w == this->head_) return this->insert_head(__n);
-			pf_assert(__n != nullptr, "__n is nullptr!");
-			pf_assert(this->contains(__n), "__n is already linked on this list!");
-			pf_assert(__n->is_linked(), "__n is already linked!");
 			__n->prev_				= __w->prev_;
 			__n->prev_->next_ = __n;
 			__w->prev_				= __n;
@@ -1522,6 +1513,8 @@ namespace pul
 		pf_decl_constexpr node *remove(
 				node *__n) pf_attr_noexcept
 		{
+			pf_assert(__n, "__n is nullptr!");
+			pf_assert(this->contains(__n), "__n isn't linked to this list!");
 			if (!__n) return nullptr;
 			if (__n == this->head_) return this->remove_head();
 			if (__n == this->tail_) return this->remove_tail();
@@ -1540,6 +1533,8 @@ namespace pul
 		pf_decl_constexpr node *remove_next(
 				node *__n) pf_attr_noexcept
 		{
+			pf_assert(__n, "__n is nullptr!");
+			pf_assert(this->contains(__n), "__n isn't linked to this list!");
 			return this->remove(__n->next_);
 		}
 
@@ -1551,6 +1546,8 @@ namespace pul
 		pf_decl_constexpr node *remove_prev(
 				node *__n) pf_attr_noexcept
 		{
+			pf_assert(__n, "__n is nullptr!");
+			pf_assert(this->contains(__n), "__n isn't linked to this list!");
 			return this->remove(__n->prev_);
 		}
 
@@ -1575,6 +1572,7 @@ namespace pul
 		pf_hint_nodiscard pf_decl_constexpr bool contains(
 				const node *__n) const pf_attr_noexcept
 		{
+			pf_assert(__n, "__n is nullptr!");
 			const node *c = this->head_;
 			while (c)
 			{
@@ -1825,9 +1823,8 @@ namespace pul
 		pf_decl_constexpr node *insert_head(
 				node *__n) pf_attr_noexcept
 		{
-			pf_assert(__n != nullptr, "__n is nullptr!");
+			pf_assert(__n, "__n is nullptr!");
 			pf_assert(!this->contains(__n), "__n is already linked to this list!");
-			pf_assert(!__n->is_linked(), "__n is already linked!");
 			if (!this->head_)
 			{
 				this->head_ = __n;
@@ -1854,9 +1851,8 @@ namespace pul
 		pf_decl_constexpr node *insert_tail(
 				node *__n) pf_attr_noexcept
 		{
-			pf_assert(__n != nullptr, "__n is nullptr!");
+			pf_assert(__n, "__n is nullptr!");
 			pf_assert(!this->contains(__n), "__n is already linked to this list!");
-			pf_assert(!__n->is_linked(), "__n is already linked!");
 			if (!this->tail_)
 			{
 				this->head_ = __n;
@@ -1885,11 +1881,10 @@ namespace pul
 				node *__w,
 				node *__n) pf_attr_noexcept
 		{
+			pf_assert(__n, "__n is nullptr!");
+			pf_assert(!this->contains(__n), "__n is already linked to this list!");
 			if (!__w) return this->insert_head(__n);
 			if (__w == this->tail_) return this->insert_tail(__n);
-			pf_assert(__n != nullptr, "__n is nullptr!");
-			pf_assert(!this->contains(__n), "__n is already linked to this list!");
-			pf_assert(!__n->is_linked(), "__n is already linked!");
 			__n->next_				= __w->next_;
 			__n->next_->prev_ = __n;
 			__w->next_				= __n;
@@ -1907,11 +1902,10 @@ namespace pul
 				node *__w,
 				node *__n) pf_attr_noexcept
 		{
+			pf_assert(__n, "__n is nullptr!");
+			pf_assert(!this->contains(__n), "__n is already linked to this list!");
 			if (!__w) return this->insert_tail(__n);
 			if (__w == this->head_) return this->insert_head(__n);
-			pf_assert(__n != nullptr, "__n is nullptr!");
-			pf_assert(this->contains(__n), "__n is already linked on this list!");
-			pf_assert(__n->is_linked(), "__n is already linked!");
 			__n->prev_				= __w->prev_;
 			__n->prev_->next_ = __n;
 			__w->prev_				= __n;
@@ -1974,8 +1968,8 @@ namespace pul
 		pf_decl_constexpr node *remove(
 				node *__n) pf_attr_noexcept
 		{
-			pf_assert(__n != nullptr, "__n is nullptr!");
-			pf_assert(this->contains(__n), "__n isn't contained in the list!");
+			pf_assert(__n, "__n is nullptr!");
+			pf_assert(this->contains(__n), "__n isn't linked to this list!");
 			if (__n == this->head_) return this->remove_head();
 			if (__n == this->tail_) return this->remove_tail();
 			node *n = __n->next_, *p = __n->prev_;
@@ -1993,6 +1987,8 @@ namespace pul
 		pf_decl_constexpr node *remove_next(
 				node *__n) pf_attr_noexcept
 		{
+			pf_assert(__n, "__n is nullptr!");
+			pf_assert(this->contains(__n), "__n isn't linked to this list!");
 			return this->remove(__n->next_);
 		}
 
@@ -2004,6 +2000,8 @@ namespace pul
 		pf_decl_constexpr node *remove_prev(
 				node *__n) pf_attr_noexcept
 		{
+			pf_assert(__n, "__n is nullptr!");
+			pf_assert(this->contains(__n), "__n isn't linked to this list!");
 			return this->remove(__n->prev_);
 		}
 
@@ -2028,8 +2026,10 @@ namespace pul
 		pf_hint_nodiscard pf_decl_constexpr bool contains(
 				const node *__n) pf_attr_noexcept
 		{
-			pf_assert(__n != nullptr, "__n is nullptr");
+			pf_assert(__n, "__n is nullptr");
 			node *c = this->head_;
+			if (!c)
+				return false;
 			do
 			{
 				if (c == __n) return true;
