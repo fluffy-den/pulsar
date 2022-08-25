@@ -136,7 +136,7 @@ namespace pul
 						exception::format(
 								std::system_category(),
 								GetLastError(),
-								strfmt("SymGetSymFromAddr64 failed for addr=0x%llx", sf.AddrPC.Offset)));
+								fmt::format("SymGetSymFromAddr64 failed for addr=0x{}", sf.AddrPC.Offset)));
 			// undecorated Name
 			if (!UnDecorateSymbolName(&s.as_symbol.Name[0], name.data(), name.length(), UNDNAME_NAME_ONLY))
 				debugger::log(
@@ -145,7 +145,7 @@ namespace pul
 						exception::format(
 								std::system_category(),
 								GetLastError(),
-								strfmt("UnDecorateSymbolName failed for addr=0x%llx", sf.AddrPC.Offset)));
+								fmt::format("UnDecorateSymbolName failed for addr=0x{}", sf.AddrPC.Offset)));
 			strtriml(name);
 			strtrimr(name);
 			strtolower(name);
@@ -157,7 +157,7 @@ namespace pul
 						exception::format(
 								std::system_category(),
 								GetLastError(),
-								strfmt("UnDecorateSymbolName failed for addr=0x%llx", sf.AddrPC.Offset)));
+								fmt::format("UnDecorateSymbolName failed for addr=0x{}", sf.AddrPC.Offset)));
 			strtriml(undname);
 			strtrimr(undname);
 			strtolower(undname);
@@ -169,7 +169,7 @@ namespace pul
 						exception::format(
 								std::system_category(),
 								GetLastError(),
-								strfmt("SymGetModuleInfo64 failed for addr=0x%llx", sf.AddrPC.Offset)));
+								fmt::format("SymGetModuleInfo64 failed for addr=0x{}", sf.AddrPC.Offset)));
 			std::string modname = m.ModuleName;
 			strtriml(modname);
 			strtrimr(modname);
@@ -183,7 +183,7 @@ namespace pul
 						exception::format(
 								std::system_category(),
 								GetLastError(),
-								strfmt("SymGetLineFromAddr64 failed for addr=0x%llx", sf.AddrPC.Offset)));
+								fmt::format("SymGetLineFromAddr64 failed for addr=0x{}", sf.AddrPC.Offset)));
 			// trace
 			sL.emplace_back(
 					std::move(undname),
@@ -281,7 +281,9 @@ namespace pul
 		// generate filename
 		std::time_t t = std::chrono::high_resolution_clock::to_time_t(
 				std::chrono::high_resolution_clock::now());
-		std::filesystem::path p = __p / (strfmt("%d%b%y-%H%M%S", *std::gmtime(&t)) + ".dmp");
+		auto time								= std::gmtime(&t);
+		std::string filename		= fmt::format("{:d:b:y-:H:M:S}.dmp", *time);
+		std::filesystem::path p = __p / (filename);
 		// generate file
 		HANDLE fhdl							= CreateFileW(
 				p.wstring().c_str(),

@@ -59,13 +59,13 @@ namespace pul
 					debugger::generate_messagebox(
 							debug_level::error,
 							"Pulsar - Framework",
-							strfmt("Unexpected error! %s\n\n"
-										 "code=%u, at path=%s\n"
-										 "A dump file has been generated."
-										 "Press ok to terminate the process...",
-										 msg.c_str(),
-										 flags,
-										 dbp.string().c_str()));
+							fmt::format("Unexpected error! {}\n\n"
+													"code={}, at path={}\n"
+													"A dump file has been generated."
+													"Press ok to terminate the process...",
+													msg.c_str(),
+													flags,
+													dbp.string().c_str()));
 				}
 				catch (exception const &e)
 				{
@@ -100,7 +100,6 @@ namespace pul
 		// reservation
 		const size_t headersize = 27;
 		std::string msg;
-		msg.reserve(msg.length() + 52 + __message.length() + ((__message.length() + 1) / 100 * headersize));
 		// chrono header
 		auto now			= std::chrono::high_resolution_clock::now() - this->loggerStart_;
 		const auto h	= std::chrono::duration_cast<std::chrono::hours>(now);
@@ -108,16 +107,8 @@ namespace pul
 		const auto s	= std::chrono::duration_cast<std::chrono::seconds>(now - h - m);
 		const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - h - m - s);
 		// fmt chrono
-		strfmt(
-				"[%c] - [%.4lli:%.2lli:%.2lli:%.4lli] - T%.2zu -> %s",
-				msg,
-				msg.end(),
-				__level,
-				h.count(),
-				m.count(),
-				s.count(),
-				ms.count(),
-				this_thread::ID());
+		std::string usermsg(__message);
+		usermsg.reserve(__message.length() + __message.length() / 50);
 		// fmt msg
 		if (__message.empty())
 		{
@@ -134,6 +125,18 @@ namespace pul
 				}
 			}
 		}
+		auto level	 = static_cast<char>(__level);
+		auto localID = this_thread::ID();
+		msg					 = fmt::format(
+				 "[{}] - [{:0<4}:{:0<2}:{:0<2}:{:0<4}] - T{:0<2} -> {: <100}",
+				 level,
+				 h.count(),
+				 m.count(),
+				 s.count(),
+				 ms.count(),
+				 localID,
+				 usermsg);
+
 		// logger task
 		fun_ptr wt = [](std::string_view __message) -> void
 		{
@@ -247,14 +250,24 @@ namespace pul
 		strtriml(fmtmsg);
 		strtrimr(fmtmsg);
 		__add_end_point_to_message(fmtmsg);
-		return strfmt(
-				__message.empty()
-						? "category=%s, code=%i, message=%s"
-						: "category=%s, code=%i, message=%s %s",
-				__cat.name(),
-				__code,
-				catmsg.data(),
-				fmtmsg.data());
+		if (__message.empty())
+		{
+			return fmt::format(
+					"category={}, code={}, message={}",
+					__cat.name(),
+					__code,
+					catmsg.data(),
+					fmtmsg.data());
+		}
+		else
+		{
+			return fmt::format(
+					"category={}, code={}, message={} {}",
+					__cat.name(),
+					__code,
+					catmsg.data(),
+					fmtmsg.data());
+		}
 	}
 
 	/// Debugger -> Constructors

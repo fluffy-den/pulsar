@@ -215,7 +215,7 @@ if(BUILD_TESTING)
 endif()
 
 #
-# CPM Package Project
+# CPM -> Package Project
 #
 CPMAddPackage("gh:TheLartians/PackageProject.cmake@1.9.0")
 PackageProject(

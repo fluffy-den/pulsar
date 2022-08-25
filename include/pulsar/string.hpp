@@ -15,4 +15,19 @@
 #include "pulsar/string/string.hpp"
 #include "pulsar/string/string_win.hpp"
 
+// Include: Fmt
+#define FMT_HEADER_ONLY 1
+#include "pulsar/string/fmt/args.h"
+#include "pulsar/string/fmt/chrono.h"
+#include "pulsar/string/fmt/color.h"
+#include "pulsar/string/fmt/compile.h"
+#include "pulsar/string/fmt/core.h"
+#include "pulsar/string/fmt/format-inl.h"
+#include "pulsar/string/fmt/format.h"
+#include "pulsar/string/fmt/os.h"
+#include "pulsar/string/fmt/ostream.h"
+#include "pulsar/string/fmt/printf.h"
+#include "pulsar/string/fmt/ranges.h"
+#include "pulsar/string/fmt/std.h"
+
 #endif // !PULSAR_STRING_INCL_HPP
