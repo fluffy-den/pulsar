@@ -8,8 +8,8 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_UTILITY_STRING_WIN_HPP
-#define PULSAR_UTILITY_STRING_WIN_HPP 1
+#ifndef PULSAR_STRING_WIN_HPP
+#define PULSAR_STRING_WIN_HPP 1
 
 // Include: Pulsar
 #include "pulsar/debug.hpp"
@@ -74,4 +74,4 @@ namespace pul
 
 #endif // PF_OS_WINDOWS
 
-#endif // !PULSAR_UTILITY_STRING_WIN_HPP
+#endif // !PULSAR_STRING_WIN_HPP

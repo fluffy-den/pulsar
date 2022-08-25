@@ -8,8 +8,8 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_UTILITY_ITERATOR_HPP
-#define PULSAR_UTILITY_ITERATOR_HPP 1
+#ifndef PULSAR_ITERATOR_HPP
+#define PULSAR_ITERATOR_HPP 1
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
@@ -641,4 +641,4 @@ namespace pul
 			->iterator<const _Ty>;
 }
 
-#endif // PULSAR_UTILITY_ITERATOR_HPP
+#endif // PULSAR_ITERATOR_HPP

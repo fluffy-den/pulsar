@@ -8,11 +8,11 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_UTILITY_LINKED_LIST_HPP
-#define PULSAR_UTILITY_LINKED_LIST_HPP 1
+#ifndef PULSAR_LINKED_LIST_INCL_HPP
+#define PULSAR_LINKED_LIST_INCL_HPP 1
 
 #include "pulsar/linked_list/doubly_list.hpp"
 #include "pulsar/linked_list/singly_cds_list.hpp"
 #include "pulsar/linked_list/singly_list.hpp"
 
-#endif // !PULSAR_UTILITY_LINKED_LIST_HPP
+#endif // !PULSAR_LINKED_LIST_INCL_HPP

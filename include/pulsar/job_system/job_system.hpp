@@ -8,8 +8,8 @@
  *  @since 0.1.2
  */
 
-#ifndef PULSAR_THREAD_JOB_SYSTEM
-#define PULSAR_THREAD_JOB_SYSTEM 1
+#ifndef PULSAR_JOB_SYSTEM_HPP
+#define PULSAR_JOB_SYSTEM_HPP 1
 
 // Include: Pulsar
 #include "pulsar/debug.hpp"
@@ -720,4 +720,4 @@ namespace pul
 	using job									 = job_system::job;
 }
 
-#endif // !PULSAR_THREAD_JOB_SYSTEM
+#endif // !PULSAR_JOB_SYSTEM_HPP

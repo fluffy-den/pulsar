@@ -20,9 +20,9 @@ namespace pul
 	// String Format
 	TEST_CASE("StringFormatTest")
 	{
-		std::format const char *fmt = "%s";
-		const char *msg							= "test";
-		std::string str							= strfmt(fmt, msg);
+		const char *fmt = "%s";
+		const char *msg = "test";
+		std::string str = strfmt(fmt, msg);
 		REQUIRE(str == "test");
 		REQUIRE(str.back() != '\0');
 	}

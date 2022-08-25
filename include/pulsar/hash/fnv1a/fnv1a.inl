@@ -25,25 +25,28 @@ namespace pul
 		{
 			/// 32 bits
 			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(
-					const void *__ptr,
+					const char *__str,
 					size_t __size) pf_attr_noexcept
 			{
 				uint32_t val = 0x811c9dc5u;
-				union
-				{
-					const byte_t *as_byte;
-					const void *as_void;
-				};
-
-				as_void = __ptr;
-
 				for (size_t i = 0; i < __size; ++i)
 				{
-					val = (val ^ *as_byte) * 0x01000193u;
-					as_byte++;
+					val = (val ^ *__str) * 0x01000193u;
+					__str++;
 				}
-
 				return val;
+			}
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr uint32_t hash32(
+					const void *__ptr,
+					size_t __size) pf_attr_noexcept
+			{
+				union
+				{
+					const char *as_char;
+					const void *as_void;
+				};
+				as_void = __ptr;
+				return hash32(as_char, __size);
 			}
 			template <typename _Ty, size_t _Len>
 			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr uint32_t hash32(
@@ -54,26 +57,28 @@ namespace pul
 
 			/// 64 bits
 			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(
-					const void *__ptr,
+					const char *__str,
 					size_t __size) pf_attr_noexcept
 			{
 				uint64_t val = 0xcbf29ce484222325ull;
-
-				union
-				{
-					const byte_t *as_byte;
-					const void *as_void;
-				};
-
-				as_void = __ptr;
-
 				for (size_t i = 0; i < __size; ++i)
 				{
-					val = (val ^ *as_byte) * 0xcbf29ce484222325ull;
-					as_byte++;
+					val = (val ^ *__str) * 0xcbf29ce484222325ull;
+					__str++;
 				}
-
 				return val;
+			}
+			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(
+					const void *__ptr,
+					size_t __size) pf_attr_noexcept
+			{
+				union
+				{
+					const char *as_char;
+					const void *as_void;
+				};
+				as_void = __ptr;
+				return hash64(as_char, __size);
 			}
 			template <typename _Ty, size_t _Len>
 			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr uint64_t hash64(

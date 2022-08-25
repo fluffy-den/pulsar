@@ -30,13 +30,23 @@ namespace pul
 			/// 32 bits
 			/*! @brief Calculates the 32 bits version of the fnv1-a hash function.
 			 *
-			 *  @param __p		Pointer to the beginning of a continuous data
+			 *  @param __p		Pointer to the beginning of a string.
 			 * structure.
 			 *  @param __size Size of this data structure in bytes.
 			 *  @return The hashed data pointed by @a __ptr of size @a __size in
 			 * bytes.
 			 */
 			pf_hint_nodiscard pf_decl_constexpr uint32_t hash32(
+					const char *__str,
+					size_t __size) pf_attr_noexcept;
+			/*! @brief Does the same thing as hash32 function, all data version.
+			 *
+			 *  @param __str  Pointer to the beginning of a data sequence.
+			 *  @param __size Size of the data sequence in bytes.
+			 *  @return The hashed data pointed by @a __ptr of size @a __size in
+			 * bytes.
+			 */
+			pf_hint_nodiscard pf_decl_inline pf_decl_constexpr uint32_t hash32(
 					const void *__ptr,
 					size_t __size) pf_attr_noexcept;
 			/*! @brief Does the same thing as hash32 function.
@@ -54,6 +64,11 @@ namespace pul
 			 * 				 This function does same as the hash32 function.
 			 *
 			 *  @see hash32.
+			 */
+			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(
+					const char *__str,
+					size_t __size) pf_attr_noexcept;
+			/*! @see hash64.
 			 */
 			pf_hint_nodiscard pf_decl_constexpr uint64_t hash64(
 					const void *__ptr,

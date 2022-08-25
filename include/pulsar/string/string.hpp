@@ -8,8 +8,8 @@
  *  @since 0.1.0
  */
 
-#ifndef PULSAR_UTILITY_STRING_HPP
-#define PULSAR_UTILITY_STRING_HPP 1
+#ifndef PULSAR_STRING_HPP
+#define PULSAR_STRING_HPP 1
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
@@ -185,7 +185,7 @@ namespace pul
 		return __str;
 	}
 
-	// TODO: In constexpr
+	// TODO: strfmt -> fmt::format
 }
 
-#endif // !PULSAR_UTILITY_STRING_HPP
+#endif // !PULSAR_STRING_HPP

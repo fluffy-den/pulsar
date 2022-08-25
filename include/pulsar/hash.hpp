@@ -8,10 +8,10 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_UTILITY_HASH_HPP
-#define PULSAR_UTILITY_HASH_HPP 1
+#ifndef PULSAR_HASH_INCL_HPP
+#define PULSAR_HASH_INCL_HPP 1
 
 // Include: Pulsar
 #include "pulsar/hash/fnv1a/fnv1a.hpp"
 
-#endif // !PULSAR_UTILITY_HASH_HPP
+#endif // !PULSAR_HASH_INCL_HPP

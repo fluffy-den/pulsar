@@ -100,8 +100,7 @@ namespace pul
 		// reservation
 		const size_t headersize = 27;
 		std::string msg;
-		msg.reserve(headersize + 5
-								+ __message.length() + (__message.length() / headersize + 1) * headersize);
+		msg.reserve(msg.length() + 52 + __message.length() + ((__message.length() + 1) / 100 * headersize));
 		// chrono header
 		auto now			= std::chrono::high_resolution_clock::now() - this->loggerStart_;
 		const auto h	= std::chrono::duration_cast<std::chrono::hours>(now);
@@ -110,7 +109,7 @@ namespace pul
 		const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - h - m - s);
 		// fmt chrono
 		strfmt(
-				"[%c] - [%.4lli:%.2lli:%.2lli:%.4lli] - T%.2zu -> ",
+				"[%c] - [%.4lli:%.2lli:%.2lli:%.4lli] - T%.2zu -> %s",
 				msg,
 				msg.end(),
 				__level,

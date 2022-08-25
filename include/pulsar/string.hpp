@@ -8,11 +8,11 @@
  *  @since 0.1.2
  */
 
-#ifndef PULSAR_STRING_HPP
-#define PULSAR_STRING_HPP 1
+#ifndef PULSAR_STRING_INCL_HPP
+#define PULSAR_STRING_INCL_HPP 1
 
 // Include: Pulsar -> String
 #include "pulsar/string/string.hpp"
 #include "pulsar/string/string_win.hpp"
 
-#endif // !PULSAR_STRING_HPP
+#endif // !PULSAR_STRING_INCL_HPP

@@ -8,8 +8,8 @@
  *  @since 0.1.0
  */
 
-#ifndef PULSAR_MEMORY_HPP
-#define PULSAR_MEMORY_HPP 1
+#ifndef PULSAR_MEMORY_INCL_HPP
+#define PULSAR_MEMORY_INCL_HPP 1
 
 // Include: Pulsar -> Memory Utils
 #include "pulsar/memory/memory_buffer.hpp"
@@ -30,4 +30,4 @@
 // Include: Pulsar -> Memory Allocator Wrapper
 #include "pulsar/memory/allocator/allocator_wrapper.hpp"
 
-#endif // !PULSAR_MEMORY_HPP
+#endif // !PULSAR_MEMORY_INCL_HPP

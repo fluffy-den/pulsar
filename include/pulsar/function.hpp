@@ -8,12 +8,12 @@
  *  @since 0.1.2
  */
 
-#ifndef PULSAR_FUNCTION_HPP
-#define PULSAR_FUNCTION_HPP 1
+#ifndef PULSAR_FUNCTION_INCL_HPP
+#define PULSAR_FUNCTION_INCL_HPP 1
 
 // Include: Pulsar -> Function
 #include "pulsar/function/fun_buf.hpp"
 #include "pulsar/function/fun_ptr.hpp"
 #include "pulsar/function/fun_signal.hpp"
 
-#endif // !PULSAR_FUNCTION_HPP
+#endif // !PULSAR_FUNCTION_INCL_HPP

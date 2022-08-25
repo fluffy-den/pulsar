@@ -55,7 +55,7 @@ namespace pul
 			}
 
 			__m.measure([&buf1, &buf2](int32_t __index)
-									{ return buf2[__index] = buf1[__index]; });
+									{ buf2[__index] = buf1[__index]; });
 		};
 		BENCHMARK_ADVANCED("GetIndex9")
 		(Catch::Benchmark::Chronometer __m)
@@ -70,7 +70,7 @@ namespace pul
 					tuple<int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t>;
 			auto buf = std::make_unique<i32tuple10_t[]>(n);
 			__m.measure([&buf](int32_t __index)
-									{ return get<9>(buf[__index]); });
+									{ return i_get<9>(buf[__index]); });
 		};
 	}
 

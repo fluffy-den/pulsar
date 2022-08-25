@@ -1,9 +1,9 @@
-/*! @file    pulsar.hpp
- * 	@author  Fluffy (noe.louis-quentin@hotmail.fr)
- * 	@brief   This file verifies that compilation is possible, by the presence of compatible
- * 					 operating systems and compilers and defines all the macros, types, of these for their
- * 					 use through the pulsar framework. Pulsar framework requires at least C++20!
- * 	@date    23-11-2021
+/*! @file   pulsar.hpp
+ * 	@author Fluffy (noe.louis-quentin@hotmail.fr)
+ * 	@brief  This file verifies that compilation is possible, by the presence of compatible
+ * 					operating systems and compilers and defines all the macros, types, of these for their
+ * 					use through the pulsar framework. Pulsar framework requires at least C++20!
+ * 	@date 23-11-2021
  *
  * 	@copyright Copyright (c) 2021 - Pulsar Software
  *
@@ -142,6 +142,7 @@ namespace pul
 // CPP decl
 #define pf_decl_constexpr		 constexpr
 #define pf_decl_consteval		 consteval
+#define pf_decl_constinit		 constinit
 #define pf_decl_friend			 friend
 #define pf_decl_extern			 extern
 #define pf_decl_static			 static
@@ -165,6 +166,7 @@ namespace pul
 #define pf_hint_fallthrough	 [[fallthrough]]
 #define pf_hint_nodiscard		 [[nodiscard]]
 #define pf_hint_deprecated	 [[deprecated]]
+#define pf_hint_maybe_unused [[maybe_unused]]
 
 // Tools
 #define pf_eat(...)
@@ -180,156 +182,7 @@ namespace pul
 #define pf_cat_pass1(x)																																											 pf_primitive_cat x
 #define pf_cat_tokens(x, y)																																									 pf_cat_pass1((x, y))
 #define pf_pass1(x)																																													 pf_primitive_cat x
-#define pf_arg_pair(x)																																											 pf_rem x
-#define pf_arg_type_pass4(x, ...)																																						 pf_rem x
-#define pf_arg_type_pass3(x)																																								 pf_arg_type_pass4 x
-#define pf_arg_type_pass2(...)																																							 pf_arg_type_pass3((__VA_ARGS__))
-#define pf_arg_type_pass1(...)																																							 (__VA_ARGS__),
-#define pf_arg_type(x)																																											 pf_arg_type_pass2(pf_arg_type_pass1 x, )
-#define pf_arg_name(x)																																											 pf_eat x
-#define pf_offset_of(type, member)																																					 offsetof(type, member)
-#define pf_member_size(type, member)																																				 sizeof(((type *)0)->member)
-#define pf_offset_after(type, member)																																				 pf_offset_of(type, member) + pf_member_size(type, member)
-
-// Tools -> Do For Each
-#define pf_do_for_each_0(m)
-#define pf_do_for_each_1(m, x1) \
-	m(x1);
-#define pf_do_for_each_2(m, x1, x2) \
-	m(x1);                            \
-	m(x2);
-#define pf_do_for_each_3(m, x1, x2, x3) \
-	m(x1);                                \
-	m(x2);                                \
-	m(x3);
-#define pf_do_for_each_4(m, x1, x2, x3, x4) \
-	m(x1);                                    \
-	m(x2);                                    \
-	m(x3);                                    \
-	m(x4);
-#define pf_do_for_each_5(m, x1, x2, x3, x4, x5) \
-	m(x1);                                        \
-	m(x2);                                        \
-	m(x3);                                        \
-	m(x4);                                        \
-	m(x5);
-#define pf_do_for_each_6(m, x1, x2, x3, x4, x5, x6) \
-	m(x1);                                            \
-	m(x2);                                            \
-	m(x3);                                            \
-	m(x4);                                            \
-	m(x5);                                            \
-	m(x6);
-#define pf_do_for_each_7(m, x1, x2, x3, x4, x5, x6, x7) \
-	m(x1);                                                \
-	m(x2);                                                \
-	m(x3);                                                \
-	m(x4);                                                \
-	m(x5);                                                \
-	m(x6);                                                \
-	m(x7);
-#define pf_do_for_each_8(m, x1, x2, x3, x4, x5, x6, x7, x8) \
-	m(x1);                                                    \
-	m(x2);                                                    \
-	m(x3);                                                    \
-	m(x4);                                                    \
-	m(x5);                                                    \
-	m(x6);                                                    \
-	m(x7);                                                    \
-	m(x8);
-#define pf_do_for_each_9(m, x1, x2, x3, x4, x5, x6, x7, x8, x9) \
-	m(x1);                                                        \
-	m(x2);                                                        \
-	m(x3);                                                        \
-	m(x4);                                                        \
-	m(x5);                                                        \
-	m(x6);                                                        \
-	m(x7);                                                        \
-	m(x8);                                                        \
-	m(x9);
-#define pf_do_for_each_10(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) \
-	m(x1);                                                              \
-	m(x2);                                                              \
-	m(x3);                                                              \
-	m(x4);                                                              \
-	m(x5);                                                              \
-	m(x6);                                                              \
-	m(x7);                                                              \
-	m(x8);                                                              \
-	m(x9);                                                              \
-	m(x10);
-#define pf_do_for_each_11(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11) \
-	m(x1);                                                                   \
-	m(x2);                                                                   \
-	m(x3);                                                                   \
-	m(x4);                                                                   \
-	m(x5);                                                                   \
-	m(x6);                                                                   \
-	m(x7);                                                                   \
-	m(x8);                                                                   \
-	m(x9);                                                                   \
-	m(x10);                                                                  \
-	m(x11);
-#define pf_do_for_each_12(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12) \
-	m(x1);                                                                        \
-	m(x2);                                                                        \
-	m(x3);                                                                        \
-	m(x4);                                                                        \
-	m(x5);                                                                        \
-	m(x6);                                                                        \
-	m(x7);                                                                        \
-	m(x8);                                                                        \
-	m(x9);                                                                        \
-	m(x10);                                                                       \
-	m(x11);                                                                       \
-	m(x12);
-#define pf_do_for_each_13(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13) \
-	m(x1);                                                                             \
-	m(x2);                                                                             \
-	m(x3);                                                                             \
-	m(x4);                                                                             \
-	m(x5);                                                                             \
-	m(x6);                                                                             \
-	m(x7);                                                                             \
-	m(x8);                                                                             \
-	m(x9);                                                                             \
-	m(x10);                                                                            \
-	m(x11);                                                                            \
-	m(x12);                                                                            \
-	m(x13);
-#define pf_do_for_each_14(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14) \
-	m(x1);                                                                                  \
-	m(x2);                                                                                  \
-	m(x3);                                                                                  \
-	m(x4);                                                                                  \
-	m(x5);                                                                                  \
-	m(x6);                                                                                  \
-	m(x7);                                                                                  \
-	m(x8);                                                                                  \
-	m(x9);                                                                                  \
-	m(x10);                                                                                 \
-	m(x11);                                                                                 \
-	m(x12);                                                                                 \
-	m(x13);                                                                                 \
-	m(x14);
-#define pf_do_for_each_15(m, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15) \
-	m(x1);                                                                                       \
-	m(x2);                                                                                       \
-	m(x3);                                                                                       \
-	m(x4);                                                                                       \
-	m(x5);                                                                                       \
-	m(x6);                                                                                       \
-	m(x7);                                                                                       \
-	m(x8);                                                                                       \
-	m(x9);                                                                                       \
-	m(x10);                                                                                      \
-	m(x11);                                                                                      \
-	m(x12);                                                                                      \
-	m(x13);                                                                                      \
-	m(x14);                                                                                      \
-	m(x15);
-#define pf_do_for_each_pass1(m, x) m x
-#define pf_do_for_each(macro, ...) pf_do_for_each_pass1(pf_cat_tokens(pf_do_for_each_, pf_nargs(__VA_ARGS__)), (macro, __VA_ARGS__))
+#define pf_offsetof(type, member)																																						 offsetof(type, member)
 }
 
 // Version

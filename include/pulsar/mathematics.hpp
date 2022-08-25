@@ -8,8 +8,8 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_MATHEMATICS_HPP
-#define PULSAR_MATHEMATICS_HPP 1
+#ifndef PULSAR_MATHEMATICS_INCL_HPP
+#define PULSAR_MATHEMATICS_INCL_HPP 1
 
 // Include: Pulsar
 #include "pulsar/math/algorithm.hpp"
@@ -18,4 +18,4 @@
 #include "pulsar/math/quaternion.hpp"
 #include "pulsar/math/vector.hpp"
 
-#endif // PULSAR_MATHEMATICS_HPP
+#endif // PULSAR_MATHEMATICS_INCL_HPP
