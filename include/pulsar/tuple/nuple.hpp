@@ -124,6 +124,8 @@ namespace pul
 		requires(is_nuple_nutag_v<_Ts> &&...)
 	struct nuple: public __nuple_select_base<_Ts...>
 	{
+		using memory_type = __tuple_select_base<_Ts...>;
+
 		/// Constructors
 		pf_decl_inline pf_decl_constexpr nuple() pf_attr_noexcept = default;
 		pf_decl_inline pf_decl_constexpr nuple(_Ts &&...__args);
@@ -168,7 +170,14 @@ namespace pul
 	template <typename _Ty>
 	pf_decl_static pf_decl_constexpr bool is_nuple_v = is_nuple<_Ty>::value;
 
-	/// NUPLE: Get
+	/// NUPLE: SFINAE -> Memory Type
+	template <typename... _Ts>
+	struct tuple_memory_type<nuple<_Ts...>>
+	{
+		using type = __nuple_select_base<_Ts...>;
+	};
+
+	/// NUPLE: (Named) Get
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &n_get(
 			_Nuple &__nuple) pf_attr_noexcept
@@ -202,12 +211,12 @@ namespace pul
 			_Nuple const &&__nuple) pf_attr_noexcept
 			requires(is_nuple_v<_Nuple> &&_Hash != tuple_at<_Nuple, 0>::type::hash && tuple_size_v<_Nuple> > 1);
 
-	/// NUPLE: Offsetof
+	/// NUPLE: (Named) Offsetof
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t n_offsetof(_Nuple const &__nuple) pf_attr_noexcept
 			requires(is_nuple_v<_Nuple>);
 
-	/// NUPLE: Sizeof
+	/// NUPLE: (Named) Sizeof
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t n_sizeof(_Nuple const &__nuple) pf_attr_noexcept
 			requires(is_nuple_v<_Nuple>);

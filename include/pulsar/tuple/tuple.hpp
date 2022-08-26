@@ -49,14 +49,14 @@ namespace pul
 	template <size_t _Num>
 	using make_index_sequence = typename __index_sequence_helper<_Num>::type;
 
-	/// TUPLE: SFINAE -> Get Index Value
+	/// TUPLE: SFINAE -> Parameter Pack Extract At Index
 	template <size_t _Index, typename _InTy, typename... _InTs>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &&__tuple_extract_at_index(
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &&__param_pack_extract_at_index(
 			_InTy &&__arg,
 			_InTs &&...) pf_attr_noexcept
 			requires(_Index == 0);
 	template <size_t _Index, typename _InTy, typename... _InTs>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &&__tuple_extract_at_index(
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &&__param_pack_extract_at_index(
 			_InTy &&,
 			_InTs &&...__args) pf_attr_noexcept
 			requires(_Index != 0 && (_Index < 1 + sizeof...(_InTs)));
@@ -361,6 +361,8 @@ namespace pul
 	template <typename... _Ts>
 	struct tuple: public __tuple_select_base<_Ts...>
 	{
+		using memory_type = __tuple_select_base<_Ts...>;
+
 		/// Constructors
 		pf_decl_inline pf_decl_constexpr tuple() pf_attr_noexcept = default;
 		pf_decl_inline pf_decl_constexpr tuple(_Ts &&...__args);
@@ -375,7 +377,7 @@ namespace pul
 	};
 
 	/// TUPLE: SFINAE -> Is Tuple
-	template <typename _TupleTy>
+	template <typename _Tuple>
 	struct is_tuple: std::false_type
 	{};
 	template <typename... _Ts>
@@ -384,10 +386,21 @@ namespace pul
 	template <typename... _Ts>
 	struct is_tuple<__tuple_base<_Ts...>>: std::true_type
 	{};
-	template <typename _TupleTy>
-	pf_decl_static pf_decl_constexpr bool is_tuple_v = is_tuple<_TupleTy>::value;
+	template <typename _Tuple>
+	pf_decl_static pf_decl_constexpr bool is_tuple_v = is_tuple<_Tuple>::value;
 
-	/// TUPLE: Get
+	/// TUPLE: SFINAE -> Memory Type
+	template <typename _Tuple>
+	struct tuple_memory_type;
+	template <typename _Tuple>
+	using tuple_memory_type_t = typename tuple_memory_type<_Tuple>::type;
+	template <typename... _Ts>
+	struct tuple_memory_type<tuple<_Ts...>>
+	{
+		using type = __tuple_select_base<_Ts...>;
+	};
+
+	/// TUPLE: (Index) Get
 	template <size_t _Index, typename _Tuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &i_get(
 			_Tuple &__tuple) pf_attr_noexcept
@@ -421,17 +434,73 @@ namespace pul
 			_Tuple const &&__tuple) pf_attr_noexcept
 			requires(is_tuple_v<_Tuple> &&_Index != tuple_at<_Tuple, 0>::type::index && tuple_size_v<_Tuple> > 1);
 
-	/// TUPLE: Offsetof
+	/// TUPLE: (Index) Offsetof
 	template <size_t _Index, typename _Tuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t i_offsetof(
 			_Tuple const &__tuple) pf_attr_noexcept
 			requires(is_tuple_v<_Tuple>);
 
-	/// TUPLE: Sizeof
+	/// TUPLE: (Index) Sizeof
 	template <size_t _Index, typename _Tuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t i_sizeof(
 			_Tuple const &__tuple) pf_attr_noexcept
 			requires(is_tuple_v<_Tuple>);
+
+	/// TUPLE: (Memory) Get
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &m_get(
+			_Tuple &__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple> &&_Index == 0 && tuple_size_v<_Tuple> > 0);
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &m_get(
+			_Tuple &__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple> &&_Index != 0 && tuple_size_v<_Tuple> > _Index);
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const auto &m_get(
+			const _Tuple &__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple> &&_Index == 0 && tuple_size_v<_Tuple> > 0);
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const auto &m_get(
+			const _Tuple &__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple> &&_Index != 0 && tuple_size_v<_Tuple> > _Index);
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &&m_get(
+			_Tuple &&__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple> &&_Index == 0 && tuple_size_v<_Tuple> > 0);
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &&m_get(
+			_Tuple &&__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple> &&_Index != 0 && tuple_size_v<_Tuple> > _Index);
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const auto &&m_get(
+			const _Tuple &&__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple> &&_Index == 0 && tuple_size_v<_Tuple> > 0);
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const auto &&m_get(
+			const _Tuple &&__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple> &&_Index != 0 && tuple_size_v<_Tuple> > _Index);
+
+	/// TUPLE: (Memory) Offsetof
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t m_offsetof(
+			_Tuple const &__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple> &&tuple_size_v<_Tuple> > _Index);
+
+	/// TUPLE: (Memory) Sizeof
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t m_sizeof(
+			_Tuple const &__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple> &&tuple_size_v<_Tuple> > _Index);
+
+	/// TUPLE: (Memory) Indexof
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t m_indexof(
+			_Tuple const &__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple> &&_Index == 0 && tuple_size_v<_Tuple> > 0);
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t m_indexof(
+			_Tuple const &__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple> &&_Index != 0 && tuple_size_v<_Tuple> > _Index);
 
 	/// TUPLE: Apply
 	template <typename _Fun, typename _Tuple, size_t... _Is>

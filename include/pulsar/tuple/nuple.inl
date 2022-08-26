@@ -50,7 +50,7 @@ namespace pul
 							std::forward<_InTs>(__args)...))
 	{}
 
-	/// Nuple -> Get
+	/// Nuple -> (Named) Get
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_constexpr auto &n_get(
 			_Nuple &__nuple) pf_attr_noexcept
@@ -108,7 +108,7 @@ namespace pul
 		return std::move(n_get<_Hash>(__nuple.rest_));
 	}
 
-	/// NUPLE: Offsetof
+	/// Nuple -> (Named) Offsetof
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t n_offsetof(
 			_Nuple const &__nuple) pf_attr_noexcept
@@ -117,7 +117,7 @@ namespace pul
 		return memory::addressof(&n_get<_Hash>(__nuple)) - memory::addressof(&__nuple);
 	}
 
-	/// NUPLE: Sizeof
+	/// Nuple -> (Named) Sizeof
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t n_sizeof(
 			_Nuple const &__nuple) pf_attr_noexcept
