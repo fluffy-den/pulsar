@@ -44,7 +44,7 @@ namespace pul
 					size_t as_addr;
 				};
 				as_byte = this->buf_.begin();
-				as_byte += padding_of(as_addr + sizeof(__node_t), this->elemalign_);
+				as_byte += paddingof(as_addr + sizeof(__node_t), this->elemalign_);
 				iterator b(as_node, this->elemsize_);
 				as_byte += this->elemsize_ * this->elemcount_;
 				iterator e(as_node, this->elemsize_);
@@ -75,7 +75,7 @@ namespace pul
 					size_t __elemcount,
 					align_val_t __maxalign = max_align)
 					: buf_(
-							(padding_of(sizeof(__node_t), __maxalign) + (__elemsize += padding_of(sizeof(__node_t) + __elemsize, __maxalign) + sizeof(__node_t))) * __elemcount,
+							(paddingof(sizeof(__node_t), __maxalign) + (__elemsize += paddingof(sizeof(__node_t) + __elemsize, __maxalign) + sizeof(__node_t))) * __elemcount,
 							__maxalign)
 					, elemsize_(__elemsize)
 					, elemcount_(__elemcount)

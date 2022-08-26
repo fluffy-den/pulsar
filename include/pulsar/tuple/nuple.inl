@@ -33,7 +33,7 @@ namespace pul
 
 	/// Nuple -> Constructors
 	template <typename... _Ts>
-		requires(__is_nuple_nutag_v<_Ts> &&...)
+		requires(is_nuple_nutag_v<_Ts> &&...)
 	pf_decl_constexpr nuple<_Ts...>::nuple(_Ts &&...__args)
 			: __nuple_select_base<_Ts...>(
 					__tuple_make_base<__nuple_select_base<_Ts...>>(
@@ -41,7 +41,7 @@ namespace pul
 							__args.val_...))
 	{}
 	template <typename... _Ts>
-		requires(__is_nuple_nutag_v<_Ts> &&...)
+		requires(is_nuple_nutag_v<_Ts> &&...)
 	template <typename... _InTs>
 	pf_decl_constexpr nuple<_Ts...>::nuple(_InTs &&...__args)
 			: __nuple_select_base<_Ts...>(
@@ -106,6 +106,24 @@ namespace pul
 			requires(is_nuple_v<_Nuple> &&_Hash != tuple_at<_Nuple, 0>::type::hash && tuple_size_v<_Nuple> > 1)
 	{
 		return std::move(n_get<_Hash>(__nuple.rest_));
+	}
+
+	/// NUPLE: Offsetof
+	template <size_t _Hash, typename _Nuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t n_offsetof(
+			_Nuple const &__nuple) pf_attr_noexcept
+			requires(is_nuple_v<_Nuple>)
+	{
+		return memory::addressof(&n_get<_Hash>(__nuple)) - memory::addressof(&__nuple);
+	}
+
+	/// NUPLE: Sizeof
+	template <size_t _Hash, typename _Nuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t n_sizeof(
+			_Nuple const &__nuple) pf_attr_noexcept
+			requires(is_nuple_v<_Nuple>)
+	{
+		return sizeof(std::remove_reference_t<decltype(n_get<_Hash>(__nuple))>);
 	}
 }
 

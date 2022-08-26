@@ -14,6 +14,9 @@
 // Include: Pulsar -> Tuple
 #include "pulsar/tuple.hpp"
 
+// Include: Pulsar
+#include "pulsar/memory.hpp"
+
 // Pulsar
 namespace pul
 {
@@ -164,6 +167,24 @@ namespace pul
 			requires(is_tuple_v<_Tuple> &&_Index != tuple_at<_Tuple, 0>::type::index && tuple_size_v<_Tuple> > 1)
 	{
 		return std::move(i_get<_Index>(__tuple.rest_));
+	}
+
+	/// Tuple -> Offsetof
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t i_offsetof(
+			_Tuple const &__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple>)
+	{
+		return memory::addressof(&i_get<_Index>(__tuple)) - memory::addressof(&__tuple);
+	}
+
+	/// Tuple -> Sizeof
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t i_sizeof(
+			_Tuple const &__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple>)
+	{
+		return sizeof(std::remove_reference_t<decltype(i_get<_Index>(__tuple))>);
 	}
 
 	/// Tuple -> Apply

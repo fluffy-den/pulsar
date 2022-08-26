@@ -63,35 +63,35 @@ namespace pul
 
 	/// NUPLE: SFINAE -> Is Nutag
 	template <typename _Ty>
-	struct __is_nuple_nutag: std::false_type
+	struct is_nuple_nutag: std::false_type
 	{};
 	template <typename _Ty, size_t _Hash>
-	struct __is_nuple_nutag<nutag<_Ty, _Hash>>: std::true_type
+	struct is_nuple_nutag<nutag<_Ty, _Hash>>: std::true_type
 	{};
 	template <typename _Ty>
-	pf_decl_static pf_decl_constexpr bool __is_nuple_nutag_v = __is_nuple_nutag<_Ty>::value;
+	pf_decl_static pf_decl_constexpr bool is_nuple_nutag_v = is_nuple_nutag<_Ty>::value;
 
 	/// NUPLE: SFINAE -> Nutag Type
 	template <typename _Ty>
-	struct __nuple_nutag_type;
+	struct nuple_nutag_type;
 	template <typename _Ty, size_t _Hash>
-	struct __nuple_nutag_type<nutag<_Ty, _Hash>>
+	struct nuple_nutag_type<nutag<_Ty, _Hash>>
 	{
 		using type = _Ty;
 	};
 	template <typename _Ty>
-	using __nuple_nutag_type_t = typename __nuple_nutag_type<_Ty>::type;
+	using nuple_nutag_type_t = typename nuple_nutag_type<_Ty>::type;
 
 	/// NUPLE: SFINAE -> Nutag Hash
 	template <typename _Ty>
-	struct __nuple_nutag_hash;
+	struct nuple_nutag_hash;
 	template <typename _Ty, size_t _Hash>
-	struct __nuple_nutag_hash<nutag<_Ty, _Hash>>
+	struct nuple_nutag_hash<nutag<_Ty, _Hash>>
 	{
 		pf_decl_static pf_decl_constexpr size_t hash = _Hash;
 	};
 	template <typename _Ty>
-	pf_decl_static pf_decl_constexpr size_t __nuple_nutag_hash_v = __nuple_nutag_hash<_Ty>::hash;
+	pf_decl_static pf_decl_constexpr size_t nuple_nutag_hash_v = nuple_nutag_hash<_Ty>::hash;
 
 	/// NUPLE: SFINAE -> Make Indexed Sequence
 	template <typename... _Ts>
@@ -104,8 +104,8 @@ namespace pul
 		struct __make_indexed_nuple<index_sequence<_Is...>>
 		{
 			using tuple_type = __tuple_base<__nuple_index<
-					__nuple_nutag_type_t<_Ts>,
-					__nuple_nutag_hash_v<_Ts>,
+					nuple_nutag_type_t<_Ts>,
+					nuple_nutag_hash_v<_Ts>,
 					_Is>...>;
 		};
 
@@ -121,7 +121,7 @@ namespace pul
 
 	/// NUPLE: Impl
 	template <typename... _Ts>
-		requires(__is_nuple_nutag_v<_Ts> &&...)
+		requires(is_nuple_nutag_v<_Ts> &&...)
 	struct nuple: public __nuple_select_base<_Ts...>
 	{
 		/// Constructors
@@ -201,6 +201,16 @@ namespace pul
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const auto &&n_get(
 			_Nuple const &&__nuple) pf_attr_noexcept
 			requires(is_nuple_v<_Nuple> &&_Hash != tuple_at<_Nuple, 0>::type::hash && tuple_size_v<_Nuple> > 1);
+
+	/// NUPLE: Offsetof
+	template <size_t _Hash, typename _Nuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t n_offsetof(_Nuple const &__nuple) pf_attr_noexcept
+			requires(is_nuple_v<_Nuple>);
+
+	/// NUPLE: Sizeof
+	template <size_t _Hash, typename _Nuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t n_sizeof(_Nuple const &__nuple) pf_attr_noexcept
+			requires(is_nuple_v<_Nuple>);
 }
 
 // Include: Pulsar -> Nuple Impl

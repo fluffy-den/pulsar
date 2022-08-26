@@ -78,6 +78,10 @@ namespace pul
 				nutag<char, $("v4")>,
 				nutag<char, $("v5")>>
 				n3;
+		REQUIRE(n_offsetof<$("v3")>(n3) == 0);
+		REQUIRE(n_offsetof<$("v4")>(n3) == i_offsetof<4>(n3));
+		REQUIRE(n_sizeof<$("v3")>(n3) == sizeof(std::string));
+		REQUIRE(i_sizeof<3>(n3) == n_sizeof<$("v3")>(n3));
 		REQUIRE(sizeof(n3) == sizeof(int32_t) + 4 * sizeof(char) + sizeof(std::string));
 	}
 	TEST_CASE("NupleUnit2")

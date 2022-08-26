@@ -137,7 +137,7 @@ namespace pul
 					align_val_t __align = max_align,
 					size_t __offset			= 0) pf_attr_noexcept
 			{
-				__size += padding_of(__size + __offset, __align);
+				__size += paddingof(__size + __offset, __align);
 				union
 				{
 					byte_t *as_byte;
@@ -147,7 +147,7 @@ namespace pul
 				byte_t *e = nullptr;
 				do
 				{
-					as_addr += padding_of(as_addr + __offset, __align);
+					as_addr += paddingof(as_addr + __offset, __align);
 					e = as_byte + __size;
 					if (e > this->buf_.end())
 						return nullptr;

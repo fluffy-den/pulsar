@@ -421,6 +421,18 @@ namespace pul
 			_Tuple const &&__tuple) pf_attr_noexcept
 			requires(is_tuple_v<_Tuple> &&_Index != tuple_at<_Tuple, 0>::type::index && tuple_size_v<_Tuple> > 1);
 
+	/// TUPLE: Offsetof
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t i_offsetof(
+			_Tuple const &__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple>);
+
+	/// TUPLE: Sizeof
+	template <size_t _Index, typename _Tuple>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t i_sizeof(
+			_Tuple const &__tuple) pf_attr_noexcept
+			requires(is_tuple_v<_Tuple>);
+
 	/// TUPLE: Apply
 	template <typename _Fun, typename _Tuple, size_t... _Is>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto __tuple_apply(

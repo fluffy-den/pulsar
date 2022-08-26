@@ -134,7 +134,7 @@ namespace pul
 					align_val_t __align = align_val_t(alignof(_Ty)),
 					size_t __offset			= 0)
 			{
-				return this->all_.allocate(__count + padding_of(__count + __offset, __align), __align);
+				return this->all_.allocate(__count + paddingof(__count + __offset, __align), __align);
 			}
 
 			/// Deallocate

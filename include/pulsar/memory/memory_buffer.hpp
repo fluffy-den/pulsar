@@ -53,7 +53,7 @@ namespace pul
 					size_t __size,
 					align_val_t __bufalign = max_align) pf_attr_noexcept
 					: align_(std::align_val_t(__bufalign))
-					, beg_(new (align_) byte_t[(__size += padding_of(__size, __bufalign))])
+					, beg_(new (align_) byte_t[(__size += paddingof(__size, __bufalign))])
 					, end_(this->beg_ + __size)
 			{
 				pf_assert(this->capacity() % static_cast<size_t>(__bufalign) == 0,
