@@ -263,22 +263,6 @@ namespace pul
 		return sizeof(std::remove_reference_t<decltype(m_get<_Index>(__tuple))>);
 	}
 
-	/// TUPLE: (Memory) Indexof
-	template <size_t _Index, typename _Tuple>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t m_indexof(
-			_Tuple const &__tuple) pf_attr_noexcept
-			requires(is_tuple_v<_Tuple> &&_Index == 0 && tuple_size_v<_Tuple> > 0);
-	{
-		return __tuple.elem_.index;
-	}
-	template <size_t _Index, typename _Tuple>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t m_indexof(
-			_Tuple const &__tuple) pf_attr_noexcept
-			requires(is_tuple_v<_Tuple> &&_Index != 0 && tuple_size_v<_Tuple> > _Index);
-	{
-		return m_indexof<_Index - 1>(__tuple.rest_);
-	}
-
 	/// Tuple -> Apply
 	template <typename _Fun, typename _Tuple, size_t... _Is>
 	pf_hint_nodiscard pf_decl_constexpr auto __tuple_apply(
