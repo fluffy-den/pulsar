@@ -19,7 +19,7 @@ namespace pul
 {
 
 /// NUPLE: Macro -> $
-#define $(name) pul::hash::fnv1a::hash(name)
+#define $(name) fnv1a::hash(name)
 
 	/// NUPLE: SFINAE -> Index
 	template <typename _Ty, size_t _Hash, size_t _Index>
@@ -48,7 +48,9 @@ namespace pul
 
 		/// Constructors
 		pf_decl_inline pf_decl_constexpr nutag() pf_attr_noexcept = default;
-		pf_decl_inline pf_decl_constexpr nutag(_Ty &&__val);
+		pf_decl_inline pf_decl_constexpr nutag(_Ty &&__val)
+				: val_(std::forward<_Ty>(__val))
+		{}
 		pf_decl_inline pf_decl_constexpr nutag(nutag<_Ty, _Hash> const &) pf_attr_noexcept = delete;
 		pf_decl_inline pf_decl_constexpr nutag(nutag<_Ty, _Hash> &&) pf_attr_noexcept			 = delete;
 
@@ -59,7 +61,10 @@ namespace pul
 	/// NUPLE: Nutag -> Nuval
 	template <size_t _Hash, typename _Ty>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr nutag<_Ty, _Hash> nuval(
-			_Ty &&__val);
+			_Ty &&__val)
+	{
+		return nutag<_Ty, _Hash>(std::forward<_Ty>(__val));
+	}
 
 	/// NUPLE: SFINAE -> Is Nutag
 	template <typename _Ty>
@@ -128,9 +133,19 @@ namespace pul
 
 		/// Constructors
 		pf_decl_inline pf_decl_constexpr nuple() pf_attr_noexcept = default;
-		pf_decl_inline pf_decl_constexpr nuple(_Ts &&...__args);
+		pf_decl_inline pf_decl_constexpr nuple(_Ts &&...__args)
+				: __nuple_select_base<_Ts...>(
+						__tuple_make_base<__nuple_select_base<_Ts...>>(
+								typename __tuple_extract_sequence<__tuple_select_base<_Ts...>>::type{},
+								__args.val_...))
+		{}
 		template <typename... _InTs>
-		pf_decl_inline pf_decl_constexpr nuple(_InTs &&...__args);
+		pf_decl_inline pf_decl_constexpr nuple(_InTs &&...__args)
+				: __nuple_select_base<_Ts...>(
+						__tuple_make_base<__nuple_select_base<_Ts...>>(
+								typename __tuple_extract_sequence<__tuple_select_base<_Ts...>>::type{},
+								std::forward<_InTs>(__args)...))
+		{}
 		pf_decl_inline pf_decl_constexpr nuple(nuple<_Ts...> const &) = default;
 		pf_decl_inline pf_decl_constexpr nuple(nuple<_Ts...> &&)			= default;
 
@@ -181,48 +196,75 @@ namespace pul
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &n_get(
 			_Nuple &__nuple) pf_attr_noexcept
-			requires(is_nuple_v<_Nuple> &&_Hash == tuple_at<_Nuple, 0>::type::hash);
+			requires(is_nuple_v<_Nuple> &&_Hash == tuple_at<_Nuple, 0>::type::hash)
+	{
+		return __nuple.elem_.data_;
+	}
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &n_get(
 			_Nuple &__nuple) pf_attr_noexcept
-			requires(is_nuple_v<_Nuple> &&_Hash != tuple_at<_Nuple, 0>::type::hash && tuple_size_v<_Nuple> > 1);
+			requires(is_nuple_v<_Nuple> &&_Hash != tuple_at<_Nuple, 0>::type::hash && tuple_size_v<_Nuple> > 1)
+	{
+		return n_get<_Hash>(__nuple.rest_);
+	}
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const auto &n_get(
 			_Nuple const &__nuple) pf_attr_noexcept
-			requires(is_nuple_v<_Nuple> &&_Hash == tuple_at<_Nuple, 0>::type::hash);
+			requires(is_nuple_v<_Nuple> &&_Hash == tuple_at<_Nuple, 0>::type::hash)
+	{
+		return __nuple.elem_.data_;
+	}
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const auto &n_get(
 			_Nuple const &__nuple) pf_attr_noexcept
-			requires(is_nuple_v<_Nuple> &&_Hash != tuple_at<_Nuple, 0>::type::hash && tuple_size_v<_Nuple> > 1);
+			requires(is_nuple_v<_Nuple> &&_Hash != tuple_at<_Nuple, 0>::type::hash && tuple_size_v<_Nuple> > 1)
+	{
+		return n_get<_Hash>(__nuple.rest_);
+	}
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &&n_get(
 			_Nuple &&__nuple) pf_attr_noexcept
-			requires(is_nuple_v<_Nuple> &&_Hash == tuple_at<_Nuple, 0>::type::hash);
+			requires(is_nuple_v<_Nuple> &&_Hash == tuple_at<_Nuple, 0>::type::hash)
+	{
+		return std::move(__nuple.elem_.data_);
+	}
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto &&n_get(
 			_Nuple &&__nuple) pf_attr_noexcept
-			requires(is_nuple_v<_Nuple> &&_Hash != tuple_at<_Nuple, 0>::type::hash && tuple_size_v<_Nuple> > 1);
+			requires(is_nuple_v<_Nuple> &&_Hash != tuple_at<_Nuple, 0>::type::hash && tuple_size_v<_Nuple> > 1)
+	{
+		return std::move(n_get<_Hash>(__nuple.rest_));
+	}
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const auto &&n_get(
 			_Nuple const &&__nuple) pf_attr_noexcept
-			requires(is_nuple_v<_Nuple> &&_Hash == tuple_at<_Nuple, 0>::type::hash);
+			requires(is_nuple_v<_Nuple> &&_Hash == tuple_at<_Nuple, 0>::type::hash)
+	{
+		return std::move(__nuple.elem_.data_);
+	}
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const auto &&n_get(
 			_Nuple const &&__nuple) pf_attr_noexcept
-			requires(is_nuple_v<_Nuple> &&_Hash != tuple_at<_Nuple, 0>::type::hash && tuple_size_v<_Nuple> > 1);
+			requires(is_nuple_v<_Nuple> &&_Hash != tuple_at<_Nuple, 0>::type::hash && tuple_size_v<_Nuple> > 1)
+	{
+		return std::move(n_get<_Hash>(__nuple.rest_));
+	}
 
 	/// NUPLE: (Named) Offsetof
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t n_offsetof(_Nuple const &__nuple) pf_attr_noexcept
-			requires(is_nuple_v<_Nuple>);
+			requires(is_nuple_v<_Nuple>)
+	{
+		return pul::addressof(&n_get<_Hash>(__nuple)) - pul::addressof(&__nuple);
+	}
 
 	/// NUPLE: (Named) Sizeof
 	template <size_t _Hash, typename _Nuple>
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t n_sizeof(_Nuple const &__nuple) pf_attr_noexcept
-			requires(is_nuple_v<_Nuple>);
+			requires(is_nuple_v<_Nuple>)
+	{
+		return sizeof(std::remove_reference_t<decltype(n_get<_Hash>(__nuple))>);
+	}
 }
-
-// Include: Pulsar -> Nuple Impl
-#include "pulsar/tuple/nuple.inl"
 
 #endif // !PULSAR_NUPLE_HPP

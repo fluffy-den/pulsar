@@ -160,7 +160,7 @@ namespace pul
 		std::string msg;
 		size_t rsv = __message.length() * 2
 							 + dtl.size() * (4 * 1024 + 32);
-		rsv += memory::paddingof(rsv, memory::max_align);
+		rsv += paddingof(rsv, MAX_ALIGN);
 		msg.reserve(rsv);
 		msg += exception::format(__cat, __code, __message);
 		msg += '\n';

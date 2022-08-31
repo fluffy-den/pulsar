@@ -17,11 +17,7 @@
 // Pulsar
 namespace pul
 {
-	// Mathematics
-	namespace math
-	{
 
-	}
 }
 
 #endif // PULSAR_MATH_GEOMETRIC_HPP

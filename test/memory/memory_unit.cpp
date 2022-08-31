@@ -20,11 +20,11 @@ namespace pul
 	/// MEMORY: Buffer
 	TEST_CASE("MemoryBufferTest1")
 	{
-		memory::buffer buf1(1024, memory::max_align);
+		buffer buf1(1024, MAX_ALIGN);
 		REQUIRE(buf1.capacity() == 1024);
-		memory::buffer buf2 = buf1;
+		buffer buf2 = buf1;
 		REQUIRE(buf2.capacity() == 1024);
-		memory::buffer buf3 = std::move(buf1);
+		buffer buf3 = std::move(buf1);
 		REQUIRE(buf3.capacity() == 1024);
 		REQUIRE(buf1.capacity() == 0);
 		buf1 = buf2;
@@ -35,22 +35,22 @@ namespace pul
 	}
 	TEST_CASE("MemoryBufferTest2")
 	{
-		memory::buffer buf1(1024, memory::max_align);
+		buffer buf1(1024, MAX_ALIGN);
 		REQUIRE(buf1.capacity() == 1024);
-		buf1.resize(2048, memory::max_align);
+		buf1.resize(2048, MAX_ALIGN);
 		REQUIRE(buf1.capacity() == 2048);
 	}
 
 	/// MEMORY: Allocators Wrappers
 	TEST_CASE("AllocatorLinearWrap")
 	{
-		memory::allocator_linear all(1024);
-		memory::allocator_wrapper<byte_t, memory::allocator_linear> wrp1 = std::move(all);
+		allocator_linear all(1024);
+		allocator_wrapper<byte_t, allocator_linear> wrp1 = std::move(all);
 
 		byte_t *obj1 = new (wrp1) byte_t('\1');
 
-		memory::allocator_wrapper wrp2 = std::move(wrp1);
-		memory::allocator_wrapper wrp3 = wrp2;
+		allocator_wrapper wrp2 = std::move(wrp1);
+		allocator_wrapper wrp3 = wrp2;
 
 		byte_t *obj2 = new (wrp3) byte_t('\3');
 
@@ -59,13 +59,13 @@ namespace pul
 	}
 	TEST_CASE("AllocatorStackWrap")
 	{
-		memory::allocator_stack all(1024);
-		memory::allocator_wrapper<byte_t, memory::allocator_stack> wrp1 = std::move(all);
+		allocator_stack all(1024);
+		allocator_wrapper<byte_t, allocator_stack> wrp1 = std::move(all);
 
 		byte_t *obj1 = new (wrp1) byte_t('\1');
 
-		memory::allocator_wrapper wrp2 = std::move(wrp1);
-		memory::allocator_wrapper wrp3 = wrp2;
+		allocator_wrapper wrp2 = std::move(wrp1);
+		allocator_wrapper wrp3 = wrp2;
 
 		byte_t *obj2 = new (wrp3) byte_t('\3');
 
@@ -74,13 +74,13 @@ namespace pul
 	}
 	TEST_CASE("AllocatorPoolWrap")
 	{
-		memory::allocator_pool all(1, 1024, align_val_t(1));
-		memory::allocator_wrapper<byte_t, memory::allocator_pool> wrp1 = std::move(all);
+		allocator_pool all(1, 1024, align_val_t(1));
+		allocator_wrapper<byte_t, allocator_pool> wrp1 = std::move(all);
 
 		byte_t *obj1 = new (wrp1) byte_t('\1');
 
-		memory::allocator_wrapper wrp2 = std::move(wrp1);
-		memory::allocator_wrapper wrp3 = wrp2;
+		allocator_wrapper wrp2 = std::move(wrp1);
+		allocator_wrapper wrp3 = wrp2;
 
 		byte_t *obj2 = new (wrp3) byte_t('\3');
 

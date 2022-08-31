@@ -30,7 +30,7 @@ namespace pul
 		/// Store
 		thread_id_t id_;
 		singly_cds_linked_lifo<job_system::__job> list_;
-		memory::allocator_ring allocator_;
+		allocator_ring allocator_;
 	};
 
 	// Job System -> Internal -> Worker

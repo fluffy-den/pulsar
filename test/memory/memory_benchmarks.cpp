@@ -22,9 +22,9 @@ namespace pul
 		(Catch::Benchmark::Chronometer __m)
 		{
 			const int32_t n = __m.runs();
-			memory::allocator_linear all(n * static_cast<size_t>(memory::max_align));
+			allocator_linear all(n * static_cast<size_t>(MAX_ALIGN));
 			__m.measure([&all]()
-									{ return all.allocate(static_cast<size_t>(memory::max_align)); });
+									{ return all.allocate(static_cast<size_t>(MAX_ALIGN)); });
 		};
 	}
 
@@ -35,19 +35,19 @@ namespace pul
 		(Catch::Benchmark::Chronometer __m)
 		{
 			const int32_t n = __m.runs();
-			memory::allocator_stack all(n * static_cast<size_t>(memory::max_align));
+			allocator_stack all(n * static_cast<size_t>(MAX_ALIGN));
 			__m.measure([&all]()
-									{ return all.allocate(static_cast<size_t>(memory::max_align)); });
+									{ return all.allocate(static_cast<size_t>(MAX_ALIGN)); });
 		};
 		BENCHMARK_ADVANCED("Deallocation")
 		(Catch::Benchmark::Chronometer __m)
 		{
 			const int32_t n = __m.runs();
-			memory::allocator_stack all(n * static_cast<size_t>(memory::max_align));
+			allocator_stack all(n * static_cast<size_t>(MAX_ALIGN));
 			auto b = std::make_unique<void *[]>(n);
 			for (int32_t i = 0; i < n; ++i)
 			{
-				b[i] = all.allocate(static_cast<size_t>(memory::max_align));
+				b[i] = all.allocate(static_cast<size_t>(MAX_ALIGN));
 			}
 			__m.measure([&all, &b, &n](int32_t i)
 									{ return all.deallocate(b[n - 1 - i]); });
@@ -61,25 +61,25 @@ namespace pul
 		(Catch::Benchmark::Chronometer __m)
 		{
 			const int32_t n = __m.runs();
-			memory::allocator_pool all(
-					static_cast<size_t>(memory::max_align),
+			allocator_pool all(
+					static_cast<size_t>(MAX_ALIGN),
 					n,
-					memory::max_align);
+					MAX_ALIGN);
 			__m.measure([&all]()
-									{ return all.allocate(static_cast<size_t>(memory::max_align)); });
+									{ return all.allocate(static_cast<size_t>(MAX_ALIGN)); });
 		};
 		BENCHMARK_ADVANCED("Deallocation")
 		(Catch::Benchmark::Chronometer __m)
 		{
 			const int32_t n = __m.runs();
-			memory::allocator_pool all(
-					static_cast<size_t>(memory::max_align),
+			allocator_pool all(
+					static_cast<size_t>(MAX_ALIGN),
 					n,
-					memory::max_align);
+					MAX_ALIGN);
 			auto b = std::make_unique<void *[]>(n);
 			for (int32_t i = 0; i < n; ++i)
 			{
-				b[i] = all.allocate(static_cast<size_t>(memory::max_align));
+				b[i] = all.allocate(static_cast<size_t>(MAX_ALIGN));
 			}
 			__m.measure([&all, &b](int32_t i)
 									{ return all.deallocate(b[i]); });
@@ -93,9 +93,9 @@ namespace pul
 		(Catch::Benchmark::Chronometer __m)
 		{
 			const int32_t n = __m.runs();
-			memory::allocator_cds_linear all(n * static_cast<size_t>(memory::max_align));
+			allocator_cds_linear all(n * static_cast<size_t>(MAX_ALIGN));
 			__m.measure([&all]()
-									{ return all.allocate(static_cast<size_t>(memory::max_align)); });
+									{ return all.allocate(static_cast<size_t>(MAX_ALIGN)); });
 		};
 	}
 
@@ -106,19 +106,19 @@ namespace pul
 		(Catch::Benchmark::Chronometer __m)
 		{
 			const int32_t n = __m.runs();
-			memory::allocator_cds_stack all(n * static_cast<size_t>(memory::max_align));
+			allocator_cds_stack all(n * static_cast<size_t>(MAX_ALIGN));
 			__m.measure([&all]()
-									{ return all.allocate(static_cast<size_t>(memory::max_align)); });
+									{ return all.allocate(static_cast<size_t>(MAX_ALIGN)); });
 		};
 		BENCHMARK_ADVANCED("Deallocation")
 		(Catch::Benchmark::Chronometer __m)
 		{
 			const int32_t n = __m.runs();
-			memory::allocator_cds_stack all(n * static_cast<size_t>(memory::max_align));
+			allocator_cds_stack all(n * static_cast<size_t>(MAX_ALIGN));
 			auto b = std::make_unique<void *[]>(n);
 			for (int32_t i = 0; i < n; ++i)
 			{
-				b[i] = all.allocate(static_cast<size_t>(memory::max_align));
+				b[i] = all.allocate(static_cast<size_t>(MAX_ALIGN));
 			}
 			__m.measure([&all, &b, &n](int32_t i)
 									{ return all.deallocate(b[n - 1 - i]); });
@@ -132,25 +132,25 @@ namespace pul
 		(Catch::Benchmark::Chronometer __m)
 		{
 			const int32_t n = __m.runs();
-			memory::allocator_cds_pool all(
-					static_cast<size_t>(memory::max_align),
+			allocator_cds_pool all(
+					static_cast<size_t>(MAX_ALIGN),
 					n,
-					memory::max_align);
+					MAX_ALIGN);
 			__m.measure([&all]()
-									{ return all.allocate(static_cast<size_t>(memory::max_align)); });
+									{ return all.allocate(static_cast<size_t>(MAX_ALIGN)); });
 		};
 		BENCHMARK_ADVANCED("Deallocation")
 		(Catch::Benchmark::Chronometer __m)
 		{
 			const int32_t n = __m.runs();
-			memory::allocator_cds_pool all(
-					static_cast<size_t>(memory::max_align),
+			allocator_cds_pool all(
+					static_cast<size_t>(MAX_ALIGN),
 					n,
-					memory::max_align);
+					MAX_ALIGN);
 			auto b = std::make_unique<void *[]>(n);
 			for (int32_t i = 0; i < n; ++i)
 			{
-				b[i] = all.allocate(static_cast<size_t>(memory::max_align));
+				b[i] = all.allocate(static_cast<size_t>(MAX_ALIGN));
 			}
 			__m.measure([&all, &b, &n](int32_t i)
 									{ return all.deallocate(b[i]); });

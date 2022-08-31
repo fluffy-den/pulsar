@@ -26,14 +26,14 @@ namespace pul
 		const char str[] = "Blah!";
 		const char *ptr	 = &str[0];
 
-		size_t val64 = hash::fnv1a::hash64(ptr, sizeof(str));
+		size_t val64 = fnv1a::hash64(ptr, sizeof(str));
 		REQUIRE(val64 != 0);
-		size_t val32 = hash::fnv1a::hash32(ptr, sizeof(str));
+		size_t val32 = fnv1a::hash32(ptr, sizeof(str));
 		REQUIRE(val32 != 0);
 #ifdef PF_64BIT
-		REQUIRE(hash::fnv1a::hash(str) == val64);
+		REQUIRE(fnv1a::hash(str) == val64);
 #else	 // ^^^ PF_64BIT ^^^ / vvv PF_64BIT vvv
-		REQUIRE(hash::fnv1a::hash(str) == val32);
+		REQUIRE(fnv1a::hash(str) == val32);
 #endif // PF_64BIT
 	}
 	TEST_CASE("Fnv1aUnit2")
@@ -47,6 +47,6 @@ namespace pul
 
 		hash_fnv1a<int32_t> hasher;
 		size_t hvl = hasher(rdv);
-		REQUIRE(hvl == hash::fnv1a::hash(&rdv, sizeof(rdv)));
+		REQUIRE(hvl == fnv1a::hash(&rdv, sizeof(rdv)));
 	}
 }

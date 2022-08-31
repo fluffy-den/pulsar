@@ -17,11 +17,7 @@
 // Pulsar
 namespace pul
 {
-	// Math
-	namespace math
-	{
 
-	}
 }
 
 #endif // !PULSAR_MATH_COL_VECTOR2_INL

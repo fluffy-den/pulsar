@@ -20,119 +20,115 @@
 // Pulsar
 namespace pul
 {
-	// Memory
-	namespace memory
+	/// MEMORY: Allocator Stack
+	/*! @brief Stack memory allocator.
+	 */
+	class allocator_stack: public allocator_linear
 	{
-		/// MEMORY: Allocator Stack
-		/*! @brief Stack memory allocator.
-		 */
-		class allocator_stack: public allocator_linear
+		struct __alloc_h
 		{
-			struct __alloc_h
-			{
-				byte_t *prev_;
-			};
-
-		public:
-			using propagate_on_container_copy_assignment = std::true_type;
-			using propagate_on_container_move_assignment = std::false_type;
-			using propagate_on_container_swap						 = std::true_type;
-
-			/// Constructors
-			/*! @brief Default constructor.
-			 */
-			pf_decl_inline pf_decl_constexpr allocator_stack() pf_attr_noexcept
-			{}
-			/*! @brief Constructor.
-			 *
-			 *  @param[in] __size		  Size of the memory buffer.
-			 *  @param[in] __bufalign Alignment of the memory buffer.
-			 */
-			pf_decl_inline pf_decl_constexpr allocator_stack(
-					size_t __size,
-					align_val_t __bufalign = max_align) pf_attr_noexcept
-					: allocator_linear(__size, __bufalign)
-			{}
-			/*! @brief Copy constructor.
-			 *
-			 *  @param[in] __r Other stack allocator to copy from.
-			 */
-			pf_decl_inline pf_decl_constexpr allocator_stack(
-					allocator_stack const &__r) pf_attr_noexcept
-					: allocator_linear(__r)
-			{}
-			/*! @brief Copy constructor.
-			 *
-			 *  @param[in] __r 				Other stack allocator to copy from.
-			 * 	@param[in] __bufalign Alignment of the memory buffer.
-			 */
-			pf_decl_inline pf_decl_constexpr allocator_stack(
-					allocator_stack const &__r,
-					align_val_t __bufalign) pf_attr_noexcept
-					: allocator_linear(__r, __bufalign)
-			{}
-			/*! @brief Move constructor
-			 *
-			 *  @param[in] __r Other stack allocator to move from.
-			 */
-			pf_decl_inline pf_decl_constexpr allocator_stack(
-					allocator_stack &&__r) pf_attr_noexcept
-					: allocator_linear(std::move(__r))
-			{}
-
-			/// Allocate
-			/*! @brief Allocates a memory of size @a __size, aligned to @a __align at the head of
-			 *				 @a __offset.
-			 *
-			 *  @param[in] __size 	Size of the allocation.
-			 *  @param[in] __align	Alignment of the allocation.
-			 *  @param[in] __offset	Offset to alignment.
-			 *  @return Pointer on a allocated memory.
-			 */
-			pf_decl_inline pf_decl_constexpr void *allocate(
-					size_t __size,
-					align_val_t __align = max_align,
-					size_t __offset			= 0) pf_attr_noexcept
-			{
-				__size += paddingof(__size + __offset, __align);
-				union
-				{
-					byte_t *as_byte;
-					__alloc_h *as_header;
-					size_t as_addr;
-				};
-				as_byte		= this->off_;
-				byte_t *l = as_byte;
-				as_addr += paddingof(as_addr + __offset, __align);
-				byte_t *e = as_byte + sizeof(__alloc_h) + __size;
-				if (e > this->buf_.end())
-					return nullptr;
-				this->off_			 = e;
-				as_header->prev_ = l;
-				return ++as_header;
-			}
-
-			/// Deallocate
-			/*! @brief Deallocates a memory pointed by @a __ptr.
-			 *
-			 *  @param[in] __ptr Pointer referring to a memory to be deallocated.
-			 */
-			pf_decl_inline pf_decl_constexpr void deallocate(
-					void *__ptr) pf_attr_noexcept
-			{
-				if (!__ptr) return;
-				union
-				{
-					void *as_void;
-					__alloc_h *as_header;
-				};
-				as_void = __ptr;
-				--as_header;
-				if (as_header->prev_ < this->off_)
-					this->off_ = as_header->prev_;
-			}
+			byte_t *prev_;
 		};
-	}
+
+	public:
+		using propagate_on_container_copy_assignment = std::true_type;
+		using propagate_on_container_move_assignment = std::false_type;
+		using propagate_on_container_swap						 = std::true_type;
+
+		/// Constructors
+		/*! @brief Default constructor.
+		 */
+		pf_decl_inline pf_decl_constexpr allocator_stack() pf_attr_noexcept
+		{}
+		/*! @brief Constructor.
+		 *
+		 *  @param[in] __size		  Size of the memory buffer.
+		 *  @param[in] __bufalign Alignment of the memory buffer.
+		 */
+		pf_decl_inline pf_decl_constexpr allocator_stack(
+				size_t __size,
+				align_val_t __bufalign = MAX_ALIGN) pf_attr_noexcept
+				: allocator_linear(__size, __bufalign)
+		{}
+		/*! @brief Copy constructor.
+		 *
+		 *  @param[in] __r Other stack allocator to copy from.
+		 */
+		pf_decl_inline pf_decl_constexpr allocator_stack(
+				allocator_stack const &__r) pf_attr_noexcept
+				: allocator_linear(__r)
+		{}
+		/*! @brief Copy constructor.
+		 *
+		 *  @param[in] __r 				Other stack allocator to copy from.
+		 * 	@param[in] __bufalign Alignment of the memory buffer.
+		 */
+		pf_decl_inline pf_decl_constexpr allocator_stack(
+				allocator_stack const &__r,
+				align_val_t __bufalign) pf_attr_noexcept
+				: allocator_linear(__r, __bufalign)
+		{}
+		/*! @brief Move constructor
+		 *
+		 *  @param[in] __r Other stack allocator to move from.
+		 */
+		pf_decl_inline pf_decl_constexpr allocator_stack(
+				allocator_stack &&__r) pf_attr_noexcept
+				: allocator_linear(std::move(__r))
+		{}
+
+		/// Allocate
+		/*! @brief Allocates a memory of size @a __size, aligned to @a __align at the head of
+		 *				 @a __offset.
+		 *
+		 *  @param[in] __size 	Size of the allocation.
+		 *  @param[in] __align	Alignment of the allocation.
+		 *  @param[in] __offset	Offset to alignment.
+		 *  @return Pointer on a allocated memory.
+		 */
+		pf_decl_inline pf_decl_constexpr void *allocate(
+				size_t __size,
+				align_val_t __align = MAX_ALIGN,
+				size_t __offset			= 0) pf_attr_noexcept
+		{
+			__size += paddingof(__size + __offset, __align);
+			union
+			{
+				byte_t *as_byte;
+				__alloc_h *as_header;
+				size_t as_addr;
+			};
+			as_byte		= this->off_;
+			byte_t *l = as_byte;
+			as_addr += paddingof(as_addr + __offset, __align);
+			byte_t *e = as_byte + sizeof(__alloc_h) + __size;
+			if (e > this->buf_.end())
+				return nullptr;
+			this->off_			 = e;
+			as_header->prev_ = l;
+			return ++as_header;
+		}
+
+		/// Deallocate
+		/*! @brief Deallocates a memory pointed by @a __ptr.
+		 *
+		 *  @param[in] __ptr Pointer referring to a memory to be deallocated.
+		 */
+		pf_decl_inline pf_decl_constexpr void deallocate(
+				void *__ptr) pf_attr_noexcept
+		{
+			if (!__ptr) return;
+			union
+			{
+				void *as_void;
+				__alloc_h *as_header;
+			};
+			as_void = __ptr;
+			--as_header;
+			if (as_header->prev_ < this->off_)
+				this->off_ = as_header->prev_;
+		}
+	};
 }
 
 #endif // !PULSAR_MEMORY_ALLOCATOR_STACK_HPP

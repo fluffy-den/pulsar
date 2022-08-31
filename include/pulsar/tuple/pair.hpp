@@ -27,10 +27,16 @@ namespace pul
 	{
 		/// Constructors
 		pf_decl_inline pf_decl_constexpr pair() pf_attr_noexcept = default;
-		pf_decl_inline pf_decl_constexpr pair(_TyA &&__a, _TyB &&__b) pf_attr_noexcept;
+		pf_decl_inline pf_decl_constexpr pair(_TyA &&__a, _TyB &&__b) pf_attr_noexcept
+				: a(std::forward<_TyA>(__a))
+				, b(std::forward<_TyB>(__b))
+		{}
 		template <typename _InTyA, typename _InTyB>
 		pf_decl_inline pf_decl_constexpr pair(_InTyA &&__a, _InTyB &&__b) pf_attr_noexcept
-				requires(std::is_convertible_v<_InTyA, _TyA> &&std::is_convertible_v<_InTyB, _TyB>);
+				requires(std::is_convertible_v<_InTyA, _TyA> &&std::is_convertible_v<_InTyB, _TyB>)
+				: a(std::forward<_InTyA>(__a))
+				, b(std::forward<_InTyB>(__b))
+		{}
 		pf_decl_inline pf_decl_constexpr pair(pair<_TyA, _TyB> const &) pf_attr_noexcept = default;
 		pf_decl_inline pf_decl_constexpr pair(pair<_TyA, _TyB> &&) pf_attr_noexcept			 = default;
 
@@ -59,13 +65,13 @@ namespace pul
 	template <typename _TyA, typename _TyB>
 	pf_decl_inline pf_decl_constexpr pair<_TyA, _TyB> make_pair(
 			_TyA &&__a,
-			_TyB &&__b) pf_attr_noexcept;
+			_TyB &&__b) pf_attr_noexcept
+	{
+		return pair(std::forward<_TyA>(__a), std::forward<_TyB>(__b));
+	}
 }
 
 // Anonymous structs
 #pragma GCC diagnostic pop
-
-// Include: Pair -> Impl
-#include "pulsar/tuple/pair.inl"
 
 #endif // !PULSAR_PAIR_HPP
