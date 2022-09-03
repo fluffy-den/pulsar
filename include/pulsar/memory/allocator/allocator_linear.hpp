@@ -174,7 +174,7 @@ namespace pul
 			this->off_ = this->buf_.begin();
 		}
 
-	private:
+	protected:
 		buffer buf_;
 		byte_t *off_;
 	};

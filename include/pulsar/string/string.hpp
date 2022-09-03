@@ -29,7 +29,38 @@
 // Pulsar
 namespace pul
 {
+	// TODO: isalpha
+	// TODO: isupper
+	// TODO: islower
+	// TODO: isdigit
+	// TODO: isspace
+	// TODO: ispunct
+	// TODO: isalnum
+	// TODO: isprint
+	// TODO: isgraph
+	// TODO: iscntrl
+	// TODO: toupper
+	// TODO: tolower
+
+	/// Length
+	/*! @brief Compute the length of a string.
+	 *
+	 *  @param[in] __str A string.
+	 *  @return Length of the string.
+	 */
+	pf_decl_constexpr pf_decl_inline size_t strlen(
+			const char *__str) pf_attr_noexcept
+	{
+		size_t i = 0;
+		while (__str[i] != '\0')
+		{
+			++i;
+		}
+		return i;
+	}
+
 	/// Trim
+	// TODO: constexpr trim
 	/*! @brief Deletes the spaces to the right of the last character of the string.
 	 *
 	 *  @param[in, out] __s String to modify.
@@ -57,6 +88,7 @@ namespace pul
 	}
 
 	/// ToLower / Upper
+	// TODO: constexpr tolower + toupper
 	/*! @brief Converts all characters in a string to lower case.
 	 *
 	 *  @param[in, out] __s String to modify.
