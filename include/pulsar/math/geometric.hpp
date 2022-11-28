@@ -17,7 +17,18 @@
 // Pulsar
 namespace pul
 {
-
+	// TODO: Ortho
+	// TODO: Look At
+	// TODO: Rotate
+	// TODO: Scale
+	// TODO: Translate
+	// TODO: Vectorial Product
+	// TODO: Scalar Product (Standard)
+	// TODO: Outer Product
+	// TODO: Perspective
+	// TODO: frustum
+	// TODO: Infinite Perspective
+	// TODO: Project
 }
 
 #endif // PULSAR_MATH_GEOMETRIC_HPP

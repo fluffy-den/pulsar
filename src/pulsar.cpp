@@ -10,37 +10,38 @@
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
+#include "pulsar/utility.hpp"
 
 // Include: Windows
 #ifdef PF_OS_WINDOWS
-#	include <windows.h>
+# include <windows.h>
 
 // Include: C++
-#	include <tuple>
+# include <tuple>	// std::ignore
 
 // Win -> DllMain
 BOOL APIENTRY DllMain(
-		HANDLE __module,
-		DWORD __reason,
-		LPVOID __reserved)
+	HANDLE __module,
+	DWORD __reason,
+	LPVOID __reserved)
 {
-	std::ignore = __module;
-	std::ignore = __reserved;
+	pul::ignore = __module;
+	pul::ignore = __reserved;
 
 	// TODO: DLL attachment security
-	switch (__reason)
+	switch(__reason)
 	{
-		case DLL_PROCESS_ATTACH:
-			break;
+	case DLL_PROCESS_ATTACH:
+		break;
 
-		case DLL_PROCESS_DETACH:
-			break;
+	case DLL_PROCESS_DETACH:
+		break;
 
-		case DLL_THREAD_ATTACH:
-			break;
+	case DLL_THREAD_ATTACH:
+		break;
 
-		case DLL_THREAD_DETACH:
-			break;
+	case DLL_THREAD_DETACH:
+		break;
 	}
 
 	return TRUE;

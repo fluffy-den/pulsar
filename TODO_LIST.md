@@ -1,0 +1,63 @@
+DECEMBER 2022
+- uncrustify
+- version control format
+- cmake main file to write
+- stateful assert (compile-time, static, runtime)
+- mimalloc as main allocator
+  - stl is too slow compared to mimalloc + pul. Useful stl must be rewritten.
+  - forward_sequence
+  - unordered_dense (unordered_map + unordered_set)
+  - queue + cds_queue
+  - allocators (growsize, magnifier)
+    - linear (for sequence)
+    - pool (for list, sets)
+    - cyclic (for queue)
+  o unique + shared ptr                                           
+- mathematics
+  - quaternion
+  - geometrics
+    - look_at
+    - rotate
+    - scale
+    - translate
+    - projection (orthographic...)
+    - span
+- io
+  - string (UTF8 everywhere!)
+    - str* utilities
+    - format
+    - string_span
+    - wchar_t <=> UTF8 cast
+- asio
+  - filesystem
+  - networking
+    - ssl
+    - tcp, udp, icmp
+- hash
+  - xxhash
+  - sha3
+- encryption
+  - TODO: For passwords
+- application
+  - signing
+  - information
+- task system
+  - rethink on how jobs & tasks are be allocated
+  - rethink on how jobs & tasks are enqueued
+  - future with wait
+  - future with value
+- utility
+  - sort
+  - copy
+  - move
+  - accumulate
+  - parallel_for
+- hot_reload
+  - auto-reload when dll is modified (using fs_signal)
+- tester (must be threadable)
+  - unit
+  - benchmark
+  - random generator
+  - multithreading
+
+APRIL 2023

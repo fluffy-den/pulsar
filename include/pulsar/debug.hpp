@@ -1,4 +1,4 @@
-/*! @file   debugger.hpp
+/*! @file   debug.hpp
  *  @author Fluffy (noe.louis-quentin@hotmail.fr)
  *  @brief	Implements debug tools.
  *  @date   27-06-2022
@@ -8,12 +8,18 @@
  *  @since 0.1.1
  */
 
-#ifndef PULSAR_DEBUG_INCL_HPP
-#define PULSAR_DEBUG_INCL_HPP 1
+#ifndef PULSAR_DEBUG_HPP
+#define PULSAR_DEBUG_HPP 1
 
-// Include: Pulsar -> Debug
-#include "pulsar/debug/debug_exception.hpp"
-#include "pulsar/debug/debug_types.hpp"
-#include "pulsar/debug/debugger.hpp"
+// Include: Pulsar
+#include "pulsar/pulsar.hpp"
+#include "pulsar/exception.hpp"
 
-#endif // !PULSAR_DEBUG_INCL_HPP
+// GCC: https://stackoverflow.com/questions/77005/how-to-automatically-generate-a-stacktrace-when-my-program-crashes
+// MSVC: StackTrace
+
+// Pulsar
+namespace pul
+{}
+
+#endif // !PULSAR_DEBUG_HPP

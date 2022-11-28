@@ -15,4 +15,6 @@
 #include "pulsar/job_system/job_system.hpp"
 #include "pulsar/job_system/thread_identifier.hpp"
 
+// TODO: Better job system using faster cds queues instead of cds list
+
 #endif // !PULSAR_JOB_SYSTEM_INCL_HPP

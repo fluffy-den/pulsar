@@ -18,30 +18,31 @@
 namespace pul
 {
 	/// MATH: Matrix -> Definition
-	template <typename _Ty, size_t _RowNum, size_t _ColNum, simd_align_t _SIMD>
-		requires(
-				std::is_arithmetic_v<_Ty> &&_RowNum > 1 && _ColNum > 1
-				&& ((is_simd_alignable_v<_Ty, _ColNum> && _SIMD == SIMD_ALIGNED) || (_SIMD == SIMD_UNALIGNED)))
-	union alignas(simd_alignment_of_v<_Ty, _ColNum, _SIMD>) matrix;
+	template <typename _Ty, size_t _RowNum, size_t _ColNum>
+	requires(
+		std::is_arithmetic_v<_Ty>
+		&& _RowNum > 1 && _ColNum > 1)
+	union matrix;
 
-	/// MATH: bmat3x3u_t
-	using bmat3u_t = matrix<bool, 3, 3, SIMD_UNALIGNED>;
+	/// MATH: bmat3x3_t
+	using bmat3_t
+	pf_alignas(bool) = matrix<bool, 3, 3>;
 
-	/// MATH: umat3x3u_t
-	using u8mat3u_t	 = matrix<uint8_t, 3, 3, SIMD_UNALIGNED>;
-	using u16mat3u_t = matrix<uint16_t, 3, 3, SIMD_UNALIGNED>;
-	using u32mat3u_t = matrix<uint32_t, 3, 3, SIMD_UNALIGNED>;
-	using u64mat3u_t = matrix<uint64_t, 3, 3, SIMD_UNALIGNED>;
+	/// MATH: umat3x3_t
+	using u8mat3_t pf_alignas(uint8_t)	 = matrix<uint8_t, 3, 3>;
+	using u16mat3_t pf_alignas(uint16_t) = matrix<uint16_t, 3, 3>;
+	using u32mat3_t pf_alignas(uint32_t) = matrix<uint32_t, 3, 3>;
+	using u64mat3_t pf_alignas(uint64_t) = matrix<uint64_t, 3, 3>;
 
-	/// MATH: imat3x3u_t
-	using i8mat3u_t	 = matrix<int8_t, 3, 3, SIMD_UNALIGNED>;
-	using i16mat3u_t = matrix<int16_t, 3, 3, SIMD_UNALIGNED>;
-	using i32mat3u_t = matrix<int32_t, 3, 3, SIMD_UNALIGNED>;
-	using i64mat3u_t = matrix<int64_t, 3, 3, SIMD_UNALIGNED>;
+	/// MATH: imat3x3_t
+	using i8mat3_t pf_alignas(int8_t)		= matrix<int8_t, 3, 3>;
+	using i16mat3_t pf_alignas(int16_t) = matrix<int16_t, 3, 3>;
+	using i32mat3_t pf_alignas(int32_t) = matrix<int32_t, 3, 3>;
+	using i64mat3_t pf_alignas(int64_t) = matrix<int64_t, 3, 3>;
 
-	/// MATH: fmat3x3u_t
-	using f32mat3u_t = matrix<float32_t, 3, 3, SIMD_UNALIGNED>;
-	using f64mat3u_t = matrix<float64_t, 3, 3, SIMD_UNALIGNED>;
+	/// MATH: fmat3x3_t
+	using f32mat3_t pf_alignas(float32_t) = matrix<float32_t, 3, 3>;
+	using f64mat3_t pf_alignas(float64_t) = matrix<float64_t, 3, 3>;
 }
 
 #endif // !PULSAR_MATH_MATRIX3_INL

@@ -18,42 +18,43 @@
 namespace pul
 {
 	/// MATH: Matrix -> Definition
-	template <typename _Ty, size_t _RowNum, size_t _ColNum, simd_align_t _SIMD>
-		requires(
-				std::is_arithmetic_v<_Ty> &&_RowNum > 1 && _ColNum > 1
-				&& ((is_simd_alignable_v<_Ty, _ColNum> && _SIMD == SIMD_ALIGNED) || (_SIMD == SIMD_UNALIGNED)))
-	union alignas(simd_alignment_of_v<_Ty, _ColNum, _SIMD>) matrix;
+	template <typename _Ty, size_t _RowNum, size_t _ColNum>
+	requires(
+		std::is_arithmetic_v<_Ty>
+		&& _RowNum > 1 && _ColNum > 1)
+	union matrix;
 
-	/// MATH: bmat4x2u_t
-	using bmat4x2u_t = matrix<bool, 4, 2, SIMD_UNALIGNED>;
+	/// MATH: bmat4x2_t
+	using bmat4x2_t
+	pf_alignas(bool) = matrix<bool, 4, 2>;
 
 	/// MATH: umat4x2_t
-	using u32mat4x2_t = matrix<uint32_t, 4, 2, SIMD_ALIGNED>;
-	using u64mat4x2_t = matrix<uint64_t, 4, 2, SIMD_ALIGNED>;
+	using u8mat4x2_t pf_alignas(uint8_t)	 = matrix<uint8_t, 4, 2>;
+	using u16mat4x2_t pf_alignas(uint16_t) = matrix<uint16_t, 4, 2>;
+	using u32mat4x2_t pf_alignas(uint32_t) = matrix<uint32_t, 4, 2>;
+	using u64mat4x2_t pf_alignas(uint64_t) = matrix<uint64_t, 4, 2>;
 
-	/// MATH: umat4x2u_t
-	using u8mat4x2u_t	 = matrix<uint8_t, 4, 2, SIMD_UNALIGNED>;
-	using u16mat4x2u_t = matrix<uint16_t, 4, 2, SIMD_UNALIGNED>;
-	using u32mat4x2u_t = matrix<uint32_t, 4, 2, SIMD_UNALIGNED>;
-	using u64mat4x2u_t = matrix<uint64_t, 4, 2, SIMD_UNALIGNED>;
+	/// MATH: s_umat4x2_t
+	using s_u32mat4x2_t pf_alignas_n(uint32_t, 2) = matrix<uint32_t, 4, 2>;
+	using s_u64mat4x2_t pf_alignas_n(uint64_t, 2) = matrix<uint64_t, 4, 2>;
 
 	/// MATH: imat4x2_t
-	using i32mat4x2_t = matrix<int32_t, 4, 2, SIMD_ALIGNED>;
-	using i64mat4x2_t = matrix<int64_t, 4, 2, SIMD_ALIGNED>;
+	using i8mat4x2_t pf_alignas(int8_t)		= matrix<int8_t, 4, 2>;
+	using i16mat4x2_t pf_alignas(int16_t) = matrix<int16_t, 4, 2>;
+	using i32mat4x2_t pf_alignas(int32_t) = matrix<int32_t, 4, 2>;
+	using i64mat4x2_t pf_alignas(int64_t) = matrix<int64_t, 4, 2>;
 
-	/// MATH: imat4x2u_t
-	using i8mat4x2u_t	 = matrix<int8_t, 4, 2, SIMD_UNALIGNED>;
-	using i16mat4x2u_t = matrix<int16_t, 4, 2, SIMD_UNALIGNED>;
-	using i32mat4x2u_t = matrix<int32_t, 4, 2, SIMD_UNALIGNED>;
-	using i64mat4x2u_t = matrix<int64_t, 4, 2, SIMD_UNALIGNED>;
+	/// MATH: s_imat4x2_t
+	using s_i32mat4x2_t pf_alignas_n(int32_t, 2) = matrix<uint32_t, 4, 2>;
+	using s_i64mat4x2_t pf_alignas_n(int64_t, 2) = matrix<uint64_t, 4, 2>;
 
 	/// MATH: fmat4x2_t
-	using f32mat4x2_t = matrix<float32_t, 4, 2, SIMD_ALIGNED>;
-	using f64mat4x2_t = matrix<float64_t, 4, 2, SIMD_ALIGNED>;
+	using f32mat4x2_t pf_alignas(float32_t) = matrix<float32_t, 4, 2>;
+	using f64mat4x2_t pf_alignas(float64_t) = matrix<float64_t, 4, 2>;
 
-	/// MATH: fmat4x2u_t
-	using f32mat4x2u_t = matrix<float32_t, 4, 2, SIMD_UNALIGNED>;
-	using f64mat4x2u_t = matrix<float64_t, 4, 2, SIMD_UNALIGNED>;
+	/// MATH: s_fmat4x2_t
+	using s_f32mat4x2_t pf_alignas_n(float32_t, 2) = matrix<float32_t, 4, 2>;
+	using s_f64mat4x2_t pf_alignas_n(float64_t, 2) = matrix<float64_t, 4, 2>;
 }
 
 #endif // !PULSAR_MATH_MATRIX4X2_INL
