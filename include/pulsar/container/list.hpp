@@ -66,7 +66,7 @@ namespace pul
 	template <typename _Ty>
 	class forward_view
 	{
-	pf_static_assert(!std::is_const_v<_Ty>, "_Ty mustn't be a const type!");
+	pf_assert_static(!std::is_const_v<_Ty>, "_Ty mustn't be a const type!");
 
 	public:
 		using value_t					 = std::remove_const_t<_Ty>;
@@ -93,7 +93,7 @@ namespace pul
 					 typename _Allocator = allocator_default>
 	class forward_list
 	{
-	pf_static_assert(!std::is_const_v<_Ty>, "_Ty mustn't be a const type!");
+	pf_assert_static(!std::is_const_v<_Ty>, "_Ty mustn't be a const type!");
 
 	public:
 		using value_t					 = _Ty;

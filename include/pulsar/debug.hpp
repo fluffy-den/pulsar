@@ -17,6 +17,7 @@
 #include "pulsar/chrono.hpp"
 
 // Include: Fmt
+#include "fmt/ranges.h"
 #include "fmt/format.h"
 
 // Include: C++
@@ -31,13 +32,12 @@ namespace pul
 		invalid_argument,
 		domain_error,
 		length_error,
-		logic_error,
 		out_of_range,
-		runtime_error,
+		logic_error,
 		range_error,
-		future_error,
 		overflow_error,
 		underflow_error,
+		runtime_error,
 		bad_alloc,
 		unknown = static_cast<uint32_t>(-1)
 	};
@@ -67,24 +67,24 @@ namespace dbg_flags
 	pf_decl_constexpr uint32_t dump_with_data_segs										= 0x00000001;	// Dump with data sections of all modules (global variables).
 	pf_decl_constexpr uint32_t dump_with_full_memory									= 0x00000002;	// Dump with all accessible memory of the process.
 	pf_decl_constexpr uint32_t dump_with_handle_data									= 0x00000004;	// Dump with high-level information of the OS.
-	pf_decl_constexpr uint32_t dump_with_filter_memory								= 0x00000008;	// Dump with stack and backing store memory filtered.
+	pf_decl_constexpr uint32_t dump_filter_memory											= 0x00000008;	// Dump with stack and backing store memory filtered.
 	pf_decl_constexpr uint32_t dump_with_scan_memory									= 0x00000010;	// Dump with stack and backing store memory scanned for reference on modules.
 	pf_decl_constexpr uint32_t dump_with_unloaded_modules							= 0x00000020;	// Dump with unloaded modules information.
 	pf_decl_constexpr uint32_t dump_with_indirectly_referenced_memory = 0x00000040;	// Dump with pages referenced by locals or other stack memory.
 	pf_decl_constexpr uint32_t dump_with_filter_module_paths					= 0x00000080;	// Dump with module path filtering such as user names or important directories.
 	pf_decl_constexpr uint32_t dump_with_process_thread_data					= 0x00000100;	// Dump with complete per-process and per-thread information from OS.
-	pf_decl_constexpr uint32_t dump_with_private_readwrite_memory			= 0x00000200;	// Dump with scan of virtual address space with read and write access.
+	pf_decl_constexpr uint32_t dump_with_private_read_write_memory		= 0x00000200;	// Dump with scan of virtual address space with read and write access.
 	pf_decl_constexpr uint32_t dump_without_auxiliary_state						= 0x00000400;	// Dump without auxiliary-supported memory gathering.
 	pf_decl_constexpr uint32_t dump_with_full_auxiliary_state					= 0x00000800;	// Dump with full auxiliary data.
-	pf_decl_constexpr uint32_t dump_with_private_write								= 0x00001000;	// Dump with virtual address with write only access.
-	pf_decl_constexpr uint32_t dump_without_inaccessible_memory				= 0x00002000;	// Dump without inaccessible memory.
+	pf_decl_constexpr uint32_t dump_with_private_read_write						= 0x00001000;	// Dump with virtual address with write only access.
+	pf_decl_constexpr uint32_t dump_ignore_inaccessible_memory				= 0x00002000;	// Dump without inaccessible memory.
 	pf_decl_constexpr uint32_t dump_with_token_information						= 0x00004000;	// Dump with security tokens for user data.
 	pf_decl_constexpr uint32_t dump_with_module_headers								= 0x00008000;	// Dump with module header related data.
-	pf_decl_constexpr uint32_t dump_with_filter_triage								= 0x00010000;	// Dump with filter triage related data.
+	pf_decl_constexpr uint32_t dump_filter_triage											= 0x00010000;	// Dump with filter triage related data.
 	pf_decl_constexpr uint32_t dump_with_avx_state_context						= 0x00020000;	// Dump with avx state context.
 	pf_decl_constexpr uint32_t dump_with_ipt_trace										= 0x00040000;	// Dump with Intel processor trace related data.
-	pf_decl_constexpr uint32_t dump_with_inaccessible_partial_pages		= 0x00080000;	// Dump with inaccessible partial pages.
-	pf_decl_constexpr uint32_t dump_with_valid_type_flags							= 0x00100000;	// Dump with valid type flags.
+	pf_decl_constexpr uint32_t dump_scan_inaccessible_partial_pages		= 0x00080000;	// Dump with inaccessible partial pages.
+	pf_decl_constexpr uint32_t dump_valid_type_flags									= 0x00100000;	// Dump with valid type flags.
 }
 
 	// Constants
@@ -100,28 +100,35 @@ namespace dbg_flags
 	{
 	public:
 		/// Constructors
-		pf_decl_constexpr dbg_u8string_view()
-		pf_attr_noexcept
+		pf_decl_constexpr pf_decl_inline dbg_u8string_view() pf_attr_noexcept
 		: store_(nullptr)
 		, count_(0)
 		{}
-		pf_decl_constexpr dbg_u8string_view(
+		pf_decl_constexpr pf_decl_inline dbg_u8string_view(
+			nullptr_t)
+			: dbg_u8string_view()
+		{}
+		pf_decl_constexpr pf_decl_inline dbg_u8string_view(
 			const char_t * __str,
 			size_t __count) pf_attr_noexcept
 		: store_(__str)
 		, count_(__count)
 		{}
-		pf_decl_constexpr dbg_u8string_view(
+		pf_decl_constexpr pf_decl_inline dbg_u8string_view(
 			const char_t * __str) pf_attr_noexcept
 		: store_(__str)
-		, count_(0)
-		{
-			for (; this->store_[this->count_] != '\0'; ++this->count_);
-		}
+		, count_(std::strlen(__str))
+		{}
+		dbg_u8string_view(
+			dbg_u8string_view const&) = default;
+		dbg_u8string_view(
+			dbg_u8string_view &&) = default;
 
 		/// Operator =
-		pf_decl_constexpr dbg_u8string_view(
+		dbg_u8string_view &operator=(
 			dbg_u8string_view const &) = default;
+		dbg_u8string_view &operator=(
+			dbg_u8string_view &&) = default;
 
 		/// Operator[]
 		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const char_t &
@@ -131,17 +138,37 @@ namespace dbg_flags
 			return this->store_[__index];
 		}
 
-		/// Begin/End
+		/// Begin
 		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline const char_t*
 		begin() const pf_attr_noexcept
 		{
 			return &this->store_[0];
 		}
 		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline const char_t*
+		cbegin() const pf_attr_noexcept
+		{
+			return &this->store_[0];
+		}
+
+		/// End
+		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline const char_t*
 		end() const pf_attr_noexcept
 		{
 			return &this->store_[0] + this->count_;
 		}
+		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline const char_t*
+		cend() const pf_attr_noexcept
+		{
+			return &this->store_[0] + this->count_;
+		}
+
+		/// Data
+		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline const char_t*
+		data() const pf_attr_noexcept
+		{
+			return &this->store_[0];
+		}
+
 
 		/// Size
 		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline size_t
@@ -169,47 +196,71 @@ namespace dbg_flags
 	pf_decl_constexpr void __assign_view(
 		dbg_u8string_view __v) pf_attr_noexcept
 	{
-		for (size_t i = 0; i < this->count_; ++i) this->store_[i] = __v[i];
+		this->shrink(__v.size());
+		std::memcpy(this->data(), __v.data(), this->count_);
 	}
 
 	public:
 		/// Constructors
-		pf_decl_constexpr dbg_u8string() pf_attr_noexcept
-		: store_(nullptr)
-		, count_(0)
+		pf_decl_constexpr pf_decl_inline dbg_u8string() pf_attr_noexcept
+		: count_(0)
+		, store_(nullptr)
+
 		{}
-		pf_decl_constexpr dbg_u8string(
+		pf_decl_constexpr pf_decl_inline dbg_u8string(
+			nullptr_t) pf_attr_noexcept
+		: dbg_u8string()
+		{}
+		pf_decl_constexpr pf_decl_inline dbg_u8string(
+			const char_t * __str,
+			size_t __count)
+			: count_(__count)
+			, store_(union_cast<char_t*>(allocate(__count + 1, align_val_t(32), 0)))
+		{
+			std::memcpy(this->store_, __str, __count);
+			*this->end() = '\0';
+		}
+		pf_decl_constexpr pf_decl_inline dbg_u8string(
+			const char_t * __str)
+			: count_(std::strlen(__str))
+			, store_(union_cast<char_t*>(allocate(this->count_ + 1, align_val_t(32), 0)))
+		{
+			std::memcpy(this->store_, __str, this->count_);
+			*this->end() = '\0';
+		}
+		pf_decl_constexpr pf_decl_inline dbg_u8string(
 			size_t __count,
 			char_t __val) pf_attr_noexcept
-		: store_(union_cast<char_t*>(allocate(__count, align_val_t(32), 0)))
-		, count_(__count)
+		: count_(__count)
+		, store_(union_cast<char_t*>(allocate(__count + 1, align_val_t(32), 0)))
 		{
-			std::memset(this->store_, __val, __count);
+			std::memset(this->store_, __val, __count + 1);
 		}
 		dbg_u8string(
 			dbg_u8string &&) = default;
 		dbg_u8string(
 			dbg_u8string const &) = default;
-		pf_decl_constexpr dbg_u8string(
+		pf_decl_constexpr pf_decl_inline dbg_u8string(
 			dbg_u8string_view __v) pf_attr_noexcept
-		: store_(union_cast<char_t*>(allocate(__v.count(), align_val_t(32), 0)))
-		, count_(__v.count())
+		: count_(__v.count())
+		, store_(union_cast<char_t*>(allocate(__v.count() + 1, align_val_t(32), 0)))
 		{
 			this->__assign_view(__v);
+			*this->end() = '\0';
 		}
 
 		/// Destructor
-		pf_decl_constexpr ~dbg_u8string() pf_attr_noexcept
+		pf_decl_constexpr pf_decl_inline ~dbg_u8string() pf_attr_noexcept
 		{
 			deallocate(this->store_);
 		}
 
 		/// Operator =
-		pf_decl_constexpr dbg_u8string &operator=(
+		pf_decl_constexpr pf_decl_inline dbg_u8string &operator=(
 			dbg_u8string const &) = default;
-		pf_decl_constexpr dbg_u8string &operator=(
+		pf_decl_constexpr pf_decl_inline dbg_u8string &operator=(
 			dbg_u8string &&) = default;
-		pf_decl_constexpr dbg_u8string &operator=(
+		pf_decl_constexpr pf_decl_inline dbg_u8string &operator=(
 			dbg_u8string_view __v) pf_attr_noexcept
 		{
 			this->count_ = 0;
@@ -233,7 +284,7 @@ namespace dbg_flags
 		}
 
 		/// Shrink
-		pf_decl_constexpr void shrink(
+		pf_decl_constexpr pf_decl_inline void shrink(
 			size_t __c) pf_attr_noexcept
 		{
 			this->store_ = union_cast<char_t*>(reallocate(this->store_, this->count_, __c, align_val_t(32), 0));
@@ -261,6 +312,30 @@ namespace dbg_flags
 			return &this->store_[0] + this->count_;
 		}
 
+		/// Data
+		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline char_t*
+		data() pf_attr_noexcept
+		{
+			return &this->store_[0];
+		}
+		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline const char_t*
+		data() const pf_attr_noexcept
+		{
+			return &this->store_[0];
+		}
+
+		/// Size
+		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline size_t
+		size() const pf_attr_noexcept
+		{
+			return this->count_;
+		}
+		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline size_t
+		count() const pf_attr_noexcept
+		{
+			return this->count_;
+		}
+
 		/// Operator (View)
 		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
 		operator dbg_u8string_view() const pf_attr_noexcept
@@ -269,8 +344,8 @@ namespace dbg_flags
 		}
 
 	private:
-		char_t *store_;
 		size_t count_;
+		char_t *store_;
 	};
 
 	// Format
@@ -290,7 +365,7 @@ namespace dbg_flags
 		name() const pf_attr_noexcept = 0;
 
 		/// Message
-		pf_decl_virtual dbg_u8string_view
+		pf_decl_virtual dbg_u8string
 		message(
 			uint32_t __val) const pf_attr_noexcept = 0;
 	};
@@ -305,28 +380,28 @@ namespace dbg_flags
 		pf_decl_constexpr dbg_category_generic_t() pf_attr_noexcept = default;
 
 		/// Name
-		pf_decl_constexpr pf_decl_inline dbg_u8string_view
+		pf_decl_inline dbg_u8string_view
 		name() const pf_attr_noexcept
 		{
 			return "generic";
 		}
 
 		/// Message
-		pf_decl_constexpr pf_decl_inline dbg_u8string_view
+		pf_decl_inline dbg_u8string
 		message(
 			uint32_t __val) const pf_attr_noexcept pf_attr_override
 		{
 			switch(union_cast<errv>(__val))
 			{
-			case errv::invalid_argument:  return "Invalid argument";
-			case errv::domain_error:      return "Domain error";
-			case errv::length_error:      return "Length error";
-			case errv::out_of_range:      return "Out of range";
-			// TODO: Add missing
-			case errv::future_error:      return "Future error";
-			case errv::overflow_error:    return "Overflow error";
-			case errv::underflow_error:   return "Underflow error";
-			case errv::bad_alloc:         return "Bad alloc error";
+			case errv::invalid_argument: return "Invalid argument";
+			case errv::domain_error:     return "Domain error";
+			case errv::length_error:     return "Length error";
+			case errv::out_of_range:     return "Out of range";
+			case errv::logic_error:      return "Logic error";
+			case errv::overflow_error:   return "Overflow error";
+			case errv::underflow_error:  return "Underflow error";
+			case errv::runtime_error:    return "Runtime error";
+			case errv::bad_alloc:        return "Bad alloc";
 			default: return "Unknown";
 			};
 		}
@@ -336,7 +411,7 @@ namespace dbg_flags
 	pf_decl_static pf_decl_inline dbg_category_generic_t dbg_category_generic_instance;
 
 	/// Generic -> Retrieve
-	pf_decl_inline pf_decl_constexpr dbg_category*
+	pf_decl_inline dbg_category*
 	dbg_category_generic() pf_attr_noexcept
 	{
 		return &dbg_category_generic_instance;
@@ -353,23 +428,16 @@ namespace dbg_flags
 		pf_decl_constexpr dbg_category_system_t() pf_attr_noexcept = default;
 
 		/// Name
-		pf_decl_constexpr pf_decl_inline dbg_u8string_view
+		pf_hint_nodiscard pf_decl_inline dbg_u8string_view
 		name() const pf_attr_noexcept
 		{
 			return "system";
 		}
 
 		/// Message
-		pf_decl_constexpr pf_decl_inline dbg_u8string_view
+		pf_hint_nodiscard pulsar_api dbg_u8string
 		message(
-			uint32_t __val) const pf_attr_noexcept pf_attr_override
-		{
-			switch(__val)
-			{
-			// TODO: Windows errors
-			default: return "Unknown";
-			};
-		}
+			uint32_t __val) const pf_attr_noexcept pf_attr_override;
 	};
 
 	/// System -> Instance
@@ -499,7 +567,7 @@ namespace dbg_flags
 		}
 
 		/// Timer
-		pf_hint_nodiscard pf_decl_inline nanosecond_t
+		pf_hint_nodiscard pf_decl_inline nanoseconds_t
 		elapsed_time() const pf_attr_noexcept
 		{
 			return high_resolution_clock_t::now() - this->timer_;
@@ -553,7 +621,7 @@ namespace dbg_flags
 		dbg_type __type,
 		dbg_level __level,
 		dbg_u8string_format<_Args...> __fmt,
-		_Args &&... __args)
+		_Args && ... __args)
 	{
 		// 1. Level
 		if (__level < logger.level()) return;
@@ -588,7 +656,7 @@ namespace dbg_flags
 	pf_hint_nodiscard pf_decl_static dbg_u8string
 	__dbg_format_message(	// Message
 		dbg_u8string_format<_Args...> __fmt,
-		_Args &&... __args) pf_attr_noexcept
+		_Args && ... __args) pf_attr_noexcept
 	{
 		// 1. Format
 		dbg_u8string str(fmt::formatted_size(__fmt, std::forward<_Args>(__args)...) + 1, '\0');
@@ -602,7 +670,7 @@ namespace dbg_flags
 	pf_hint_nodiscard pf_decl_static dbg_u8string
 	__dbg_format_error_message(	// Assertion
 		dbg_u8string_format<_Args...> __fmt,
-		_Args &&... __args) pf_attr_noexcept
+		_Args && ... __args) pf_attr_noexcept
 	{
 		// 1. Format
 		dbg_u8string str(DBG_FMT_BUFFER_SIZE, '\0');
@@ -664,7 +732,7 @@ namespace dbg_flags
 #define pf_throw(cat, val, bit, format, ...) pul::__dbg_throw(cat, pul::union_cast<uint32_t>(val), bit, pul::__dbg_format_message(format __VA_OPT__( ,) __VA_ARGS__))
 #define pf_throw_if(c, cat, val, bit, format, ...) if(pf_unlikely(c)) pf_throw(cat, val, bit, format __VA_OPT__( ,) __VA_ARGS__)
 #ifdef PF_DEBUG
-#define pf_assert(c, ...) if(pf_unlikely(!c)) pul::__dbg_assert(pul::__dbg_format_error_message(__VA_ARGS__))
+#define pf_assert(c, ...) if(!c) pul::__dbg_assert(pul::__dbg_format_error_message(__VA_ARGS__))
 #define pf_assert_nodiscard(c, ...) pf_assert(c __VA_OPT__( ,) __VA_ARGS__)
 #else
 #define pf_assert(c, ...)

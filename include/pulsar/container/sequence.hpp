@@ -32,7 +32,7 @@ namespace pul
 		typename _Ty>
 	class sequence_view
 	{
-	pf_static_assert(!std::is_const_v<_Ty>, "_Ty mustn't be a const type!");
+	pf_assert_static(!std::is_const_v<_Ty>, "_Ty mustn't be a const type!");
 
 	public:
 		using value_t									 = const _Ty;
@@ -66,7 +66,7 @@ namespace pul
 		sequence_view(sequence_view<_Ty> &&)			= default;
 
 		/// Destructor
-		~sequence_view() default;
+		~sequence_view() = default;
 
 		/// Begin
 		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_iterator_t
@@ -280,7 +280,7 @@ namespace pul
 		size_t __c)
 	{
 		const size_t c = this->count_;
-		if(c > __c) pf_hint_unlikely return;
+		if(pf_unlikely(c > __c)) return;
 		__c -= c;
 		_Ty *se = this->store_ + this->count_;
 		_Ty *e	= se + __c;
@@ -296,7 +296,7 @@ namespace pul
 		_Ty const &__val)
 	{
 		const size_t c = this->count_;
-		if(c > __c) pf_hint_unlikely return;
+		if(pf_unlikely(c > __c)) return;
 		__c -= c;
 		_Ty *se = this->store_ + this->count_;
 		_Ty *e	= se + __c;
@@ -322,7 +322,7 @@ namespace pul
 		sequence(
 			align_val_t __align			 = union_cast<align_val_t>(alignof(_Ty)),
 			_Magnifier &&__magnifier = magnifier_default(),
-			_Allocator &&__allocator = allocator_malloc()) pf_attr_noexcept
+			_Allocator &&__allocator = allocator_default()) pf_attr_noexcept
 			: store_(nullptr)
 			, count_(0)
 			, memCount_(0)
@@ -336,7 +336,7 @@ namespace pul
 			_Ty const &__value,
 			align_val_t __align			 = union_cast<align_val_t>(alignof(_Ty)),
 			_Magnifier &&__magnifier = magnifier_default(),
-			_Allocator &&__allocator = allocator_malloc()) pf_attr_noexcept
+			_Allocator &&__allocator = allocator_default()) pf_attr_noexcept
 		requires(std::is_copy_constructible_v<_Ty>)
 			: sequence(
 				__align,
@@ -352,7 +352,7 @@ namespace pul
 			_InIteratorTy __end,
 			align_val_t __align			 = union_cast<align_val_t>(alignof(_Ty)),
 			_Magnifier &&__magnifier = magnifier_default(),
-			_Allocator &&__allocator = allocator_malloc())
+			_Allocator &&__allocator = allocator_default())
 		requires(
 			std::is_copy_constructible_v<_Ty> &&
 			std::is_same_v<std::remove_cvref_t<decltype(*std::declval<_InIteratorTy>())>, _Ty>)
@@ -368,7 +368,7 @@ namespace pul
 			initializer_list<_Ty> __il,
 			align_val_t __align			 = union_cast<align_val_t>(alignof(_Ty)),
 			_Magnifier &&__magnifier = magnifier_default(),
-			_Allocator &&__allocator = allocator_malloc())
+			_Allocator &&__allocator = allocator_default())
 			: sequence(
 				__il.begin(),
 				__il.end(),
@@ -408,7 +408,7 @@ namespace pul
 			sequence<_Ty, _Magnifier, _Allocator> const &__r,
 			align_val_t __align,
 			_Magnifier &&__magnifier,
-			_Allocator &&__allocator = allocator_malloc())
+			_Allocator &&__allocator = allocator_default())
 		requires(std::is_copy_constructible_v<_Ty>)
 			: store_(nullptr)
 			, count_(0)
@@ -482,7 +482,7 @@ namespace pul
 			sequence<_Ty, _MagnifierR, _AllocatorR> const &__r)
 		requires(std::is_copy_constructible_v<_Ty>)
 		{
-			if(this == &__r) pf_hint_unlikely return *this;
+			if(pf_unlikely(this == &__r)) return *this;
 			this->reserve(__r.count());
 			this->insert(this->begin(), __r.begin(), __r.end());
 			this->resize(__r.count());
@@ -493,7 +493,7 @@ namespace pul
 		operator =(
 			sequence<_Ty, _MagnifierR, _AllocatorR> &&__r)
 		{
-			if(this == &__r) pf_hint_unlikely return *this;
+			if(pf_unlikely(this == &__r)) return *this;
 			this->clear();
 			this->store_		= __r.store_;
 			__r.store_			= nullptr;
@@ -934,7 +934,7 @@ namespace pul
 			std::is_same_v<std::remove_cvref_t<decltype(*std::declval<_InIteratorTy>())>, _Ty>)
 		{
 			const size_t s = sizeof_s(__beg, __end);
-			const size_t c = s / sizeof(value_typeof_t<_InIteratorTy>);
+			const size_t c = s / sizeof(value_type_t<_InIteratorTy>);
 			if(this->count_ + c > this->memCount_)
 			{
 				size_t o = countof(this->begin(), __it);

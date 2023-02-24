@@ -167,7 +167,7 @@ target_include_directories(
   PRIVATE src
 )
 target_link_libraries(
-  ${PULSAR_LIBRARY_NAME} PRIVATE imagehlp
+  ${PULSAR_LIBRARY_NAME} PRIVATE imagehlp dbghelp
 )
 
 #
