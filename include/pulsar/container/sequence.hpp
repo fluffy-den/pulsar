@@ -17,144 +17,296 @@
 // Pulsar
 namespace pul
 {
+	/// SEQUENCE: Types
+	template <
+		typename _Ty>
+	class sequence_view;
+	template <
+		typename _Ty,
+		typename _Magnifier = magnifier_default,
+		typename _Allocator = allocator_default>
+	class sequence;
 
-  /// SEQUENCE: View
-  template <
-    typename _Ty>
-  class sequence_view
-  {
-    pf_static_assert(!std::is_const_v<_Ty>, "_Ty mustn't be a const type!");
+	/// SEQUENCE: View
+	template <
+		typename _Ty>
+	class sequence_view
+	{
+	pf_static_assert(!std::is_const_v<_Ty>, "_Ty mustn't be a const type!");
 
-  public:
-    /// Constructors
+	public:
+		using value_t									 = const _Ty;
+		using const_iterator_t				 = const_iterator<_Ty>;
+		using const_reverse_iterator_t = reverse_iterator<const_iterator_t>;
 
-    /// Destructor
+		/// Constructors
+		pf_decl_inline pf_decl_constexpr sequence_view() pf_attr_noexcept
+			: begin_(nullptr)
+			, count_(0)
+		{}
+		pf_decl_inline pf_decl_constexpr sequence_view(nullptr_t) pf_attr_noexcept
+			: sequence_view()
+		{}
+		pf_decl_inline pf_decl_constexpr sequence_view(
+			const _Ty *__begin,
+			size_t __count) pf_attr_noexcept
+			: begin_(__begin)
+			, count_(__count)
+		{}
+		template <typename _Iterable>
+		pf_decl_inline pf_decl_constexpr sequence_view(
+			_Iterable const &__ia) pf_attr_noexcept
+		requires(is_iterable_v<_Iterable>
+						 && std::is_same_v<typename _Iterable::value_t, value_t>
+						 && is_sequence_iterator_v<typename _Iterable::const_iterator_t>)
+			: begin_(__ia.begin())
+			, count_(__ia.count())
+		{}
+		sequence_view(sequence_view<_Ty> const &) = default;
+		sequence_view(sequence_view<_Ty> &&)			= default;
 
-    /// Begin / End
+		/// Destructor
+		~sequence_view() default;
 
-    /// Data
-
-    /// Size
-
-    /// Count
-
-    /// Operator =
-
-    /// Operator ==
-
-    /// Operator (const _Ty*)
-
-    /// Operator (Bool)
-
-  private:
-    const _Ty *beg_;
-    size_t count_;
-  };
-
-  /// SEQUENCE:
-  template <
-    typename _Ty,
-    typename _Magnifier,
-    typename _Allocator>
-  class sequence
-  {
-    /// Reallocate
-		pf_decl_constexpr bool __reallocate_no_check(
-			size_t __s)
+		/// Begin
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_iterator_t
+		begin() const pf_attr_noexcept
 		{
-			const size_t cs = this->count();
-			const size_t cm = __s / sizeof(_Ty);
-			bool r					= false;
-			if(std::is_constant_evaluated())
+			return this->begin_;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_iterator_t
+		cbegin() const pf_attr_noexcept
+		{
+			return this->begin_;
+		}
+
+		/// End
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_iterator_t
+		end() const pf_attr_noexcept
+		{
+			return this->begin_ + this->count_;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_iterator_t
+		cend() const pf_attr_noexcept
+		{
+			return this->begin_ + this->count_;
+		}
+
+		/// Reverse Begin
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_reverse_iterator_t
+		rbegin() const pf_attr_noexcept
+		{
+			return this->begin_ + (this->count_ - 1);
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_reverse_iterator_t
+		crbegin() const pf_attr_noexcept
+		{
+			return this->begin_ + (this->count_ - 1);
+		}
+
+		/// Reverse End
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_reverse_iterator_t
+		rend() const pf_attr_noexcept
+		{
+			return this->end_ - 1;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_reverse_iterator_t
+		crend() const pf_attr_noexcept
+		{
+			return this->end_ - 1;
+		}
+
+		/// Data
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t*
+		data() const pf_attr_noexcept
+		{
+			return this->begin_;
+		}
+
+		/// Size
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
+		size() const pf_attr_noexcept
+		{
+			return this->count_ * sizeof(_Ty);
+		}
+
+		/// Count
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
+		count() const pf_attr_noexcept
+		{
+			return this->count_;
+		}
+
+		/// Operator =
+		sequence_view<_Ty> &
+		operator=(
+			sequence_view<_Ty> const &) = default;
+		sequence_view<_Ty> &
+		operator=(
+			sequence_view<_Ty> &&) = default;
+		template <typename _Iterable>
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr sequence_view<_Ty> &
+		operator=(
+			_Iterable const &__ia) pf_attr_noexcept
+		requires(is_iterable_v<_Iterable>
+						 && std::is_same_v<typename _Iterable::value_t, value_t>
+						 && is_sequence_iterator_v<typename _Iterable::const_iterator_t>)
+		{
+			this->begin_ = __ia.begin();
+			this->count_ = __ia.count();
+			return *this;
+		}
+
+		/// Operator ==
+		template <typename _Iterable>
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr bool
+		operator ==(
+			_Iterable const &__ia) const pf_attr_noexcept
+		requires(is_iterable_v<_Iterable>
+						 && std::is_same_v<typename _Iterable::value_t, value_t>
+						 && is_sequence_iterator_v<typename _Iterable::const_iterator_t>)
+		{
+			if (this->count_ != __ia.count()) return false;
+			for (auto b = this->begin(), e = this->end(), ib = __ia.begin(); b != e; ++b, ++ib)
 			{
-				if(!this->store_)
-				{
-					this->store_ = static_cast<_Ty *>(new _Ty[cm]);
-				}
-				else
-				{
-					_Ty *ptr = static_cast<_Ty *>(new _Ty[cm]);
-					std::memmove(ptr, this->store_, std::min(cs, cm) * sizeof(_Ty));
-					delete[] this->store_;
-					this->store_ = ptr;
-					r						 = true;
-				}
+				if(*b != *ib) return false;
+			}
+			return true;
+		}
+		template <typename _Iterable>
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr bool
+		operator !=(
+			_Iterable const &__ia) const pf_attr_noexcept
+		requires(is_iterable_v<_Iterable>
+						 && std::is_same_v<typename _Iterable::value_t, value_t>
+						 && is_sequence_iterator_v<typename _Iterable::const_iterator_t>)
+		{
+			return !(*this == __ia);
+		}
+
+		/// Operator (value_t*)
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator value_t*() pf_attr_noexcept
+		{
+			return this->begin_;
+		}
+
+		/// Operator (Bool)
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator bool() pf_attr_noexcept
+		{
+			return this->begin_;
+		}
+
+	private:
+		value_t *begin_;
+		size_t count_;
+	};
+
+	/// SEQUENCE:
+	template <
+		typename _Ty,
+		typename _Magnifier,
+		typename _Allocator>
+	class sequence// TODO: Modify!
+	{
+	/// Reallocate
+	pf_decl_constexpr bool __reallocate_no_check(
+		size_t __s)
+	{
+		const size_t cs = this->count();
+		const size_t cm = __s / sizeof(_Ty);
+		bool r					= false;
+		if(std::is_constant_evaluated())
+		{
+			if(!this->store_)
+			{
+				this->store_ = union_cast<_Ty*>(new _Ty[cm]);
 			}
 			else
 			{
-				if(!this->store_)
-				{
-					this->store_ = static_cast<_Ty *>(this->allocator_.allocate(__s, this->memAlign_, 0));
-				}
-				else
-				{
-					_Ty *p = this->store_;
-					this->store_ = static_cast<_Ty *>(this->allocator_.reallocate(this->store_, __s, this->memAlign_, 0));
-					r						 = (p == this->store_);
-				}
+				_Ty *ptr = union_cast<_Ty*>(new _Ty[cm]);
+				std::memmove(ptr, this->store_, std::min(cs, cm) * sizeof(_Ty));
+				delete[] this->store_;
+				this->store_ = ptr;
+				r						 = true;
 			}
-			this->count_		= cs;
-			this->memCount_ = cm;
-			return r;
 		}
-		pf_decl_constexpr bool __reallocate(
-			size_t __s)
+		else
 		{
-			__s = this->magnifier_(__s);
-			if(__s > this->capacity())
+			if(!this->store_)
 			{
-				return this->__reallocate_no_check(__s);
-			}
-			return false;
-		}
-		pf_decl_constexpr bool __reallocate(
-			size_t __s,
-			align_val_t __na)
-		{
-			if(__na != this->memAlign_)
-			{
-				this->memAlign_ = __na;
-				return this->__reallocate_no_check(__s);
+				this->store_ = union_cast<_Ty*>(this->allocator_.allocate(__s, this->memAlign_, 0));
 			}
 			else
 			{
-				return this->__reallocate(__s);
+				_Ty *p = this->store_;
+				this->store_ = union_cast<_Ty*>(this->allocator_.reallocate(this->store_, __s, this->memAlign_, 0));
+				r						 = (p == this->store_);
 			}
-			return false;
 		}
+		this->count_		= cs;
+		this->memCount_ = cm;
+		return r;
+	}
+	pf_decl_constexpr bool __reallocate(
+		size_t __s)
+	{
+		__s = this->magnifier_(__s);
+		if(__s > this->capacity())
+		{
+			return this->__reallocate_no_check(__s);
+		}
+		return false;
+	}
+	pf_decl_constexpr bool __reallocate(
+		size_t __s,
+		align_val_t __na)
+	{
+		if(__na != this->memAlign_)
+		{
+			this->memAlign_ = __na;
+			return this->__reallocate_no_check(__s);
+		}
+		else
+		{
+			return this->__reallocate(__s);
+		}
+		return false;
+	}
 
-		/// Resize
-		pf_decl_constexpr void __resize_default_construct(
-			size_t __c)
+	/// Resize
+	pf_decl_constexpr void __resize_default_construct(
+		size_t __c)
+	{
+		const size_t c = this->count_;
+		if(c > __c) pf_hint_unlikely return;
+		__c -= c;
+		_Ty *se = this->store_ + this->count_;
+		_Ty *e	= se + __c;
+		this->count_ += countof(se, e);
+		while(se != e)
 		{
-			const size_t c = this->count_;
-			if(c > __c) pf_hint_unlikely return;
-			__c -= c;
-			_Ty *se = this->store_ + this->count_;
-			_Ty *e	= se + __c;
-			this->count_ += countof(se, e);
-			while(se != e)
-			{
-				construct_at(se);
-				++se;
-			}
+			construct_at(se);
+			++se;
 		}
-		pf_decl_constexpr void __resize_copy_construct(
-			size_t __c,
-			_Ty const &__val)
+	}
+	pf_decl_constexpr void __resize_copy_construct(
+		size_t __c,
+		_Ty const &__val)
+	{
+		const size_t c = this->count_;
+		if(c > __c) pf_hint_unlikely return;
+		__c -= c;
+		_Ty *se = this->store_ + this->count_;
+		_Ty *e	= se + __c;
+		this->count_ += countof(se, e);
+		while(se != e)
 		{
-			const size_t c = this->count_;
-			if(c > __c) pf_hint_unlikely return;
-			__c -= c;
-			_Ty *se = this->store_ + this->count_;
-			_Ty *e	= se + __c;
-			this->count_ += countof(se, e);
-			while(se != e)
-			{
-				construct_at(se, __val);
-				++se;
-			}
+			construct_at(se, __val);
+			++se;
 		}
+	}
 
 	public:
 		using value_t									 = _Ty;
@@ -167,8 +319,8 @@ namespace pul
 
 		/// Constructors
 		pf_decl_constexpr
-		forward_sequence(
-			align_val_t __align			 = static_cast<align_val_t>(alignof(_Ty)),
+		sequence(
+			align_val_t __align			 = union_cast<align_val_t>(alignof(_Ty)),
 			_Magnifier &&__magnifier = magnifier_default(),
 			_Allocator &&__allocator = allocator_malloc()) pf_attr_noexcept
 			: store_(nullptr)
@@ -179,14 +331,14 @@ namespace pul
 			, allocator_(std::move(__allocator))
 		{}
 		pf_decl_constexpr pf_decl_explicit
-		forward_sequence(
+		sequence(
 			size_t __n,
 			_Ty const &__value,
-			align_val_t __align			 = static_cast<align_val_t>(alignof(_Ty)),
+			align_val_t __align			 = union_cast<align_val_t>(alignof(_Ty)),
 			_Magnifier &&__magnifier = magnifier_default(),
 			_Allocator &&__allocator = allocator_malloc()) pf_attr_noexcept
 		requires(std::is_copy_constructible_v<_Ty>)
-			: forward_sequence(
+			: sequence(
 				__align,
 				std::move(__magnifier),
 				std::move(__allocator))
@@ -195,16 +347,16 @@ namespace pul
 		}
 		template <typename _InIteratorTy>
 		pf_decl_constexpr
-		forward_sequence(
+		sequence(
 			_InIteratorTy __beg,
 			_InIteratorTy __end,
-			align_val_t __align			 = static_cast<align_val_t>(alignof(_Ty)),
+			align_val_t __align			 = union_cast<align_val_t>(alignof(_Ty)),
 			_Magnifier &&__magnifier = magnifier_default(),
 			_Allocator &&__allocator = allocator_malloc())
 		requires(
-			std::is_copy_constructible_v<_Ty>&&
+			std::is_copy_constructible_v<_Ty> &&
 			std::is_same_v<std::remove_cvref_t<decltype(*std::declval<_InIteratorTy>())>, _Ty>)
-			: forward_sequence(
+			: sequence(
 				__align,
 				std::move(__magnifier),
 				std::move(__allocator))
@@ -212,12 +364,12 @@ namespace pul
 			this->insert_back(__beg, __end);
 		}
 		pf_decl_constexpr
-		forward_sequence(
-			initializer_list<_Ty> const &__il,
-			align_val_t __align			 = static_cast<align_val_t>(alignof(_Ty)),
+		sequence(
+			initializer_list<_Ty> __il,
+			align_val_t __align			 = union_cast<align_val_t>(alignof(_Ty)),
 			_Magnifier &&__magnifier = magnifier_default(),
 			_Allocator &&__allocator = allocator_malloc())
-			: forward_sequence(
+			: sequence(
 				__il.begin(),
 				__il.end(),
 				__align,
@@ -225,8 +377,8 @@ namespace pul
 				std::move(__allocator))
 		{}
 		pf_decl_constexpr
-		forward_sequence(
-			forward_sequence<_Ty, _Magnifier, _Allocator> const &__r)
+		sequence(
+			sequence<_Ty, _Magnifier, _Allocator> const &__r)
 		requires(std::is_copy_constructible_v<_Ty>)
 			: store_(nullptr)
 			, count_(0)
@@ -238,8 +390,8 @@ namespace pul
 			this->insert_back(__r.begin(), __r.end());
 		}
 		pf_decl_constexpr
-		forward_sequence(
-			forward_sequence<_Ty, _Magnifier, _Allocator> const &__r,
+		sequence(
+			sequence<_Ty, _Magnifier, _Allocator> const &__r,
 			align_val_t __align)
 		requires(std::is_copy_constructible_v<_Ty>)
 			: store_(nullptr)
@@ -252,8 +404,8 @@ namespace pul
 			this->insert_back(__r.begin(), __r.end());
 		}
 		pf_decl_constexpr
-		forward_sequence(
-			forward_sequence<_Ty, _Magnifier, _Allocator> const &__r,
+		sequence(
+			sequence<_Ty, _Magnifier, _Allocator> const &__r,
 			align_val_t __align,
 			_Magnifier &&__magnifier,
 			_Allocator &&__allocator = allocator_malloc())
@@ -268,8 +420,8 @@ namespace pul
 			this->insert_back(__r.begin(), __r.end());
 		}
 		pf_decl_constexpr
-		forward_sequence(
-			forward_sequence<_Ty, _Magnifier, _Allocator> &&__r) pf_attr_noexcept
+		sequence(
+			sequence<_Ty, _Magnifier, _Allocator> &&__r) pf_attr_noexcept
 			: store_(__r.store_)
 			, count_(__r.count_)
 			, memCount_(__r.memCount_)
@@ -282,8 +434,8 @@ namespace pul
 			__r.memCount_ = 0;
 		}
 		pf_decl_constexpr
-		forward_sequence(
-			forward_sequence<_Ty, _Magnifier, _Allocator> &&__r,
+		sequence(
+			sequence<_Ty, _Magnifier, _Allocator> &&__r,
 			align_val_t __align) pf_attr_noexcept
 			: store_(__r.store_)
 			, count_(__r.count_)
@@ -299,8 +451,8 @@ namespace pul
 		}
 		template <typename _MagnifierR, typename _AllocatorR>
 		pf_decl_constexpr
-		forward_sequence(
-			forward_sequence<_Ty, _MagnifierR, _AllocatorR> &&__r,
+		sequence(
+			sequence<_Ty, _MagnifierR, _AllocatorR> &&__r,
 			align_val_t __align,
 			_MagnifierR &&__magnifier,
 			_AllocatorR &&__allocator) pf_attr_noexcept
@@ -318,16 +470,16 @@ namespace pul
 		}
 
 		/// Destructor
-		pf_decl_constexpr ~forward_sequence() pf_attr_noexcept
+		pf_decl_constexpr ~sequence() pf_attr_noexcept
 		{
 			this->clear();
 		}
 
 		/// Operator =
 		template <typename _MagnifierR, typename _AllocatorR>
-		pf_decl_constexpr forward_sequence<_Ty, _Magnifier, _AllocatorR> &
+		pf_decl_constexpr sequence<_Ty, _Magnifier, _AllocatorR> &
 		operator =(
-			forward_sequence<_Ty, _MagnifierR, _AllocatorR> const &__r)
+			sequence<_Ty, _MagnifierR, _AllocatorR> const &__r)
 		requires(std::is_copy_constructible_v<_Ty>)
 		{
 			if(this == &__r) pf_hint_unlikely return *this;
@@ -337,9 +489,9 @@ namespace pul
 			return *this;
 		}
 		template <typename _MagnifierR, typename _AllocatorR>
-		pf_decl_constexpr forward_sequence<_Ty, _Magnifier, _AllocatorR> &
+		pf_decl_constexpr sequence<_Ty, _Magnifier, _AllocatorR> &
 		operator =(
-			forward_sequence<_Ty, _MagnifierR, _AllocatorR> &&__r)
+			sequence<_Ty, _MagnifierR, _AllocatorR> &&__r)
 		{
 			if(this == &__r) pf_hint_unlikely return *this;
 			this->clear();
@@ -351,7 +503,7 @@ namespace pul
 			__r.memCount_		= 0;
 			return *this;
 		}
-		pf_decl_constexpr forward_sequence<_Ty, _Magnifier, _Allocator> &
+		pf_decl_constexpr sequence<_Ty, _Magnifier, _Allocator> &
 		operator =(
 			initializer_list<_Ty> const &__il)
 		requires(std::is_copy_constructible_v<_Ty>)
@@ -365,7 +517,7 @@ namespace pul
 		/// Operator ==
 		template <typename _MagnifierR, typename _AllocatorR>
 		pf_decl_constexpr bool operator ==(
-			forward_sequence<_Ty, _MagnifierR, _AllocatorR> const &__r)
+			sequence<_Ty, _MagnifierR, _AllocatorR> const &__r)
 		{
 			if(this->count() != __r.count())
 				return false;
@@ -381,7 +533,7 @@ namespace pul
 		}
 		template <typename _MagnifierR, typename _AllocatorR>
 		pf_decl_constexpr bool operator !=(
-			forward_sequence<_Ty, _MagnifierR, _AllocatorR> const &__r)
+			sequence<_Ty, _MagnifierR, _AllocatorR> const &__r)
 		{
 			return !(*this == __r);
 		}
@@ -392,14 +544,14 @@ namespace pul
 		operator [](
 			size_t __index) pf_attr_noexcept
 		{
-			pf_assert(__index < this->count_, u8"__index is out of sequence!");
+			pf_assert(__index < this->count_, "__index is out of sequence!");
 			return *(this->store_ + __index);
 		}
 		pf_hint_nodiscard pf_decl_constexpr const _Ty &
 		operator [](
 			size_t __index) const pf_attr_noexcept
 		{
-			pf_assert(__index < this->count_, u8"__index is out of sequence!");
+			pf_assert(__index < this->count_, "__index is out of sequence!");
 			return *(this->store_ + __index);
 		}
 
@@ -424,12 +576,12 @@ namespace pul
 		{
 			return *(this->store_ + this->count_ - 1);
 		}
-		pf_hint_nodiscard pf_decl_constexpr _Ty *
+		pf_hint_nodiscard pf_decl_constexpr _Ty*
 		data() pf_attr_noexcept
 		{
 			return this->store_;
 		}
-		pf_hint_nodiscard pf_decl_constexpr const _Ty *
+		pf_hint_nodiscard pf_decl_constexpr const _Ty*
 		data() const pf_attr_noexcept
 		{
 			return this->store_;
@@ -843,7 +995,7 @@ namespace pul
 		/// Swap
 		pf_decl_constexpr void
 		swap(
-			forward_sequence<_Ty, _Magnifier, _Allocator> &__r) pf_attr_noexcept
+			sequence<_Ty, _Magnifier, _Allocator> &__r) pf_attr_noexcept
 		{
 			swap(this->store_, __r.store_);
 			swap(this->count_, __r.count_);
@@ -879,23 +1031,36 @@ namespace pul
 			this->memCount_ = 0;
 		}
 
-		/// Empty
+		/// Is Empty
 		pf_hint_nodiscard pf_decl_constexpr bool
 		is_empty() const pf_attr_noexcept
 		{
 			return this->count_ == 0;
 		}
 
-		/// Operator (span<_Ty>)
-		pf_hint_nodiscard pf_decl_constexpr
-		operator span<_Ty>() pf_attr_noexcept
+		/// View
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr sequence_view<_Ty>
+		view() pf_attr_noexcept
 		{
-			return span<_Ty>(this->begin(), this->end());
+			return sequence_view<_Ty>(this->begin(), this->end());
+		}
+
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr sequence_view<_Ty>
+		view() const pf_attr_noexcept
+		{
+			return sequence_view<const _Ty>(this->begin(), this->end());
+		}
+
+		/// Operator (sequence_view<_Ty>)
+		pf_hint_nodiscard pf_decl_constexpr
+		operator sequence_view<_Ty>() pf_attr_noexcept
+		{
+			return this->view();
 		}
 		pf_hint_nodiscard pf_decl_constexpr
-		operator span<const _Ty>() const pf_attr_noexcept
+		operator sequence_view<const _Ty>() const pf_attr_noexcept
 		{
-			return span<const _Ty>(this->begin(), this->end());
+			return this->view();
 		}
 
 	private:
@@ -903,9 +1068,9 @@ namespace pul
 		size_t count_;
 		size_t memCount_;
 		align_val_t memAlign_;
-		_Magnifier magnifier_;
-		_Allocator allocator_;
-  };
+		pf_hint_nounique_address _Magnifier magnifier_;
+		pf_hint_nounique_address _Allocator allocator_;
+	};
 }
 
 #endif // !PULSAR_SEQUENCE_HPP
