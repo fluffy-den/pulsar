@@ -1,9 +1,9 @@
 /*! @file   vector.hpp
- *  @author Fluffy (noe.louis-quentin@hotmail.fr)
+ *  @author Louis-Quentin Noé (noe.louis-quentin@hotmail.fr)
  *  @brief	Definitions of vectors.
  *  @date   24-05-2022
  *
- *  @copyright Copyright (c) 2022 - Pulsar Software
+ *  @copyright Copyright (c) 2023 - Pulsar Software
  *
  *  @since 0.1.1
  */
@@ -12,7 +12,7 @@
 #define PULSAR_MATH_VECTOR_HPP 1
 
 // Include: Pulsar
-#include "pulsar/intrin.hpp"
+#include "pulsar/pulsar.hpp"
 
 // Include: C++
 #include <array>
@@ -22,7 +22,8 @@ namespace pul
 {
 	/// MATH: Vector
 	template <typename _Ty, size_t _Num>
-	requires(std::is_arithmetic_v<_Ty>&& _Num > 1)
+	requires(std::is_arithmetic_v<_Ty>
+					 && _Num > 1)
 	union vector;
 
 	/// MATH: Vector -> SFINAE -> Is vector?
@@ -69,17 +70,19 @@ namespace pul
 
 	/// MATH: Vector
 	template <typename _Ty, size_t _Num>
-	requires(std::is_arithmetic_v<_Ty>&& _Num > 1)
+	requires(std::is_arithmetic_v<_Ty>
+					 && _Num > 1)
 	union vector
 	{
 		template <typename _TyF, size_t _NumFF>
-		requires(std::is_arithmetic_v<_Ty>&& _Num > 1)
+		requires(std::is_arithmetic_v<_Ty>
+						 && _Num > 1)
 		pf_decl_friend union vector;
 
 	private:
 		/// Initialize
 		template <typename _InTy>
-		pf_decl_inline pf_decl_constexpr void __init_rec(
+		pf_decl_constexpr void __init_rec(
 			size_t &__index,
 			_InTy const &__val) pf_attr_noexcept
 		{
@@ -87,7 +90,7 @@ namespace pul
 			++__index;
 		}
 		template <typename _InTy, size_t _InNum>
-		pf_decl_inline pf_decl_constexpr void __init_rec(
+		pf_decl_constexpr void __init_rec(
 			size_t &__index,
 			vector<_InTy, _InNum> const &__r) pf_attr_noexcept
 		{
@@ -97,7 +100,7 @@ namespace pul
 			}
 		}
 		template <typename _InTy, size_t _InNum>
-		pf_decl_inline pf_decl_constexpr void __init_rec(
+		pf_decl_constexpr void __init_rec(
 			size_t &__index,
 			_InTy const (&__tab)[_InNum]) pf_attr_noexcept
 		{
@@ -107,7 +110,7 @@ namespace pul
 			}
 		}
 		template <typename _InTy, typename ..._InArgs>
-		pf_decl_inline pf_decl_constexpr void __init(
+		pf_decl_constexpr void __init(
 			size_t &__index,
 			_InTy const &__val,
 			_InArgs const &... __args) pf_attr_noexcept
@@ -121,17 +124,17 @@ namespace pul
 
 	public:
 		/// Constructors
-		pf_decl_inline pf_decl_constexpr vector(
-			_Ty __val = static_cast<_Ty>(0)) pf_attr_noexcept
+		pf_decl_constexpr vector(
+			_Ty __val = 0) pf_attr_noexcept
 		: store_ { __val }
 		{}
 
-		pf_decl_inline pf_decl_constexpr vector(
+		pf_decl_constexpr vector(
 			vector<_Ty, _Num> const &__r) pf_attr_noexcept
 		: store_(__r.store_)
 		{}
 		template <typename ..._InArgs>
-		pf_decl_inline pf_decl_constexpr vector(
+		pf_decl_constexpr vector(
 			_InArgs const &... __args) pf_attr_noexcept
 		requires(
 			(is_vector_v<_InArgs>&& ...)
@@ -143,26 +146,26 @@ namespace pul
 		}
 
 		/// Destructor
-		pf_decl_inline pf_decl_constexpr ~vector() pf_attr_noexcept = default;
+		pf_decl_constexpr ~vector() pf_attr_noexcept = default;
 
 		/// Operator=
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &
+		pf_decl_constexpr vector<_Ty, _Num> &
 		operator =(vector<_Ty, _Num> const &__r) pf_attr_noexcept = default;
 
 		/// Operator[]
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _Ty &operator [](
+		pf_hint_nodiscard pf_decl_constexpr _Ty &operator [](
 			size_t __index) pf_attr_noexcept
 		{
 			return this->store_[__index];
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const _Ty &operator [](
+		pf_hint_nodiscard pf_decl_constexpr const _Ty &operator [](
 			size_t __index) const pf_attr_noexcept
 		{
 			return this->store_[__index];
 		}
 
 		/// Operator+=
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator +=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator +=(
 			_Ty __val) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _Num; ++i)
@@ -171,7 +174,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator +=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator +=(
 			vector<_Ty, _Num> const &__r) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _Num; ++i)
@@ -182,7 +185,7 @@ namespace pul
 		}
 
 		/// Operator-=
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator -=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator -=(
 			_Ty __val) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _Num; ++i)
@@ -191,7 +194,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator -=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator -=(
 			vector<_Ty, _Num> const &__r) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _Num; ++i)
@@ -202,7 +205,7 @@ namespace pul
 		}
 
 		/// Operator*=
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator *=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator *=(
 			_Ty __val) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _Num; ++i)
@@ -211,7 +214,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator *=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator *=(
 			vector<_Ty, _Num> const &__r) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _Num; ++i)
@@ -222,7 +225,7 @@ namespace pul
 		}
 
 		/// Operator/=
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator /=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator /=(
 			_Ty __val) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _Num; ++i)
@@ -231,7 +234,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator /=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator /=(
 			vector<_Ty, _Num> const &__r) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _Num; ++i)
@@ -242,7 +245,7 @@ namespace pul
 		}
 
 		/// Operator%=
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator %=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator %=(
 			_Ty __val) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -252,7 +255,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator %=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator %=(
 			vector<_Ty, _Num> const &__r) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -264,7 +267,7 @@ namespace pul
 		}
 
 		/// Operator&=
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator &=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator &=(
 			_Ty __val) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -274,7 +277,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator &=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator &=(
 			vector<_Ty, _Num> const &__r) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -286,7 +289,7 @@ namespace pul
 		}
 
 		/// Operator|=
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator |=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator |=(
 			_Ty __val) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -296,7 +299,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator |=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator |=(
 			vector<_Ty, _Num> const &__r) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -308,7 +311,7 @@ namespace pul
 		}
 
 		/// Operator^=
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator ^=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator ^=(
 			_Ty __val) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -318,7 +321,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator ^=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator ^=(
 			vector<_Ty, _Num> const &__r) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -330,7 +333,7 @@ namespace pul
 		}
 
 		/// Operator<<=
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator <<=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator <<=(
 			_Ty __val) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -340,7 +343,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator <<=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator <<=(
 			vector<_Ty, _Num> const &__r) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -352,7 +355,7 @@ namespace pul
 		}
 
 		/// Operator>>=
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator >>=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator >>=(
 			_Ty __val) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -362,7 +365,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> &operator >>=(
+		pf_decl_constexpr vector<_Ty, _Num> &operator >>=(
 			vector<_Ty, _Num> const &__r) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -374,7 +377,7 @@ namespace pul
 		}
 
 		/// Operator==
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr bool operator ==(
+		pf_hint_nodiscard pf_decl_constexpr bool operator ==(
 			vector<_Ty, _Num> const &__r) const pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _Num; ++i)
@@ -386,7 +389,7 @@ namespace pul
 		}
 
 		/// Compare
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<bool, _Num> equal(
+		pf_hint_nodiscard pf_decl_constexpr vector<bool, _Num> equal(
 			vector<_Ty, _Num> const &__r) const pf_attr_noexcept
 		{
 			vector<bool, _Num> tmp;
@@ -396,7 +399,7 @@ namespace pul
 			}
 			return tmp;
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<bool, _Num> not_equal(
+		pf_hint_nodiscard pf_decl_constexpr vector<bool, _Num> not_equal(
 			vector<_Ty, _Num> const &__r) const pf_attr_noexcept
 		{
 			vector<bool, _Num> tmp;
@@ -406,7 +409,7 @@ namespace pul
 			}
 			return tmp;
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<bool, _Num> greater(
+		pf_hint_nodiscard pf_decl_constexpr vector<bool, _Num> greater(
 			vector<_Ty, _Num> const &__v) const pf_attr_noexcept
 		{
 			vector<bool, _Num> tmp;
@@ -416,7 +419,7 @@ namespace pul
 			}
 			return tmp;
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<bool, _Num> greater_equal(
+		pf_hint_nodiscard pf_decl_constexpr vector<bool, _Num> greater_equal(
 			vector<_Ty, _Num> const &__v) const pf_attr_noexcept
 		{
 			vector<bool, _Num> tmp;
@@ -426,7 +429,7 @@ namespace pul
 			}
 			return tmp;
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<bool, _Num> smaller(
+		pf_hint_nodiscard pf_decl_constexpr vector<bool, _Num> smaller(
 			vector<_Ty, _Num> const &__v) const pf_attr_noexcept
 		{
 			vector<bool, _Num> tmp;
@@ -436,7 +439,7 @@ namespace pul
 			}
 			return tmp;
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<bool, _Num> smaller_equal(
+		pf_hint_nodiscard pf_decl_constexpr vector<bool, _Num> smaller_equal(
 			vector<_Ty, _Num> const &__v) const pf_attr_noexcept
 		{
 			vector<bool, _Num> tmp;
@@ -448,11 +451,11 @@ namespace pul
 		}
 
 		/// Data
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _Ty *data() pf_attr_noexcept
+		pf_hint_nodiscard pf_decl_constexpr _Ty *data() pf_attr_noexcept
 		{
 			return this->store_.data();
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const _Ty *data() const pf_attr_noexcept
+		pf_hint_nodiscard pf_decl_constexpr const _Ty *data() const pf_attr_noexcept
 		{
 			return this->store_.data();
 		}
@@ -464,7 +467,7 @@ namespace pul
 
 	/// MATH: Vector -> Operator+
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator +(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator +(
 		vector<_Ty, _Num> const & __l,
 		_Ty __val) pf_attr_noexcept
 	{
@@ -472,7 +475,7 @@ namespace pul
 		return tmp += __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator +(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator +(
 		_Ty __val,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	{
@@ -480,7 +483,7 @@ namespace pul
 		return tmp += __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator +(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator +(
 		vector<_Ty, _Num> const & __l,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	{
@@ -490,7 +493,7 @@ namespace pul
 
 	/// MATH: Vector -> Operator-
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator -(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator -(
 		vector<_Ty, _Num> const & __l,
 		_Ty __val) pf_attr_noexcept
 	{
@@ -498,7 +501,7 @@ namespace pul
 		return tmp -= __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator -(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator -(
 		_Ty __val,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	{
@@ -506,7 +509,7 @@ namespace pul
 		return tmp -= __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator -(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator -(
 		vector<_Ty, _Num> const & __l,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	{
@@ -516,7 +519,7 @@ namespace pul
 
 	/// MATH: Vector -> Operator*
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator *(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator *(
 		vector<_Ty, _Num> const & __l,
 		_Ty __val) pf_attr_noexcept
 	{
@@ -524,7 +527,7 @@ namespace pul
 		return tmp *= __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator *(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator *(
 		_Ty __val,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	{
@@ -532,7 +535,7 @@ namespace pul
 		return tmp *= __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator *(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator *(
 		vector<_Ty, _Num> const & __l,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	{
@@ -542,7 +545,7 @@ namespace pul
 
 	/// MATH: Vector -> Operator/
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator /(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator /(
 		vector<_Ty, _Num> const & __l,
 		_Ty __val) pf_attr_noexcept
 	{
@@ -550,7 +553,7 @@ namespace pul
 		return tmp /= __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator /(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator /(
 		_Ty __val,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	{
@@ -558,7 +561,7 @@ namespace pul
 		return tmp /= __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator /(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator /(
 		vector<_Ty, _Num> const & __l,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	{
@@ -568,7 +571,7 @@ namespace pul
 
 	/// MATH: Vector -> Operator%
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator %(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator %(
 		vector<_Ty, _Num> const & __l,
 		_Ty __val) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -577,7 +580,7 @@ namespace pul
 		return tmp %= __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator %(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator %(
 		vector<_Ty, _Num> const & __l,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -588,7 +591,7 @@ namespace pul
 
 	/// MATH: Vector -> Operator&
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator &(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator &(
 		vector<_Ty, _Num> const & __l,
 		_Ty __val) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -597,7 +600,7 @@ namespace pul
 		return tmp &= __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator &(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator &(
 		vector<_Ty, _Num> const & __l,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -608,7 +611,7 @@ namespace pul
 
 	/// MATH: Vector -> Operator|
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator |(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator |(
 		vector<_Ty, _Num> const & __l,
 		_Ty __val) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -617,7 +620,7 @@ namespace pul
 		return tmp |= __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator |(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator |(
 		vector<_Ty, _Num> const & __l,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -628,7 +631,7 @@ namespace pul
 
 	/// MATH: Vector -> Operator^
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator ^(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator ^(
 		vector<_Ty, _Num> const & __l,
 		_Ty __val) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -637,7 +640,7 @@ namespace pul
 		return tmp ^= __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator ^(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator ^(
 		vector<_Ty, _Num> const & __l,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -648,7 +651,7 @@ namespace pul
 
 	/// MATH: Vector -> Operator<<
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator <<(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator <<(
 		vector<_Ty, _Num> const & __l,
 		_Ty __val) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -657,7 +660,7 @@ namespace pul
 		return tmp <<= __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator <<(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator <<(
 		vector<_Ty, _Num> const & __l,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -668,7 +671,7 @@ namespace pul
 
 	/// MATH: Vector -> Operator>>
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator >>(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator >>(
 		vector<_Ty, _Num> const & __l,
 		_Ty __val) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -677,7 +680,7 @@ namespace pul
 		return tmp >>= __val;
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator >>(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator >>(
 		vector<_Ty, _Num> const & __l,
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -688,7 +691,7 @@ namespace pul
 
 	/// MATH: Vector -> Operator~
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator ~(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) operator ~(
 		vector<_Ty, _Num> const & __r) pf_attr_noexcept
 	{
 		vector<_Ty, _Num> pf_alignas_n(_Ty, _Num) tmp;
@@ -701,42 +704,42 @@ namespace pul
 
 	/// MATH: Vector -> Compare
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<bool, _Num> equal(
+	pf_hint_nodiscard pf_decl_constexpr vector<bool, _Num> equal(
 		vector<_Ty, _Num> const &__l,
 		vector<_Ty, _Num> const &__r) pf_attr_noexcept
 	{
 		return __l.equal(__r);
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<bool, _Num> not_equal(
+	pf_hint_nodiscard pf_decl_constexpr vector<bool, _Num> not_equal(
 		vector<_Ty, _Num> const &__l,
 		vector<_Ty, _Num> const &__r) pf_attr_noexcept
 	{
 		return __l.not_equal(__r);
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<bool, _Num> greater(
+	pf_hint_nodiscard pf_decl_constexpr vector<bool, _Num> greater(
 		vector<_Ty, _Num> const &__l,
 		vector<_Ty, _Num> const &__r) pf_attr_noexcept
 	{
 		return __l.greater(__r);
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<bool, _Num> greater_equal(
+	pf_hint_nodiscard pf_decl_constexpr vector<bool, _Num> greater_equal(
 		vector<_Ty, _Num> const &__l,
 		vector<_Ty, _Num> const &__r) pf_attr_noexcept
 	{
 		return __l.greater_equal(__r);
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<bool, _Num> smaller(
+	pf_hint_nodiscard pf_decl_constexpr vector<bool, _Num> smaller(
 		vector<_Ty, _Num> const &__l,
 		vector<_Ty, _Num> const &__r) pf_attr_noexcept
 	{
 		return __l.smaller(__r);
 	}
 	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<bool, _Num> smaller_equal(
+	pf_hint_nodiscard pf_decl_constexpr vector<bool, _Num> smaller_equal(
 		vector<_Ty, _Num> const &__l,
 		vector<_Ty, _Num> const &__r) pf_attr_noexcept
 	{

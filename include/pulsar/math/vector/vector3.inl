@@ -1,9 +1,9 @@
-/*! @file   vector3.inl
- *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief  Definition of vector with 3 components.
- *  @date   30-08-2022
+/*! @file   matrix3.inl
+ *  @author Louis-Quentin Noé (noe.louis-quentin@hotmail.fr)
+ *  @brief	Specialization for square matrices of size 3.
+ *  @date   31-05-2022
  *
- *  @copyright Copyright (c) 2022 - Pulsar Software
+ *  @copyright Copyright (c) 2023 - Pulsar Software
  *
  *  @since 0.1.1
  */
@@ -39,11 +39,8 @@ namespace pul
 	public:
 		/// Constructors
 		pf_decl_inline pf_decl_constexpr vector(
-			_Ty __val = static_cast<_Ty>(0)) pf_attr_noexcept
-		: store_
-		{
-			__val
-		}
+			_Ty __val = 0) pf_attr_noexcept
+		: store_ { __val }
 		{}
 		pf_decl_inline pf_decl_constexpr vector(
 			_Ty __val1,
@@ -387,7 +384,7 @@ namespace pul
 
 	private:
 		/// Store
-		std::array<_Ty, 3> store_;
+		array<_Ty, 3> store_;
 	};
 
 	/// MATH: bvec3_t

@@ -1,9 +1,9 @@
 /*! @file   matrix4x3.inl
- *  @author Fluffy (noe.louis-quentin@hotmail.fr)
+ *  @author Louis-Quentin Noé (noe.louis-quentin@hotmail.fr)
  *  @brief	Specialization for matrices of 4 rows and 3 columns.
  *  @date   31-05-2022
  *
- *  @copyright Copyright (c) 2022 - Pulsar Software
+ *  @copyright Copyright (c) 2023 - Pulsar Software
  *
  *  @since 0.1.1
  */
@@ -12,7 +12,7 @@
 #define PULSAR_MATH_MATRIX4X3_INL 1
 
 // Include: Pulsar
-#include "pulsar/intrin.hpp"
+#include "pulsar/pulsar.hpp"
 
 // Pulsar
 namespace pul

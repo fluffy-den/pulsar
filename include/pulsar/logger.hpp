@@ -1,5 +1,0 @@
-#ifndef PULSAR_LOGGER_HPP
-#define PULSAR_LOGGER_HPP 1
-
-
-#endif // !PULSAR_LOGGER_HPP

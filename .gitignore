@@ -1,13 +1,7 @@
-# Ignore VScode cache
 .VScode/*
-
-# Ignore CMake cache
 build/*
-
-# Ignore binaries
-*.exe
-
-# Ignore CMake generated
 bin/*
 lib/*
-
+archive/*
+uncrustify.cfg
+.cmake-format

@@ -1,9 +1,9 @@
 /*! @file   matrix.hpp
- *  @author Fluffy (noe.louis-quentin@hotmail.fr)
+ *  @author Louis-Quentin Noé (noe.louis-quentin@hotmail.fr)
  *  @brief	Definition of matrices.
  *  @date   24-05-2022
  *
- *  @copyright Copyright (c) 2022 - Pulsar Software
+ *  @copyright Copyright (c) 2023 - Pulsar Software
  *
  *  @since 0.1.1
  */
@@ -12,6 +12,9 @@
 #define PULSAR_MATH_MATRIX_HPP 1
 
 // Include: Pulsar
+#include "pulsar/pulsar.hpp"
+
+// Include: Pulsar -> Math
 #include "pulsar/math/vector.hpp"
 
 // Pulsar
@@ -19,7 +22,8 @@ namespace pul
 {
 	/// MATH: Matrix
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	requires(std::is_arithmetic_v<_Ty>&& _RowNum > 1 && _ColNum > 1)
+	requires(std::is_arithmetic_v<_Ty>
+					 && _RowNum > 1 && _ColNum > 1)
 	union matrix;
 
 	/// MATH: Matrix -> SFINAE -> Is Matrix
@@ -86,7 +90,8 @@ namespace pul
 
 	/// MATH: Matrix
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	requires(std::is_arithmetic_v<_Ty>&& _RowNum > 1 && _ColNum > 1)
+	requires(std::is_arithmetic_v<_Ty>
+					 && _RowNum > 1 && _ColNum > 1)
 	union matrix
 	{
 		template <typename _TyF, size_t _RowNumF, size_t _ColNumF>
@@ -94,20 +99,19 @@ namespace pul
 
 	public:
 		/// Constructors
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix(
-			_Ty __val = static_cast<_Ty>(0)) pf_attr_noexcept
-		: store_
+		pf_hint_nodiscard pf_decl_constexpr matrix(
+			_Ty __val = 0) pf_attr_noexcept
+		: store_ { __val }
 		{
-			__val
+			for(size_t i = 0, l = std::min(_RowNum, _ColNum); i < l; ++i) this->store_[i][l] = __val;
 		}
-		{}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix(
+		pf_hint_nodiscard pf_decl_constexpr matrix(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 		: store_(__r.store_)
 		{}
 		template <size_t _Num>
 		requires(_Num == _RowNum)
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix(
+		pf_hint_nodiscard pf_decl_constexpr matrix(
 			vector<_Ty, _ColNum> const (&__l)[_Num])
 		pf_attr_noexcept
 		{
@@ -118,24 +122,24 @@ namespace pul
 		}
 
 		/// Operator=
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &
 		operator =(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept = default;
 
 		/// Operator[]
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _ColNum> &operator [](
+		pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _ColNum> &operator [](
 			size_t __index) pf_attr_noexcept
 		{
 			return this->store_[__index];
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const vector<_Ty, _ColNum> &operator [](
+		pf_hint_nodiscard pf_decl_constexpr const vector<_Ty, _ColNum> &operator [](
 			size_t __index) const pf_attr_noexcept
 		{
 			return this->store_[__index];
 		}
 
 		/// Operator+=
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator +=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator +=(
 			_Ty __val) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _RowNum; ++i)
@@ -144,7 +148,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator +=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator +=(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _RowNum; ++i)
@@ -155,7 +159,7 @@ namespace pul
 		}
 
 		/// Operator-=
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator -=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator -=(
 			_Ty __val) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _RowNum; ++i)
@@ -164,7 +168,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator -=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator -=(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _RowNum; ++i)
@@ -175,7 +179,7 @@ namespace pul
 		}
 
 		/// Operator*=
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator *=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator *=(
 			_Ty __val) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _RowNum; ++i)
@@ -184,7 +188,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator *=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator *=(
 			matrix<_Ty, _RowNum, _ColNum> const & __r) pf_attr_noexcept
 		requires(_RowNum == _ColNum)
 		{
@@ -202,7 +206,7 @@ namespace pul
 		}
 
 		/// Operator/=
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator /=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator /=(
 			_Ty __val) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _RowNum; ++i)
@@ -211,7 +215,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator /=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator /=(
 			matrix<_Ty, _RowNum, _ColNum> const & __r) pf_attr_noexcept
 		requires(_RowNum == _ColNum)
 		{
@@ -229,7 +233,7 @@ namespace pul
 		}
 
 		/// Operator%=
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator %=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator %=(
 			_Ty __val) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -239,7 +243,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator %=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator %=(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -251,7 +255,7 @@ namespace pul
 		}
 
 		/// Operator&=
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator &=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator &=(
 			_Ty __val) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _RowNum; ++i)
@@ -260,7 +264,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator &=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator &=(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -272,7 +276,7 @@ namespace pul
 		}
 
 		/// Operator|=
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator |=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator |=(
 			_Ty __val) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -282,7 +286,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator |=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator |=(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -294,7 +298,7 @@ namespace pul
 		}
 
 		/// Operator^=
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator ^=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator ^=(
 			_Ty __val) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -304,7 +308,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator ^=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator ^=(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -316,7 +320,7 @@ namespace pul
 		}
 
 		/// Operator>>=
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator >>=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator >>=(
 			_Ty __val) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -326,7 +330,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator >>=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator >>=(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -338,7 +342,7 @@ namespace pul
 		}
 
 		/// Operator<<=
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator <<=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator <<=(
 			_Ty __val) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -348,7 +352,7 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator <<=(
+		pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> &operator <<=(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 		requires(std::is_integral_v<_Ty>)
 		{
@@ -360,7 +364,7 @@ namespace pul
 		}
 
 		/// Operator==
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr bool operator ==(
+		pf_hint_nodiscard pf_decl_constexpr bool operator ==(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 		{
 			for(size_t i = 0; i < _RowNum; ++i)
@@ -372,7 +376,7 @@ namespace pul
 		}
 
 		/// Compare
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<bool, _RowNum, _ColNum> equal(
+		pf_hint_nodiscard pf_decl_constexpr matrix<bool, _RowNum, _ColNum> equal(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) const pf_attr_noexcept
 		{
 			matrix<bool, _RowNum, _ColNum> tmp;
@@ -385,7 +389,7 @@ namespace pul
 			}
 			return tmp;
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<bool, _RowNum, _ColNum> not_equal(
+		pf_hint_nodiscard pf_decl_constexpr matrix<bool, _RowNum, _ColNum> not_equal(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) const pf_attr_noexcept
 		{
 			matrix<bool, _RowNum, _ColNum> tmp;
@@ -398,7 +402,7 @@ namespace pul
 			}
 			return tmp;
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<bool, _RowNum, _ColNum> greater(
+		pf_hint_nodiscard pf_decl_constexpr matrix<bool, _RowNum, _ColNum> greater(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) const pf_attr_noexcept
 		{
 			matrix<bool, _RowNum, _ColNum> tmp;
@@ -411,7 +415,7 @@ namespace pul
 			}
 			return tmp;
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<bool, _RowNum, _ColNum> greater_equal(
+		pf_hint_nodiscard pf_decl_constexpr matrix<bool, _RowNum, _ColNum> greater_equal(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) const pf_attr_noexcept
 		{
 			matrix<bool, _RowNum, _ColNum> tmp;
@@ -424,7 +428,7 @@ namespace pul
 			}
 			return tmp;
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<bool, _RowNum, _ColNum> smaller(
+		pf_hint_nodiscard pf_decl_constexpr matrix<bool, _RowNum, _ColNum> smaller(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) const pf_attr_noexcept
 		{
 			matrix<bool, _RowNum, _ColNum> tmp;
@@ -437,7 +441,7 @@ namespace pul
 			}
 			return tmp;
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<bool, _RowNum, _ColNum> smaller_equal(
+		pf_hint_nodiscard pf_decl_constexpr matrix<bool, _RowNum, _ColNum> smaller_equal(
 			matrix<_Ty, _RowNum, _ColNum> const &__r) const pf_attr_noexcept
 		{
 			matrix<bool, _RowNum, _ColNum> tmp;
@@ -452,22 +456,22 @@ namespace pul
 		}
 
 		/// Data
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _Ty *data() pf_attr_noexcept
+		pf_hint_nodiscard pf_decl_constexpr _Ty *data() pf_attr_noexcept
 		{
 			return this->store_.data()->data();
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const _Ty *data() const pf_attr_noexcept
+		pf_hint_nodiscard pf_decl_constexpr const _Ty *data() const pf_attr_noexcept
 		{
 			return this->store_.data()->data();
 		}
 
 	private:
-		std::array<vector<_Ty, _ColNum>, _RowNum> store_;
+		array<vector<_Ty, _ColNum>, _RowNum> store_;
 	};
 
 	/// MATH: Matrix -> Operator+
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator +(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator +(
 		matrix<_Ty, _RowNum, _ColNum> const & __l,
 		_Ty __val) pf_attr_noexcept
 	{
@@ -475,7 +479,7 @@ namespace pul
 		return tmp += __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator +(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator +(
 		_Ty __val,
 		matrix<_Ty, _RowNum, _ColNum> const & __l) pf_attr_noexcept
 	{
@@ -483,7 +487,7 @@ namespace pul
 		return tmp += __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator +(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator +(
 		matrix<_Ty, _RowNum, _ColNum> const & __l,
 		matrix<_Ty, _RowNum, _ColNum> const & __r) pf_attr_noexcept
 	{
@@ -493,7 +497,7 @@ namespace pul
 
 	/// MATH: Matrix -> Operator-
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator -(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator -(
 		matrix<_Ty, _RowNum, _ColNum> const & __l,
 		_Ty __val) pf_attr_noexcept
 	{
@@ -501,7 +505,7 @@ namespace pul
 		return tmp -= __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator -(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator -(
 		_Ty __val,
 		matrix<_Ty, _RowNum, _ColNum> const & __l) pf_attr_noexcept
 	{
@@ -509,7 +513,7 @@ namespace pul
 		return tmp -= __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator -(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator -(
 		matrix<_Ty, _RowNum, _ColNum> const & __l,
 		matrix<_Ty, _RowNum, _ColNum> const & __r) pf_attr_noexcept
 	{
@@ -519,7 +523,7 @@ namespace pul
 
 	/// MATH: Matrix -> Operator*
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator *(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator *(
 		matrix<_Ty, _RowNum, _ColNum> const & __l,
 		_Ty __val) pf_attr_noexcept
 	{
@@ -527,7 +531,7 @@ namespace pul
 		return tmp *= __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator *(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator *(
 		_Ty __val,
 		matrix<_Ty, _RowNum, _ColNum> const & __l) pf_attr_noexcept
 	{
@@ -535,7 +539,7 @@ namespace pul
 		return tmp *= __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _ColNum> pf_alignas_n(_Ty, _ColNum) operator *(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _ColNum> pf_alignas_n(_Ty, _ColNum) operator *(
 		vector<_Ty, _RowNum> const & __v,
 		matrix<_Ty, _RowNum, _ColNum> const & __m) pf_attr_noexcept
 	{
@@ -550,7 +554,7 @@ namespace pul
 		return tmp;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _Num, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator *(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator *(
 		matrix<_Ty, _RowNum, _Num> const & __l,
 		matrix<_Ty, _Num, _ColNum> const & __r) pf_attr_noexcept
 	{
@@ -568,7 +572,7 @@ namespace pul
 		return tmp;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _RowNum> pf_alignas_n(_Ty, _ColNum) operator *(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _RowNum> pf_alignas_n(_Ty, _ColNum) operator *(
 		matrix<_Ty, _RowNum, _ColNum> const & __m,
 		vector<_Ty, _ColNum> const & __v) pf_attr_noexcept
 	{
@@ -585,7 +589,7 @@ namespace pul
 
 	/// MATH: Matrix -> Operator/
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator /(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator /(
 		matrix<_Ty, _RowNum, _ColNum> const & __l,
 		_Ty __val) pf_attr_noexcept
 	{
@@ -593,7 +597,7 @@ namespace pul
 		return tmp /= __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator /(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator /(
 		_Ty __val,
 		matrix<_Ty, _RowNum, _ColNum> const & __l) pf_attr_noexcept
 	{
@@ -601,7 +605,7 @@ namespace pul
 		return tmp /= __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _ColNum> pf_alignas_n(_Ty, _ColNum) operator /(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _ColNum> pf_alignas_n(_Ty, _ColNum) operator /(
 		vector<_Ty, _RowNum> const & __v,
 		matrix<_Ty, _RowNum, _ColNum> const & __m) pf_attr_noexcept
 	{
@@ -616,7 +620,7 @@ namespace pul
 		return tmp;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _Num, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator /(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator /(
 		matrix<_Ty, _RowNum, _Num> const & __l,
 		matrix<_Ty, _Num, _ColNum> const & __r) pf_attr_noexcept
 	{
@@ -634,7 +638,7 @@ namespace pul
 		return tmp;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr vector<_Ty, _RowNum> pf_alignas_n(_Ty, _ColNum) operator /(
+	pf_hint_nodiscard pf_decl_constexpr vector<_Ty, _RowNum> pf_alignas_n(_Ty, _ColNum) operator /(
 		matrix<_Ty, _RowNum, _ColNum> const & __m,
 		vector<_Ty, _ColNum> const & __v) pf_attr_noexcept
 	{
@@ -651,7 +655,7 @@ namespace pul
 
 	/// MATH: Matrix -> Operator%
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator %(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator %(
 		matrix<_Ty, _RowNum, _ColNum> const & __m,
 		_Ty __val) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -660,7 +664,7 @@ namespace pul
 		return tmp %= __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator %(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator %(
 		matrix<_Ty, _RowNum, _ColNum> const & __m1,
 		matrix<_Ty, _RowNum, _ColNum> const & __m2) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -671,7 +675,7 @@ namespace pul
 
 	/// MATH: Matrix -> Operator&
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator &(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator &(
 		matrix<_Ty, _RowNum, _ColNum> const & __m,
 		_Ty __val) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -680,7 +684,7 @@ namespace pul
 		return tmp &= __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator &(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator &(
 		matrix<_Ty, _RowNum, _ColNum> const & __m1,
 		matrix<_Ty, _RowNum, _ColNum> const & __m2) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -691,7 +695,7 @@ namespace pul
 
 	/// MATH: Matrix -> Operator|
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator |(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator |(
 		matrix<_Ty, _RowNum, _ColNum> const & __m,
 		_Ty __val) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -700,7 +704,7 @@ namespace pul
 		return tmp |= __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator |(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator |(
 		matrix<_Ty, _RowNum, _ColNum> const & __m1,
 		matrix<_Ty, _RowNum, _ColNum> const & __m2) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -711,7 +715,7 @@ namespace pul
 
 	/// MATH: Matrix -> Operator^
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator ^(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator ^(
 		matrix<_Ty, _RowNum, _ColNum> const & __m,
 		_Ty __val) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -720,7 +724,7 @@ namespace pul
 		return tmp ^= __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator ^(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator ^(
 		matrix<_Ty, _RowNum, _ColNum> const & __m1,
 		matrix<_Ty, _RowNum, _ColNum> const & __m2) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -731,7 +735,7 @@ namespace pul
 
 	/// MATH: Matrix -> Operator<<
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator <<(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator <<(
 		matrix<_Ty, _RowNum, _ColNum> const & __m,
 		_Ty __val) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -740,7 +744,7 @@ namespace pul
 		return tmp <<= __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator <<(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator <<(
 		matrix<_Ty, _RowNum, _ColNum> const & __m1,
 		matrix<_Ty, _RowNum, _ColNum> const & __m2) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -751,7 +755,7 @@ namespace pul
 
 	/// MATH: Matrix -> Operator>>
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator >>(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator >>(
 		matrix<_Ty, _RowNum, _ColNum> const & __m,
 		_Ty __val) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -760,7 +764,7 @@ namespace pul
 		return tmp >>= __val;
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator >>(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator >>(
 		matrix<_Ty, _RowNum, _ColNum> const & __m1,
 		matrix<_Ty, _RowNum, _ColNum> const & __m2) pf_attr_noexcept
 	requires(std::is_integral_v<_Ty>)
@@ -771,7 +775,7 @@ namespace pul
 
 	/// MATH: Matrix -> Operator~
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator ~(
+	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) operator ~(
 		matrix<_Ty, _RowNum, _ColNum> const & __m) pf_attr_noexcept
 	{
 		matrix<_Ty, _RowNum, _ColNum> pf_alignas_n(_Ty, _ColNum) tmp;
@@ -784,42 +788,42 @@ namespace pul
 
 	/// MATH: Matrix -> Compare
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<bool, _RowNum, _ColNum> equal(
+	pf_hint_nodiscard pf_decl_constexpr matrix<bool, _RowNum, _ColNum> equal(
 		matrix<_Ty, _RowNum, _ColNum> const &__l,
 		matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 	{
 		return __l.equal(__r);
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<bool, _RowNum, _ColNum> not_equal(
+	pf_hint_nodiscard pf_decl_constexpr matrix<bool, _RowNum, _ColNum> not_equal(
 		matrix<_Ty, _RowNum, _ColNum> const &__l,
 		matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 	{
 		return __l.not_equal(__r);
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<bool, _RowNum, _ColNum> greater(
+	pf_hint_nodiscard pf_decl_constexpr matrix<bool, _RowNum, _ColNum> greater(
 		matrix<_Ty, _RowNum, _ColNum> const &__l,
 		matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 	{
 		return __l.greater(__r);
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<bool, _RowNum, _ColNum> greater_equal(
+	pf_hint_nodiscard pf_decl_constexpr matrix<bool, _RowNum, _ColNum> greater_equal(
 		matrix<_Ty, _RowNum, _ColNum> const &__l,
 		matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 	{
 		return __l.greater_equal(__r);
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<bool, _RowNum, _ColNum> smaller(
+	pf_hint_nodiscard pf_decl_constexpr matrix<bool, _RowNum, _ColNum> smaller(
 		matrix<_Ty, _RowNum, _ColNum> const &__l,
 		matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 	{
 		return __l.smaller(__r);
 	}
 	template <typename _Ty, size_t _RowNum, size_t _ColNum>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr matrix<bool, _RowNum, _ColNum> smaller_equal(
+	pf_hint_nodiscard pf_decl_constexpr matrix<bool, _RowNum, _ColNum> smaller_equal(
 		matrix<_Ty, _RowNum, _ColNum> const &__l,
 		matrix<_Ty, _RowNum, _ColNum> const &__r) pf_attr_noexcept
 	{

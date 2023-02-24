@@ -1,9 +1,9 @@
 /*! @file   function.hpp
- *  @author Fluffy (noe.louis-quentin@hotmail.fr)
+ *  @author Louis-Quentin Noé (noe.louis-quentin@hotmail.fr)
  *  @brief  Adds function utilities.
  *  @date   16-06-2022
  *
- *  @copyright Copyright (c) 2022 - Pulsar Software
+ *  @copyright Copyright (c) 2023 - Pulsar Software
  *
  *  @since 0.1.2
  */
@@ -14,16 +14,14 @@
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
 
-// Include: C++
-#include <array>
-#include <functional>
-
-// Include: C
-#include <cstddef>// std::nullptr_t
-
 // Pulsar
 namespace pul
 {
+	/*
+	 * !          !
+	 *   Function
+	 * !          !
+	 */
 	/// FUNCTION: Pointer
 	/*! @brief Function pointer.
 	 *
@@ -46,20 +44,20 @@ namespace pul
 		/// Constructors
 		/*! @brief Default constructor.
 		 */
-		pf_decl_constexpr fun_ptr() pf_attr_noexcept
+		pf_decl_inline pf_decl_constexpr fun_ptr() pf_attr_noexcept
 			: ptr_(nullptr)
 		{}
 		/*! @brief Nullptr constructor.
 		 */
-		pf_decl_constexpr fun_ptr(
-			std::nullptr_t) pf_attr_noexcept
+		pf_decl_inline pf_decl_constexpr fun_ptr(
+			nullptr_t) pf_attr_noexcept
 			: fun_ptr()
 		{}
 		/*! @brief Constructor.
 		 *
 		 *  @param[in] __ptr Pointer of function.
 		 */
-		pf_decl_constexpr fun_ptr(
+		pf_decl_inline pf_decl_constexpr fun_ptr(
 			_RetTy (*__ptr)(_Args ...)) pf_attr_noexcept
 			: ptr_(__ptr)
 		{}
@@ -69,7 +67,7 @@ namespace pul
 		 *  @param[in] __ptr Function to copy.
 		 */
 		template <typename _FunTy>
-		pf_decl_constexpr fun_ptr(
+		pf_decl_inline pf_decl_constexpr fun_ptr(
 			_FunTy &&__ptr) pf_attr_noexcept
 		requires(std::is_convertible_v<_FunTy, _RetTy (*)(_Args ...)>)
 			: ptr_(__ptr)
@@ -78,7 +76,7 @@ namespace pul
 		 *
 		 *  @param[in] __r Other function pointer.
 		 */
-		pf_decl_constexpr fun_ptr(
+		pf_decl_inline pf_decl_constexpr fun_ptr(
 			fun_ptr<_RetTy(_Args ...)> const &__r) pf_attr_noexcept
 			: ptr_(__r.ptr_)
 		{}
@@ -86,7 +84,7 @@ namespace pul
 		 *
 		 *  @param[in] __r Other function pointer.
 		 */
-		pf_decl_constexpr fun_ptr(
+		pf_decl_inline pf_decl_constexpr fun_ptr(
 			fun_ptr<_RetTy(_Args ...)> &&__r) pf_attr_noexcept
 			: ptr_(__r.ptr_)
 		{
@@ -99,7 +97,7 @@ namespace pul
 		 *  @param[in] __r Other function pointer.
 		 *  @return Reference on this function pointer.
 		 */
-		pf_decl_constexpr fun_ptr<_RetTy(_Args ...)> &operator =(
+		pf_decl_inline pf_decl_constexpr fun_ptr<_RetTy(_Args ...)> &operator =(
 			fun_ptr<_RetTy(_Args ...)> const &__r) pf_attr_noexcept
 		{
 			this->ptr_ = __r.ptr_;
@@ -110,7 +108,7 @@ namespace pul
 		 *  @param[in] __r Other function pointer.
 		 *  @return Reference on this function pointer.
 		 */
-		pf_decl_constexpr fun_ptr<_RetTy(_Args ...)> &operator =(
+		pf_decl_inline pf_decl_constexpr fun_ptr<_RetTy(_Args ...)> &operator =(
 			fun_ptr<_RetTy(_Args ...)> &&__r) pf_attr_noexcept
 		{
 			this->ptr_ = __r.ptr_;
@@ -125,7 +123,7 @@ namespace pul
 		 *  @return Value returned by the encapsulated function pointer.
 		 */
 		template <typename ..._InArgs>
-		pf_hint_nodiscard pf_decl_constexpr _RetTy operator ()(
+		pf_decl_inline pf_decl_constexpr _RetTy operator ()(
 			_InArgs &&... __args) const
 		{
 			return this->ptr_(__args ...);
@@ -138,10 +136,17 @@ namespace pul
 		 *  @return True If both pointer are equals.
 		 *  @return False Otherwise.
 		 */
-		pf_decl_constexpr bool operator ==(
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr bool operator ==(
 			fun_ptr<_RetTy(_Args ...)> const &__r) const pf_attr_noexcept
 		{
 			return this->ptr_ = __r.ptr_;
+		}
+
+		/// Operator (Bool)
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator bool() const pf_attr_noexcept
+		{
+			return this->ptr_ != nullptr;
 		}
 
 	private:
@@ -248,31 +253,28 @@ namespace pul
 		typename _Signature = typename __fun_helper<decltype(&_Functor::operator ())>::type>
 	fun_ptr(_Functor)->fun_ptr<_Signature>;
 
-
-
-
 	/// FUNCTION: Buffer -> Base
-	template <typename _RetTy, typename ..._Args>
+	template<typename _RetTy, typename ... _Args>
 	class __fun_buf_base
 	{
 	public:
 		/// Destructor
-		pf_decl_constexpr pf_decl_virtual
-		~__fun_buf_base() = default;
+		pf_decl_constexpr pf_decl_virtual ~__fun_buf_base() = default;
 
 		/// Operator()
 		pf_decl_constexpr pf_decl_virtual _RetTy
-		operator ()(
-			_Args && ...) const = 0;
+		operator()(
+			_Args &&...) const = 0;
 	};
 
 	/// FUNCTION: Buffer -> Base Impl
-	template <typename _FunTy, typename _RetTy, typename ..._Args>
-	class __fun_buf_base_impl : public __fun_buf_base<_RetTy, _Args ...>
+	template<typename _FunTy, typename _RetTy, typename ... _Args>
+	class __fun_buf_base_impl : public __fun_buf_base<_RetTy, _Args...>
 	{
 	public:
 		/// Constructors
-		pf_decl_constexpr __fun_buf_base_impl(
+		pf_decl_constexpr
+		__fun_buf_base_impl(
 			_FunTy &&__f) pf_attr_noexcept
 			: fun_(__f)
 		{}
@@ -280,12 +282,12 @@ namespace pul
 		__fun_buf_base_impl(__fun_buf_base_impl &&)			 = delete;
 
 		/// Destructor
-		pf_decl_constexpr
-		~__fun_buf_base_impl() pf_attr_noexcept = default;
+		pf_decl_constexpr ~__fun_buf_base_impl() pf_attr_noexcept = default;
 
 		/// Operator()
-		pf_decl_constexpr _RetTy operator ()(
-			_Args && ... __args) const pf_attr_override
+		pf_decl_constexpr _RetTy
+		operator()(
+			_Args &&... __args) const pf_attr_override
 		{
 			return this->fun_(std::forward<_Args>(__args)...);
 		}
@@ -295,43 +297,48 @@ namespace pul
 	};
 
 	/// FUNCTION: Buffer
-	template <typename _FunTy>
+	template<typename _FunTy>
 	class fun_buf;
-	template <typename _RetTy, typename ..._Args>
-	class fun_buf<_RetTy(_Args ...)> pf_attr_final
+	template<typename _RetTy, typename ... _Args>
+	class fun_buf<_RetTy(_Args...)> pf_attr_final
 	{
 	public:
 		/// Constructors
-		pf_decl_constexpr fun_buf() pf_attr_noexcept
-			: base_{'\0'}
+		pf_decl_constexpr
+		fun_buf() pf_attr_noexcept
+			: base_{ '\0' }
 		{}
-		pf_decl_constexpr fun_buf(
-			std::nullptr_t) pf_attr_noexcept
+		pf_decl_constexpr
+		fun_buf(
+			nullptr_t) pf_attr_noexcept
 			: fun_buf()
 		{}
-		pf_decl_constexpr fun_buf(
-			fun_buf<_RetTy(_Args ...)> const &__r) pf_attr_noexcept
+		pf_decl_constexpr
+		fun_buf(
+			fun_buf<_RetTy(_Args...)> const &__r) pf_attr_noexcept
 			: base_(__r.base_)
 		{}
-		pf_decl_constexpr fun_buf(
-			fun_buf<_RetTy(_Args ...)> &&__r) pf_attr_noexcept
+		pf_decl_constexpr
+		fun_buf(
+			fun_buf<_RetTy(_Args...)> &&__r) pf_attr_noexcept
 			: base_(__r.base_)
 		{
-			__r.base_ = {'\0'};
+			__r.base_ = { '\0' };
 		}
-		template <typename _FunTy>
-		pf_decl_constexpr fun_buf(
+		template<typename _FunTy>
+		pf_decl_constexpr
+		fun_buf(
 			_FunTy &&__ptr) pf_attr_noexcept
-		requires(std::is_invocable_r_v<_RetTy, _FunTy, _Args ...>)
+		requires(std::is_invocable_r_v<_RetTy, _FunTy, _Args...>)
 			: fun_buf()
 		{
 			union
 			{
 				byte_t *as_byte;
-				__fun_buf_base_impl<std::decay_t<_FunTy>, _RetTy, _Args ...> *as_fun_base;
+				__fun_buf_base_impl<std::decay_t<_FunTy>, _RetTy, _Args...> *as_fun_base;
 			};
-			as_byte = this->base_.data();
-			std::construct_at(as_fun_base, std::move(__ptr));
+			as_byte = data(this->base_);
+			construct(as_fun_base, std::move(__ptr));
 		}
 
 		/// Destructor
@@ -340,36 +347,38 @@ namespace pul
 			union
 			{
 				byte_t *as_byte;
-				__fun_buf_base<_RetTy, _Args ...> *as_base;
+				__fun_buf_base<_RetTy, _Args...> *as_base;
 			};
-			as_byte = this->base_.data();
-			std::destroy_at(as_base);
+			as_byte = data(this->base_);
+			destroy(as_base);
 		}
 
 		/// Operator()
-		template <typename ..._InArgs>
-		pf_decl_constexpr _RetTy operator ()(
+		template<typename ... _InArgs>
+		pf_decl_constexpr _RetTy
+		operator()(
 			_InArgs &&... __args) const
-		requires(std::is_invocable_v<_RetTy (_Args ...), _InArgs...>)
+		requires(std::is_invocable_v<_RetTy (_Args...), _InArgs...>)
 		{
 			union
 			{
 				const byte_t *as_byte;
-				const __fun_buf_base<_RetTy, _Args ...> *as_base;
+				const __fun_buf_base<_RetTy, _Args...> *as_base;
 			};
-			as_byte = this->base_.data();
-			return as_base->operator ()(std::forward<_InArgs>(__args)...);
+			as_byte = data(this->base_);
+			return as_base->operator()(std::forward<_InArgs>(__args)...);
 		}
 
 		/// Operator==
-		pf_decl_constexpr bool operator ==(
-			fun_buf<_RetTy(_Args ...)> const &__r) const pf_attr_noexcept
+		pf_decl_constexpr bool
+		operator==(
+			fun_buf<_RetTy(_Args...)> const &__r) const pf_attr_noexcept
 		{
 			return this->base_ == __r.base_;
 		}
 
 	private:
-		std::array<byte_t, 2 * sizeof(__fun_buf_base<_RetTy, _Args ...>)> base_;
+		byte_t base_[2 * sizeof(__fun_buf_base<_RetTy, _Args...>)];
 	};
 
 	/*! @brief Deduction guide for function pointers.
@@ -377,9 +386,9 @@ namespace pul
 	 *  @tparam _Res 		  Return type.
 	 *  @tparam _ArgTypes Type of function's arguments.
 	 */
-	template <
+	template<
 		typename _Res,
-		typename ..._ArgTypes>
+		typename ... _ArgTypes>
 	fun_buf(_Res (*)(_ArgTypes...))->fun_buf<_Res(_ArgTypes...)>;
 
 	/*! @brief Deduction guide for fonctors / methods.
@@ -387,10 +396,11 @@ namespace pul
 	 *  @tparam _Functor 	 Functor type.
 	 *  @tparam _Signature Encapsulated function type.
 	 */
-	template <
+	template<
 		typename _Functor,
-		typename _Signature = typename __fun_helper<decltype(&_Functor::operator ())>::type>
+		typename _Signature = typename __fun_helper<decltype(&_Functor::operator())>::type>
 	fun_buf(_Functor)->fun_buf<_Signature>;
 }
+
 
 #endif // !PULSAR_FUNCTION_HPP

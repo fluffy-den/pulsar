@@ -1,299 +1,447 @@
 /*! @file   system.hpp
- *  @author Fluffy (noe.louis-quentin@hotmail.fr)
- *  @brief  Introduces functions allowing to manage the system.
- *  @date   15-05-2022
+ *  @author Louis-Quentin Noé (noe.louis-quentin@hotmail.fr)
+ *  @brief
+ *  @date   30-01-2023
  *
- *  @copyright Copyright (c) 2022 - Pulsar Software
+ *  @copyright Copyright (c) 2023 - Pulsar Software
  *
- *  @since 0.1.1
+ *  @since 0.1.3
  */
 
 #ifndef PULSAR_SYSTEM_HPP
 #define PULSAR_SYSTEM_HPP 1
 
 // Include: Pulsar
-#include "pulsar/mathematics.hpp"
 #include "pulsar/pulsar.hpp"
-
-// Include: C++
-#include <string>
-#include <string_view>
 
 // Pulsar
 namespace pul
 {
-	/// SYSTEM: CPU
-	/*! @brief Structure containing the information of the processor attached to this process.
+	/*
+	 * !                 !
+	 *   Instruction Set
+	 * !                 !
 	 */
-	struct cpu_info_t
+	/// INSTRUCTION: Set
+	class instruction_set
 	{
-		size_t nNUMA;
-		size_t nLogical;
-		size_t nPhysical;
-		size_t nPhysicalPackages;
-		size_t sL1;
-		size_t lL1;
-		size_t sL2;
-		size_t lL2;
-		size_t sL3;
-		size_t lL3;
+		/// Vendor
+		void
+		__retrieve_vendor(char_t *__vendor) const pf_attr_noexcept
+		{
+			int32_t *p = union_cast<int32_t *>(__vendor);
+			*(p + 0)   = this->vendor_[1];
+			*(p + 1)   = this->vendor_[3];
+			*(p + 2)   = this->vendor_[2];
+		}
+
+		/// Name
+		void
+		__retrieve_brand(char_t *__brand) const pf_attr_noexcept
+		{
+			iterator<const char_t> beg = union_cast<const char_t *>(this->brand1_.data());
+			copy(beg + 00, beg + 16, iterator(__brand));
+			copy(beg + 16, beg + 32, iterator(__brand));
+			copy(beg + 32, beg + 48, iterator(__brand));
+		}
+
+	 public:
+		/// Constructors
+		instruction_set() pf_attr_noexcept
+				: brand1_{ 0 }
+				, brand2_{ 0 }
+				, brand3_{ 0 }
+				, vendor_{ 0 }
+				, nIDs_(0)
+				, nExIDs_(0)
+				, f_1_ECX_(0)
+				, f_1_EDX_(0)
+				, f_7_EBX_(0)
+				, f_7_ECX_(0)
+				, f_81_ECX_(0)
+				, f_81_EDX_(0)
+		{
+			// https://learn.microsoft.com/fr-fr/cpp/intrinsics/cpuid-cpuidex?view=msvc-170
+			// Cpui
+			array<int32_t, 4> cpui;
+			__cpuid(cpui.data(), 0);
+			this->nIDs_ = cpui[0];
+
+			// Vendor
+			__cpuidex(cpui.data(), 0, 0);
+			this->vendor_ = cpui;
+
+			// load bitset with flags for function 0x00000001
+			if(this->nIDs_ >= 1)
+			{
+				__cpuidex(cpui.data(), 1, 0);
+				f_1_ECX_ = cpui[2];
+				f_1_EDX_ = cpui[3];
+			}
+
+			// load bitset with flags for function 0x00000007
+			if(this->nIDs_ >= 7)
+			{
+				__cpuidex(cpui.data(), 7, 0);
+				f_7_EBX_ = cpui[1];
+				f_7_ECX_ = cpui[2];
+			}
+
+			// CpuiEx
+			__cpuid(cpui.data(), 0x80000000);
+			this->nExIDs_ = cpui[0];
+
+			// load bitset with flags for function 0x80000001
+			if(this->nExIDs_ >= union_cast<int32_t>(0x80000001))
+			{
+				__cpuidex(cpui.data(), 0x80000001, 0);
+				f_81_ECX_ = cpui[2];
+				f_81_EDX_ = cpui[3];
+			}
+
+			// Brand
+			if(this->nExIDs_ >= union_cast<int32_t>(0x80000004))
+			{
+				__cpuidex(cpui.data(), 0x80000002, 0);
+				this->brand1_ = cpui;
+				__cpuidex(cpui.data(), 0x80000003, 0);
+				this->brand2_ = cpui;
+				__cpuidex(cpui.data(), 0x80000004, 0);
+				this->brand3_ = cpui;
+			}
+		}
+		instruction_set(const instruction_set &) pf_attr_noexcept = delete;
+		instruction_set(instruction_set &&) pf_attr_noexcept      = delete;
+
+		/// Destructor
+		~instruction_set() pf_attr_noexcept = default;
+
+		/// Operator =
+		instruction_set &
+		operator=(const instruction_set &) pf_attr_noexcept = delete;
+		instruction_set &
+		operator=(instruction_set &&) pf_attr_noexcept = delete;
+
+		/// f_1_ECX
+		pf_hint_nodiscard bool
+		sse3() const pf_attr_noexcept
+		{
+			return this->f_1_ECX_ & 0b1;
+		}
+		pf_hint_nodiscard bool
+		pclmulqdq() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 1) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		monitor() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 3) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		fma() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 9) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		ssse3() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 12) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		cmpxchg16b() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 13) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		sse41() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 19) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		sse42() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 20) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		movbe() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 22) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		popcnt() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 23) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		aes() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 25) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		xsave() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 26) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		osxsave() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 27) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		avx() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 28) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		f16c() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 29) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		rdrand() const pf_attr_noexcept
+		{
+			return (this->f_1_ECX_ >> 30) & 0b1;
+		}
+
+		/// f_1_EDX
+		pf_hint_nodiscard bool
+		msr() const pf_attr_noexcept
+		{
+			return (this->f_1_EDX_ >> 5) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		cx8() const pf_attr_noexcept
+		{
+			return (this->f_1_EDX_ >> 8) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		sep() const pf_attr_noexcept
+		{
+			return (this->f_1_EDX_ >> 11) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		cmov() const pf_attr_noexcept
+		{
+			return (this->f_1_EDX_ >> 15) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		clfsh() const pf_attr_noexcept
+		{
+			return (this->f_1_EDX_ >> 19) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		mmx() const pf_attr_noexcept
+		{
+			return (this->f_1_EDX_ >> 23) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		fxsr() const pf_attr_noexcept
+		{
+			return (this->f_1_EDX_ >> 24) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		sse() const pf_attr_noexcept
+		{
+			return (this->f_1_EDX_ >> 25) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		sse2() const pf_attr_noexcept
+		{
+			return (this->f_1_EDX_ >> 26) & 0b1;
+		}
+
+		/// f_7_EBX
+		pf_hint_nodiscard bool
+		fsgsbase() const pf_attr_noexcept
+		{
+			return this->f_7_EBX_ & 0b1;
+		}
+		pf_hint_nodiscard bool
+		bmi1() const pf_attr_noexcept
+		{
+			return (this->f_7_EBX_ >> 3) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		hle() const pf_attr_noexcept
+		{
+			return this->is_intel() && (this->f_7_EBX_ >> 4) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		avx2() const pf_attr_noexcept
+		{
+			return (this->f_7_EBX_ >> 5) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		bmi2() const pf_attr_noexcept
+		{
+			return (this->f_7_EBX_ >> 8) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		erms() const pf_attr_noexcept
+		{
+			return (this->f_7_EBX_ >> 9) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		invpcid() const pf_attr_noexcept
+		{
+			return (this->f_7_EBX_ >> 10) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		rtm() const pf_attr_noexcept
+		{
+			return this->is_intel() && (this->f_7_EBX_ >> 11) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		avx512f() const pf_attr_noexcept
+		{
+			return (this->f_7_EBX_ >> 16) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		rdseed() const pf_attr_noexcept
+		{
+			return (this->f_7_EBX_ >> 18) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		adx() const pf_attr_noexcept
+		{
+			return (this->f_7_EBX_ >> 19) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		avx512pf() const pf_attr_noexcept
+		{
+			return (this->f_7_EBX_ >> 26) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		avx512er() const pf_attr_noexcept
+		{
+			return (this->f_7_EBX_ >> 27) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		avx512cd() const pf_attr_noexcept
+		{
+			return (this->f_7_EBX_ >> 28) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		sha() const pf_attr_noexcept
+		{
+			return (this->f_7_EBX_ >> 29) & 0b1;
+		}
+
+		/// f_7_ECX
+		pf_hint_nodiscard bool
+		prefetchwt1() const pf_attr_noexcept
+		{
+			return this->f_7_ECX_ & 0b1;
+		}
+
+		/// f_81_ECX
+		pf_hint_nodiscard bool
+		lahf() const pf_attr_noexcept
+		{
+			return this->f_81_ECX_ & 0b1;
+		}
+		pf_hint_nodiscard bool
+		lzcnt() const pf_attr_noexcept
+		{
+			return this->is_intel() && (this->f_81_ECX_ >> 5) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		abm() const pf_attr_noexcept
+		{
+			return this->is_amd() && (this->f_81_ECX_ >> 5) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		sse4a() const pf_attr_noexcept
+		{
+			return this->is_amd() && (this->f_81_ECX_ >> 6) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		xop() const pf_attr_noexcept
+		{
+			return this->is_amd() && (this->f_81_ECX_ >> 11) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		tbm() const pf_attr_noexcept
+		{
+			return this->is_amd() && (this->f_81_ECX_ >> 21) & 0b1;
+		}
+
+		/// f_81_EDX
+		pf_hint_nodiscard bool
+		syscall() const pf_attr_noexcept
+		{
+			return this->is_intel() && (this->f_81_EDX_ >> 11) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		mmxext() const pf_attr_noexcept
+		{
+			return this->is_amd() && (this->f_81_EDX_ >> 22) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		rdtscp() const pf_attr_noexcept
+		{
+			return this->is_intel() && (this->f_81_EDX_ >> 27) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		mmx3Dnowext() const pf_attr_noexcept
+		{
+			return this->is_amd() && (this->f_81_EDX_ >> 30) & 0b1;
+		}
+		pf_hint_nodiscard bool
+		mmx3Dnow() const pf_attr_noexcept
+		{
+			return this->is_amd() && (this->f_81_EDX_ >> 31) & 0b1;
+		}
+
+		/// Is
+		pf_hint_nodiscard bool
+		is_amd() const pf_attr_noexcept
+		{
+			array<char_t, 0x20> vendor;
+			array<char_t, 0x20> asAMD = { "AuthenticAMD" };
+			this->__retrieve_vendor(vendor.data());
+			return vendor == asAMD;
+		}
+		pf_hint_nodiscard bool
+		is_intel() const pf_attr_noexcept
+		{
+			array<char_t, 0x20> vendor;
+			array<char_t, 0x20> asIntel = { "GenuineIntel" };
+			this->__retrieve_vendor(vendor.data());
+			return vendor == asIntel;
+		}
+
+		/// Name
+		pf_hint_nodiscard string<char_traits::ascii, magnifier_default, allocator_default>
+		brand() const pf_attr_noexcept
+		{
+			array<char_t, 0x40> brand;
+			this->__retrieve_brand(brand.data());
+			return string<char_traits::ascii, magnifier_default, allocator_default>(brand, 0x40);
+		}
+		pf_hint_nodiscard string<char_traits::ascii, magnifier_default, allocator_default>
+		vendor() const pf_attr_noexcept
+		{
+			array<char_t, 0x20> vendor;
+			this->__retrieve_vendor(vendor.data());
+			return string<char_traits::ascii, magnifier_default, allocator_default>(vendor, 0x20);
+		}
+
+	 private:
+		array<int32_t, 4> brand1_;
+		array<int32_t, 4> brand2_;
+		array<int32_t, 4> brand3_;
+		array<int32_t, 4> vendor_;
+		int32_t nIDs_;
+		int32_t nExIDs_;
+		int32_t f_1_ECX_;
+		int32_t f_1_EDX_;
+		int32_t f_7_EBX_;
+		int32_t f_7_ECX_;
+		int32_t f_81_ECX_;
+		int32_t f_81_EDX_;
 	};
-
-	/*! @brief Imports a structure containing the characteristics of the CPU.
-	 *
-	 *  @return cpu_info_t containing CPU information.
-	 */
-	pf_hint_nodiscard pulsar_api cpu_info_t
-	cpu_info();
-
-	/*! @brief Get the name of the processor attached to this process.
-	 *
-	 *  @return c8string_t containing the name of the processor.
-	 */
-	pulsar_api pf_hint_nodiscard c8string_t
-	cpu_name() pf_attr_noexcept;
-
-	/*! @brief Get the vendor name of the processor attached to this process.
-	 *
-	 *  @return c8string_t containing the vendor name of the processor.
-	 */
-	pulsar_api pf_hint_nodiscard c8string_t
-	cpu_vendor() pf_attr_noexcept;
-
-	/*! @brief Check if the processor is from the Intel brand.
-	 *
-	 *  @param __vendor Vendor's name.
-	 *  @return True if is from Intel.
-	 *  @return False if not.
-	 */
-	pf_hint_nodiscard pf_decl_inline bool cpu_is_intel(
-		c8string_t_view __vendor) pf_attr_noexcept
-	{
-		return __vendor == "GenuineIntel";
-	}
-	/*! @brief Check if the processor is from the Intel brand.
-	 *
-	 *  @return True if is from Intel.
-	 *  @return False if not.
-	 */
-	pf_hint_nodiscard pf_decl_inline bool cpu_is_intel() pf_attr_noexcept
-	{
-		return cpu_is_intel(cpu_vendor());
-	}
-
-	/*! @brief Check if the processor is from the AMD brand.
-	 *
-	 *  @param __vendor Vendor's name.
-	 *  @return True if is from AMD.
-	 *  @return False if not.
-	 */
-	pf_hint_nodiscard pf_decl_inline bool cpu_is_amd(
-		c8string_t_view __vendor) pf_attr_noexcept
-	{
-		return __vendor == "AuthenticAMD";
-	}
-	/*! @brief Check if the processor is from the AMD brand.
-	 *
-	 *  @return True if is from AMD.
-	 *  @return False if not.
-	 */
-	pf_hint_nodiscard pf_decl_inline bool cpu_is_amd() pf_attr_noexcept
-	{
-		return cpu_is_amd(cpu_vendor());
-	}
-
-	/*! @brief Check if hyperthreading is enabled on this processor.
-	 *
-	 *  @param __info Information structure of the processor.
-	 *  @return True if enabled.
-	 *  @return Else if not.
-	 */
-	pf_hint_nodiscard pf_decl_inline bool cpu_hyperthreading_enabled(
-		cpu_info_t const &__info) pf_attr_noexcept
-	{
-		return __info.nLogical == 2 * __info.nPhysical;
-	}
-	/*! @brief Check if hyperthreading is enabled on this processor.
-	 *
-	 *  @return True if enabled.
-	 *  @return Else if not.
-	 */
-	pf_hint_nodiscard pf_decl_inline bool cpu_hyperthreading_enabled() pf_attr_noexcept
-	{
-		return cpu_hyperthreading_enabled(cpu_info());
-	}
-
-	/// SYSTEM: Instruction Sets
-	/// f_1_ECX
-	pulsar_api pf_hint_nodiscard bool
-	cpu_sse3() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_pclmulqdq() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_monitor() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_ssse3() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_fma() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_cmpxchg16b() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_sse41() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_sse42() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_movbe() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_popcnt() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_aes() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_xsave() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_osxsave() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_avx() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_f16c() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_rdrand() pf_attr_noexcept;
-
-	/// f_1_EDX
-	pulsar_api pf_hint_nodiscard bool
-	cpu_msr() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_cx8() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_sep() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_cmov() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_clfsh() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_mmx() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_fxsr() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_sse() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_sse2() pf_attr_noexcept;
-
-	/// f_7_EBX
-	pulsar_api pf_hint_nodiscard bool
-	cpu_fsgsbase() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_bmi1() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_hle() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_avx2() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_bmi2() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_erms() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_invpcid() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_rtm() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_avx512f() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_rdseed() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_adx() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_avx512pf() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_avx512er() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_avx512cd() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_sha() pf_attr_noexcept;
-
-	/// f_7_ECX
-	pulsar_api pf_hint_nodiscard bool
-	cpu_prefetchwt1() pf_attr_noexcept;
-
-	/// f_81_ECX
-	pulsar_api pf_hint_nodiscard bool
-	cpu_lahf() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_lzcnt() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_abm() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_sse4a() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_xop() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_tbm() pf_attr_noexcept;
-
-	/// f_81_EDX
-	pulsar_api pf_hint_nodiscard bool
-	cpu_syscall() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_mmxext() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_rdtscp() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_mmx3Dnowext() pf_attr_noexcept;
-	pulsar_api pf_hint_nodiscard bool
-	cpu_mmx3Dnow() pf_attr_noexcept;
-
-	/// SYSTEM: RAM
-	/*! @brief Structure containing information about memory usage by this process.
-	 */
-	struct ram_process_info_t
-	{
-		size_t sVirtUsage;		// Total virtual memory usage size.
-		size_t sPhysUsage;		// Total physical memory usage size.
-		size_t sPageFileUsage;// Total pagefile usage size.
-		size_t nPageFileFault;// Number of page faults.
-	};
-	/*! @brief Get the memory usage of this process when this function is called.
-	 *
-	 *  @return Structure containing memory usage information by this process.
-	 */
-	pf_hint_nodiscard pulsar_api ram_process_info_t
-	ram_process_info();
-
-	/*! @brief Structure containing information about memory status of the system.
-	 */
-	struct ram_system_info_t
-	{
-		size_t sVirtTotal;		// Total virtual memory size.
-		size_t sVirtAvail;		// Available virtual memory size.
-		size_t sVirtAvailExt;	// Available extended virtual memory size.
-		size_t sPhysTotal;		// Total physical memory size.
-		size_t sPhysAvail;		// Available physical memory size.
-		size_t sPageFileTotal;// Total pagefile memory size.
-		size_t sPageFileAvail;// Available pagefile memory size.
-	};
-	/*! @brief Get the memory status of this system when this function is called.
-	 *
-	 *  @return Structure containing memory status information by this system.
-	 */
-	pf_hint_nodiscard pulsar_api ram_system_info_t
-	ram_system_info();
-
-	/// SYSTEM: Info
-	/*! @brief Structure containing the essential system information.
-	 */
-	struct system_info_t
-	{
-		size_t pageSize;
-		size_t numProcessors;
-		size_t allocationGranularity;
-		void *minAllocationAddress;
-		void *maxAllocationAddress;
-	};
-
-	/*! @brief Returns essential system information.
-	 *
-	 *  @return Essential system information.
-	 */
-	pulsar_api pf_hint_nodiscard system_info_t
-	system_info() pf_attr_noexcept;
-}
+} // namespace pul
 
 #endif // !PULSAR_SYSTEM_HPP

@@ -1,9 +1,9 @@
 /*! @file   matrix3.inl
- *  @author Fluffy (noe.louis-quentin@hotmail.fr)
+ *  @author Louis-Quentin Noé (noe.louis-quentin@hotmail.fr)
  *  @brief	Specialization for square matrices of size 3.
  *  @date   31-05-2022
  *
- *  @copyright Copyright (c) 2022 - Pulsar Software
+ *  @copyright Copyright (c) 2023 - Pulsar Software
  *
  *  @since 0.1.1
  */
@@ -12,7 +12,7 @@
 #define PULSAR_MATH_MATRIX3_INL 1
 
 // Include: Pulsar
-#include "pulsar/intrin.hpp"
+#include "pulsar/pulsar.hpp"
 
 // Pulsar
 namespace pul
