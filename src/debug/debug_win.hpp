@@ -37,19 +37,20 @@ namespace pul
 	public:
 		/// Constructors
 		pf_decl_inline __dbg_wsstring_view() pf_attr_noexcept
-			: store_(nullptr)
-			, count_(0)
+			: count_(0)
+			, store_(nullptr)
 		{}
 		pf_decl_inline __dbg_wsstring_view(
 			const wchar_t *__str,
 			size_t __count) pf_attr_noexcept
-			: store_(__str)
-			, count_(__count)
+			: count_(__count)
+			, store_(__str)
+
 		{}
 		pf_decl_inline __dbg_wsstring_view(
 			const wchar_t *__str) pf_attr_noexcept
-			: store_(__str)
-			, count_(std::wcslen(__str))
+			: count_(std::wcslen(__str))
+			, store_(__str)
 		{}
 		__dbg_wsstring_view(
 			__dbg_wsstring_view const&) = default;
@@ -116,8 +117,8 @@ namespace pul
 		}
 
 	private:
-		const wchar_t *store_;
 		size_t count_;
+		const wchar_t *store_;
 	};
 
 	// String
@@ -129,13 +130,14 @@ namespace pul
 	{
 		this->shrink(__v.size());
 		std::memcpy(this->data(), __v.data(), this->count_);
+		*(this->end()) = L'\0';
 	}
 
 	public:
 		/// Constructors
 		pf_decl_inline __dbg_wsstring() pf_attr_noexcept
-			: store_(nullptr)
-			, count_(0)
+			: count_(0)
+			, store_(nullptr)
 		{}
 		pf_decl_inline __dbg_wsstring(
 			nullptr_t) pf_attr_noexcept
@@ -144,8 +146,8 @@ namespace pul
 		pf_decl_inline __dbg_wsstring(
 			size_t __count,
 			char_t __val) pf_attr_noexcept
-			: store_(union_cast<wchar_t*>(allocate(__count, align_val_t(32), 0)))
-			, count_(__count)
+			: count_(__count)
+			, store_(union_cast<wchar_t*>(allocate(__count, align_val_t(32), 0)))
 		{
 			std::memset(this->store_, __val, __count);
 		}
@@ -155,8 +157,8 @@ namespace pul
 			__dbg_wsstring const &) = default;
 		pf_decl_inline __dbg_wsstring(
 			__dbg_wsstring_view __v) pf_attr_noexcept
-			: store_(union_cast<wchar_t*>(allocate(__v.count(), align_val_t(32), 0)))
-			, count_(__v.count())
+			: count_(__v.count())
+			, store_(union_cast<wchar_t*>(allocate(__v.count(), align_val_t(32), 0)))
 		{
 			this->__assign_view(__v);
 		}
@@ -199,7 +201,15 @@ namespace pul
 		pf_decl_inline void shrink(
 			size_t __c) pf_attr_noexcept
 		{
-			this->store_ = union_cast<wchar_t*>(reallocate(this->store_, this->count_, __c, align_val_t(32), 0));
+			if (__c == 0)
+			{
+				deallocate(this->store_);
+			}
+			else
+			{
+				this->store_ = union_cast<wchar_t*>(reallocate(this->store_, this->count_, __c + 1, align_val_t(32), 0));
+				this->count_ = __c + 1;
+			}
 		}
 
 		/// Begin/End
@@ -256,8 +266,8 @@ namespace pul
 		}
 
 	private:
-		wchar_t *store_;
 		size_t count_;
+		wchar_t *store_;
 	};
 
 	/// DEBUG: Win -> Exception Handler
@@ -637,7 +647,7 @@ namespace pul
 
 		// 3. Popup
 		__dbg_generate_error_popup_win(
-			"Pulsar", __dbg_format_message(
+			"Pulsar", dbg_format_message(
 				"An unknown error has been caught.\n"
 				"A dumpfile has been generated at location={}.\n"
 				"Press ok to terminate the program.",
@@ -665,7 +675,7 @@ namespace pul
 
 		// 3. Popup
 		__dbg_generate_error_popup_win(
-			"Pulsar", __dbg_format_message(
+			"Pulsar", dbg_format_message(
 				"An exception has been thrown of category={}, code={}, message={} | {}.\n"
 				"A dumpfile has been generated at location={}.\n"
 				"Press ok to terminate the program.",

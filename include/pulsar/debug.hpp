@@ -17,6 +17,7 @@
 #include "pulsar/chrono.hpp"
 
 // Include: Fmt
+#include "fmt/color.h"
 #include "fmt/ranges.h"
 #include "fmt/format.h"
 
@@ -101,8 +102,8 @@ namespace dbg_flags
 	public:
 		/// Constructors
 		pf_decl_constexpr pf_decl_inline dbg_u8string_view() pf_attr_noexcept
-		: store_(nullptr)
-		, count_(0)
+		: count_(0)
+		, store_(nullptr)
 		{}
 		pf_decl_constexpr pf_decl_inline dbg_u8string_view(
 			nullptr_t)
@@ -111,13 +112,13 @@ namespace dbg_flags
 		pf_decl_constexpr pf_decl_inline dbg_u8string_view(
 			const char_t * __str,
 			size_t __count) pf_attr_noexcept
-		: store_(__str)
-		, count_(__count)
+		: count_(__count)
+		, store_(__str)
 		{}
 		pf_decl_constexpr pf_decl_inline dbg_u8string_view(
 			const char_t * __str) pf_attr_noexcept
-		: store_(__str)
-		, count_(std::strlen(__str))
+		: count_(std::strlen(__str))
+		, store_(__str)
 		{}
 		dbg_u8string_view(
 			dbg_u8string_view const&) = default;
@@ -185,8 +186,8 @@ namespace dbg_flags
 		}
 
 	private:
-		const char_t *store_;
 		size_t count_;
+		const char_t *store_;
 	};
 
 	// String
@@ -198,6 +199,7 @@ namespace dbg_flags
 	{
 		this->shrink(__v.size());
 		std::memcpy(this->data(), __v.data(), this->count_);
+		*(this->end()) = '\0';
 	}
 
 	public:
@@ -214,27 +216,28 @@ namespace dbg_flags
 		pf_decl_constexpr pf_decl_inline dbg_u8string(
 			const char_t * __str,
 			size_t __count)
-			: count_(__count)
-			, store_(union_cast<char_t*>(allocate(__count + 1, align_val_t(32), 0)))
+			: count_(__count + 1)
+			, store_(union_cast<char_t*>(allocate(this->count_, align_val_t(32), 0)))
 		{
 			std::memcpy(this->store_, __str, __count);
-			*this->end() = '\0';
+			*this->end() = L'\0';
 		}
 		pf_decl_constexpr pf_decl_inline dbg_u8string(
 			const char_t * __str)
-			: count_(std::strlen(__str))
-			, store_(union_cast<char_t*>(allocate(this->count_ + 1, align_val_t(32), 0)))
+			: count_(std::strlen(__str) + 1)
+			, store_(union_cast<char_t*>(allocate(this->count_, align_val_t(32), 0)))
 		{
 			std::memcpy(this->store_, __str, this->count_);
-			*this->end() = '\0';
+			*this->end() = L'\0';
 		}
 		pf_decl_constexpr pf_decl_inline dbg_u8string(
 			size_t __count,
 			char_t __val) pf_attr_noexcept
-		: count_(__count)
-		, store_(union_cast<char_t*>(allocate(__count + 1, align_val_t(32), 0)))
+		: count_(__count + 1)
+		, store_(union_cast<char_t*>(allocate(this->count_, align_val_t(32), 0)))
 		{
-			std::memset(this->store_, __val, __count + 1);
+			std::memset(this->store_, __val, __count);
+			*this->end() = L'\0';
 		}
 		dbg_u8string(
 			dbg_u8string &&) = default;
@@ -287,7 +290,15 @@ namespace dbg_flags
 		pf_decl_constexpr pf_decl_inline void shrink(
 			size_t __c) pf_attr_noexcept
 		{
-			this->store_ = union_cast<char_t*>(reallocate(this->store_, this->count_, __c, align_val_t(32), 0));
+			if (__c == 0)
+			{
+				deallocate(this->store_);
+			}
+			else
+			{
+				this->store_ = union_cast<char_t*>(reallocate(this->store_, this->count_, __c + 1, align_val_t(32), 0));
+				this->count_ = __c + 1;
+			}
 		}
 
 		/// Begin/End
@@ -627,15 +638,16 @@ namespace dbg_flags
 		if (__level < logger.level()) return;
 
 		// 2. Print
-		const char_t *lvl;
+		dbg_u8string_view lvl;
+		fmt::text_style style;
 		switch(__level)
 		{
-		case dbg_level::low:    { lvl = "LOW";    break; }
-		case dbg_level::medium: { lvl = "MEDIUM"; break; }
-		case dbg_level::high:   { lvl = "HIGH";   break; }
+		case dbg_level::low:    { lvl = "low"; style = fmt::bg(fmt::color::midnight_blue); break; }
+		case dbg_level::medium: { lvl = "medium"; style = fmt::bg(fmt::color::green); break; }
+		case dbg_level::high:   { lvl = "high"; style = fmt::bg(fmt::color::indian_red);  break; }
 		};
 		dbg_u8string prt(DBG_FMT_BUFFER_SIZE, '\0');
-		char_t *p = prt.begin();
+		char_t *p = prt.data();
 		if (__type == dbg_type::extension)
 		{
 			p = fmt::format_to(p, "                  ");
@@ -643,24 +655,59 @@ namespace dbg_flags
 		else
 		{
 			p = __dbg_format_chrono_to(p);
-			p = fmt::format_to(p, " /{}/ /{}/ message=", union_cast<char_t>(__type), lvl);
+			p = fmt::format_to(
+				p, " /{}/ /{}/ message=",
+				fmt::styled(union_cast<char_t>(__type), __type == dbg_type::info ? fmt::fg(fmt::color::sky_blue) : fmt::fg(fmt::color::orange_red)),
+				fmt::styled(lvl.data(), style));
 		}
 		char_t *k = p;
-		p			 = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
-		p			 = __dbg_reformat_newlines_to(k);
-		*(p++) = '\n';
-		prt.shrink(union_cast<size_t>(p) - union_cast<size_t>(prt.begin()) + 1);
+		p = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
+		p = __dbg_reformat_newlines_to(k);
+		if (__type != dbg_type::extension)
+		{
+			*(p++) = '\n';
+		}
+		prt.shrink(union_cast<size_t>(p) - union_cast<size_t>(prt.data()));
 		logger.write(prt);
+	}
+	template <typename ..._Args>
+	pf_decl_static void
+	__dbg_print(
+		dbg_level __level,
+		dbg_u8string_format<_Args...> __fmt,
+		_Args && ... __args)
+	{
+		// 1. Level
+		if (__level < logger.level()) return;
+
+		// 2. Print
+		dbg_u8string prt(DBG_FMT_BUFFER_SIZE, '\0');
+		char_t *p = prt.data();
+		p = fmt::format_to(p, "                  ");
+		char_t *k = p;
+		p = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
+		p = __dbg_reformat_newlines_to(k);
+		prt.shrink(union_cast<size_t>(p) - union_cast<size_t>(prt.data()));
+		logger.write(prt);
+	}
+	template <typename ..._Args>
+	pf_decl_static void
+	__dbg_print(
+		dbg_u8string_format<_Args...> __fmt,
+		_Args && ... __args)
+	{
+		// Print
+		return __dbg_print(dbg_level::high, __fmt, std::forward<_Args>(__args)...);
 	}
 	template<typename ..._Args>
 	pf_hint_nodiscard pf_decl_static dbg_u8string
-	__dbg_format_message(	// Message
+	dbg_format_message(	// Message
 		dbg_u8string_format<_Args...> __fmt,
 		_Args && ... __args) pf_attr_noexcept
 	{
 		// 1. Format
-		dbg_u8string str(fmt::formatted_size(__fmt, std::forward<_Args>(__args)...) + 1, '\0');
-		char_t *p = str.begin();
+		dbg_u8string str(fmt::formatted_size(__fmt, std::forward<_Args>(__args)...), '\0');
+		char_t *p = str.data();
 		p = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
 
 		// 2. Return
@@ -674,17 +721,20 @@ namespace dbg_flags
 	{
 		// 1. Format
 		dbg_u8string str(DBG_FMT_BUFFER_SIZE, '\0');
-		char_t *p				= str.begin();
+		char_t *p				= str.data();
 		const char_t *b = p;
 		p = __dbg_format_chrono_to(p);
-		p = fmt::format_to(p, " T={} /A/ message=", union_cast<size_t>(std::this_thread::get_id()));
+		p = fmt::format_to(
+			p, " T={} /{}/ message=",
+			union_cast<size_t>(std::this_thread::get_id()),
+			fmt::styled('A', fmt::fg(fmt::color::orange) | fmt::bg(fmt::color::black)));
 		char_t *k = p;
 		p	 = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
 		p	 = __dbg_reformat_newlines_to(k);
 		*p = '\n';
 		++p;
 		p = __dbg_format_stacktrace_to(p, DBG_FMT_STACK_FRAMES_IGNORE);
-		str.shrink(union_cast<size_t>(p) - union_cast<size_t>(b) - 1);
+		str.shrink(union_cast<size_t>(p) - union_cast<size_t>(b));
 
 		// 2. Return
 		return str;
@@ -728,11 +778,11 @@ namespace dbg_flags
 	pf_decl_extern __dbg_initializer __dbg_initializer_instance;
 }
 
-#define pf_print(type, level, format, ...) pul::__dbg_print(type, level, format __VA_OPT__( ,) __VA_ARGS__)
-#define pf_throw(cat, val, bit, format, ...) pul::__dbg_throw(cat, pul::union_cast<uint32_t>(val), bit, pul::__dbg_format_message(format __VA_OPT__( ,) __VA_ARGS__))
+#define pf_print(...) pul::__dbg_print(__VA_ARGS__)
+#define pf_throw(cat, val, bit, format, ...) pul::__dbg_throw(cat, pul::union_cast<uint32_t>(val), bit, pul::dbg_format_message(format __VA_OPT__( ,) __VA_ARGS__))
 #define pf_throw_if(c, cat, val, bit, format, ...) if(pf_unlikely(c)) pf_throw(cat, val, bit, format __VA_OPT__( ,) __VA_ARGS__)
 #ifdef PF_DEBUG
-#define pf_assert(c, ...) if(!c) pul::__dbg_assert(pul::__dbg_format_error_message(__VA_ARGS__))
+#define pf_assert(c, ...) if(!(c)) pul::__dbg_assert(pul::__dbg_format_error_message(__VA_ARGS__))
 #define pf_assert_nodiscard(c, ...) pf_assert(c __VA_OPT__( ,) __VA_ARGS__)
 #else
 #define pf_assert(c, ...)
@@ -742,4 +792,5 @@ namespace dbg_flags
 
 #endif // !PULSAR_DEBUG_HPP
 
-// TODO: Ring Buffer for Logger ?
+// TODO: Local Ring Buffer
+// TODO: Concurrent Logger

@@ -13,337 +13,269 @@
 
 // Include: Pulsar
 #include "pulsar/debug.hpp"
-#include "pulsar/container.hpp"
 
 // Pulsar
 namespace pul
 {
-	struct __test_result_t;
-	class __test_engine;
-	class __test_runner;
-	class __test_unit;
-	class __test_pack;
+	/// TESTER: Types
+	class __tester_unit;
+	class __tester_pack;
+	class __tester_engine;
+	template <size_t _Num> class __tester_benchmark;
+	class __tester_exception_require;
 
-	/// TEST: Engine
-	class __test_engine
+	/// TESTER: Unit
+	class __tester_unit
 	{
 	public:
-	// TODO:
+		/// Constructors
+		__tester_unit(
+			dbg_u8string_view __name) pf_attr_noexcept;
+		__tester_unit(__tester_unit const &) = delete;
+		__tester_unit(__tester_unit &&)			 = delete;
 
-	private:
-		forward_list<__test_pack> packs_;
+		/// Run
+		pf_decl_virtual void __run() pf_attr_noexcept = 0;
+
+		/// Destructor
+		~__tester_unit();
+
+		/// Store
+		dbg_u8string_view name_;
+		__tester_unit *next_;
 	};
 
-	/// TEST: Pack
-	class __test_pack
+
+	/// TESTER: Benchmark
+	template <size_t _Num>
+	class __tester_benchmark pf_attr_final
+		: public __tester_unit
 	{
 	public:
-	// TODO:
+		/// Constructor
+		template <typename ... _Args>
+		__tester_benchmark(
+			dbg_u8string __name,
+			_Args && ... __args) pf_attr_noexcept
+		requires(sizeof...(_Args) == _Num)
+			: __tester_unit(__name)
+			, iterationList_ { std::forward<_Args>(__args)... }
+		{}
 
-	private:
-		forward_list<__test_unit> units_;
+		/// Run
+		void __run() pf_attr_override
+		{
+			// TODO: Benchmark
+		}
+
+		/// Destructor
+		~__tester_benchmark() pf_attr_noexcept = default;
+
+		/// Store
+		size_t iterationList_[_Num];
 	};
 
-  #define __pf_test_class_name(name) pf_concatenate("__ptf", name);
-
-	/// TEST: Unit
-	class __test_unit: public __test_pack
+	/// TESTER: Unit -> Exception Require
+	class __tester_exception_require
 	{
 	public:
-	// TODO:
+		/// Constructors
+		__tester_exception_require(
+			dbg_u8string_view __file,
+			uint32_t __line) pf_attr_noexcept;
+		__tester_exception_require(__tester_exception_require const&) = default;
+		__tester_exception_require(__tester_exception_require &&)			= default;
 
-	private:
+		/// Destructor
+		~__tester_exception_require() pf_attr_noexcept = default;
+
+		/// Operator =
+		__tester_exception_require &operator=(__tester_exception_require const &) = default;
+		__tester_exception_require &operator=(__tester_exception_require &&)			= default;
+
+		/// File
+		pf_hint_nodiscard pf_decl_inline dbg_u8string_view
+		file() const pf_attr_noexcept
+		{
+			return this->file_;
+		}
+
+		/// Line
+		pf_hint_nodiscard pf_decl_inline uint32_t
+		line() const pf_attr_noexcept
+		{
+			return this->line_;
+		}
+
+		/// Store
+		dbg_u8string_view file_;
+		uint32_t line_;
 	};
+
+	/// TESTER: Unit -> Pack
+	class __tester_pack
+	{
+	public:
+		/// Constructors
+		__tester_pack(
+			dbg_u8string_view __name) pf_attr_noexcept;
+		__tester_pack(__tester_pack const &) = delete;
+		__tester_pack(__tester_pack &&)			 = delete;
+
+		/// Destructor
+		~__tester_pack() pf_attr_noexcept = default;
+
+		/// Operator =
+		__tester_pack &operator=(__tester_pack const &) = delete;
+		__tester_pack &operator=(__tester_pack &&)			= delete;
+
+		/// Run
+		void
+		__run() pf_attr_noexcept;
+
+		/// Unit
+		void
+		__add_unit(
+			__tester_unit *__u) pf_attr_noexcept;
+		void
+		__add_result(
+			bool __c,
+			dbg_u8string_view __file,
+			uint32_t __line) pf_attr_noexcept;
+
+		/// Store
+		dbg_u8string_view name_;
+		__tester_pack *next_;
+		__tester_unit *unitCurr_;
+		__tester_unit *unitHead_;
+		__tester_unit *unitTail_;
+		size_t numTests_;
+		size_t numFailed_;
+	};
+
+	/// TESTER: Engine
+	// Type
+	class __tester_engine pf_attr_final
+	{
+	public:
+		/// Constructors
+		__tester_engine() pf_attr_noexcept;
+		__tester_engine(__tester_engine const &) = delete;
+		__tester_engine(__tester_engine &&)			 = delete;
+
+		/// Destructor
+		~__tester_engine() pf_attr_noexcept = default;
+
+		/// Run
+		pf_hint_nodiscard int32_t
+		run() pf_attr_noexcept;
+
+		/// Operator =
+		__tester_engine &operator=(
+			__tester_engine const &) = delete;
+		__tester_engine &operator=(
+			__tester_engine &&) = delete;
+
+		/// Test
+		void
+		__test(
+			bool __c,
+			dbg_u8string_view __file,
+			uint32_t __line) pf_attr_noexcept;
+
+		/// Pack
+		void
+		__add_pack(
+			__tester_pack *__p) pf_attr_noexcept;
+		pf_hint_nodiscard __tester_pack*
+		__cur_pack() pf_attr_noexcept;
+
+		/// Store
+		__tester_pack unscoppedPack_;
+		__tester_pack *packHead_;
+		__tester_pack *packTail_;
+	};
+
+	/// TESTER: Instances
+	pf_decl_extern __tester_engine tester_engine;
+
+	/// TESTER: Functions
+	pf_hint_noreturn pf_decl_static void __test_require(
+		bool __c,
+		dbg_u8string_view __file,
+		uint32_t __line) pf_attr_noexcept
+	{
+		if(!__c) throw(__tester_exception_require(__file, __line));
+	}
 }
 
-#define pf_suite(name) 																						    \
-   pf_static_assert(sizeof(sn) > 1, "Suite name mustn't be empty!");	\
-   class __pf_test_class_name(sn) : public pul::__test_suite					\
-   {																																	\
-   public:																														\
-    pf_decl_constexpr __pf_test_class_name(sn)() pf_attr_noexcept		  \
-    : pul::__test_suite(sn)																					  \
-    {}																															  \
-   };
+/// TESTER: Macro -> Functions
+#define pt_check(cond) pul::tester_engine.__test(cond, __FILE__, __LINE__)
+#define pt_require(cond) pul::__test_require(cond, __FILE__, __LINE__)
 
-/* namespace pul
-   {
+/// TESTER: Macro -> Unit
+#define __pt_generate_unit_name(name) pf_concatenate(__pt_unit_, name)
+#define __pt_generate_unit_type(name) pf_concatenate(__pt_generate_unit_name(name), _t)
 
-   struct __test_result_t;
-   class __test_engine;
-   class __test_runner;
-   class __test_unit;
-   class __test_suite;
+#define pt_unit(name)
+class __pt_generate_unit_type(name)	\
+		: public pul::__tester_unit			\
+	{																	\
+public:															\
+	};
 
-   /// TEST: Engine
-   class __test_engine
-   {
-   public:
-    /// Constructors
-    pf_decl_constexpr __test_engine() pf_attr_noexcept
-    {
-      pf_assert(this->suites_.is_empty(), "Suites aren't empty!");
-      // TODO: Print Testing Start
-    }
-    __test_engine(__test_engine const &) = delete;
-    __test_engine(__test_engine &&)			 = delete;
 
-    /// Destructor
-    pf_decl_constexpr ~__test_engine() pf_attr_noexcept
-    {
-      // TODO: Print Results
-      this->suites_.clear();
-    }
+/// TESTER: Macro -> Pack
+#define __pt_generate_pack_name(name) pf_concatenate(__pt_pack_, name)
+#define __pt_generate_pack_type(name) pf_concatenate(__pt_generate_pack_name(name), _t)
 
-    /// Operator =
-    pf_decl_constexpr
-    __test_engine &
-    operator =(__test_engine const &) = delete;
-    pf_decl_constexpr
-    __test_engine &
-    operator =(__test_engine &&) = delete;
+#define pt_pack(name)												\
+				class __pt_generate_pack_type(name)	\
+					: public pul::__tester_pack				\
+				{																		\
+																						\
+				};
 
-    /// Suite -> Add
-    pf_decl_constexpr void
-    __add_suite(
-      const __test_suite *__suite) pf_attr_noexcept
-    {
-      // TODO: Check if suite name already exist
-      this->suites_.insert_back(__suite);
-    }
+/// TESTER: Macro -> Benchmark
+#define __pt_generate_benchmark_name(name) pf_concatenate(__pt_benchmark_, name)
+#define __pt_generate_benchmark_type(name) pf_concatenate(__pt_generate_benchmark_name(name), _t)
 
-    /// Suite -> Process All
-    pf_decl_constexpr void
-    __process_all() pf_attr_noexcept
-    {
-      for(auto &it : this->suites_)
-      {
-        it.__process();
-      }
-    }
+#define pt_benchmark(name, bvn, ...)															 \
+				class __pt_generate_benchmark_type(name)									 \
+					: public pul::__tester_benchmark<sizeof...(__VA_ARGS__)> \
+				{																													 \
+																																	 \
+				};
 
-   private:
-    list_forward<__test_suite *> suites_;
-   };
 
-   /// TEST: Result
-   struct __test_result_t
-   {
-    nanosecond_t total;
-    nanosecond_t average;
-    nanosecond_t min;
-    nanosecond_t max;
-   };
 
-   /// TEST: Runner
-   class __test_runner
-   {
-   public:
-    /// Constructors
-    pf_decl_constexpr
-    __test_runner()											 = default;
-    pf_decl_constexpr
-    __test_runner(__test_runner const &) = delete;
-    pf_decl_constexpr
-    __test_runner(__test_runner &&)			 = delete;
+/*
+ * [HHHH:MM:SS:MMMM] /I/ Using Pulsar Tester
+ *                   Running Pack "Global"
+ *                   <Test>::<line>
+ *                   ... X Times
+ *                   (A) Success | (B) Failed
+ *                   ...
+ *
+ *                   Pack "<PackName X>"
+ *                   Benchmark "<BenchName>"
+ *                   iterations   X        ...
+ *                   Min (ns)   1438 ns    ...
+ *                   Max (ns)   2000 ns    ...
+ *                   Avg (ns)   1639 ns    ...
+ *                   Var (ns)   1550 ns    ...
+ *                   Sig (ns)   725  ns    ...
+ *                   Q1  (ns)   1250 ns    ...
+ *                   Q3  (ns)   1500 ns    ...
+ *                   Total (ns)   N         M
+ *
+ *                   (X) Pack(s) ran
+ *                   (U) Unit(s) ran
+ *                   (B) Benchmark(s) ran
+ *                   (A) Total Success | (B) Total Fails
+ *                or All tests passed!
+ */
 
-    /// Destructor
-    pf_decl_constexpr
-      pf_decl_virtual
-    ~__test_runner() pf_attr_noexcept = default;
 
-    /// Operator
-    __test_runner &
-    operator =(__test_runner const &) = delete;
-    __test_runner &
-    operator =(__test_runner &&)			= delete;
-
-    /// Execute
-    pf_decl_virtual void
-    __execute() pf_attr_noexcept = 0;
-   };
-
-   /// TEST: Suite
-   class __test_suite
-   {
-   public:
-    /// Constructors
-    pf_decl_constexpr
-    __test_suite(
-      const char_t *__name) pf_attr_noexcept
-      : name_(__name)
-    {
-      __test_engine::__add_suite(this);
-    }
-    __test_suite(__test_suite const &) = delete;
-    __test_suite(__test_suite &&)			 = delete;
-
-    /// Destructor
-    pf_decl_constexpr
-    ~__test_suite() pf_attr_noexcept = default;
-
-    /// Operator=
-    pf_decl_constexpr __test_suite &
-    operator =(__test_suite const &) = delete;
-    pf_decl_constexpr __test_suite &
-    operator =(__test_suite &&)			 = delete;
-
-    /// Runner -> Process
-    pf_decl_constexpr void
-    __process() pf_attr_noexcept
-    {
-      for(auto &it : this->runners_)
-      {
-        it->a->__execute();
-      }
-    }
-
-    /// Runner -> Add
-    pf_decl_constexpr void
-    __add_runner(
-      const __test_runner *__runner) pf_attr_noexcept
-    {
-      // TODO: Check if runner's name already exist.
-      this->runners_.insert_back(__runner, true);
-    }
-
-   private:
-    const char_t *name_;
-    list_forward<pair<__test_runner *, bool>> runners_;
-   };
-
-   /// TEST: Unit
-   class __test_unit : public __test_runner
-   {
-   public:
-    /// Constructors
-    pf_decl_constexpr
-    __test_unit(
-      string_span<char_traits_ascii> __name)
-      : name_(__name)
-    {
-      // TODO: Link to __test_engine
-    }
-    __test_unit(__test_unit const &) = delete;
-    __test_unit(__test_unit &&)			 = delete;
-
-    /// Destructor
-    pf_decl_constexpr
-    ~__test_unit() pf_attr_noexcept = default;
-
-    /// Operator =
-    __test_unit &
-    operator =(__test_unit const &) = delete;
-    __test_unit &
-    operator =(__test_unit &&)			= delete;
-
-    /// Execute
-    pf_decl_virtual
-    void
-    __execute() pf_attr_noexcept = 0;
-
-   private:
-    const char_t *name_;
-   };
-
-   /// TEST: Unit -> Benchmark
-   class test_benchmark pf_attr_final : public __test_runner
-   {
-   public:
-    /// Measure
-    enum measure_t
-    {
-      measure_each,
-      measure_all
-    };
-
-    /// Constructors
-    pf_decl_constexpr
-    test_benchmark(
-      const char_t *__name,
-      size_t __i)
-    {}
-    test_benchmark(test_benchmark const &) = delete;
-    test_benchmark(test_benchmark &&)			 = delete;
-
-    /// Destructor
-    pf_decl_constexpr
-    test_benchmark() pf_attr_noexcept = default;
-
-    /// Execute
-    void
-    execute() pf_attr_noexcept
-    {}
-
-    /// Add Runner
-    template <typename _Ret>
-    void
-    add_runner(
-      fun_buf<_Ret(size_t)> __proc);
-
-   private:
-    size_t num_;
-   };
-   }
-
-   /// TEST: Macros
-
-   // TODO: Check if their isn't any parent
- #define pf_test_suite(sn)																						\
-   pf_static_assert(sizeof(sn) > 1, "Suite name mustn't be empty!");	\
-   class __pf_test_class_name(sn) : public pul::__test_suite					\
-   {																																	\
-   public:																														\
-    pf_decl_constexpr __pf_test_class_name(sn)() pf_attr_noexcept		\
-    : pul::__test_suite(sn)																					\
-    {}																															\
-   };
-
-   // TODO: Check if parent scope is a suite
- #define pf_test_unit(un)																					 \
-   pf_static_assert(sizeof(un) > 1, "Unit name mustn't be empty!"); \
-   class __pf_test_class_name(sn) : public pul::__test_unit				 \
-   {																																 \
-   public:																													 \
-    pf_decl_constexpr __pf_test_class_name(un)() pf_attr_noexcept	 \
-    : pul::__test_unit(un)																				 \
-    {}																														 \
- \
-    pf_decl_constexpr void																				 \
-    __execute();																									 \
- \
-   };																															 \
-   void __pf_test_class_name(sn)::__execute()
-
-   // TODO: Check if parent scope is a suite
- #define pf_test_benchmark(bn)
-   pf_static_assert(sizeof(bn) > 1, "Benchmark name mustn't be empty!");	\
-   class __pf_test_class_name(bn) : public pul::test_benchmark					\
-   {																																		\
-   public:																																\
-   };																																	\
-   void __pf_test_class_name(bn)::execute()														\
-
-   // TODO: Check if parent scope is a unit
- #define pf_require(assert) \
-   if(!(assert))						 \
-   {												 \
- \
-   }
-
- #define pf_require_catch(function, exception)	\
-
- #define pf_require_no_catch(function)	\
-
-   // TODO: Check if parent scope is a unit
- #define pf_check(assert) \
-   if(!(assert))					 \
-   {											 \
- \
-   }
-
- #define pf_check_catch(function, exception)	\
-
- #define pf_check_no_catch(function)	\ */
 
 #endif // !PULSAR_TESTER_HPP
