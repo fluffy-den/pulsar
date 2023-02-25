@@ -38,10 +38,14 @@ namespace pul
 		{
 			++e;
 		}
+		char_t *r = e;
 		if (__w + 2 >= e) return e;
+		--e;
+		while (*e == '\n') --e;
+		++e;
 
 		// 2. '\n' -> " ... "
-		for (; __w != e - 2; ++__w)
+		for (; __w != e; ++__w)
 		{
 			if (*__w == '\n')
 			{
@@ -57,7 +61,7 @@ namespace pul
 		}
 
 		// Returns
-		return e;
+		return r;
 	}
 
 	/// DEBUG: Instance

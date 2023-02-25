@@ -1,17 +1,17 @@
 /*! @file   pulsar_tester.cpp
  *  @author Louis-Quentin Noé (noe.louis-quentin@hotmail.fr)
  *  @brief
- *  @date   29-01-2023
+ *  @date   25-02-2023
  *
  *  @copyright Copyright (c) 2023 - Pulsar Software
  *
- *  @since 0.1.2
+ *  @since 0.1.3
  */
 
-// Include: Pulsar
+// Include: Pulsar -> Tester
 #include "pulsar_tester/pulsar_tester.hpp"
 
-// Pulsar
+// Pulsar Tester
 namespace pul
 {
 	/// TESTER: Engine -> Variables
@@ -43,7 +43,6 @@ namespace pul
 		dbg_u8string_view __name) pf_attr_noexcept
 		: name_(__name)
 		, next_(nullptr)
-		, unitCurr_(nullptr)
 		, unitHead_(nullptr)
 		, unitTail_(nullptr)
 		, numTests_(0)
@@ -57,42 +56,64 @@ namespace pul
 	__tester_pack::__run() pf_attr_noexcept
 	{
 		// 1. Print Pack
-		if (this->name_.size() != 1)
+		if (this->name_.size() != 0)
 		{
 			pf_print(
 				"Pack <{}>\n",
 				fmt::styled(this->name_.data(),
-										fmt::fg(fmt::color::steel_blue) | fmt::bg(fmt::color::black)));
+										fmt::fg(fmt::color::steel_blue)));
 		}
 		// 2. Run Units
 		__tester_unit *u = this->unitHead_;
-		while (u)
+		if (!u && this->name_.size() != 0)
 		{
-			try
+			pf_print("No unit to run!\n");
+		}
+		else
+		{
+			while (u)
 			{
-				this->unitCurr_ = u;
-				u->__run();
-				u = u->next_;
-			}
-			catch (__tester_exception_require const &__r)	// Require stops the program!
-			{
-				this->__add_result(false, __r.file(), __r.line());
+				try
+				{
+					u->__run();
+					u = u->next_;
+				}
+				catch (__tester_exception_require const &__r)	// Require stops the program!
+				{
+					this->__add_result(false, __r.file(), __r.line());
+					u = u->next_;
+				}
 			}
 		}
-		// 3. Results
+		// 3. Benchmarks
+		if (this->benchHead_)
+		{
+
+		}
+		// 4. Results
 		if (this->numFailed_ > 0)
 		{
 			pf_print("{} | {}\n\n",
 							 fmt::styled(dbg_format_message("({}) Succeeded", this->numTests_ - this->numFailed_).data(),
-													 fmt::fg(fmt::color::green) | fmt::bg(fmt::color::black)),
+													 fmt::fg(fmt::color::green)),
 							 fmt::styled(dbg_format_message("({}) Failed", this->numFailed_).data(),
-													 fmt::fg(fmt::color::red) | fmt::bg(fmt::color::black)));
+													 fmt::fg(fmt::color::red)));
 		}
 		else
 		{
-			pf_print(
-				"All ({}) succeeded!\n\n",
-				fmt::styled(this->numTests_, fmt::fg(fmt::color::green) | fmt::bg(fmt::color::black)));
+			if (this->name_.size() != 0)
+			{
+				if (this->numTests_ > 0)
+				{
+					pf_print(
+						"All ({}) succeeded!\n\n",
+						fmt::styled(this->numTests_, fmt::fg(fmt::color::green)));
+				}
+				else
+				{
+					pf_print("No test in pack.\n\n");
+				}
+			}
 		}
 	}
 
@@ -106,8 +127,26 @@ namespace pul
 			this->unitHead_ = __u;
 			this->unitTail_ = __u;
 		}
-		this->unitTail_->next_ = __u;
-		this->unitTail_				 = __u;
+		else
+		{
+			this->unitTail_->next_ = __u;
+			this->unitTail_				 = __u;
+		}
+	}
+	void
+	__tester_pack::__add_benchmark(
+		__tester_benchmark *__b) pf_attr_noexcept
+	{
+		if (!this->benchHead_)
+		{
+			this->benchHead_ = __b;
+			this->benchTail_ = __b;
+		}
+		else
+		{
+			this->benchTail_->next_ = __b;
+			this->benchTail_				= __b;
+		}
 	}
 	void
 	__tester_pack::__add_result(
@@ -120,20 +159,54 @@ namespace pul
 		{
 			++this->numFailed_;
 			pf_print(
-				"<{}> at {}:{}\n",
-				fmt::styled(this->name_, fmt::fg(fmt::color::steel_blue) | fmt::bg(fmt::color::black)),
-				fmt::styled(__file.data(), fmt::fg(fmt::color::orange) | fmt::bg(fmt::color::black)),
-				fmt::styled(__line, fmt::fg(fmt::color::red) | fmt::bg(fmt::color::black)));
+				"/{}/ <{}> at {}:{}\n",
+				fmt::styled('A', fmt::fg(fmt::color::red)),
+				fmt::styled(this->name_.data(), fmt::fg(fmt::color::steel_blue)),
+				fmt::styled(__file.data(), fmt::fg(fmt::color::orange)),
+				fmt::styled(__line, fmt::fg(fmt::color::red)));
 		}
+	}
+
+	/// TESTER: Benchmark
+	// Constructors
+	__tester_benchmark::__tester_benchmark(
+		dbg_u8string __name,
+		size_t __itc) pf_attr_noexcept
+		: name_(__name)
+		, benchFun_(nullptr)
+		, next_(nullptr)
+		, itc_(__itc)
+	{
+		__tester_pack *p = tester_engine.__cur_pack();
+		p->__add_benchmark(this);
+	}
+
+	// Run
+	void
+	__tester_benchmark::__run()
+	{
+		this->__proc(*this);
+		if (!this->benchFun_)
+		{
+			// TODO
+		}
+	}
+	void
+	__tester_benchmark::bench(
+		fun_buf<void(size_t)> __benchFun)
+	{
+		this->benchFun_ = __benchFun;
 	}
 
 	/// TESTER: Engine
 	// Constructors
 	__tester_engine::__tester_engine() pf_attr_noexcept
-		: unscoppedPack_("")
+		: unscoppedPack_(nullptr)
 		, packHead_(nullptr)
 		, packTail_(nullptr)
-	{}
+	{
+		this->__add_pack(&this->unscoppedPack_);
+	}
 
 	// Run
 	pf_hint_nodiscard int32_t
@@ -151,6 +224,7 @@ namespace pul
 			p->__run();
 			nt += p->numTests_;
 			nf += p->numFailed_;
+			p		= p->next_;
 		}
 
 		// 3. Print
@@ -162,15 +236,15 @@ namespace pul
 		{
 			pf_print("\n{} | {}\n\n",
 							 fmt::styled(dbg_format_message("({}) Succeeded", nt - nf).data(),
-													 fmt::fg(fmt::color::green) | fmt::bg(fmt::color::black)),
+													 fmt::fg(fmt::color::green)),
 							 fmt::styled(dbg_format_message("({}) Failed", nf).data(),
-													 fmt::fg(fmt::color::red) | fmt::bg(fmt::color::black)));
+													 fmt::fg(fmt::color::red)));
 		}
 		else
 		{
 			pf_print("{}",
 							 fmt::styled(dbg_format_message("\nAll ({}) test(s) passed!\n\n", nt).data(),
-													 fmt::fg(fmt::color::green) | fmt::bg(fmt::color::black)));
+													 fmt::fg(fmt::color::green)));
 		}
 
 		// Fail? Succeeded?
@@ -197,22 +271,15 @@ namespace pul
 			this->packHead_ = __p;
 			this->packTail_ = __p;
 		}
-		this->packTail_->next_ = __p;
-		this->packTail_				 = __p;
+		else
+		{
+			this->packTail_->next_ = __p;
+			this->packTail_				 = __p;
+		}
 	}
 	__tester_pack*
 	__tester_engine::__cur_pack() pf_attr_noexcept
 	{
-		return this->packTail_;	// TODO: Logic to get current pack
+		return this->packTail_;
 	}
-
-	/// TESTER: Functions
-
-}
-
-// Pulsar -> Main
-pul::int32_t
-main()
-{
-	return pul::tester_engine.run();
 }

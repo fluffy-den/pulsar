@@ -220,7 +220,7 @@ namespace dbg_flags
 			, store_(union_cast<char_t*>(allocate(this->count_, align_val_t(32), 0)))
 		{
 			std::memcpy(this->store_, __str, __count);
-			*this->end() = L'\0';
+			*this->end() = '\0';
 		}
 		pf_decl_constexpr pf_decl_inline dbg_u8string(
 			const char_t * __str)
@@ -228,7 +228,7 @@ namespace dbg_flags
 			, store_(union_cast<char_t*>(allocate(this->count_, align_val_t(32), 0)))
 		{
 			std::memcpy(this->store_, __str, this->count_);
-			*this->end() = L'\0';
+			*this->end() = '\0';
 		}
 		pf_decl_constexpr pf_decl_inline dbg_u8string(
 			size_t __count,
@@ -237,7 +237,7 @@ namespace dbg_flags
 		, store_(union_cast<char_t*>(allocate(this->count_, align_val_t(32), 0)))
 		{
 			std::memset(this->store_, __val, __count);
-			*this->end() = L'\0';
+			*this->end() = '\0';
 		}
 		dbg_u8string(
 			dbg_u8string &&) = default;
@@ -315,12 +315,12 @@ namespace dbg_flags
 		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline char_t*
 		end() pf_attr_noexcept
 		{
-			return &this->store_[0] + this->count_;
+			return &this->store_[0] + this->count_ - 1;
 		}
 		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline const char_t*
 		end() const pf_attr_noexcept
 		{
-			return &this->store_[0] + this->count_;
+			return &this->store_[0] + this->count_ - 1;
 		}
 
 		/// Data
@@ -344,7 +344,7 @@ namespace dbg_flags
 		pf_hint_nodiscard pf_decl_constexpr pf_decl_inline size_t
 		count() const pf_attr_noexcept
 		{
-			return this->count_;
+			return this->count_ - 1;
 		}
 
 		/// Operator (View)
@@ -523,7 +523,7 @@ namespace dbg_flags
 	};
 
 	/// DEBUG: Logger
-	class dbg_logger
+	class dbg_logger// TODO: Move to src
 	{
 	public:
 		using callback_t = fun_ptr<void (dbg_u8string_view)>;
@@ -707,8 +707,7 @@ namespace dbg_flags
 	{
 		// 1. Format
 		dbg_u8string str(fmt::formatted_size(__fmt, std::forward<_Args>(__args)...), '\0');
-		char_t *p = str.data();
-		p = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
+		fmt::format_to(str.data(), __fmt, std::forward<_Args>(__args)...);
 
 		// 2. Return
 		return str;

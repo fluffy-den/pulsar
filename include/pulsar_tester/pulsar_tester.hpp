@@ -14,14 +14,14 @@
 // Include: Pulsar
 #include "pulsar/debug.hpp"
 
-// Pulsar
+// Pulsar Tester 
 namespace pul
 {
 	/// TESTER: Types
 	class __tester_unit;
 	class __tester_pack;
 	class __tester_engine;
-	template <size_t _Num> class __tester_benchmark;
+	class __tester_benchmark;
 	class __tester_exception_require;
 
 	/// TESTER: Unit
@@ -35,10 +35,10 @@ namespace pul
 		__tester_unit(__tester_unit &&)			 = delete;
 
 		/// Run
-		pf_decl_virtual void __run() pf_attr_noexcept = 0;
+		pf_decl_virtual void __run() = 0;
 
 		/// Destructor
-		~__tester_unit();
+		pf_decl_virtual ~__tester_unit() = default;
 
 		/// Store
 		dbg_u8string_view name_;
@@ -47,33 +47,34 @@ namespace pul
 
 
 	/// TESTER: Benchmark
-	template <size_t _Num>
-	class __tester_benchmark pf_attr_final
-		: public __tester_unit
+	class __tester_benchmark
 	{
 	public:
 		/// Constructor
-		template <typename ... _Args>
-		__tester_benchmark(
-			dbg_u8string __name,
-			_Args && ... __args) pf_attr_noexcept
-		requires(sizeof...(_Args) == _Num)
-			: __tester_unit(__name)
-			, iterationList_ { std::forward<_Args>(__args)... }
-		{}
+    __tester_benchmark(
+        dbg_u8string __name,
+        size_t __itc) pf_attr_noexcept;
+
+    /// Destructor
+    ~__tester_benchmark() = default;
+
+    /// Proc
+    pf_decl_virtual void
+    __proc(__tester_benchmark &__b) = 0;
 
 		/// Run
-		void __run() pf_attr_override
-		{
-			// TODO: Benchmark
-		}
-
-		/// Destructor
-		~__tester_benchmark() pf_attr_noexcept = default;
+    void
+    __run();
+    void
+    bench(
+      fun_buf<void(size_t)> __benchFun);
 
 		/// Store
-		size_t iterationList_[_Num];
-	};
+    dbg_u8string_view name_;
+    fun_buf<void(size_t)> benchFun_;
+    __tester_benchmark *next_;
+    size_t itc_;
+  };
 
 	/// TESTER: Unit -> Exception Require
 	class __tester_exception_require
@@ -137,7 +138,10 @@ namespace pul
 		void
 		__add_unit(
 			__tester_unit *__u) pf_attr_noexcept;
-		void
+    void
+    __add_benchmark(
+      __tester_benchmark *__b) pf_attr_noexcept;
+    void
 		__add_result(
 			bool __c,
 			dbg_u8string_view __file,
@@ -146,10 +150,11 @@ namespace pul
 		/// Store
 		dbg_u8string_view name_;
 		__tester_pack *next_;
-		__tester_unit *unitCurr_;
 		__tester_unit *unitHead_;
 		__tester_unit *unitTail_;
-		size_t numTests_;
+    __tester_benchmark *benchHead_;
+    __tester_benchmark *benchTail_;
+    size_t numTests_;
 		size_t numFailed_;
 	};
 
@@ -203,7 +208,7 @@ namespace pul
 	pf_hint_noreturn pf_decl_static void __test_require(
 		bool __c,
 		dbg_u8string_view __file,
-		uint32_t __line) pf_attr_noexcept
+		uint32_t __line)
 	{
 		if(!__c) throw(__tester_exception_require(__file, __line));
 	}
@@ -214,38 +219,61 @@ namespace pul
 #define pt_require(cond) pul::__test_require(cond, __FILE__, __LINE__)
 
 /// TESTER: Macro -> Unit
-#define __pt_generate_unit_name(name) pf_concatenate(__pt_unit_, name)
-#define __pt_generate_unit_type(name) pf_concatenate(__pt_generate_unit_name(name), _t)
+#define __pt_generate_unit_name(name) pf_stringize(name)
+#define __pt_generate_unit_type(name) pf_concatenate(pf_concatenate(__pt_unit_, name), _t)
+#define __pt_generate_unit_instance_name(name) __pt_generate_unit_type(name) pf_concatenate(pf_concatenate(__pt_unit_, name), _instance)
 
-#define pt_unit(name)
-class __pt_generate_unit_type(name)	\
-		: public pul::__tester_unit			\
-	{																	\
-public:															\
-	};
+#define pt_unit(name)                                                   \
+class __pt_generate_unit_type(name)	                                    \
+		: public pul::__tester_unit			                                    \
+{                                                                       \
+public:																	                                \
+  __pt_generate_unit_type(name)() pf_attr_noexcept                      \
+    : pul::__tester_unit(__pt_generate_unit_name(name))                 \
+  {}                                                                    \
+  void                                                                  \
+  __run();                                                              \
+};                                                                      \
+pf_decl_static pf_decl_inline __pt_generate_unit_instance_name(name);   \
+void                                                                    \
+__pt_generate_unit_type(name)::__run()                                
 
 
 /// TESTER: Macro -> Pack
-#define __pt_generate_pack_name(name) pf_concatenate(__pt_pack_, name)
-#define __pt_generate_pack_type(name) pf_concatenate(__pt_generate_pack_name(name), _t)
+#define __pt_generate_pack_name(name) pf_stringize(name)
+#define __pt_generate_pack_type(name) pf_concatenate(pf_concatenate(__pt_pack_, name), _t)
+#define __pt_generate_pack_instance_name(name) __pt_generate_pack_type(name) pf_concatenate(pf_concatenate(__pt_pack_, name), _instance)
 
-#define pt_pack(name)												\
-				class __pt_generate_pack_type(name)	\
-					: public pul::__tester_pack				\
-				{																		\
-																						\
-				};
+#define pt_pack(name)                                                   \
+class __pt_generate_pack_type(name)                                     \
+	: public pul::__tester_pack                                           \
+{                                                                       \
+public:                                                                 \
+  __pt_generate_pack_type(name)() pf_attr_noexcept                      \ 
+    : pul::__tester_pack(__pt_generate_pack_name(name))                 \
+  {}                                                                    \
+};                                                                      \
+pf_decl_static pf_decl_inline __pt_generate_pack_instance_name(name);
+
 
 /// TESTER: Macro -> Benchmark
-#define __pt_generate_benchmark_name(name) pf_concatenate(__pt_benchmark_, name)
-#define __pt_generate_benchmark_type(name) pf_concatenate(__pt_generate_benchmark_name(name), _t)
+#define __pt_generate_benchmark_name(name) pf_stringize(name)
+#define __pt_generate_benchmark_type(name) pf_concatenate(pf_concatenate(__pt_benchmark_, name), _t)
+#define __pt_generate_benchmark_instance_name(name) __pt_generate_benchmark_type(name) pf_concatenate(pf_concatenate(__pt_benchmark_, name), _instance)
 
-#define pt_benchmark(name, bvn, ...)															 \
-				class __pt_generate_benchmark_type(name)									 \
-					: public pul::__tester_benchmark<sizeof...(__VA_ARGS__)> \
-				{																													 \
-																																	 \
-				};
+#define pt_benchmark(name, bvn, itc)														               \  
+class __pt_generate_benchmark_type(name)									                     \
+	: public pul::__tester_benchmark                                             \
+{																													                     \
+public:																											                   \
+  __pt_generate_benchmark_type(name)() pf_attr_noexcept                        \
+    : pul::__tester_benchmark(__pt_generate_benchmark_name(name), itc)         \
+  {}                                                                           \
+  void                                                                         \
+  __proc(pul::__tester_benchmark &bvn) pf_attr_override;                       \
+};                                                                             \
+pf_decl_static pf_decl_inline __pt_generate_benchmark_instance_name(name);     \
+void __pt_generate_benchmark_type(name)::__proc(pul::__tester_benchmark &bvn)
 
 
 
@@ -276,6 +304,6 @@ public:															\
  *                or All tests passed!
  */
 
-
+// TODO: Move all to static library (better compilation time)
 
 #endif // !PULSAR_TESTER_HPP

@@ -259,10 +259,10 @@ namespace pul
 	{
 	public:
 		/// Destructor
-		pf_decl_constexpr pf_decl_virtual ~__fun_buf_base() = default;
+		pf_decl_inline pf_decl_constexpr pf_decl_virtual ~__fun_buf_base() = default;
 
 		/// Operator()
-		pf_decl_constexpr pf_decl_virtual _RetTy
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr pf_decl_virtual _RetTy
 		operator()(
 			_Args &&...) const = 0;
 	};
@@ -273,7 +273,7 @@ namespace pul
 	{
 	public:
 		/// Constructors
-		pf_decl_constexpr
+		pf_decl_inline pf_decl_constexpr
 		__fun_buf_base_impl(
 			_FunTy &&__f) pf_attr_noexcept
 			: fun_(__f)
@@ -282,10 +282,10 @@ namespace pul
 		__fun_buf_base_impl(__fun_buf_base_impl &&)			 = delete;
 
 		/// Destructor
-		pf_decl_constexpr ~__fun_buf_base_impl() pf_attr_noexcept = default;
+		pf_decl_inline pf_decl_constexpr ~__fun_buf_base_impl() pf_attr_noexcept = default;
 
 		/// Operator()
-		pf_decl_constexpr _RetTy
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _RetTy
 		operator()(
 			_Args &&... __args) const pf_attr_override
 		{
@@ -304,21 +304,21 @@ namespace pul
 	{
 	public:
 		/// Constructors
-		pf_decl_constexpr
+		pf_decl_inline pf_decl_constexpr
 		fun_buf() pf_attr_noexcept
 			: base_{ '\0' }
 		{}
-		pf_decl_constexpr
+		pf_decl_inline pf_decl_constexpr
 		fun_buf(
 			nullptr_t) pf_attr_noexcept
 			: fun_buf()
 		{}
-		pf_decl_constexpr
+		pf_decl_inline pf_decl_constexpr
 		fun_buf(
 			fun_buf<_RetTy(_Args...)> const &__r) pf_attr_noexcept
 			: base_(__r.base_)
 		{}
-		pf_decl_constexpr
+		pf_decl_inline pf_decl_constexpr
 		fun_buf(
 			fun_buf<_RetTy(_Args...)> &&__r) pf_attr_noexcept
 			: base_(__r.base_)
@@ -326,7 +326,7 @@ namespace pul
 			__r.base_ = { '\0' };
 		}
 		template<typename _FunTy>
-		pf_decl_constexpr
+		pf_decl_inline pf_decl_constexpr
 		fun_buf(
 			_FunTy &&__ptr) pf_attr_noexcept
 		requires(std::is_invocable_r_v<_RetTy, _FunTy, _Args...>)
@@ -342,20 +342,20 @@ namespace pul
 		}
 
 		/// Destructor
-		pf_decl_constexpr ~fun_buf() pf_attr_noexcept
+		pf_decl_inline pf_decl_constexpr ~fun_buf() pf_attr_noexcept
 		{
 			union
 			{
 				byte_t *as_byte;
 				__fun_buf_base<_RetTy, _Args...> *as_base;
 			};
-			as_byte = data(this->base_);
-			destroy(as_base);
+			as_byte = &this->base_[0];
+			as_base->~__fun_buf_base();
 		}
 
 		/// Operator()
 		template<typename ... _InArgs>
-		pf_decl_constexpr _RetTy
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _RetTy
 		operator()(
 			_InArgs &&... __args) const
 		requires(std::is_invocable_v<_RetTy (_Args...), _InArgs...>)
@@ -369,12 +369,29 @@ namespace pul
 			return as_base->operator()(std::forward<_InArgs>(__args)...);
 		}
 
+		/// Operator=
+		fun_buf<_RetTy(_Args...)> &operator=(
+			fun_buf<_RetTy(_Args...)> const&) = default;
+		fun_buf<_RetTy(_Args...)> &operator=(
+			fun_buf<_RetTy(_Args...)> &&) = default;
+
 		/// Operator==
-		pf_decl_constexpr bool
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr bool
 		operator==(
 			fun_buf<_RetTy(_Args...)> const &__r) const pf_attr_noexcept
 		{
 			return this->base_ == __r.base_;
+		}
+
+		/// Operator (Bool)
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator bool() const pf_attr_noexcept
+		{
+			for (size_t i = 0; i < 2 * sizeof(__fun_buf_base<_RetTy, _Args...>); ++i)
+			{
+				if (base_[i] != 0) return true;
+			}
+			return false;
 		}
 
 	private:
