@@ -115,7 +115,8 @@ namespace pul
       std::thread *workers	 = union_cast<std::thread*>(allocate(ni * this->ntt_, align_val_t(alignof(std::thread)), 0));
       for (size_t i = 1; i < this->ntt_; ++i)
       {
-        // workers[i - 1] = std::thread(__compute_results<_Ty>, __measureFun, this->itc_, this->itc_ * i, results);
+        workers[i - 1] = std::thread([&]() { 
+          __compute_results(__measureFun, this->itc_, this->itc_ * i, results); });
       }
       __compute_results(__measureFun, this->itc_, 0, results);
       for (size_t i = 0; i < this->ntt_; ++i)
@@ -173,7 +174,14 @@ namespace pul
     pf_decl_inline pf_decl_constexpr size_t 
     num_iterations() const pf_attr_noexcept
     {
-      return itc_ * ntt_;
+      return this->itc_ * this->ntt_;
+    }
+
+    /// Num Threads
+    pf_decl_inline pf_decl_constexpr size_t
+    num_threads() const pf_attr_noexcept
+    {
+      return this->ntt_;
     }
 
 		/// Store

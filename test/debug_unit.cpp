@@ -19,7 +19,7 @@ namespace pul
 {
 	// Debug -> Logger
 	pt_pack(logger)
-	pt_benchmark(writing_bench, __b, 1024, 1)
+	pt_benchmark(writing_bench, __b, 1024, 16)
 	{
 		__b.measure(std::function([&](size_t __i)
 															{ return __i; }));

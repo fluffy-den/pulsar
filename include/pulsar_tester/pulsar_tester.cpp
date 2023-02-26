@@ -94,8 +94,8 @@ namespace pul
 
 			// A. Format
 			pf_print(
-				"{: <32} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
-				"benchmark", "num", "min", "max", "avg", "var", "dev", "Q1", "Q2", "Q3", "total");
+				"{: <32} {: <12} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
+				"benchmark", "threads", "num", "min", "max", "avg", "var", "dev", "Q1", "Q2", "Q3", "total");
 
 			// B. Print Results
 			p = this->benchHead_;
@@ -209,9 +209,9 @@ namespace pul
 		__results_t const &__r) pf_attr_noexcept
 	{
 		pf_print(
-			"{} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
+			"{} {: <12} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
 			dbg_format_message("{: <32}", fmt::styled(this->name().data(), fmt::fg(fmt::color::steel_blue))).data(),
-			this->num_iterations(), __r.min, __r.max, __r.avg, __r.var, __r.ect, __r.q1, __r.q2, __r.q3, __r.total);
+			this->num_threads(), this->num_iterations(), __r.min, __r.max, __r.avg, __r.var, __r.ect, __r.q1, __r.q2, __r.q3, __r.total);
 	}
 	/// TESTER: Engine
 	// Constructors
