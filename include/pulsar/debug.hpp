@@ -815,3 +815,6 @@ namespace dbg_flags
 
 // TODO: Local Ring Buffer
 // TODO: Concurrent Logger
+// TODO: Move more to static library
+// TODO: fmt::style -> dbg_style
+// TODO: Upgrade dbg_u8string_* + dbg_wsstring_* types (memCount_ + RingBuffer)

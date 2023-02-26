@@ -28,15 +28,6 @@ namespace pul
 		p->__add_unit(this);
 	}
 
-	/// TESTER: Exception
-	// Constructors
-	__tester_exception_require::__tester_exception_require(
-		dbg_u8string_view __file,
-		uint32_t __line) pf_attr_noexcept
-		: file_(__file)
-		, line_(__line)
-	{}
-
 	/// TESTER: Unit -> Pack
 	// Constructors
 	__tester_pack::__tester_pack(
@@ -60,7 +51,7 @@ namespace pul
 		{
 			pf_print(
 				dbg_type::info, dbg_level::high,
-				"[Pulsar Tester] -> Pack <{}>",
+				"Tester -> Pack <{}>",
 				fmt::styled(this->name_.data(),
 										fmt::fg(fmt::color::steel_blue)));
 		}
@@ -81,7 +72,6 @@ namespace pul
 				}
 				catch (__tester_exception_require const &__r)	// Require stops the program!
 				{
-					this->__add_result(false, __r.file(), __r.line());
 					u = u->next_;
 				}
 			}
@@ -102,13 +92,20 @@ namespace pul
 			p = this->benchHead_;
 			while (p)
 			{
-				p->process(*p);
-				p = p->next_;
+				try
+				{
+					p->process(*p);
+					p = p->next_;
+				}
+				catch (__tester_exception_require const &__r)	// Require stops the program!
+				{
+					p = p->next_;
+				}
 			}
 
 			// C. End
 			nanoseconds_t dur = high_resolution_clock_t::now() - start;
-			pf_print("Finished after {}.\n\n", dur);
+			pf_print("Finished after {}.\n", dur);
 		}
 		// 4. Results
 		if (this->numFailed_ > 0)
@@ -125,7 +122,7 @@ namespace pul
 			{
 				if (this->numTests_ > 0)
 				{
-					pf_print("All ({}) succeeded!\n\n",
+					pf_print(dbg_type::info, dbg_level::high, "Tester -> All ({}) succeeded!\n\n",
 									 fmt::styled(this->numTests_, fmt::fg(fmt::color::green)));
 				}
 				else
@@ -177,12 +174,23 @@ namespace pul
 		if (!__c)
 		{
 			++this->numFailed_;
-			pf_print(
-				"/{}/ <{}> at {}:{}\n",
-				fmt::styled('A', fmt::fg(fmt::color::red)),
-				fmt::styled(this->name_.data(), fmt::fg(fmt::color::steel_blue)),
-				fmt::styled(__file.data(), fmt::fg(fmt::color::orange)),
-				fmt::styled(__line, fmt::fg(fmt::color::red)));
+			if (this->name_.data() == nullptr)
+			{
+				pf_print(
+					"/{}/ at {}:{}\n",
+					fmt::styled('A', fmt::fg(fmt::color::red)),
+					fmt::styled(__file.data(), fmt::fg(fmt::color::orange)),
+					fmt::styled(__line, fmt::fg(fmt::color::red)));
+			}
+			else
+			{
+				pf_print(
+					"/{}/ <{}> at {}:{}\n",
+					fmt::styled('A', fmt::fg(fmt::color::red)),
+					fmt::styled(this->name_.data(), fmt::fg(fmt::color::steel_blue)),
+					fmt::styled(__file.data(), fmt::fg(fmt::color::orange)),
+					fmt::styled(__line, fmt::fg(fmt::color::red)));
+			}
 		}
 	}
 
@@ -228,7 +236,7 @@ namespace pul
 	__tester_engine::run() pf_attr_noexcept
 	{
 		// 1. Info
-		pf_print(dbg_type::info, dbg_level::high, "Launching Pulsar Tester...");
+		pf_print(dbg_type::info, dbg_level::high, "Launching Tester...");
 
 		// 2. Running Packs
 		__tester_pack *p = this->packHead_;
@@ -245,11 +253,11 @@ namespace pul
 		// 3. Print
 		if (nt == 0)
 		{
-			pf_print(dbg_type::info, dbg_level::high, "[Pulsar Tester] -> Nothing to test.\n");
+			pf_print(dbg_type::info, dbg_level::high, "Tester -> Nothing to test.\n");
 		}
 		else if (nf > 0)
 		{
-			pf_print("\n[Pulsar Tester] -> {} | {}\n\n",
+			pf_print(dbg_type::info, dbg_level::high, "Tester -> {} | {}\n",
 							 fmt::styled(dbg_format_message("({}) Succeeded", nt - nf).data(),
 													 fmt::fg(fmt::color::green)),
 							 fmt::styled(dbg_format_message("({}) Failed", nf).data(),
@@ -257,8 +265,8 @@ namespace pul
 		}
 		else
 		{
-			pf_print("{}",
-							 fmt::styled(dbg_format_message("\nAll ({}) test(s) passed!\n\n", nt).data(),
+			pf_print(dbg_type::info, dbg_level::high, "Tester -> {}",
+							 fmt::styled(dbg_format_message("All ({}) test(s) passed!\n", nt).data(),
 													 fmt::fg(fmt::color::green)));
 		}
 

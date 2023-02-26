@@ -18,10 +18,10 @@
 namespace pul
 {
 	// Debug -> Logger
-	pt_pack(logger)
-	pt_benchmark(writing_bench, __b, 1024, 16)
+	pt_benchmark(writing_bench, __b, 4096, 16)
 	{
-		__b.measure(std::function([&](size_t __i)
-															{ return __i; }));
+		__b.measure([&](size_t __i){ return __i; });
+		pt_require(__b.num_iterations() == 4096 * 16);
+		pt_require(__b.num_threads() == 16);
 	}
 }

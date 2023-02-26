@@ -14,6 +14,9 @@
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
 
+// Include: C++
+#include <functional>
+
 // Pulsar
 namespace pul
 {
@@ -315,15 +318,19 @@ namespace pul
 		{}
 		pf_decl_inline pf_decl_constexpr
 		fun_buf(
-			fun_buf<_RetTy(_Args...)> const &__r) pf_attr_noexcept
-			: base_(__r.base_)
-		{}
+			fun_buf<_RetTy(_Args...)> const &__r) pf_attr_noexcept = delete;
 		pf_decl_inline pf_decl_constexpr
 		fun_buf(
 			fun_buf<_RetTy(_Args...)> &&__r) pf_attr_noexcept
-			: base_(__r.base_)
 		{
-			__r.base_ = { '\0' };
+			union
+			{
+				byte_t *as_byte;
+				__fun_buf_base<_RetTy, _Args...> *as_base;
+			} t;
+			t.as_byte = &this->base_[0];
+			std::memcpy(t.as_byte, &__r.base_[0], sizeof(this->base_));
+			std::memset(&__r.base_[0], 0, sizeof(__r.base_));
 		}
 		template<typename _FunTy>
 		pf_decl_inline pf_decl_constexpr
@@ -350,7 +357,14 @@ namespace pul
 				__fun_buf_base<_RetTy, _Args...> *as_base;
 			};
 			as_byte = &this->base_[0];
-			as_base->~__fun_buf_base();
+			for (size_t i = 0; i < sizeof(this->base_); ++i)
+			{
+				if (this->base_[i] != 0)
+				{
+					as_base->~__fun_buf_base();
+					return;
+				}
+			}
 		}
 
 		/// Operator()
@@ -366,12 +380,12 @@ namespace pul
 				const __fun_buf_base<_RetTy, _Args...> *as_base;
 			};
 			as_byte = &this->base_[0];
-			return as_base->operator()(std::forward<_InArgs>(__args)...);
+			return as_base->operator()(std::move(__args)...);
 		}
 
 		/// Operator=
 		fun_buf<_RetTy(_Args...)> &operator=(
-			fun_buf<_RetTy(_Args...)> const&) = default;
+			fun_buf<_RetTy(_Args...)> const&) = delete;
 		fun_buf<_RetTy(_Args...)> &operator=(
 			fun_buf<_RetTy(_Args...)> &&) = default;
 
