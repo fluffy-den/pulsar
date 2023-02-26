@@ -59,7 +59,8 @@ namespace pul
 		if (this->name_.size() != 0)
 		{
 			pf_print(
-				"Pack <{}>\n",
+				dbg_type::info, dbg_level::high,
+				"[Pulsar Tester] -> Pack <{}>",
 				fmt::styled(this->name_.data(),
 										fmt::fg(fmt::color::steel_blue)));
 		}
@@ -107,7 +108,7 @@ namespace pul
 
 			// C. End
 			nanoseconds_t dur = high_resolution_clock_t::now() - start;
-			pf_print("\nFinished after {}.\n", dur);
+			pf_print("Finished after {}.\n\n", dur);
 		}
 		// 4. Results
 		if (this->numFailed_ > 0)
@@ -124,9 +125,8 @@ namespace pul
 			{
 				if (this->numTests_ > 0)
 				{
-					pf_print(
-						"All ({}) succeeded!\n\n",
-						fmt::styled(this->numTests_, fmt::fg(fmt::color::green)));
+					pf_print("All ({}) succeeded!\n\n",
+									 fmt::styled(this->numTests_, fmt::fg(fmt::color::green)));
 				}
 				else
 				{
@@ -245,11 +245,11 @@ namespace pul
 		// 3. Print
 		if (nt == 0)
 		{
-			pf_print("Nothing to test.\n");
+			pf_print(dbg_type::info, dbg_level::high, "[Pulsar Tester] -> Nothing to test.\n");
 		}
 		else if (nf > 0)
 		{
-			pf_print("\n{} | {}\n\n",
+			pf_print("\n[Pulsar Tester] -> {} | {}\n\n",
 							 fmt::styled(dbg_format_message("({}) Succeeded", nt - nf).data(),
 													 fmt::fg(fmt::color::green)),
 							 fmt::styled(dbg_format_message("({}) Failed", nf).data(),

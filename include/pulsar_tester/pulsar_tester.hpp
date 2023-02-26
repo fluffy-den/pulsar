@@ -101,7 +101,7 @@ namespace pul
         __results[i] = high_resolution_clock_t::now() - n;
         // 2. Anti-Optimize
         byte_t buf[sizeof(k)];
-        std::memcpy(&k, &buf[0], sizeof(k)); // Anti-optimize!
+        std::memcpy(&buf[0], &k, sizeof(k)); // Anti-optimize!
       }
     }
     template <typename _Ty>
