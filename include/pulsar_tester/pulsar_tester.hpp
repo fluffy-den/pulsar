@@ -14,6 +14,9 @@
 // Include: Pulsar
 #include "pulsar/debug.hpp"
 
+// Include: C++
+#include <functional>
+
 // Pulsar Tester 
 namespace pul
 {
@@ -49,31 +52,135 @@ namespace pul
 	/// TESTER: Benchmark
 	class __tester_benchmark
 	{
-	public:
+  public:
 		/// Constructor
     __tester_benchmark(
-        dbg_u8string __name,
-        size_t __itc) pf_attr_noexcept;
+        dbg_u8string_view __name,
+        size_t __itc,
+        size_t __ntc) pf_attr_noexcept;
 
     /// Destructor
     ~__tester_benchmark() = default;
 
     /// Proc
     pf_decl_virtual void
-    __proc(__tester_benchmark &__b) = 0;
+    process(__tester_benchmark &__b) = 0;
 
 		/// Run
+    struct __results_t
+    {
+      nanoseconds_t min;
+      nanoseconds_t max;
+      nanoseconds_t avg;
+      nanoseconds_t var;
+      nanoseconds_t ect;
+      nanoseconds_t q1;
+      nanoseconds_t q2;
+      nanoseconds_t q3;
+      nanoseconds_t total;
+    };
+
+    /// Computation
+    pulsar_api void
+    __display_results(
+        __results_t const &__r) pf_attr_noexcept;
+
+    template <typename _Ty>
     void
-    __run();
+    __compute_results(
+      std::function<_Ty(size_t)> __measureFun,
+      size_t __itc,
+      size_t __off,
+      nanoseconds_t *__results)
+    {
+      for(size_t i = __off, e = __off + __itc; i != e; ++i)
+      {
+        // 1. Measure
+        high_resolution_point_t n		= high_resolution_clock_t::now();
+        pf_hint_maybe_unused auto k = __measureFun(i);
+        __results[i] = high_resolution_clock_t::now() - n;
+        // 2. Anti-Optimize
+        byte_t buf[sizeof(k)];
+        std::memcpy(&k, &buf[0], sizeof(k)); // Anti-optimize!
+      }
+    }
+    template <typename _Ty>
     void
-    bench(
-      fun_buf<void(size_t)> __benchFun);
+    measure(
+      std::function<_Ty(size_t)> __measureFun)
+    {
+      // 1. Measure
+      const size_t ni				 = this->num_iterations();
+      nanoseconds_t *results = union_cast<nanoseconds_t*>(allocate(ni * sizeof(nanoseconds_t), align_val_t(32), 0));
+      std::thread *workers	 = union_cast<std::thread*>(allocate(ni * this->ntt_, align_val_t(alignof(std::thread)), 0));
+      for (size_t i = 1; i < this->ntt_; ++i)
+      {
+        // workers[i - 1] = std::thread(__compute_results<_Ty>, __measureFun, this->itc_, this->itc_ * i, results);
+      }
+      __compute_results(__measureFun, this->itc_, 0, results);
+      for (size_t i = 0; i < this->ntt_; ++i)
+      {
+        if(workers[i - 1].joinable())
+        {
+          workers[i - 1].join();
+        }
+      }
+      deallocate(workers);
+
+      // 2. Compute Results
+      __results_t r = { 
+        nanoseconds_t(union_cast<size_t>(-1)), 
+        nanoseconds_t(0), 
+        nanoseconds_t(0), 
+        nanoseconds_t(0), 
+        nanoseconds_t(0), 
+        nanoseconds_t(0), 
+        nanoseconds_t(0), 
+        nanoseconds_t(0), 
+        nanoseconds_t(0) };
+      nanoseconds_t avg2	 = nanoseconds_t(0);	// E[X^2]
+      for (size_t i = 0; i < ni; ++i)
+      {
+        if (results[i] < r.min) r.min = results[i];
+        if (results[i] > r.max) r.max = results[i];
+        r.avg   += results[i];
+        r.total += results[i];
+      }
+      r.avg  = nanoseconds_t(r.avg.count() / ni);
+      for (size_t i = 0; i < ni; ++i)
+      {
+        const nanoseconds_t k = (results[i] - r.avg);
+        r.var += nanoseconds_t(k.count() * k.count());
+      }
+      r.var  = nanoseconds_t(r.var.count() / ni);
+      r.ect  = nanoseconds_t(static_cast<int64_t>(std::sqrt(static_cast<float64_t>(r.var.count()))));
+      r.q1   = results[ni / 4];
+      r.q2   = results[ni / 2];
+      r.q3   = results[ni * 3 / 4];
+
+      // 3. Display
+      __display_results(r);
+    }
+
+    /// Name
+    pf_decl_inline pf_decl_constexpr dbg_u8string_view
+    name() const pf_attr_noexcept
+    {
+      return this->name_;
+    }
+
+    /// Num Iteration
+    pf_decl_inline pf_decl_constexpr size_t 
+    num_iterations() const pf_attr_noexcept
+    {
+      return itc_ * ntt_;
+    }
 
 		/// Store
-    dbg_u8string_view name_;
-    fun_buf<void(size_t)> benchFun_;
     __tester_benchmark *next_;
+    dbg_u8string_view name_;
     size_t itc_;
+    size_t ntt_;
   };
 
 	/// TESTER: Unit -> Exception Require
@@ -261,19 +368,19 @@ pf_decl_static pf_decl_inline __pt_generate_pack_instance_name(name);
 #define __pt_generate_benchmark_type(name) pf_concatenate(pf_concatenate(__pt_benchmark_, name), _t)
 #define __pt_generate_benchmark_instance_name(name) __pt_generate_benchmark_type(name) pf_concatenate(pf_concatenate(__pt_benchmark_, name), _instance)
 
-#define pt_benchmark(name, bvn, itc)														               \  
+#define pt_benchmark(name, bvn, itc, ntt)                                      \  
 class __pt_generate_benchmark_type(name)									                     \
 	: public pul::__tester_benchmark                                             \
 {																													                     \
 public:																											                   \
   __pt_generate_benchmark_type(name)() pf_attr_noexcept                        \
-    : pul::__tester_benchmark(__pt_generate_benchmark_name(name), itc)         \
+    : pul::__tester_benchmark(__pt_generate_benchmark_name(name), itc, ntt)    \
   {}                                                                           \
   void                                                                         \
-  __proc(pul::__tester_benchmark &bvn) pf_attr_override;                       \
+  process(pul::__tester_benchmark &bvn) pf_attr_override;                      \
 };                                                                             \
 pf_decl_static pf_decl_inline __pt_generate_benchmark_instance_name(name);     \
-void __pt_generate_benchmark_type(name)::__proc(pul::__tester_benchmark &bvn)
+void __pt_generate_benchmark_type(name)::process(pul::__tester_benchmark &bvn)
 
 
 

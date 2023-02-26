@@ -19,6 +19,7 @@
 // Include: Fmt
 #include "fmt/color.h"
 #include "fmt/ranges.h"
+#include "fmt/chrono.h"
 #include "fmt/format.h"
 
 // Include: C++
@@ -199,7 +200,7 @@ namespace dbg_flags
 	{
 		this->shrink(__v.size());
 		std::memcpy(this->data(), __v.data(), this->count_);
-		*(this->end()) = '\0';
+		*(this->data() + this->count_) = '\0';
 	}
 
 	public:
@@ -216,27 +217,27 @@ namespace dbg_flags
 			const char_t * __str,
 			size_t __count)
 			: count_(__count + 1)
-			, store_(union_cast<char_t*>(allocate(this->count_, align_val_t(32), 0)))
+			, store_(union_cast<char_t*>(allocate(this->count_ + 1, align_val_t(32), 0)))
 		{
 			std::memcpy(this->store_, __str, __count);
-			*this->end() = '\0';
+			*(this->data() + this->count_) = '\0';
 		}
 		pf_decl_constexpr pf_decl_inline dbg_u8string(
 			const char_t * __str)
-			: count_(std::strlen(__str) + 1)
-			, store_(union_cast<char_t*>(allocate(this->count_, align_val_t(32), 0)))
+			: count_(std::strlen(__str))
+			, store_(union_cast<char_t*>(allocate(this->count_ + 1, align_val_t(32), 0)))
 		{
 			std::memcpy(this->store_, __str, this->count_);
-			*this->end() = '\0';
+			*(this->data() + this->count_) = '\0';
 		}
 		pf_decl_constexpr pf_decl_inline dbg_u8string(
 			size_t __count,
 			char_t __val) pf_attr_noexcept
-		: count_(__count + 1)
-		, store_(union_cast<char_t*>(allocate(this->count_, align_val_t(32), 0)))
+		: count_(__count)
+		, store_(union_cast<char_t*>(allocate(this->count_ + 1, align_val_t(32), 0)))
 		{
 			std::memset(this->store_, __val, __count);
-			*this->end() = '\0';
+			*(this->data() + this->count_) = '\0';
 		}
 		dbg_u8string(
 			dbg_u8string && __r) pf_attr_noexcept
@@ -288,7 +289,6 @@ namespace dbg_flags
 		pf_decl_constexpr pf_decl_inline dbg_u8string &operator=(
 			dbg_u8string_view __v) pf_attr_noexcept
 		{
-			this->count_ = 0;
 			this->__assign_view(__v);
 			return *this;
 		}

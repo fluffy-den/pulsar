@@ -19,15 +19,9 @@ namespace pul
 {
 	// Debug -> Logger
 	pt_pack(logger)
-	pt_unit(writing)
+	pt_benchmark(writing_bench, __b, 1024, 1)
 	{
-		int32_t i = 0;
-		throw(std::runtime_error("Blah"));
-		pt_require(i > 0);
-	}
-	pt_benchmark(writing_bench, __b, 1024)
-	{
-
-
+		__b.measure(std::function([&](size_t __i)
+															{ return __i; }));
 	}
 }

@@ -88,7 +88,26 @@ namespace pul
 		// 3. Benchmarks
 		if (this->benchHead_)
 		{
+			pf_print("\nLaunching benchmark(s)...\n");
+			high_resolution_point_t start = high_resolution_clock_t::now();
+			__tester_benchmark *p					= this->benchHead_;
 
+			// A. Format
+			pf_print(
+				"{: <32} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
+				"benchmark", "num", "min", "max", "avg", "var", "dev", "Q1", "Q2", "Q3", "total");
+
+			// B. Print Results
+			p = this->benchHead_;
+			while (p)
+			{
+				p->process(*p);
+				p = p->next_;
+			}
+
+			// C. End
+			nanoseconds_t dur = high_resolution_clock_t::now() - start;
+			pf_print("\nFinished after {}.\n", dur);
 		}
 		// 4. Results
 		if (this->numFailed_ > 0)
@@ -170,36 +189,30 @@ namespace pul
 	/// TESTER: Benchmark
 	// Constructors
 	__tester_benchmark::__tester_benchmark(
-		dbg_u8string __name,
-		size_t __itc) pf_attr_noexcept
-		: name_(__name)
-		, benchFun_(nullptr)
-		, next_(nullptr)
+		dbg_u8string_view __name,
+		size_t __itc,
+		size_t __ntt) pf_attr_noexcept
+		: next_(nullptr)
+		, name_(__name)
 		, itc_(__itc)
+		, ntt_(__ntt)
 	{
+		if (this->ntt_ == 0) this->ntt_ = 1;
+		else if (this->ntt_ >= 128) this->ntt_ = 128;
 		__tester_pack *p = tester_engine.__cur_pack();
 		p->__add_benchmark(this);
 	}
 
-	// Run
+	// Display
 	void
-	__tester_benchmark::__run()
+	__tester_benchmark::__display_results(
+		__results_t const &__r) pf_attr_noexcept
 	{
-		this->__proc(*this);
-		if (!this->benchFun_)
-		{
-			pf_print("<{}> impossible to benchmark if no bench() isn't provided!",
-							 fmt::styled(this->name_.data(), fmt::fg(fmt::color::steel_blue)));
-
-		}
+		pf_print(
+			"{} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
+			dbg_format_message("{: <32}", fmt::styled(this->name().data(), fmt::fg(fmt::color::steel_blue))).data(),
+			this->num_iterations(), __r.min, __r.max, __r.avg, __r.var, __r.ect, __r.q1, __r.q2, __r.q3, __r.total);
 	}
-	void
-	__tester_benchmark::bench(
-		fun_buf<void(size_t)> __benchFun)
-	{
-		this->benchFun_ = __benchFun;
-	}
-
 	/// TESTER: Engine
 	// Constructors
 	__tester_engine::__tester_engine() pf_attr_noexcept

@@ -337,8 +337,8 @@ namespace pul
 				byte_t *as_byte;
 				__fun_buf_base_impl<std::decay_t<_FunTy>, _RetTy, _Args...> *as_fun_base;
 			};
-			as_byte = data(this->base_);
-			construct(as_fun_base, std::move(__ptr));
+			as_byte = &this->base_[0];
+			::new (as_fun_base) __fun_buf_base_impl<std::decay_t<_FunTy>, _RetTy, _Args...>(std::move(__ptr));
 		}
 
 		/// Destructor
@@ -365,7 +365,7 @@ namespace pul
 				const byte_t *as_byte;
 				const __fun_buf_base<_RetTy, _Args...> *as_base;
 			};
-			as_byte = data(this->base_);
+			as_byte = &this->base_[0];
 			return as_base->operator()(std::forward<_InArgs>(__args)...);
 		}
 
