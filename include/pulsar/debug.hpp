@@ -207,7 +207,6 @@ namespace dbg_flags
 		pf_decl_constexpr pf_decl_inline dbg_u8string() pf_attr_noexcept
 		: count_(0)
 		, store_(nullptr)
-
 		{}
 		pf_decl_constexpr pf_decl_inline dbg_u8string(
 			nullptr_t) pf_attr_noexcept
@@ -240,29 +239,52 @@ namespace dbg_flags
 			*this->end() = '\0';
 		}
 		dbg_u8string(
-			dbg_u8string &&) = default;
+			dbg_u8string && __r) pf_attr_noexcept
+		: count_(__r.count_)
+		, store_(__r.store_)
+		{
+			__r.count_ = 0;
+			__r.store_ = nullptr;
+		}
 		dbg_u8string(
-			dbg_u8string const &) = default;
+			dbg_u8string const & __r) pf_attr_noexcept
+		: dbg_u8string(__r.data())
+		{}
 		pf_decl_constexpr pf_decl_inline dbg_u8string(
 			dbg_u8string_view __v) pf_attr_noexcept
 		: count_(__v.count())
 		, store_(union_cast<char_t*>(allocate(__v.count() + 1, align_val_t(32), 0)))
 		{
 			this->__assign_view(__v);
-			*this->end() = '\0';
 		}
 
 		/// Destructor
 		pf_decl_constexpr pf_decl_inline ~dbg_u8string() pf_attr_noexcept
 		{
-			deallocate(this->store_);
+			if (this->store_)
+			{
+				deallocate(this->store_);
+			}
 		}
 
 		/// Operator =
 		pf_decl_constexpr pf_decl_inline dbg_u8string &operator=(
-			dbg_u8string const &) = default;
+			dbg_u8string const & __r)
+		{
+			this->count_ = 0;
+			this->__assign_view(__r.view());
+			return *this;
+		}
 		pf_decl_constexpr pf_decl_inline dbg_u8string &operator=(
-			dbg_u8string &&) = default;
+			dbg_u8string && __r)
+		{
+			if (this->store_) deallocate(this->store_);
+			this->count_ = __r.count_;
+			__r.count_	 = 0;
+			this->store_ = __r.store_;
+			__r.store_	 = 0;
+			return *this;
+		}
 		pf_decl_constexpr pf_decl_inline dbg_u8string &operator=(
 			dbg_u8string_view __v) pf_attr_noexcept
 		{
@@ -752,7 +774,7 @@ namespace dbg_flags
 		dbg_u8string_view __msg) pf_attr_noexcept
 	{
 		logger.write(__msg);
-		std::exit(SIGABRT);
+		std::abort();
 	}
 
 	/// DEBUG: Initializer

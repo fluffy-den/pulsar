@@ -188,7 +188,9 @@ namespace pul
 		this->__proc(*this);
 		if (!this->benchFun_)
 		{
-			// TODO
+			pf_print("<{}> impossible to benchmark if no bench() isn't provided!",
+							 fmt::styled(this->name_.data(), fmt::fg(fmt::color::steel_blue)));
+
 		}
 	}
 	void

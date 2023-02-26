@@ -19,6 +19,8 @@
 
 // Include: Windows
 #ifdef PF_OS_WINDOWS
+#include <initguid.h>
+#include <knownfolders.h>
 #include <dbghelp.h>
 #include <shlobj.h>
 
@@ -129,11 +131,14 @@ namespace pul
 		__dbg_wsstring_view __v) pf_attr_noexcept
 	{
 		this->shrink(__v.size());
-		std::memcpy(this->data(), __v.data(), this->count_);
-		*(this->end()) = L'\0';
+		std::memcpy(this->data(), __v.data(), this->count_ * sizeof(wchar_t));
+		*(this->data() + this->count_) = L'\0';
 	}
 
 	public:
+		using iterator_t			 = wchar_t*;
+		using const_iterator_t = const wchar_t*;
+
 		/// Constructors
 		pf_decl_inline __dbg_wsstring() pf_attr_noexcept
 			: count_(0)
@@ -145,35 +150,61 @@ namespace pul
 		{}
 		pf_decl_inline __dbg_wsstring(
 			size_t __count,
-			char_t __val) pf_attr_noexcept
+			wchar_t __val) pf_attr_noexcept
 			: count_(__count)
-			, store_(union_cast<wchar_t*>(allocate(__count, align_val_t(32), 0)))
+			, store_(union_cast<wchar_t*>(allocate((this->count_ + 1) * sizeof(wchar_t), align_val_t(32), 0)))
 		{
-			std::memset(this->store_, __val, __count);
+			std::memset(this->store_, __val, __count * sizeof(wchar_t));
+			*(this->data() + this->count_) = L'\0';
 		}
 		__dbg_wsstring(
-			__dbg_wsstring &&) = default;
+			__dbg_wsstring &&__r) pf_attr_noexcept
+			: count_(__r.count_)
+			, store_(__r.store_)
+		{
+			__r.count_ = 0;
+			__r.store_ = nullptr;
+		}
 		__dbg_wsstring(
-			__dbg_wsstring const &) = default;
+			__dbg_wsstring const &__r) pf_attr_noexcept
+			: __dbg_wsstring(__r.data())
+		{}
 		pf_decl_inline __dbg_wsstring(
 			__dbg_wsstring_view __v) pf_attr_noexcept
 			: count_(__v.count())
-			, store_(union_cast<wchar_t*>(allocate(__v.count(), align_val_t(32), 0)))
+			, store_(union_cast<wchar_t*>(allocate((count_ + 1) * sizeof(wchar_t), align_val_t(32), 0)))
 		{
-			this->__assign_view(__v);
+			std::memcpy(this->store_, __v.data(), __v.size());
+			*(this->data() + this->count_) = L'\0';
 		}
 
 		/// Destructor
 		pf_decl_inline ~__dbg_wsstring() pf_attr_noexcept
 		{
-			deallocate(this->store_);
+			if (this->store_)
+			{
+				deallocate(this->store_);
+			}
 		}
 
 		/// Operator =
 		pf_decl_inline __dbg_wsstring &operator=(
-			__dbg_wsstring const &) = default;
+			__dbg_wsstring const &__r) pf_attr_noexcept
+		{
+			this->count_ = 0;
+			this->__assign_view(__r.view());
+			return *this;
+		}
 		pf_decl_inline __dbg_wsstring &operator=(
-			__dbg_wsstring &&) = default;
+			__dbg_wsstring &&__r) pf_attr_noexcept
+		{
+			if (this->store_) deallocate(this->store_);
+			this->count_ = __r.count_;
+			__r.count_	 = 0;
+			this->store_ = __r.store_;
+			__r.store_	 = 0;
+			return *this;
+		}
 		pf_decl_inline __dbg_wsstring &operator=(
 			__dbg_wsstring_view __v) pf_attr_noexcept
 		{
@@ -188,6 +219,20 @@ namespace pul
 			size_t __index) pf_attr_noexcept
 		{
 			return this->store_[__index];
+		}
+
+		/// Insert
+		pf_decl_inline iterator_t
+		insert_back(
+			const wchar_t *__str)
+		{
+			const size_t c = std::wcslen(__str);
+			iterator_t p	 = this->data() + std::wcslen(this->data());
+			std::memcpy(p, __str, std::wcslen(__str) * sizeof(wchar_t));
+			this->count_ += c;
+			p						 += c;
+			*p = '\0';
+			return p;
 		}
 
 		/// View
@@ -207,8 +252,8 @@ namespace pul
 			}
 			else
 			{
-				this->store_ = union_cast<wchar_t*>(reallocate(this->store_, this->count_, __c + 1, align_val_t(32), 0));
-				this->count_ = __c + 1;
+				this->store_ = union_cast<wchar_t*>(reallocate(this->store_, this->count_, __c + sizeof(wchar_t), align_val_t(32), 0));
+				this->count_ = __c + sizeof(wchar_t);
 			}
 		}
 
@@ -226,12 +271,12 @@ namespace pul
 		pf_hint_nodiscard pf_decl_inline wchar_t*
 		end() pf_attr_noexcept
 		{
-			return &this->store_[0] + this->count_;
+			return &this->store_[0] + std::wcslen(this->data());
 		}
 		pf_hint_nodiscard pf_decl_inline const wchar_t*
 		end() const pf_attr_noexcept
 		{
-			return &this->store_[0] + this->count_;
+			return &this->store_[0] + std::wcslen(this->data());
 		}
 
 		/// Data
@@ -479,42 +524,42 @@ namespace pul
 	/// DEBUG: Message
 	pf_hint_nodiscard pf_decl_static __dbg_wsstring __dbg_convert_u8_to_wide_win(
 		const char_t *__buf,
-		size_t __size) pf_attr_noexcept
+		size_t __size)
 	{
 		// 1. Buffer
-		const size_t r = MultiByteToWideChar(CP_UTF8, WC_ERR_INVALID_CHARS, __buf, __size, nullptr, 0);
+		if (!__buf || !__size) return __dbg_wsstring();
+		const size_t r = MultiByteToWideChar(CP_UTF8, 0, __buf, __size, nullptr, 0);
 		__dbg_wsstring str(r, '\0');
-		DWORD err = GetLastError();
-		if (pf_unlikely(!MultiByteToWideChar(CP_UTF8, WC_ERR_INVALID_CHARS, __buf, __size, str.begin(), str.size())))
-			pf_throw(dbg_category_system(), err, dbg_flags::none, "[WIN] MultiByteToWideChar failed!");
+		if (pf_unlikely(!MultiByteToWideChar(CP_UTF8, 0, __buf, __size, str.begin(), str.size())))
+			pf_print(dbg_type::warning, dbg_level::high, "[WIN] MultiByteToWideChar failed with code=({}).", GetLastError());
 
 		// 2. Returns
 		return str;
 	}
 	pf_hint_nodiscard pf_decl_static dbg_u8string __dbg_convert_wide_to_u8_win(
 		const wchar_t *__buf,
-		size_t __size) pf_attr_noexcept
+		size_t __count)
 	{
 		// 1. Buffer
-		const size_t r = WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, __buf, __size, nullptr, 0, 0, 0);
+		if (!__buf || !__count) return dbg_u8string();
+		const size_t r = WideCharToMultiByte(CP_UTF8, 0, __buf, __count, nullptr, 0, 0, 0);
 		dbg_u8string str(r, '\0');
-		DWORD err = GetLastError();
-		if (pf_unlikely(!WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, __buf, __size, str.begin(), str.size(), 0, 0)))
-			pf_throw(dbg_category_system(), err, dbg_flags::none, "[WIN] WideCharToMultiByte failed!");
+		if (pf_unlikely(!WideCharToMultiByte(CP_UTF8, 0, __buf, __count, str.begin(), str.size(), 0, 0)))
+			pf_print(dbg_type::warning, dbg_level::high, "[WIN] WideCharToMultiByte failed with code=({}).", GetLastError());
 
 		// 2. Returns
 		return str;
 	}
 	pf_hint_nodiscard pf_decl_static dbg_u8string __dbg_generate_error_message_win(
-		DWORD __error) pf_attr_noexcept
+		DWORD __error)
 	{
 		// 1. Buffer
 		PWSTR msg			 = nullptr;
 		const size_t c = FormatMessageW(
 			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-			0, __error, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), msg, 0, nullptr);
+			0, __error, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), union_cast<PWSTR>(&msg), 0, nullptr);
 		if (pf_unlikely(!msg || c == 0))
-			pf_throw(dbg_category_system(), __error, dbg_flags::none, "[WIN] FormatMessageW failed!");
+			pf_print(dbg_type::warning, dbg_level::high, "[WIN] FormatMessageW failed for code={}!", __error);
 		LocalFree(msg);
 
 		// 2. Returns
@@ -523,7 +568,7 @@ namespace pul
 
 	/// DEBUG: MiniDump
 	pf_decl_static MINIDUMP_TYPE __dbg_flags_to_minidump_type_win(
-		uint32_t __flags) pf_attr_noexcept
+		uint32_t __flags)
 	{
 		DWORD flags = MINIDUMP_TYPE::MiniDumpNormal;
 		if (__flags & dbg_flags::dump_with_data_segs)
@@ -572,12 +617,12 @@ namespace pul
 	}
 	pf_decl_static void __dbg_generate_error_popup_win(
 		dbg_u8string_view __title,
-		dbg_u8string_view __msg) pf_attr_noexcept
+		dbg_u8string_view __msg)
 	{
 		// 1. Display
-		__dbg_wsstring wstitle = __dbg_convert_u8_to_wide_win(__title.begin(), __title.size());
-		__dbg_wsstring wsmsg	 = __dbg_convert_u8_to_wide_win(__msg.begin(), __msg.size());
-		if (!MessageBoxExW(nullptr, wstitle.begin(), wsmsg.begin(), MB_OK | MB_ICONERROR, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)))
+		__dbg_wsstring wstitle = __dbg_convert_u8_to_wide_win(__title.data(), __title.size());
+		__dbg_wsstring wsmsg	 = __dbg_convert_u8_to_wide_win(__msg.data(), __msg.size());
+		if (!MessageBoxW(nullptr, wsmsg.data(), wstitle.data(), MB_OK | MB_ICONERROR))
 			pf_print(dbg_type::warning, dbg_level::high, "[WIN] Failed to generate error popup!");
 	}
 	pf_decl_static dbg_u8string __dbg_generate_dumpbin(
@@ -585,31 +630,46 @@ namespace pul
 		MINIDUMP_TYPE __type)
 	{
 		// 1. Path
-		PWSTR *known = nullptr;
-		BOOL ret		 = SHGetKnownFolderPath(FOLDERID_LocalAppDataLow, 0, 0, known);
-		if (!ret)
+		PWSTR known = nullptr;
+		BOOL ret		= SHGetKnownFolderPath(FOLDERID_LocalAppDataLow, 0, 0, &known);
+		if (ret != S_OK)
 		{
 			CoTaskMemFree(known);
-			pf_throw(dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] SHGetKnownFolderPath failed to find path=\"*user*/appdata/locallow/\"!");
+			pf_print(dbg_type::warning, dbg_level::high, "[WIN] SHGetKnownFolderPath failed to find known folder GUID appdata/locallow path! message={}",
+							 __dbg_generate_error_message_win(GetLastError()).data());
+			return dbg_u8string();
 		}
-		WCHAR buffer[DBG_FMT_NAME_LEN];
-		WCHAR *p = &buffer[0];
-		size_t s = std::wcslen(*known) * sizeof(wchar_t);
-		std::memcpy(p, known, s);
-		CoTaskMemFree(known);
-		p += s;
-		WCHAR wpath[] = L"\\pulsar\\crash.dmp\0";
-		std::memcpy(p, &wpath[0], sizeof(wpath));
-		dbg_u8string u8path = __dbg_convert_wide_to_u8_win(&buffer[0], std::wcslen(&buffer[0]));
 
-		// 2. File
-		HANDLE file = CreateFileW(&buffer[0], GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+		// 2. Directory
+		__dbg_wsstring str(DBG_FMT_NAME_LEN, '\0');
+		str.insert_back(known);
+		str.insert_back(L"\\PulsarSoftware\\");
+		CoTaskMemFree(known);
+		if(!CreateDirectoryW(str.data(), nullptr))
+		{
+			DWORD err = GetLastError();
+			if (err != ERROR_ALREADY_EXISTS)
+			{
+				dbg_u8string u8path = __dbg_convert_wide_to_u8_win(str.data(), std::wcslen(str.data()));
+				pf_print(dbg_type::warning, dbg_level::high, "[WIN] CreateDirectoryW failed at path={}, message={}",
+								 u8path.data(),
+								 __dbg_generate_error_message_win(err).data());
+			}
+		}
+
+		// 3. File
+		str.insert_back(L"minidump.dmp");
+		HANDLE file					= CreateFileW(str.data(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+		dbg_u8string u8path = __dbg_convert_wide_to_u8_win(str.data(), std::wcslen(str.data()));
 		if (!file)
 		{
-			pf_throw(dbg_category_system(), GetLastError(), 0, "[WIN] CreateFileW failed at path={}", u8path.data());
+			pf_print(dbg_type::warning, dbg_level::high, "[WIN] CreateFileW failed at path={}, message={}",
+							 u8path.data(),
+							 __dbg_generate_error_message_win(GetLastError()).data());
+			return dbg_u8string();
 		}
 
-		// 3. Generate
+		// 4. Generate
 		if(!MiniDumpWriteDump(
 				 GetCurrentProcess(), GetCurrentProcessId(), file,
 				 __type, __mei, nullptr, nullptr))
@@ -618,26 +678,29 @@ namespace pul
 			pf_print(
 				dbg_type::warning, dbg_level::high,
 				"[WIN] Failed to generate dumpbin at path={}, code={}, reason={}",
-				u8path.data(), result, __dbg_generate_error_message_win(result).begin());
+				u8path.data(), result, __dbg_generate_error_message_win(result).data());
+			return dbg_u8string();
 		}
 
-		// 4. Close File
+		// 5. Close File
 		if (!CloseHandle(file))
 		{
 			pf_print(
 				dbg_type::warning, dbg_level::high,
-				"[WIN] Failed closing file handle for file={}, at path={}", union_cast<void*>(file), u8path.data());
+				"[WIN] Failed closing file handle for file={}, at path={}",
+				union_cast<void*>(file), u8path.data());
+			return dbg_u8string();
 		}
 
-		// 5. Info
+		// 6. Info
 		pf_print(
 			dbg_type::info, dbg_level::high,
 			"[WIN] Dumpfile written at path={}.", u8path.begin());
 
-		// 6. Returns
+		// 7. Returns
 		return u8path;
 	}
-	pf_decl_static void __dbg_generate_unknown_dumpbin()
+	pf_decl_static void __dbg_generate_unknown_dumpbin() pf_attr_noexcept
 	{
 		// 1. Print
 		pf_print(dbg_type::info, dbg_level::high, "[WIN] Unknown error caught. Generating dumpbin...");
@@ -668,9 +731,15 @@ namespace pul
 		// 2. Generating Dumpbin
 		MINIDUMP_EXCEPTION_INFORMATION mei;
 		std::memset(&mei, 0, sizeof(mei));
-		mei.ThreadId					= __dbg_exception_handler_win::thrower_thread_id();
-		mei.ExceptionPointers = __dbg_exception_handler_win::current_exception();
-		mei.ClientPointers		= TRUE;
+		CONTEXT c;
+		std::memset(&c, 0, sizeof(c));
+		c.ContextFlags = CONTEXT_ALL;
+		HANDLE thread = OpenThread(THREAD_ALL_ACCESS, FALSE, __dbg_exception_handler_win::thrower_thread_id());
+		GetThreadContext(thread, &c);
+		mei.ThreadId												 = __dbg_exception_handler_win::thrower_thread_id();
+		mei.ExceptionPointers								 = __dbg_exception_handler_win::current_exception();
+		mei.ExceptionPointers->ContextRecord = &c;
+		mei.ClientPointers									 = FALSE;
 		dbg_u8string u8path = __dbg_generate_dumpbin(&mei, __dbg_flags_to_minidump_type_win(__flags));
 
 		// 3. Popup
@@ -683,7 +752,7 @@ namespace pul
 				__code,
 				__cat->message(__code).data(),
 				__what.data(),
-				u8path.data()));
+				u8path.data()).data());
 	}
 
 	/// DEBUG: Win -> Category -> System
@@ -703,127 +772,135 @@ namespace pul
 		#if defined(PF_RELEASE)
 		/// Exception?
 		std::exception_ptr p = std::current_exception();
-		if (p)
+		if (!generatingDump_)
 		{
-			try
+			generatingDump_ = true;
+			if (p)
 			{
-				std::rethrow_exception(p);
+				try
+				{
+					std::rethrow_exception(p);
+				}
+				catch (dbg_exception const &__e)
+				{
+					// It's an exception. Generate dumpbin
+					__dbg_generate_exception_dumpbin(
+						__e.category(),
+						__e.code(),
+						__e.flags(),
+						__e.what());
+				}
+				catch (std::system_error const &__e)
+				{
+					__dbg_generate_exception_dumpbin(
+						dbg_category_system(),
+						__e.code().value(),
+						dbg_flags::none,
+						__e.what());
+				}
+				catch (std::invalid_argument const &__e)
+				{
+					__dbg_generate_exception_dumpbin(
+						dbg_category_generic(),
+						union_cast<uint32_t>(errv::invalid_argument),
+						dbg_flags::none,
+						__e.what());
+				}
+				catch (std::domain_error const &__e)
+				{
+					__dbg_generate_exception_dumpbin(
+						dbg_category_generic(),
+						union_cast<uint32_t>(errv::domain_error),
+						dbg_flags::none,
+						__e.what());
+				}
+				catch (std::length_error const &__e)
+				{
+					__dbg_generate_exception_dumpbin(
+						dbg_category_generic(),
+						union_cast<uint32_t>(errv::length_error),
+						dbg_flags::none,
+						__e.what());
+				}
+				catch (std::out_of_range const &__e)
+				{
+					__dbg_generate_exception_dumpbin(
+						dbg_category_generic(),
+						union_cast<uint32_t>(errv::out_of_range),
+						dbg_flags::none,
+						__e.what());
+				}
+				catch (std::logic_error const &__e)
+				{
+					__dbg_generate_exception_dumpbin(
+						dbg_category_generic(),
+						union_cast<uint32_t>(errv::logic_error),
+						dbg_flags::none,
+						__e.what());
+				}
+				catch (std::range_error const &__e)
+				{
+					__dbg_generate_exception_dumpbin(
+						dbg_category_generic(),
+						union_cast<uint32_t>(errv::range_error),
+						dbg_flags::none,
+						__e.what());
+				}
+				catch (std::overflow_error const &__e)
+				{
+					__dbg_generate_exception_dumpbin(
+						dbg_category_generic(),
+						union_cast<uint32_t>(errv::overflow_error),
+						dbg_flags::none,
+						__e.what());
+				}
+				catch (std::underflow_error const &__e)
+				{
+					__dbg_generate_exception_dumpbin(
+						dbg_category_generic(),
+						union_cast<uint32_t>(errv::underflow_error),
+						dbg_flags::none,
+						__e.what());
+				}
+				catch (std::runtime_error const &__e)
+				{
+					__dbg_generate_exception_dumpbin(
+						dbg_category_generic(),
+						union_cast<uint32_t>(errv::runtime_error),
+						dbg_flags::none,
+						__e.what());
+				}
+				catch (std::bad_alloc const &__e)
+				{
+					__dbg_generate_exception_dumpbin(
+						dbg_category_generic(),
+						union_cast<uint32_t>(errv::bad_alloc),
+						dbg_flags::none,
+						__e.what());
+				}
+				catch (std::exception const &__e)
+				{
+					__dbg_generate_exception_dumpbin(
+						dbg_category_generic(),
+						union_cast<uint32_t>(errv::unknown),
+						dbg_flags::none,
+						__e.what());
+				}
+				// TODO: Other exceptions ?
 			}
-			catch(dbg_exception const &__e)
+			else
 			{
-				// It's an exception. Generate dumpbin
-				__dbg_generate_exception_dumpbin(
-					__e.category(),
-					__e.code(),
-					__e.flags(),
-					__e.what());
+				__dbg_generate_unknown_dumpbin();
 			}
-			catch(std::system_error const &__e)
-			{
-				__dbg_generate_exception_dumpbin(
-					dbg_category_system(),
-					__e.code().value(),
-					dbg_flags::none,
-					__e.what());
-			}
-			catch(std::invalid_argument const &__e)
-			{
-				__dbg_generate_exception_dumpbin(
-					dbg_category_generic(),
-					union_cast<uint32_t>(errv::invalid_argument),
-					dbg_flags::none,
-					__e.what());
-			}
-			catch(std::domain_error const &__e)
-			{
-				__dbg_generate_exception_dumpbin(
-					dbg_category_generic(),
-					union_cast<uint32_t>(errv::domain_error),
-					dbg_flags::none,
-					__e.what());
-			}
-			catch(std::length_error const &__e)
-			{
-				__dbg_generate_exception_dumpbin(
-					dbg_category_generic(),
-					union_cast<uint32_t>(errv::length_error),
-					dbg_flags::none,
-					__e.what());
-			}
-			catch(std::out_of_range const &__e)
-			{
-				__dbg_generate_exception_dumpbin(
-					dbg_category_generic(),
-					union_cast<uint32_t>(errv::out_of_range),
-					dbg_flags::none,
-					__e.what());
-			}
-			catch(std::logic_error const &__e)
-			{
-				__dbg_generate_exception_dumpbin(
-					dbg_category_generic(),
-					union_cast<uint32_t>(errv::logic_error),
-					dbg_flags::none,
-					__e.what());
-			}
-			catch(std::range_error const &__e)
-			{
-				__dbg_generate_exception_dumpbin(
-					dbg_category_generic(),
-					union_cast<uint32_t>(errv::range_error),
-					dbg_flags::none,
-					__e.what());
-			}
-			catch(std::overflow_error const &__e)
-			{
-				__dbg_generate_exception_dumpbin(
-					dbg_category_generic(),
-					union_cast<uint32_t>(errv::overflow_error),
-					dbg_flags::none,
-					__e.what());
-			}
-			catch(std::underflow_error const &__e)
-			{
-				__dbg_generate_exception_dumpbin(
-					dbg_category_generic(),
-					union_cast<uint32_t>(errv::underflow_error),
-					dbg_flags::none,
-					__e.what());
-			}
-			catch(std::runtime_error const &__e)
-			{
-				__dbg_generate_exception_dumpbin(
-					dbg_category_generic(),
-					union_cast<uint32_t>(errv::runtime_error),
-					dbg_flags::none,
-					__e.what());
-			}
-			catch(std::bad_alloc const &__e)
-			{
-				__dbg_generate_exception_dumpbin(
-					dbg_category_generic(),
-					union_cast<uint32_t>(errv::bad_alloc),
-					dbg_flags::none,
-					__e.what());
-			}
-			catch(std::exception const &__e)
-			{
-				__dbg_generate_exception_dumpbin(
-					dbg_category_generic(),
-					union_cast<uint32_t>(errv::unknown),
-					dbg_flags::none,
-					__e.what());
-			}
-			// TODO: Other exceptions ?
 		}
-		else
-		{
-			__dbg_generate_unknown_dumpbin();
-		}
-		#endif
+
+		#endif // PF_RELEASE
+
+		/// Info
+		pf_print(dbg_type::info, dbg_level::high, "Aborting the program.");
 
 		/// Exit
-		std::exit(SIGABRT);
+		std::abort();
 	}
 
 	public:
@@ -842,6 +919,7 @@ namespace pul
 		/// Initializers
 		pf_decl_static void __init() pf_attr_noexcept
 		{
+			generatingDump_ = false;
 			__dbg_exception_handler_win::__init();
 			std::set_terminate(__terminate_handle);
 		}
@@ -849,7 +927,12 @@ namespace pul
 		{
 			__dbg_exception_handler_win::__terminate();
 		}
+
+		/// Dump anti-loop
+		pf_decl_static pf_decl_inline bool generatingDump_;
 	};
+
+
 }
 
 

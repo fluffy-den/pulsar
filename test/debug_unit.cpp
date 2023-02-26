@@ -22,10 +22,12 @@ namespace pul
 	pt_unit(writing)
 	{
 		int32_t i = 0;
+		throw(std::runtime_error("Blah"));
 		pt_require(i > 0);
 	}
 	pt_benchmark(writing_bench, __b, 1024)
 	{
+
 
 	}
 }
