@@ -33,7 +33,7 @@ namespace pul
 	{
 	public:
 		/// Constructors
-		__tester_unit(
+		pulsar_api __tester_unit(
 			dbg_u8string_view __name) pf_attr_noexcept;
 		__tester_unit(__tester_unit const &) = delete;
 		__tester_unit(__tester_unit &&)			 = delete;
@@ -53,38 +53,34 @@ namespace pul
 	/// TESTER: Benchmark
 	class __tester_benchmark
 	{
+		/// Type
+    using __tester_thread_t = std::thread;
+
   public:
 		/// Constructor
-    __tester_benchmark(
+    pulsar_api __tester_benchmark(
         dbg_u8string_view __name,
         size_t __itc,
         size_t __ntc = 1) pf_attr_noexcept;
 
     /// Destructor
-    ~__tester_benchmark() = default;
+    pulsar_api ~__tester_benchmark() = default;
 
     /// Proc
     pf_decl_virtual void
-    process(__tester_benchmark &__b) = 0;
+    process(
+      __tester_benchmark &__b) = 0;
 
-		/// Run
-    struct __results_t
-    {
-      nanoseconds_t min;
-      nanoseconds_t max;
-      nanoseconds_t avg;
-      nanoseconds_t var;
-      nanoseconds_t ect;
-      nanoseconds_t q1;
-      nanoseconds_t q2;
-      nanoseconds_t q3;
-      nanoseconds_t total;
-    };
+    /// Display
+    pulsar_api void
+    __display_measures(
+        const nanoseconds_t *__rts,
+        const size_t __c) pf_attr_noexcept; 
 
     /// Computation
     template <typename _FunTy>
     void
-    pf_decl_static __compute_results(
+    pf_decl_static __measure_proc(
       _FunTy &&__measureFun,
       size_t __itc,
       size_t __off,
@@ -96,14 +92,12 @@ namespace pul
         high_resolution_point_t n = high_resolution_clock_t::now();
         auto k = __measureFun(i);
         __results[i] = high_resolution_clock_t::now() - n;
+
         // 2. Anti-Optimize
         byte_t buf[sizeof(k)];
         std::memcpy(&buf[0], &k, sizeof(k)); // Anti-optimize!
       }
     }
-    pulsar_api void
-    __display_results(
-        __results_t const &__r) pf_attr_noexcept;
     template <typename _FunTy>
     void
     measure(
@@ -111,20 +105,24 @@ namespace pul
     {
       // 1. Measure
       const size_t ni = this->num_iterations();
-      std::thread *workers   = union_cast<std::thread *>(allocate(sizeof(std::thread) * this->ntt_, align_val_t(alignof(std::thread))));
-      std::memset(&workers[0], 0, sizeof(std::thread) * this->ntt_);
-      nanoseconds_t *results = union_cast<nanoseconds_t *>(allocate(sizeof(nanoseconds_t) * ni, align_val_t(32)));
-      std::memset(&results[0], 0, sizeof(nanoseconds_t) * ni);
+      const size_t rs = sizeof(nanoseconds_t) * ni;
+      const size_t ss = sizeof(__tester_thread_t) * this->ntt_ + rs;
+      byte_t *store = union_cast<byte_t *>(allocate(ss, align_val_t(32)));
+      std::memset(store, 0, sizeof(ss));
+      __tester_thread_t *workers = union_cast<__tester_thread_t*>(&store[0]);
+      nanoseconds_t *results = union_cast<nanoseconds_t*>(&store[0] + sizeof(__tester_thread_t) * this->ntt_);
       for (size_t i = 1; i < this->ntt_; ++i)
       {
-        workers[i - 1] = std::thread(
-          this->__compute_results<_FunTy>,
+        workers[i - 1] = __tester_thread_t(
+          this->__measure_proc<_FunTy>,
           std::move(__measureFun), 
           this->itc_, 
           this->itc_ * i, 
           results);
       }
-      this->__compute_results(std::move(__measureFun), this->itc_, 0, results);
+      this->__measure_proc(std::move(__measureFun), this->itc_, 0, results);
+
+      // 2. End Threads
       for (size_t i = 0; i < this->ntt_; ++i)
       {
         if(workers[i - 1].joinable())
@@ -132,44 +130,12 @@ namespace pul
           workers[i - 1].join();
         }
       }
-      deallocate(workers);
 
-      // 2. Compute Results
-      __results_t r = { 
-        nanoseconds_t(union_cast<size_t>(-1)), 
-        nanoseconds_t(0), 
-        nanoseconds_t(0), 
-        nanoseconds_t(0), 
-        nanoseconds_t(0), 
-        nanoseconds_t(0), 
-        nanoseconds_t(0), 
-        nanoseconds_t(0), 
-        nanoseconds_t(0) };
-      nanoseconds_t avg2	 = nanoseconds_t(0);	// E[X^2]
-      for (size_t i = 0; i < ni; ++i)
-      {
-        if (results[i] < r.min) r.min = results[i];
-        if (results[i] > r.max) r.max = results[i];
-        r.avg   += results[i];
-        r.total += results[i];
-      }
-      r.avg  = nanoseconds_t(r.avg.count() / ni);
-      for (size_t i = 0; i < ni; ++i)
-      {
-        const nanoseconds_t k = (results[i] - r.avg);
-        r.var += nanoseconds_t(k.count() * k.count());
-      }
-      r.var  = nanoseconds_t(r.var.count() / ni);
-      r.ect  = nanoseconds_t(static_cast<int64_t>(std::sqrt(static_cast<float64_t>(r.var.count()))));
-      r.q1   = results[ni / 4];
-      r.q2   = results[ni / 2];
-      r.q3   = results[ni * 3 / 4];
+      // 3. Compute
+      __display_measures(results, rs);
 
-      // 3. Deallocate
+      // 4. Deallocate
       deallocate(results);
-
-      // 4. Display
-      __display_results(r);
     }
 
     /// Name
@@ -222,30 +188,30 @@ namespace pul
 	{
 	public:
 		/// Constructors
-		__tester_pack(
+		pulsar_api __tester_pack(
 			dbg_u8string_view __name) pf_attr_noexcept;
 		__tester_pack(__tester_pack const &) = delete;
 		__tester_pack(__tester_pack &&)			 = delete;
 
 		/// Destructor
-		~__tester_pack() pf_attr_noexcept = default;
+		pulsar_api ~__tester_pack() pf_attr_noexcept = default;
 
 		/// Operator =
 		__tester_pack &operator=(__tester_pack const &) = delete;
 		__tester_pack &operator=(__tester_pack &&)			= delete;
 
 		/// Run
-		void
+		pulsar_api void
 		__run() pf_attr_noexcept;
 
 		/// Unit
-		void
+		pulsar_api void
 		__add_unit(
 			__tester_unit *__u) pf_attr_noexcept;
-    void
+    pulsar_api void
     __add_benchmark(
       __tester_benchmark *__b) pf_attr_noexcept;
-    void
+    pulsar_api void
 		__add_result(
 			bool __c,
 			dbg_u8string_view __file,
@@ -268,15 +234,15 @@ namespace pul
 	{
 	public:
 		/// Constructors
-		__tester_engine() pf_attr_noexcept;
+		pulsar_api __tester_engine() pf_attr_noexcept;
 		__tester_engine(__tester_engine const &) = delete;
 		__tester_engine(__tester_engine &&)			 = delete;
 
 		/// Destructor
-		~__tester_engine() pf_attr_noexcept = default;
+		pulsar_api ~__tester_engine() pf_attr_noexcept = default;
 
 		/// Run
-		pf_hint_nodiscard int32_t
+		pf_hint_nodiscard pulsar_api int32_t
 		run() pf_attr_noexcept;
 
 		/// Operator =
@@ -286,17 +252,17 @@ namespace pul
 			__tester_engine &&) = delete;
 
 		/// Test
-		void
+		pulsar_api void
 		__test(
 			bool __c,
 			dbg_u8string_view __file,
 			uint32_t __line) pf_attr_noexcept;
 
 		/// Pack
-		void
+		pulsar_api void
 		__add_pack(
 			__tester_pack *__p) pf_attr_noexcept;
-		pf_hint_nodiscard __tester_pack*
+		pf_hint_nodiscard pulsar_api __tester_pack*
 		__cur_pack() pf_attr_noexcept;
 
 		/// Store
@@ -309,7 +275,7 @@ namespace pul
 	pf_decl_extern __tester_engine tester_engine;
 
 	/// TESTER: Functions
-	pf_decl_static void __test_require(
+	pf_decl_static pulsar_api void __test_require(
 		bool __cond,
 		dbg_u8string_view __file,
 		uint32_t __line)

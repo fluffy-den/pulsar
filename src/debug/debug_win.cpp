@@ -21,7 +21,7 @@ namespace pul
 {
 	/// DEBUG: Win -> Stack Trace
 	pulsar_api char_t*
-	__dbg_format_stacktrace_to(
+	dbg_format_stacktrace_to(
 		char_t *__where,
 		size_t __ignore) pf_attr_noexcept
 	{
@@ -47,7 +47,7 @@ namespace pul
 		dbg_u8string_view catm = __cat->message(__code);
 		dbg_u8string str(DBG_FMT_BUFFER_SIZE, '\0');
 		char_t *p = str.begin();
-		p = __dbg_format_chrono_to(p);
+		p = dbg_format_chrono_to(p);
 		p = fmt::format_to(p, " T={} /{}/ /{}/ ({}) message={} | ",
 											 union_cast<size_t>(std::this_thread::get_id()),
 											 fmt::styled('E', fmt::fg(fmt::color::red) | fmt::bg(fmt::color::black)),
@@ -56,7 +56,7 @@ namespace pul
 											 fmt::styled(catm.begin(), fmt::fg(fmt::color::orange) | fmt::bg(fmt::color::black)));
 		char_t *k = p;
 		p			 = fmt::format_to(p, "{}", __msg.begin());
-		p			 = __dbg_reformat_newlines_to(k);
+		p			 = dbg_reformat_newlines_to(k);
 		p			 = __dbg_format_stacktrace_of_exception_to_win(p, 0);
 		*(p++) = '\n';
 		str.shrink(union_cast<size_t>(p) - union_cast<size_t>(str.begin()) + 1);

@@ -384,6 +384,7 @@ namespace dbg_flags
 	// Format
 	template <typename ... _Args>
 	using dbg_u8string_format = fmt::basic_format_string<char_t, fmt::type_identity_t<_Args>...>;
+	// TODO: bg, fg, styles, etc...
 
 
 	/// DEBUG: Category
@@ -394,11 +395,11 @@ namespace dbg_flags
 		pf_decl_constexpr dbg_category() pf_attr_noexcept = default;
 
 		/// Name
-		pf_decl_virtual dbg_u8string_view
+		pf_hint_nodiscard pf_decl_virtual dbg_u8string_view
 		name() const pf_attr_noexcept = 0;
 
 		/// Message
-		pf_decl_virtual dbg_u8string
+		pf_hint_nodiscard pf_decl_virtual dbg_u8string
 		message(
 			uint32_t __val) const pf_attr_noexcept = 0;
 	};
@@ -413,14 +414,14 @@ namespace dbg_flags
 		pf_decl_constexpr dbg_category_generic_t() pf_attr_noexcept = default;
 
 		/// Name
-		pf_decl_inline dbg_u8string_view
+		pf_hint_nodiscard pf_decl_inline dbg_u8string_view
 		name() const pf_attr_noexcept
 		{
 			return "generic";
 		}
 
 		/// Message
-		pf_decl_inline dbg_u8string
+		pf_hint_nodiscard pf_decl_inline dbg_u8string
 		message(
 			uint32_t __val) const pf_attr_noexcept pf_attr_override
 		{
@@ -545,33 +546,18 @@ namespace dbg_flags
 	};
 
 	/// DEBUG: Logger
-	class dbg_logger// TODO: Move to src
+	class dbg_logger
 	{
 	public:
 		using callback_t = fun_ptr<void (dbg_u8string_view)>;
 
-		/// Constructor
-		pf_decl_inline dbg_logger() pf_attr_noexcept
-		: c_(nullptr)
-		, timer_(high_resolution_clock_t::now())
-		{
-			dbg_u8string_view logo =
-				R"(
-        ██████╗ ██╗   ██╗██╗     ███████╗ █████╗ ██████╗ 
-        ██╔══██╗██║   ██║██║     ██╔════╝██╔══██╗██╔══██╗
-        ██████╔╝██║   ██║██║     ███████╗███████║██████╔╝
-        ██╔═══╝ ██║   ██║██║     ╚════██║██╔══██║██╔══██╗
-        ██║     ╚██████╔╝███████╗███████║██║  ██║██║  ██║
-        ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝  )";
-			fmt::print("{}", logo.begin());
-			char_t buf[64] = {'\0'};
-			fmt::format_to(
-				&buf[0], "v{0}.{1}.{2}\n\n",
-				PULSAR_VERSION_MAJOR,
-				PULSAR_VERSION_MINOR,
-				PULSAR_VERSION_PATCH);
-			fmt::print("{}", &buf[0]);
-		}
+		/// Constructors
+		pulsar_api dbg_logger() pf_attr_noexcept;
+		dbg_logger(dbg_logger const &) = delete;
+		dbg_logger(dbg_logger &&)			 = delete;
+
+		/// Destructor
+		~dbg_logger() pf_attr_noexcept = default;
 
 		/// Callback
 		pf_decl_inline callback_t get_callback()
@@ -624,7 +610,7 @@ namespace dbg_flags
 		}
 
 	private:
-		callback_t c_;
+		callback_t c_;// TODO: Callback list
 		dbg_level lvl_;
 		const high_resolution_point_t timer_;
 	};
@@ -634,14 +620,14 @@ namespace dbg_flags
 
 	/// DEBUG: Format
 	pf_hint_nodiscard pulsar_api char_t*
-	__dbg_format_chrono_to(
+	dbg_format_chrono_to(
 		char_t *__w) pf_attr_noexcept;
 	pf_hint_nodiscard pulsar_api char_t*
-	__dbg_format_stacktrace_to(
+	dbg_format_stacktrace_to(
 		char_t *__w,
 		size_t __ignore) pf_attr_noexcept;
 	pf_hint_nodiscard pulsar_api char_t*
-	__dbg_reformat_newlines_to(
+	dbg_reformat_newlines_to(
 		char_t *__w) pf_attr_noexcept;
 	pulsar_api void
 	dbg_print_exception(
@@ -668,7 +654,7 @@ namespace dbg_flags
 		case dbg_level::medium: { lvl = "medium"; style = fmt::bg(fmt::color::green); break; }
 		case dbg_level::high:   { lvl = "high"; style = fmt::bg(fmt::color::indian_red);  break; }
 		};
-		dbg_u8string prt(DBG_FMT_BUFFER_SIZE, '\0');
+		dbg_u8string prt(DBG_FMT_BUFFER_SIZE, '\0');// TODO: Good size
 		char_t *p = prt.data();
 		if (__type == dbg_type::extension)
 		{
@@ -676,7 +662,7 @@ namespace dbg_flags
 		}
 		else
 		{
-			p = __dbg_format_chrono_to(p);
+			p = dbg_format_chrono_to(p);
 			p = fmt::format_to(
 				p, " /{}/ /{}/ message=",
 				fmt::styled(union_cast<char_t>(__type), __type == dbg_type::info ? fmt::fg(fmt::color::sky_blue) : fmt::fg(fmt::color::orange_red)),
@@ -684,7 +670,7 @@ namespace dbg_flags
 		}
 		char_t *k = p;
 		p = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
-		p = __dbg_reformat_newlines_to(k);
+		p = dbg_reformat_newlines_to(k);
 		if (__type != dbg_type::extension)
 		{
 			*(p++) = '\n';
@@ -703,12 +689,12 @@ namespace dbg_flags
 		if (__level < logger.level()) return;
 
 		// 2. Print
-		dbg_u8string prt(DBG_FMT_BUFFER_SIZE, '\0');
+		dbg_u8string prt(DBG_FMT_BUFFER_SIZE, '\0');// TODO: Good size
 		char_t *p = prt.data();
 		p = fmt::format_to(p, "                  ");
 		char_t *k = p;
 		p = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
-		p = __dbg_reformat_newlines_to(k);
+		p = dbg_reformat_newlines_to(k);
 		prt.shrink(union_cast<size_t>(p) - union_cast<size_t>(prt.data()));
 		logger.write(prt);
 	}
@@ -741,20 +727,20 @@ namespace dbg_flags
 		_Args && ... __args) pf_attr_noexcept
 	{
 		// 1. Format
-		dbg_u8string str(DBG_FMT_BUFFER_SIZE, '\0');
+		dbg_u8string str(DBG_FMT_BUFFER_SIZE, '\0');// TODO: Good size
 		char_t *p				= str.data();
 		const char_t *b = p;
-		p = __dbg_format_chrono_to(p);
+		p = dbg_format_chrono_to(p);
 		p = fmt::format_to(
 			p, " T={} /{}/ message=",
 			union_cast<size_t>(std::this_thread::get_id()),
 			fmt::styled('A', fmt::fg(fmt::color::orange) | fmt::bg(fmt::color::black)));
 		char_t *k = p;
 		p	 = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
-		p	 = __dbg_reformat_newlines_to(k);
+		p	 = dbg_reformat_newlines_to(k);
 		*p = '\n';
 		++p;
-		p = __dbg_format_stacktrace_to(p, DBG_FMT_STACK_FRAMES_IGNORE);
+		p = dbg_format_stacktrace_to(p, DBG_FMT_STACK_FRAMES_IGNORE);
 		str.shrink(union_cast<size_t>(p) - union_cast<size_t>(b));
 
 		// 2. Return
@@ -788,7 +774,7 @@ namespace dbg_flags
 		__dbg_initializer(__dbg_initializer &&)			 = delete;
 
 		/// Destructor
-		pulsar_api ~__dbg_initializer() pf_attr_noexcept;
+		~__dbg_initializer() pf_attr_noexcept;
 
 		/// Operator =
 		__dbg_initializer &operator=(__dbg_initializer const&) = delete;

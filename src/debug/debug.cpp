@@ -14,9 +14,32 @@
 // Pulsar
 namespace pul
 {
+	/// DEBUG: Logger
+	pulsar_api dbg_logger::dbg_logger() pf_attr_noexcept
+		: c_(nullptr)
+		, timer_(high_resolution_clock_t::now())
+	{
+		dbg_u8string_view logo =
+			R"(
+        ██████╗ ██╗   ██╗██╗     ███████╗ █████╗ ██████╗ 
+        ██╔══██╗██║   ██║██║     ██╔════╝██╔══██╗██╔══██╗
+        ██████╔╝██║   ██║██║     ███████╗███████║██████╔╝
+        ██╔═══╝ ██║   ██║██║     ╚════██║██╔══██║██╔══██╗
+        ██║     ╚██████╔╝███████╗███████║██║  ██║██║  ██║
+        ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝  )";
+		fmt::print("{}", logo.begin());
+		char_t buf[64] = {'\0'};
+		fmt::format_to(
+			&buf[0], "v{0}.{1}.{2}\n\n",
+			PULSAR_VERSION_MAJOR,
+			PULSAR_VERSION_MINOR,
+			PULSAR_VERSION_PATCH);
+		fmt::print("{}", &buf[0]);
+	}
+
 	/// DEBUG: Format
 	pulsar_api char_t*
-	__dbg_format_chrono_to(
+	dbg_format_chrono_to(
 		char_t *__where) pf_attr_noexcept
 	{
 		uint64_t elapsed = union_cast<uint64_t>(logger.elapsed_time().count());
@@ -29,7 +52,7 @@ namespace pul
 			(elapsed / 1000000ull) % 10000ull);
 	}
 	pulsar_api char_t*
-	__dbg_reformat_newlines_to(
+	dbg_reformat_newlines_to(
 		char_t *__w) pf_attr_noexcept
 	{
 		// 1. Length

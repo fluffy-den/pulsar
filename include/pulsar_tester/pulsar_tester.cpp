@@ -15,11 +15,11 @@
 namespace pul
 {
 	/// TESTER: Engine -> Variables
-	__tester_engine tester_engine;
+	pulsar_api __tester_engine tester_engine;
 
 	/// TESTER: Unit
 	// Constructors
-	__tester_unit::__tester_unit(
+	pulsar_api __tester_unit::__tester_unit(
 		dbg_u8string_view __name) pf_attr_noexcept
 		: name_(__name)
 		, next_(nullptr)
@@ -30,7 +30,7 @@ namespace pul
 
 	/// TESTER: Unit -> Pack
 	// Constructors
-	__tester_pack::__tester_pack(
+	pulsar_api __tester_pack::__tester_pack(
 		dbg_u8string_view __name) pf_attr_noexcept
 		: name_(__name)
 		, next_(nullptr)
@@ -43,7 +43,7 @@ namespace pul
 	}
 
 	// Run
-	void
+	pulsar_api void
 	__tester_pack::__run() pf_attr_noexcept
 	{
 		// 1. Print Pack
@@ -79,7 +79,7 @@ namespace pul
 		// 3. Benchmarks
 		if (this->benchHead_)
 		{
-			pf_print("\nLaunching benchmark(s)...\n");
+			pf_print("\nLaunching benchmark(s)...\n\n");
 			high_resolution_point_t start = high_resolution_clock_t::now();
 			__tester_benchmark *p					= this->benchHead_;
 
@@ -105,7 +105,7 @@ namespace pul
 
 			// C. End
 			nanoseconds_t dur = high_resolution_clock_t::now() - start;
-			pf_print("Finished after {}.\n", dur);
+			pf_print("\nFinished after {}.\n\n", dur);
 		}
 		// 4. Results
 		if (this->numFailed_ > 0)
@@ -134,7 +134,7 @@ namespace pul
 	}
 
 	// Unit
-	void
+	pulsar_api void
 	__tester_pack::__add_unit(
 		__tester_unit *__u) pf_attr_noexcept
 	{
@@ -149,7 +149,7 @@ namespace pul
 			this->unitTail_				 = __u;
 		}
 	}
-	void
+	pulsar_api void
 	__tester_pack::__add_benchmark(
 		__tester_benchmark *__b) pf_attr_noexcept
 	{
@@ -164,7 +164,7 @@ namespace pul
 			this->benchTail_				= __b;
 		}
 	}
-	void
+	pulsar_api void
 	__tester_pack::__add_result(
 		bool __c,
 		dbg_u8string_view __file,
@@ -196,7 +196,7 @@ namespace pul
 
 	/// TESTER: Benchmark
 	// Constructors
-	__tester_benchmark::__tester_benchmark(
+	pulsar_api __tester_benchmark::__tester_benchmark(
 		dbg_u8string_view __name,
 		size_t __itc,
 		size_t __ntt) pf_attr_noexcept
@@ -212,18 +212,44 @@ namespace pul
 	}
 
 	// Display
-	void
-	__tester_benchmark::__display_results(
-		__results_t const &__r) pf_attr_noexcept
+	pulsar_api void
+	__tester_benchmark::__display_measures(
+		const nanoseconds_t *__rts,
+		const size_t __c) pf_attr_noexcept
 	{
+		// 1. Convert
+		nanoseconds_t min = nanoseconds_t(union_cast<size_t>(-1));
+		nanoseconds_t max = nanoseconds_t(0);
+		nanoseconds_t avg = nanoseconds_t(0);
+		for (size_t i = 0; i < __c; ++i)
+		{
+			if (__rts[i] < min) min = __rts[i];
+			if (__rts[i] > max) max = __rts[i];
+			avg += __rts[i];
+		}
+		nanoseconds_t total = avg;
+		avg = nanoseconds_t(avg.count() / __c);
+		nanoseconds_t var = nanoseconds_t(0);
+		for (size_t i = 0; i < __c; ++i)
+		{
+			const nanoseconds_t k = (__rts[i] - avg);
+			var += nanoseconds_t(k.count() * k.count());
+		}
+		var = nanoseconds_t(var.count() / __c);
+		nanoseconds_t ect = nanoseconds_t(static_cast<int64_t>(std::sqrt(static_cast<float64_t>(var.count()))));
+		nanoseconds_t q1	= __rts[__c / 4];
+		nanoseconds_t q2	= __rts[__c / 2];
+		nanoseconds_t q3	= __rts[__c * 3 / 4];
+
+		// 2. Print
 		pf_print(
 			"{} {: <12} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
 			dbg_format_message("{: <32}", fmt::styled(this->name().data(), fmt::fg(fmt::color::steel_blue))).data(),
-			this->num_threads(), this->num_iterations(), __r.min, __r.max, __r.avg, __r.var, __r.ect, __r.q1, __r.q2, __r.q3, __r.total);
+			this->num_threads(), this->num_iterations(), min, max, avg, var, ect, q1, q2, q3, total);
 	}
 	/// TESTER: Engine
 	// Constructors
-	__tester_engine::__tester_engine() pf_attr_noexcept
+	pulsar_api __tester_engine::__tester_engine() pf_attr_noexcept
 		: unscoppedPack_(nullptr)
 		, packHead_(nullptr)
 		, packTail_(nullptr)
@@ -232,7 +258,7 @@ namespace pul
 	}
 
 	// Run
-	pf_hint_nodiscard int32_t
+	pf_hint_nodiscard pulsar_api int32_t
 	__tester_engine::run() pf_attr_noexcept
 	{
 		// 1. Info
@@ -275,7 +301,7 @@ namespace pul
 	}
 
 	// Test
-	void __tester_engine::__test(
+	pulsar_api void __tester_engine::__test(
 		bool __c,
 		dbg_u8string_view __file,
 		uint32_t __line) pf_attr_noexcept
@@ -285,7 +311,7 @@ namespace pul
 	}
 
 	// Pack
-	void
+	pulsar_api void
 	__tester_engine::__add_pack(
 		__tester_pack *__p) pf_attr_noexcept
 	{
@@ -300,7 +326,7 @@ namespace pul
 			this->packTail_				 = __p;
 		}
 	}
-	__tester_pack*
+	pulsar_api __tester_pack*
 	__tester_engine::__cur_pack() pf_attr_noexcept
 	{
 		return this->packTail_;

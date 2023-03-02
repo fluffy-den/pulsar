@@ -224,6 +224,8 @@ target_include_directories(
 )
 
 if(BUILD_TESTING)
+  enable_testing()
+
   # Discover the tests
   file(
     GLOB_RECURSE TEST_SOURCES

@@ -17,11 +17,9 @@
 // Pulsar
 namespace pul
 {
-	// Debug -> Logger
-	pt_benchmark(writing_bench, __b, 4096, 16)
-	{
-		__b.measure([&](size_t __i){ return __i; });
-		pt_require(__b.num_iterations() == 4096 * 16);
-		pt_require(__b.num_threads() == 16);
-	}
+	// TODO: u8string_view
+	// TODO: u8string
+	// TODO: Benchmark -> Ring Buffer
+	// TODO: Benchmark -> Formatting Message
+
 }
