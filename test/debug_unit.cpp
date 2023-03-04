@@ -26,19 +26,23 @@ namespace pul
 	{
 		pt_unit(ring_buffer)
 		{
-
+			pt_check(DBG_UNIT_NUM_ITERATIONS >= 65536);
+			// TODO
 		}
 		pt_benchmark(ring_buffer_01t, __bvn, DBG_UNIT_NUM_ITERATIONS, 1)
 		{
-
+			__bvn.measure([&](size_t __i){ return __i;});
+			// TODO
 		}
 		pt_benchmark(ring_buffer_08t, __bvn, DBG_UNIT_NUM_ITERATIONS, 8)
 		{
-
+			__bvn.measure([&](size_t __i){ return __i;});
+			// TODO
 		}
 		pt_benchmark(ring_buffer_16t, __bvn, DBG_UNIT_NUM_ITERATIONS, 16)
 		{
-
+			__bvn.measure([&](size_t __i){ return __i;});
+			// TODO
 		}
 	}
 
@@ -47,27 +51,26 @@ namespace pul
 	{
 		pt_unit(u8string_view)
 		{
-
+			pt_check(DBG_UNIT_NUM_ITERATIONS >= 65536);
+			// TODO
 		}
 		pt_unit(u8string)
 		{
-
+			pt_check(DBG_UNIT_NUM_ITERATIONS >= 65536);
+			// TODO
 		}
 
 		#ifdef PF_OS_WINDOWS
 		pt_unit(wsstring_view)
 		{
-
+			pt_check(DBG_UNIT_NUM_ITERATIONS >= 65536);
+			// TODO
 		}
 		pt_unit(wsstring)
 		{
-
+			pt_check(DBG_UNIT_NUM_ITERATIONS >= 65536);
+			// TODO
 		}
 		#endif // PF_OS_WINDOWS
 	}
-	// TODO: u8string_view
-	// TODO: u8string
-	// TODO: Benchmark -> Ring Buffer
-	// TODO: Benchmark -> Formatting Message
-
 }

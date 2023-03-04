@@ -86,16 +86,14 @@ namespace pul
       size_t __off,
       nanoseconds_t *__results)
     {
-      for(size_t i = __off, e = __off + __itc; i != e; ++i)
+      // We force CPU to maximize his state
+      for (size_t i = 0; i < 1073741824; ++i);
+      // Measure
+      for (size_t i = __off, e = __off + __itc; i != e; ++i)
       {
-        // 1. Measure
         high_resolution_point_t n = high_resolution_clock_t::now();
         auto k = __measureFun(i);
         __results[i] = high_resolution_clock_t::now() - n;
-
-        // 2. Anti-Optimize
-        byte_t buf[sizeof(k)];
-        std::memcpy(&buf[0], &k, sizeof(k)); // Anti-optimize!
       }
     }
     template <typename _FunTy>
@@ -106,11 +104,12 @@ namespace pul
       // 1. Measure
       const size_t ni = this->num_iterations();
       const size_t rs = sizeof(nanoseconds_t) * ni;
-      const size_t ss = sizeof(__tester_thread_t) * this->ntt_ + rs;
-      byte_t *store = union_cast<byte_t *>(allocate(ss, align_val_t(32)));
-      std::memset(store, 0, sizeof(ss));
+      const size_t ss = sizeof(__tester_thread_t) * this->ntt_;
+      const size_t ts = rs + ss;
+      byte_t *store = union_cast<byte_t *>(allocate(ts, align_val_t(32)));
+      std::memset(store, 0, ts);
       __tester_thread_t *workers = union_cast<__tester_thread_t*>(&store[0]);
-      nanoseconds_t *results = union_cast<nanoseconds_t*>(&store[0] + sizeof(__tester_thread_t) * this->ntt_);
+      nanoseconds_t *results = union_cast<nanoseconds_t*>(&store[0] + ss);
       for (size_t i = 1; i < this->ntt_; ++i)
       {
         workers[i - 1] = __tester_thread_t(
@@ -125,17 +124,14 @@ namespace pul
       // 2. End Threads
       for (size_t i = 0; i < this->ntt_; ++i)
       {
-        if(workers[i - 1].joinable())
-        {
-          workers[i - 1].join();
-        }
+        if(workers[i - 1].joinable()) workers[i - 1].join();
       }
 
       // 3. Compute
-      __display_measures(results, rs);
+      __display_measures(results, ni);
 
       // 4. Deallocate
-      deallocate(results);
+      deallocate(store);
     }
 
     /// Name
@@ -268,7 +264,8 @@ namespace pul
 		/// Store
 		__tester_pack unscoppedPack_;
 		__tester_pack *packHead_;
-		__tester_pack *packTail_;
+    __tester_pack *packTail_;
+    __tester_pack *packCurr_;
 	};
 
 	/// TESTER: Instances
@@ -325,7 +322,7 @@ public:                                                                 \
   {}                                                                    \
 };                                                                      \
 pf_decl_static pf_decl_inline __pt_generate_pack_instance_name(name);   \
-namespace __pul_tester
+namespace
 
 
 /// TESTER: Macro -> Benchmark

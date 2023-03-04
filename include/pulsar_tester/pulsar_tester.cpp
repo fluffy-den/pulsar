@@ -59,7 +59,9 @@ namespace pul
 		__tester_unit *u = this->unitHead_;
 		if (!u && this->name_.size() != 0)
 		{
-			pf_print("No unit to run!\n");
+			pf_print(
+				"/{}/ No unit to run!\n",
+				dbg_styled('T', dbg_style_fg(dbg_color::green)));
 		}
 		else
 		{
@@ -85,7 +87,9 @@ namespace pul
 
 			// Format
 			pf_print(
+				"/{}/ Launching benchmark(s)\n"
 				"{: <32} {: <12} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
+				dbg_styled('B', dbg_style_fg(dbg_color::golden_rod)),
 				"benchmark", "threads", "num", "min", "max", "avg", "var", "dev", "Q1", "Q2", "Q3", "total");
 
 			// Print Results
@@ -105,16 +109,21 @@ namespace pul
 
 			// Print time
 			nanoseconds_t dur = high_resolution_clock_t::now() - start;
-			pf_print("finished after {}!\n", dur);
+			pf_print(
+				"/{}/ finished after {}!\n",
+				dbg_styled('B', dbg_style_fg(dbg_color::golden_rod)),
+				dur);
 		}
 		// 4. Results
 		if (this->numFailed_ > 0)
 		{
-			pf_print("{} | {}\n",
-							 dbg_styled(dbg_u8format("({}) Succeeded", this->numTests_ - this->numFailed_).data(),
-													dbg_style_fg(dbg_color::green)),
-							 dbg_styled(dbg_u8format("({}) Failed", this->numFailed_).data(),
-													dbg_style_fg(dbg_color::red)));
+			pf_print(
+				"/{}/ {} | {}\n",
+				dbg_styled('T', dbg_style_fg(dbg_color::green_yellow)),
+				dbg_styled(dbg_u8format("({}) Succeeded", this->numTests_ - this->numFailed_).data(),
+									 dbg_style_fg(dbg_color::green)),
+				dbg_styled(dbg_u8format("({}) Failed", this->numFailed_).data(),
+									 dbg_style_fg(dbg_color::red)));
 		}
 		else
 		{
@@ -122,8 +131,16 @@ namespace pul
 			{
 				if (this->numTests_ > 0)
 				{
-					pf_print(dbg_type::info, dbg_level::high, "Tester -> All ({}) succeeded!\n",
-									 dbg_styled(this->numTests_, dbg_style_fg(dbg_color::green)));
+					pf_print(
+						"/{}/ ({}) Succeded\n",
+						dbg_styled('T', dbg_style_fg(dbg_color::green_yellow)),
+						dbg_styled(this->numTests_, dbg_style_fg(dbg_color::green)));
+				}
+				else
+				{
+					pf_print(
+						"/{}/ No test!\n",
+						dbg_styled('T', dbg_style_fg(dbg_color::green_yellow)));
 				}
 			}
 		}
@@ -214,10 +231,10 @@ namespace pul
 		const size_t __c) pf_attr_noexcept
 	{
 		// 1. Convert
-		nanoseconds_t min = nanoseconds_t(union_cast<size_t>(-1));
-		nanoseconds_t max = nanoseconds_t(0);
-		nanoseconds_t avg = nanoseconds_t(0);
-		for (size_t i = 0; i < __c; ++i)
+		nanoseconds_t min = __rts[0];
+		nanoseconds_t max = __rts[0];
+		nanoseconds_t avg = __rts[0];
+		for (size_t i = 1; i < __c; ++i)
 		{
 			if (__rts[i] < min) min = __rts[i];
 			if (__rts[i] > max) max = __rts[i];
@@ -240,7 +257,7 @@ namespace pul
 		// 2. Print
 		pf_print(
 			"{: <32} {: <12} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
-			dbg_u8format("<{}>", dbg_styled(this->name().data(), dbg_style_fg(dbg_color::steel_blue))).data(),
+			dbg_styled(this->name().data(), dbg_emphasis::bold | dbg_style_fg(dbg_color::pale_golden_rod)),
 			this->num_threads(), this->num_iterations(), min, max, avg, var, ect, q1, q2, q3, total);
 	}
 	/// TESTER: Engine
@@ -249,6 +266,7 @@ namespace pul
 		: unscoppedPack_(nullptr)
 		, packHead_(nullptr)
 		, packTail_(nullptr)
+		, packCurr_(nullptr)
 	{
 		this->__add_pack(&this->unscoppedPack_);
 	}
@@ -261,15 +279,15 @@ namespace pul
 		pf_print(dbg_type::info, dbg_level::high, "Launching Tester...");
 
 		// 2. Running Packs
-		__tester_pack *p = this->packHead_;
-		size_t nt				 = 0;
-		size_t nf				 = 0;
-		while (p)
+		this->packCurr_ = this->packHead_;
+		size_t nt = 0;
+		size_t nf = 0;
+		while (this->packCurr_ )
 		{
-			p->__run();
-			nt += p->numTests_;
-			nf += p->numFailed_;
-			p		= p->next_;
+			this->packCurr_->__run();
+			nt						 += this->packCurr_->numTests_;
+			nf						 += this->packCurr_->numFailed_;
+			this->packCurr_ = this->packCurr_->next_;
 		}
 
 		// 3. Print
@@ -288,7 +306,7 @@ namespace pul
 		else
 		{
 			pf_print(dbg_type::info, dbg_level::high, "Tester -> {}",
-							 dbg_styled(dbg_u8format("All ({}) test(s) passed!\n", nt).data(),
+							 dbg_styled(dbg_u8format("({}) Succeeded\n", nt).data(),
 													dbg_style_fg(dbg_color::green)));
 		}
 
@@ -321,10 +339,11 @@ namespace pul
 			this->packTail_->next_ = __p;
 			this->packTail_				 = __p;
 		}
+		this->packCurr_ = __p;
 	}
 	pulsar_api __tester_pack*
 	__tester_engine::__cur_pack() pf_attr_noexcept
 	{
-		return this->packTail_;
+		return this->packCurr_;
 	}
 }
