@@ -52,8 +52,8 @@ namespace pul
 			pf_print(
 				dbg_type::info, dbg_level::high,
 				"Tester -> Pack <{}>",
-				fmt::styled(this->name_.data(),
-										fmt::fg(fmt::color::steel_blue)));
+				dbg_styled(this->name_.data(),
+									 dbg_style_fg(dbg_color::steel_blue)));
 		}
 		// 2. Run Units
 		__tester_unit *u = this->unitHead_;
@@ -79,16 +79,16 @@ namespace pul
 		// 3. Benchmarks
 		if (this->benchHead_)
 		{
-			pf_print("\nLaunching benchmark(s)...\n\n");
+			// Initialisation
 			high_resolution_point_t start = high_resolution_clock_t::now();
 			__tester_benchmark *p					= this->benchHead_;
 
-			// A. Format
+			// Format
 			pf_print(
 				"{: <32} {: <12} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
 				"benchmark", "threads", "num", "min", "max", "avg", "var", "dev", "Q1", "Q2", "Q3", "total");
 
-			// B. Print Results
+			// Print Results
 			p = this->benchHead_;
 			while (p)
 			{
@@ -103,18 +103,18 @@ namespace pul
 				}
 			}
 
-			// C. End
+			// Print time
 			nanoseconds_t dur = high_resolution_clock_t::now() - start;
-			pf_print("\nFinished after {}.\n\n", dur);
+			pf_print("finished after {}!\n", dur);
 		}
 		// 4. Results
 		if (this->numFailed_ > 0)
 		{
-			pf_print("{} | {}\n\n",
-							 fmt::styled(dbg_format_message("({}) Succeeded", this->numTests_ - this->numFailed_).data(),
-													 fmt::fg(fmt::color::green)),
-							 fmt::styled(dbg_format_message("({}) Failed", this->numFailed_).data(),
-													 fmt::fg(fmt::color::red)));
+			pf_print("{} | {}\n",
+							 dbg_styled(dbg_u8format("({}) Succeeded", this->numTests_ - this->numFailed_).data(),
+													dbg_style_fg(dbg_color::green)),
+							 dbg_styled(dbg_u8format("({}) Failed", this->numFailed_).data(),
+													dbg_style_fg(dbg_color::red)));
 		}
 		else
 		{
@@ -122,12 +122,8 @@ namespace pul
 			{
 				if (this->numTests_ > 0)
 				{
-					pf_print(dbg_type::info, dbg_level::high, "Tester -> All ({}) succeeded!\n\n",
-									 fmt::styled(this->numTests_, fmt::fg(fmt::color::green)));
-				}
-				else
-				{
-					pf_print("No test in pack.\n\n");
+					pf_print(dbg_type::info, dbg_level::high, "Tester -> All ({}) succeeded!\n",
+									 dbg_styled(this->numTests_, dbg_style_fg(dbg_color::green)));
 				}
 			}
 		}
@@ -178,18 +174,18 @@ namespace pul
 			{
 				pf_print(
 					"/{}/ at {}:{}\n",
-					fmt::styled('A', fmt::fg(fmt::color::red)),
-					fmt::styled(__file.data(), fmt::fg(fmt::color::orange)),
-					fmt::styled(__line, fmt::fg(fmt::color::red)));
+					dbg_styled('A', dbg_style_fg(dbg_color::red)),
+					dbg_styled(__file.data(), dbg_style_fg(dbg_color::orange)),
+					dbg_styled(__line, dbg_style_fg(dbg_color::red)));
 			}
 			else
 			{
 				pf_print(
 					"/{}/ <{}> at {}:{}\n",
-					fmt::styled('A', fmt::fg(fmt::color::red)),
-					fmt::styled(this->name_.data(), fmt::fg(fmt::color::steel_blue)),
-					fmt::styled(__file.data(), fmt::fg(fmt::color::orange)),
-					fmt::styled(__line, fmt::fg(fmt::color::red)));
+					dbg_styled('A', dbg_style_fg(dbg_color::red)),
+					dbg_styled(this->name_.data(), dbg_style_fg(dbg_color::steel_blue)),
+					dbg_styled(__file.data(), dbg_style_fg(dbg_color::orange)),
+					dbg_styled(__line, dbg_style_fg(dbg_color::red)));
 			}
 		}
 	}
@@ -243,8 +239,8 @@ namespace pul
 
 		// 2. Print
 		pf_print(
-			"{} {: <12} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
-			dbg_format_message("{: <32}", fmt::styled(this->name().data(), fmt::fg(fmt::color::steel_blue))).data(),
+			"{: <32} {: <12} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
+			dbg_u8format("<{}>", dbg_styled(this->name().data(), dbg_style_fg(dbg_color::steel_blue))).data(),
 			this->num_threads(), this->num_iterations(), min, max, avg, var, ect, q1, q2, q3, total);
 	}
 	/// TESTER: Engine
@@ -284,16 +280,16 @@ namespace pul
 		else if (nf > 0)
 		{
 			pf_print(dbg_type::info, dbg_level::high, "Tester -> {} | {}\n",
-							 fmt::styled(dbg_format_message("({}) Succeeded", nt - nf).data(),
-													 fmt::fg(fmt::color::green)),
-							 fmt::styled(dbg_format_message("({}) Failed", nf).data(),
-													 fmt::fg(fmt::color::red)));
+							 dbg_styled(dbg_u8format("({}) Succeeded", nt - nf).data(),
+													dbg_style_fg(dbg_color::green)),
+							 dbg_styled(dbg_u8format("({}) Failed", nf).data(),
+													dbg_style_fg(dbg_color::red)));
 		}
 		else
 		{
 			pf_print(dbg_type::info, dbg_level::high, "Tester -> {}",
-							 fmt::styled(dbg_format_message("All ({}) test(s) passed!\n", nt).data(),
-													 fmt::fg(fmt::color::green)));
+							 dbg_styled(dbg_u8format("All ({}) test(s) passed!\n", nt).data(),
+													dbg_style_fg(dbg_color::green)));
 		}
 
 		// Fail? Succeeded?

@@ -208,20 +208,30 @@ target_link_libraries(
 #
 # Testing
 #
-set(PULSAR_TESTER_INTERNAL_LIBRARY_NAME ${CMAKE_PROJECT_NAME}_tester-internal)
-set(PULSAR_TESTER_LIBRARY_NAME ${CMAKE_PROJECT_NAME}_tester)
+set(PULSAR_TESTER_INTERNAL_LIBRARY_NAME
+  ${CMAKE_PROJECT_NAME}-tester-internal)
+set(PULSAR_TESTER_LIBRARY_NAME
+  ${CMAKE_PROJECT_NAME}-tester)
 set(PULSAR_TESTER_INTERNAL_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/include/pulsar_tester/pulsar_tester.hpp"
   "${CMAKE_CURRENT_SOURCE_DIR}/include/pulsar_tester/pulsar_tester.cpp")
 set(PULSAR_TESTER_SOURCES
-  "${CMAKE_CURRENT_SOURCE_DIR}/include/pulsar_tester/pulsar_tester_entry.cpp")
-add_library(${PULSAR_TESTER_INTERNAL_LIBRARY_NAME} STATIC ${PULSAR_TESTER_INTERNAL_SOURCES})
-target_link_libraries(${PULSAR_TESTER_INTERNAL_LIBRARY_NAME} PUBLIC ${PULSAR_LIBRARY_NAME})
-add_library(${PULSAR_TESTER_LIBRARY_NAME} INTERFACE ${PULSAR_TESTER_SOURCES})
-target_link_libraries(${PULSAR_TESTER_LIBRARY_NAME} INTERFACE ${PULSAR_TESTER_INTERNAL_LIBRARY_NAME})
-target_include_directories(
-  ${PULSAR_TESTER_LIBRARY_NAME} INTERFACE ${PULSAR_TESTER_SOURCES}>
-)
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/pulsar_tester/pulsar_tester_main.cpp")
+add_library(
+  ${PULSAR_TESTER_INTERNAL_LIBRARY_NAME}
+  STATIC ${PULSAR_TESTER_INTERNAL_SOURCES})
+target_link_libraries(
+  ${PULSAR_TESTER_INTERNAL_LIBRARY_NAME}
+  PUBLIC ${PULSAR_LIBRARY_NAME})
+add_library(
+  ${PULSAR_TESTER_LIBRARY_NAME}
+  INTERFACE)
+target_sources(
+  ${PULSAR_TESTER_LIBRARY_NAME}
+  INTERFACE ${PULSAR_TESTER_SOURCES})
+target_link_libraries(
+  ${PULSAR_TESTER_LIBRARY_NAME}
+  INTERFACE ${PULSAR_TESTER_INTERNAL_LIBRARY_NAME})
 
 if(BUILD_TESTING)
   enable_testing()
@@ -230,22 +240,24 @@ if(BUILD_TESTING)
   file(
     GLOB_RECURSE TEST_SOURCES
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
-    "test/*.cpp"
-  )
+    "test/*.cpp")
 
   # Process the tests
   foreach(TEST_SOURCE IN ITEMS ${TEST_SOURCES})
     get_filename_component(BINARY_NAME ${TEST_SOURCE} NAME_WLE)
-    add_executable(${BINARY_NAME} ${TEST_SOURCE} ${PULSAR_TESTER_SOURCES})
+    add_executable(${BINARY_NAME} ${TEST_SOURCE})
     target_link_libraries(
       ${BINARY_NAME}
-      PUBLIC ${PULSAR_TESTER_LIBRARY_NAME}
-    )
-    target_compile_options(${BINARY_NAME} PRIVATE ${PULSAR_COMPILER_FLAGS})
+      PUBLIC ${PULSAR_TESTER_LIBRARY_NAME})
+    target_include_directories(
+      ${BINARY_NAME}
+      PRIVATE src)
+    target_compile_options(
+      ${BINARY_NAME}
+      PRIVATE ${PULSAR_COMPILER_FLAGS})
     set_target_properties(
-      ${BINARY_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
-      ${CMAKE_BINARY_DIR}/test/${OUTPUT_SYSTEM}/
-    )
+      ${BINARY_NAME}
+      PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/test/${OUTPUT_SYSTEM}/)
 
     add_test(${BINARY_NAME} ${BINARY_NAME})
 

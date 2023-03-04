@@ -27,14 +27,14 @@ namespace pul
         ██╔═══╝ ██║   ██║██║     ╚════██║██╔══██║██╔══██╗
         ██║     ╚██████╔╝███████╗███████║██║  ██║██║  ██║
         ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝  )";
-		fmt::print("{}", logo.begin());
+		dbg_u8print("{}", logo.begin());
 		char_t buf[64] = {'\0'};
-		fmt::format_to(
+		dbg_u8format_to(
 			&buf[0], "v{0}.{1}.{2}\n\n",
 			PULSAR_VERSION_MAJOR,
 			PULSAR_VERSION_MINOR,
 			PULSAR_VERSION_PATCH);
-		fmt::print("{}", &buf[0]);
+		dbg_u8print("{}", &buf[0]);
 	}
 
 	/// DEBUG: Format
@@ -43,7 +43,7 @@ namespace pul
 		char_t *__where) pf_attr_noexcept
 	{
 		uint64_t elapsed = union_cast<uint64_t>(logger.elapsed_time().count());
-		return fmt::format_to(
+		return dbg_u8format_to(
 			__where,
 			"[{:0>4}:{:0>2}:{:0>2}:{:0>4}]",
 			(elapsed / 3600000000000ull),

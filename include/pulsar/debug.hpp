@@ -12,6 +12,7 @@
 #define PULSAR_DEBUG_HPP 1
 
 // Include: Pulsar
+#include "pulsar/pulsar.hpp"
 #include "pulsar/memory.hpp"
 #include "pulsar/function.hpp"
 #include "pulsar/chrono.hpp"
@@ -384,8 +385,9 @@ namespace dbg_flags
 	// Format
 	template <typename ... _Args>
 	using dbg_u8string_format = fmt::basic_format_string<char_t, fmt::type_identity_t<_Args>...>;
-	// TODO: bg, fg, styles, etc...
-
+	using dbg_color						= fmt::color;
+	using dbg_style						= fmt::text_style;
+	using dbg_emphasis				= fmt::emphasis;
 
 	/// DEBUG: Category
 	class dbg_category
@@ -490,7 +492,7 @@ namespace dbg_flags
 	{
 	public:
 		/// Constructors
-		dbg_exception(
+		pf_decl_inline dbg_exception(
 			dbg_category const *__cat,
 			uint32_t __code,
 			uint32_t __flags,
@@ -545,6 +547,66 @@ namespace dbg_flags
 		uint32_t flags_;
 	};
 
+	/// DEBUG: Format -> Functions
+	template <typename ..._Args>
+	pf_hint_nodiscard pf_decl_inline char_t*
+	dbg_u8format_to(
+		char_t *__to,
+		dbg_u8string_format<_Args...> __fmt,
+		_Args && ... __args) pf_attr_noexcept
+	{
+		// Returns
+		return fmt::format_to(__to, __fmt, std::forward<_Args>(__args)...);
+	}
+	template <typename ..._Args>
+	pf_hint_nodiscard pf_decl_inline dbg_u8string
+	dbg_u8format(	// Message
+		dbg_u8string_format<_Args...> __fmt,
+		_Args && ... __args) pf_attr_noexcept
+	{
+		// 1. Format
+		dbg_u8string str(fmt::formatted_size(__fmt, std::forward<_Args>(__args)...), '\0');
+		fmt::format_to(str.data(), __fmt, std::forward<_Args>(__args)...);
+
+		// 2. Return
+		return str;
+	}
+	template <typename ... _Args>
+	pf_decl_constexpr void
+	dbg_u8print(
+		dbg_u8string_format<_Args...> __fmt,
+		_Args && ... __args) pf_attr_noexcept
+	{
+		// Print
+		fmt::print(__fmt, std::forward<_Args>(__args)...);
+	}
+	template <typename _Ty>
+	pf_decl_constexpr pf_decl_inline auto
+	dbg_styled(
+		const _Ty &__val,
+		dbg_style __ts) pf_attr_noexcept
+	{
+		// Styled
+		return fmt::styled(__val, __ts);
+	}
+	template <typename _Ty>
+	pf_decl_constexpr pf_decl_inline auto
+	dbg_style_fg(
+		_Ty __ts) pf_attr_noexcept
+	{
+		// Styled
+		return fmt::fg(__ts);
+	}
+	template <typename _Ty>
+	pf_decl_constexpr pf_decl_inline auto
+	dbg_style_bg(
+		_Ty __ts) pf_attr_noexcept
+	{
+		// Styled
+		return fmt::bg(__ts);
+	}
+
+
 	/// DEBUG: Logger
 	class dbg_logger
 	{
@@ -596,7 +658,7 @@ namespace dbg_flags
 		pf_decl_inline void write(
 			dbg_u8string_view __msg)
 		{
-			fmt::print("{}", __msg.begin());
+			dbg_u8print("{}", __msg.begin());
 			if (this->c_) this->c_(__msg);
 		}
 		pf_decl_inline void write(
@@ -610,7 +672,7 @@ namespace dbg_flags
 		}
 
 	private:
-		callback_t c_;// TODO: Callback list
+		callback_t c_;
 		dbg_level lvl_;
 		const high_resolution_point_t timer_;
 	};
@@ -709,19 +771,6 @@ namespace dbg_flags
 	}
 	template<typename ..._Args>
 	pf_hint_nodiscard pf_decl_static dbg_u8string
-	dbg_format_message(	// Message
-		dbg_u8string_format<_Args...> __fmt,
-		_Args && ... __args) pf_attr_noexcept
-	{
-		// 1. Format
-		dbg_u8string str(fmt::formatted_size(__fmt, std::forward<_Args>(__args)...), '\0');
-		fmt::format_to(str.data(), __fmt, std::forward<_Args>(__args)...);
-
-		// 2. Return
-		return str;
-	}
-	template<typename ..._Args>
-	pf_hint_nodiscard pf_decl_static dbg_u8string
 	__dbg_format_error_message(	// Assertion
 		dbg_u8string_format<_Args...> __fmt,
 		_Args && ... __args) pf_attr_noexcept
@@ -786,7 +835,7 @@ namespace dbg_flags
 }
 
 #define pf_print(...) pul::__dbg_print(__VA_ARGS__)
-#define pf_throw(cat, val, bit, format, ...) pul::__dbg_throw(cat, pul::union_cast<uint32_t>(val), bit, pul::dbg_format_message(format __VA_OPT__( ,) __VA_ARGS__))
+#define pf_throw(cat, val, bit, format, ...) pul::__dbg_throw(cat, pul::union_cast<uint32_t>(val), bit, pul::dbg_u8format(format __VA_OPT__( ,) __VA_ARGS__))
 #define pf_throw_if(c, cat, val, bit, format, ...) if(pf_unlikely(c)) pf_throw(cat, val, bit, format __VA_OPT__( ,) __VA_ARGS__)
 #ifdef PF_DEBUG
 #define pf_assert(c, ...) if(!(c)) pul::__dbg_assert(pul::__dbg_format_error_message(__VA_ARGS__))

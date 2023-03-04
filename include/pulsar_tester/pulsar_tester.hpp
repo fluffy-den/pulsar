@@ -324,7 +324,8 @@ public:                                                                 \
     : pul::__tester_pack(__pt_generate_pack_name(name))                 \
   {}                                                                    \
 };                                                                      \
-pf_decl_static pf_decl_inline __pt_generate_pack_instance_name(name);
+pf_decl_static pf_decl_inline __pt_generate_pack_instance_name(name);   \
+namespace __pul_tester
 
 
 /// TESTER: Macro -> Benchmark
