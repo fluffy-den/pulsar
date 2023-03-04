@@ -132,7 +132,7 @@ namespace pul
 				if (this->numTests_ > 0)
 				{
 					pf_print(
-						"/{}/ ({}) Succeded\n",
+						"/{}/ ({}) Succeeded\n",
 						dbg_styled('T', dbg_style_fg(dbg_color::green_yellow)),
 						dbg_styled(this->numTests_, dbg_style_fg(dbg_color::green)));
 				}

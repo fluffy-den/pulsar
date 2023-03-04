@@ -87,7 +87,9 @@ namespace pul
       nanoseconds_t *__results)
     {
       // We force CPU to maximize his state
-      for (size_t i = 0; i < 1073741824; ++i);
+      const size_t bc = 16777216;
+      size_t s = 0;
+      for (size_t i = 0; i < bc; ++i) s += i % bc;
       // Measure
       for (size_t i = __off, e = __off + __itc; i != e; ++i)
       {
@@ -343,8 +345,5 @@ public:																											                   \
 };                                                                             \
 pf_decl_static pf_decl_inline __pt_generate_benchmark_instance_name(name);     \
 void __pt_generate_benchmark_type(name)::process(pul::__tester_benchmark &bvn)
-
-// TODO: Move the more possible to static library (better compilation time)
-// TODO: Accessors to private when possible
 
 #endif // !PULSAR_TESTER_HPP
