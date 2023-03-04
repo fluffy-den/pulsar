@@ -94,7 +94,7 @@ namespace pul
       for (size_t i = __off, e = __off + __itc; i != e; ++i)
       {
         high_resolution_point_t n = high_resolution_clock_t::now();
-        auto k = __measureFun(i);
+        pf_hint_maybe_unused auto k = __measureFun(i);
         __results[i] = high_resolution_clock_t::now() - n;
       }
     }
