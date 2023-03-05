@@ -13,13 +13,21 @@
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
+#include "pulsar/utility.hpp"
 
 // Include: MiMalloc
 #include <mimalloc.h>
 
+// Include: C
+#include <cstring>// memcpy, memmove...
+
 // Pulsar
 namespace pul
 {
+	/// HEAP: Constants
+	pf_decl_constexpr align_val_t ALIGN_DEFAULT = align_val_t(alignof(void*));
+	pf_decl_constexpr align_val_t ALIGN_MAX			= align_val_t(1024);
+
 	/// HEAP: Allocate
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr void*
 	heap_allocate(
@@ -55,8 +63,7 @@ namespace pul
 			if (!__ptr) return p;
 			const size_t m = std::min(__osize, __nsize);
 			std::memcpy(p, __ptr, std::min(__osize, __nsize));
-			if (__nsize > __osize) std::memset(p + m, 0, __nsize - __osize);
-			deallocate(__ptr);
+			delete[] __ptr;
 			return p;
 		}
 		else

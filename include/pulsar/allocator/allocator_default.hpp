@@ -27,7 +27,7 @@ namespace pul
 			align_val_t __align,
 			size_t __o) pf_attr_noexcept
 		{
-			return heap_allocate(__s, __align, __o);
+			return mi_malloc_aligned_at(__s, __align, __o);
 		}
 
 		/// Reallocate
@@ -38,7 +38,7 @@ namespace pul
 			align_val_t __align,
 			size_t __o) pf_attr_noexcept
 		{
-			return heap_reallocate(__p, __s, __align, __o);
+			return mi_realloc_aligned_at(__p, __s, __align, __o);
 		}
 
 		/// Deallocate
@@ -46,7 +46,7 @@ namespace pul
 		deallocate(
 			void *__p) pf_attr_noexcept
 		{
-			heap_deallocate(__p);
+			mi_free(__p);
 		}
 	};
 }

@@ -108,7 +108,7 @@ namespace pul
       const size_t rs = sizeof(nanoseconds_t) * ni;
       const size_t ss = sizeof(__tester_thread_t) * this->ntt_;
       const size_t ts = rs + ss;
-      byte_t *store = union_cast<byte_t *>(allocate(ts, align_val_t(32)));
+      byte_t *store = union_cast<byte_t *>(heap_allocate(ts, align_val_t(32)));
       std::memset(store, 0, ts);
       __tester_thread_t *workers = union_cast<__tester_thread_t*>(&store[0]);
       nanoseconds_t *results = union_cast<nanoseconds_t*>(&store[0] + ss);
@@ -133,7 +133,7 @@ namespace pul
       __display_measures(results, ni);
 
       // 4. Deallocate
-      deallocate(store);
+      heap_deallocate(store);
     }
 
     /// Name

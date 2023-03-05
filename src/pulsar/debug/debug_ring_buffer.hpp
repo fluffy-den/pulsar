@@ -97,10 +97,6 @@ namespace pul
 		__dbg_ring_buffer_block_t *tail_;
 		size_t nextGrow_;
 	};
-
-	/// DEBUG: Ring Buffer
-	pf_decl_thread_local __dbg_ring_buffer_local_t __dbg_ring_buffer_local;
-
 }
 
 #endif // !PULSAR_DEBUG_RING_BUFFER_HPP

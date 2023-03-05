@@ -15,17 +15,17 @@
 namespace pul
 {
 	/// DEBUG: Ring Buffer -> Local Instance
-	__dbg_ring_buffer_local_t __dbg_ring_buffer_local;
+	pf_decl_static pf_decl_thread_local __dbg_ring_buffer_local_t __dbg_ring_buffer_local;
 
 	/// DEBUG: Allocator
 	pulsar_api void*
-	allocate(
-		size_t __size) pf_attr_noexcept
+	__dbg_allocate(
+		size_t __size)
 	{
 		return __dbg_ring_buffer_local.allocate(__size);
 	}
 	pulsar_api void
-	deallocate(
+	__dbg_deallocate(
 		void *__ptr) pf_attr_noexcept
 	{
 		__dbg_ring_buffer_local.deallocate(__ptr);

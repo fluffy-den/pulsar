@@ -12,6 +12,7 @@
 #define PULSAR_ITERATOR_HPP 1
 
 // Include: Pulsar
+#include "pulsar/debug.hpp"
 #include "pulsar/pulsar.hpp"
 
 // Include: C++

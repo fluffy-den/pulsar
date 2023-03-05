@@ -14,6 +14,7 @@
 // Include: Pulsar
 #include "pulsar/heap.hpp"
 #include "pulsar/magnifier.hpp"
+#include "pulsar/utility.hpp"
 
 // Pulsar
 namespace pul

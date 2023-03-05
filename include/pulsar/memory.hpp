@@ -14,6 +14,7 @@
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
 #include "pulsar/heap.hpp"
+#include "pulsar/iterator.hpp"
 #include "pulsar/allocator.hpp"
 #include "pulsar/utility.hpp"
 
@@ -26,10 +27,6 @@
 // Pulsar
 namespace pul
 {
-	/// MEMORY: Constants
-	pf_decl_constexpr align_val_t ALIGN_DEFAULT = align_val_t(alignof(void*));
-	pf_decl_constexpr align_val_t ALIGN_MAX			= align_val_t(1024);
-
 	/// MEMORY: Utility
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr bool
 	is_power_of_two(
@@ -201,7 +198,7 @@ namespace pul
 	requires(std::is_constructible_v<_Ty, _Args...>)
 	{
 		_Ty *p = union_cast<_Ty*>(
-			allocate(sizeof(_Ty) + __exBytes, __align, __offset));
+			heap_allocate(sizeof(_Ty) + __exBytes, __align, __offset));
 		construct(p, std::forward<_Args>(__args)...);
 		return p;
 	}
@@ -379,7 +376,7 @@ namespace pul
 			size_t *as_size;
 		};
 		as_array = union_cast<memory_array_t*>(
-			allocate(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
+			heap_allocate(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count));
 		return union_cast<_Ty*>(&as_array->data[0]);
@@ -417,7 +414,7 @@ namespace pul
 			size_t *as_size;
 		};
 		as_array = union_cast<memory_array_t*>(
-			allocate(__all, sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
+			heap_allocate(__all, sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count));
 		return union_cast<_Ty*>(&as_array->data[0]);
@@ -459,7 +456,7 @@ namespace pul
 			size_t *as_size;
 		};
 		as_array = union_cast<memory_array_t*>(
-			allocate(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
+			heap_allocate(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count), __val);
 		return union_cast<_Ty*>(&as_array->data[0]);
@@ -501,7 +498,7 @@ namespace pul
 			size_t *as_size;
 		};
 		as_array = union_cast<memory_array_t*>(
-			allocate(__all, sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
+			heap_allocate(__all, sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count), __val);
 		return union_cast<_Ty*>(&as_array->data[0]);
@@ -546,7 +543,7 @@ namespace pul
 			size_t *as_size;
 		};
 		as_array = union_cast<memory_array_t*>(
-			allocate(sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
+			heap_allocate(sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
 		as_array->count = c;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + c), __beg);
 		return union_cast<typename _IteratorIn::value_t*>(&as_array->data[0]);
@@ -596,7 +593,7 @@ namespace pul
 			size_t *as_size;
 		};
 		as_array = union_cast<memory_array_t*>(
-			allocate(__all, sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
+			heap_allocate(__all, sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
 		as_array->count = c;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + c), __beg);
 		return union_cast<typename _IteratorIn::value_t*>(&as_array->data[0]);
