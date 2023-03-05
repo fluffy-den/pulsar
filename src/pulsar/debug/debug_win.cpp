@@ -414,7 +414,7 @@ namespace pul
 		{
 			DWORD result = HRESULT_FROM_WIN32(GetLastError());
 			pf_throw(
-				dbg_category_system(), GetLastError(), dbg_flags::none,
+				dbg_category_system(), result, dbg_flags::none,
 				"[WIN] Failed to generate dumpbin at path={}", u8path.data());
 			return dbg_u8string();
 		}

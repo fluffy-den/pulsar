@@ -12,11 +12,27 @@
 #define PULSAR_LIST_HPP 1
 
 // Include: Pulsar
-#include "pulsar/container.hpp"
+#include "pulsar/iterable.hpp"
 
 // Pulsar
 namespace pul
 {
+	/// LIST: Types
+	template <typename _Ty>
+	class singly_view;
+	template <
+		typename _Ty,
+		typename _Magnifier = magnifier_linear,
+		typename _Allocator = allocator_default>
+	class singly_list;
+	template <typename _Ty>
+	class doubly_view;
+	template <
+		typename _Ty,
+		typename _Magnifier = magnifier_linear,
+		typename _Allocator = allocator_default>
+	class doubly_list;
+
 	/// LIST: Forward -> Node
 	template <typename _Ty>
 	struct __forward_node
@@ -66,7 +82,7 @@ namespace pul
 	template <typename _Ty>
 	class forward_view
 	{
-	pf_static_assert(!std::is_const_v<_Ty>, "_Ty mustn't be a const type!");
+	pf_assert_static(!std::is_const_v<_Ty>, "_Ty mustn't be a const type!");
 
 	public:
 		using value_t					 = std::remove_const_t<_Ty>;
@@ -93,7 +109,7 @@ namespace pul
 					 typename _Allocator = allocator_default>
 	class forward_list
 	{
-	pf_static_assert(!std::is_const_v<_Ty>, "_Ty mustn't be a const type!");
+	pf_assert_static(!std::is_const_v<_Ty>, "_Ty mustn't be a const type!");
 
 	public:
 		using value_t					 = _Ty;

@@ -97,6 +97,14 @@ namespace dbg_flags
 	pf_decl_constexpr uint32_t DBG_FMT_WRITE_OFFSET				 = sizeof("[HHHH:MM:SS:MMMM]");
 	pf_decl_constexpr uint32_t DBG_FMT_BUFFER_SIZE				 = 65536;
 
+	/// DEBUG: Allocator
+	pf_hint_nodiscard pulsar_api void*
+	__dbg_allocate(
+		size_t __size);
+	pulsar_api void
+	__dbg_deallocate(
+		void *__ptr) pf_attr_noexcept;
+
 	/// DEBUG: UTF8 -> Types
 	// String View
 	class dbg_u8string_view

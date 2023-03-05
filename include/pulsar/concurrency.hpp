@@ -24,7 +24,10 @@
 namespace pul
 {
 	/// CONCURRENCY: Atomic
-
+	template <typename _Ty>
+	using atomic			 = std::atomic<_Ty>;
+	using atomic_flag	 = std::atomic_flag;
+	using atomic_order = std::memory_order;
 
 	/// CONCURRENCY: Lock
 	using lock				= std::mutex;
@@ -167,7 +170,7 @@ namespace pul
 	class alignas(8) __job_scheduler pf_attr_final
 	{
 	private:
-		sequence_forward<__job_worker> ws_;
+		__job_worker *ws_;
 		__job_worker_storage ms_;
 		condition_variable cond_;
 		atomic<size_t> numjobs_;

@@ -45,7 +45,7 @@
 #endif  // _WIN64
 
 // OS: Linux
-#elif defined(__linux) || defined(__linux__) || \
+#elif defined(__linux) || defined(__linux__) ||	\
 	defined(linux)		// ^^^ Windows ^^^ / vvv Linux vvv
 #define PF_OS_LINUX 1
 
@@ -57,7 +57,7 @@
 #endif  // Not supported OS!
 
 // Architecture
-#if defined(_M_IX86) || defined(__i386) || defined(__i386__) || \
+#if defined(_M_IX86) || defined(__i386) || defined(__i386__) ||	\
 	defined(i386) || defined(_X86_)		// vvv i386 vvv
 #define PF_ARCHITECTURE_I386 1
 #elif defined(_M_X64) || defined(__amd64__) || defined(__amd64) || \
@@ -155,9 +155,9 @@
 #define pf_file                   __FILE__
 #define pf_va_args                __VA_ARGS__	// TODO: Find unused __VA_ARGS__
 #define pf_alignas(a)             alignas(a)
-#define pf_alignas_n(type, a)                                         \
-				alignas(alignof(type) * a > 32                                \
-							? 32                                                    \
+#define pf_alignas_n(type, a)					 \
+				alignas(alignof(type) * a > 32 \
+							? 32										 \
 							: (alignof(type) * a < 16 ? 16 : alignof(type) * a))
 #define pf_concatenate_helper(a, b) a ## b
 #define pf_concatenate(a, b) pf_concatenate_helper(a, b)
@@ -220,50 +220,6 @@ namespace pul
 
 	// Nullptr
 	typedef decltype(nullptr) nullptr_t;
-
-	// Union-Cast
-	template <typename _ToTy, typename _InTy>
-	union __union_cast
-	{
-		/// Constructors
-		pf_decl_inline __union_cast(_InTy __in)
-			: in(__in) {
-		}
-		__union_cast(__union_cast const &) = delete;
-		__union_cast(__union_cast &&)			 = delete;
-
-		/// Destructor
-		pf_decl_inline ~__union_cast() pf_attr_noexcept = default;
-
-		/// Operator=
-		__union_cast<_ToTy, _InTy> &
-		operator=(__union_cast<_ToTy, _InTy> const &)												 = delete;
-		__union_cast<_ToTy, _InTy> &operator=(__union_cast<_ToTy, _InTy> &&) = delete;
-
-		_InTy in;
-		_ToTy to;
-	};
-	template <typename _ToTy, typename _InTy>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _ToTy
-	union_cast(_InTy __in) pf_attr_noexcept
-	requires(
-		// Convertible
-		(std::is_convertible_v<_InTy, _ToTy>)
-		// Pointer
-		|| (std::is_pointer_v<_ToTy> && std::is_pointer_v<_InTy>
-				&& (std::is_const_v<_InTy> && std::is_const_v<_ToTy>)
-				|| (!std::is_const_v<_InTy>))
-		// Integer
-		|| (std::is_integral_v<_ToTy> && std::is_integral_v<_InTy>)
-		// Floating-Point
-		|| (std::is_floating_point_v<_ToTy> && std::is_floating_point_v<_InTy>))
-	{
-		__union_cast<_ToTy, _InTy> uc(__in);
-		return uc.to;
-	}
 }
-
-// Include: Pulsar -> Debug
-#include "pulsar/debug.hpp"
 
 #endif  // !PULSAR_HPP

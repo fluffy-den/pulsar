@@ -169,7 +169,7 @@ namespace pul
 }	// namespace pul
 
 /// SIMD: Alignas -> Vector
-#define pf_alignas_v(type, num)                                                \
+#define pf_alignas_v(type, num)	\
 				pf_alignas(alignof(type) * num > 16 ? alignof(type) * num : 16)
 
 #endif // !PULSAR_INTRIN_HPP

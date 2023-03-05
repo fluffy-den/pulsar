@@ -214,7 +214,7 @@ set(PULSAR_TESTER_LIBRARY_NAME
   ${CMAKE_PROJECT_NAME}-tester)
 set(PULSAR_TESTER_INTERNAL_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/include/pulsar_tester/pulsar_tester.hpp"
-  "${CMAKE_CURRENT_SOURCE_DIR}/include/pulsar_tester/pulsar_tester.cpp")
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/pulsar_tester/pulsar_tester.cpp")
 set(PULSAR_TESTER_SOURCES
   "${CMAKE_CURRENT_SOURCE_DIR}/include/pulsar_tester/pulsar_tester_main.cpp")
 add_library(

@@ -12,7 +12,7 @@
 #define PULSAR_SEQUENCE_HPP 1
 
 // Include: Pulsar
-#include "pulsar/container.hpp"
+#include "pulsar/iterable.hpp"
 
 // Pulsar
 namespace pul

@@ -23,10 +23,11 @@
 // Pulsar
 namespace pul
 {
+	/// CHRONO: Types
 	using time_t = std::time_t;
 	using tm_t	 = std::tm;
 	template <typename _Rep, typename _Period>
-	using time_duration						= std::chrono::duration<_Rep, _Period>;
+	using duration								= std::chrono::duration<_Rep, _Period>;
 	using high_resolution_clock_t = std::chrono::high_resolution_clock;
 	using high_resolution_point_t = std::chrono::high_resolution_clock::time_point;
 	using nanoseconds_t						= std::chrono::nanoseconds;
@@ -40,12 +41,19 @@ namespace pul
 	using months_t								= std::chrono::month;
 	using years_t									= std::chrono::year;
 
+	/// CHRONO: Cast
 	template <typename _To, typename _From>
-	pf_decl_inline pf_decl_constexpr time_cast(
+	pf_decl_inline pf_decl_constexpr duration_cast(
 		_From const &__from)
 	{
 		return std::chrono::duration_cast<_To>(__from);
 	}
+
+	/// CHRONO: Literals
+namespace chrono_literals
+{
+	using namespace std::chrono_literals;
+}
 }
 
 

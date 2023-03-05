@@ -8,11 +8,14 @@
  *  @since 0.1.3
  */
 
-#ifndef PULSAR_ITERATOR_INCL_HPP
-#define PULSAR_ITERATOR_INCL_HPP 1
+#ifndef PULSAR_ITERATOR_HPP
+#define PULSAR_ITERATOR_HPP 1
 
 // Include: Pulsar
-#include "pulsar/utility.hpp"
+#include "pulsar/pulsar.hpp"
+
+// Include: C++
+#include <type_traits>
 
 // Pulsar
 namespace pul
@@ -2190,4 +2193,4 @@ namespace pul
 	pf_assert_static(is_sequence_iterator_v<move_iterator<iterator<const int32_t>>>);
 }
 
-#endif // !PULSAR_ITERATOR_INCL_HPP
+#endif // !PULSAR_ITERATOR_HPP
