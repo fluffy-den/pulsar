@@ -108,11 +108,11 @@ namespace pul
 			{
 				// Validity
 				as_header = this->tail;
-				as_byte		= union_cast<byte_t*>(align_top(as_byte, __align, sizeof(__samd_ring_buffer_header_t) + __offset));
+				as_byte		= union_cast<byte_t*>(align_top(as_byte, align_val_t(64), 0));
 				if (pf_unlikely(as_byte + __size > &this->store[0] + this->size))
 				{
 					as_byte = &this->store[0];
-					as_byte = union_cast<byte_t*>(align_top(as_byte, __align, sizeof(__samd_ring_buffer_header_t) + __offset));
+					as_byte = union_cast<byte_t*>(align_top(as_byte, align_val_t(64), 0));
 					if (pf_unlikely(as_byte + __size > union_cast<byte_t*>(this->head)))
 						return nullptr;
 				}
@@ -132,11 +132,11 @@ namespace pul
 				byte_t *h = union_cast<byte_t*>(this->head);
 				if (pf_unlikely(h > t && as_byte + __size > h))
 					return nullptr;
-				as_byte = union_cast<byte_t*>(align_top(as_byte, __align, sizeof(__samd_ring_buffer_header_t) + __offset));
+				as_byte = union_cast<byte_t*>(align_top(as_byte, align_val_t(64), 0));
 				if (pf_unlikely(as_byte + __size > &this->store[0] + this->size))
 				{
 					as_byte = &this->store[0];
-					as_byte = union_cast<byte_t*>(align_top(as_byte, __align, sizeof(__samd_ring_buffer_header_t) + __offset));
+					as_byte = union_cast<byte_t*>(align_top(as_byte, align_val_t(64), 0));
 					if (pf_unlikely(as_byte + __size > h))
 						return nullptr;
 				}

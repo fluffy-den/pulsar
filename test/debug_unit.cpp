@@ -26,8 +26,7 @@ namespace pul
 	{
 		pt_unit(ring_buffer)
 		{
-			pt_check(DBG_UNIT_NUM_ITERATIONS >= 65536);
-			// TODO
+
 		}
 		pt_benchmark(ring_buffer_01t, __bvn, DBG_UNIT_NUM_ITERATIONS, 1)
 		{

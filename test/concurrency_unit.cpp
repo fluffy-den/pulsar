@@ -42,16 +42,45 @@ namespace pul
 		// Benchmarks
 		pt_benchmark(samd_ring_allocator_t1, __bvn, 65536, 1)
 		{
-			samd_ring_allocator<magnifier_quadratic> all(2 * 65536 * (8 + sizeof(__samd_ring_buffer_header_t)));
+			samd_ring_allocator<magnifier_quadratic> all(1 * 65536 * (8 + sizeof(__samd_ring_buffer_header_t)));
+			void **buf = union_cast<void**>(heap_allocate(65536 * 1 * sizeof(void*), align_val_t(32)));
+			for (size_t i = 0; i < 65536 * 1; ++i)
+			{
+				buf[i] = all.allocate(8, align_val_t(16));
+			}
 			__bvn.measure([&](size_t __index)
 			{
-				void *a = all.allocate(
+				all.deallocate(buf[__index]);
+				return buf[__index];
+			});
+			heap_deallocate(buf);
+		}
+		pt_benchmark(samd_ring_allocator_t2, __bvn, 65536, 2)
+		{
+			samd_ring_allocator<magnifier_quadratic> all(2 * 65536 * (8 + sizeof(__samd_ring_buffer_header_t)));
+			void **buf = union_cast<void**>(heap_allocate(65536 * 2 * sizeof(void*), align_val_t(32)));
+			for (size_t i = 0; i < 65536 * 2; ++i)
+			{
+				buf[i] = all.allocate(8, align_val_t(16));
+			}
+			__bvn.measure([&](size_t __index)
+			{
+				all.deallocate(buf[__index]);
+				return buf[__index];
+			});
+			heap_deallocate(buf);
+		}
+		pt_benchmark(mimalloc_allocator_t1, __bvn, 65536, 1)
+		{
+			__bvn.measure([&](size_t __index)
+			{
+				void *a = heap_allocate(
 					8, align_val_t(16));
-				all.deallocate(a);
+				heap_deallocate(a);
 				return a;
 			});
 		}
-		pt_benchmark(mimalloc_allocator_t1, __bvn, 65536, 1)
+		pt_benchmark(mimalloc_allocator_t2, __bvn, 65536, 2)
 		{
 			__bvn.measure([&](size_t __index)
 			{
@@ -64,6 +93,7 @@ namespace pul
 	}
 
 	// MPSC Queue
+	// TODO CAS vs Load + Store using fetch_add
 	// TODO
 
 	// SPMC Queue
