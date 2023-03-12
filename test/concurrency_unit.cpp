@@ -40,17 +40,26 @@ namespace pul
 		}
 
 		// Benchmarks
-		pt_benchmark(samd_ring_allocator_benchmark_t1, __bvn, 65536, 1)
+		pt_benchmark(samd_ring_allocator_t1, __bvn, 65536, 1)
 		{
-
+			samd_ring_allocator<magnifier_quadratic> all(2 * 65536 * (8 + sizeof(__samd_ring_buffer_header_t)));
+			__bvn.measure([&](size_t __index)
+			{
+				void *a = all.allocate(
+					8, align_val_t(16));
+				all.deallocate(a);
+				return a;
+			});
 		}
-		pt_benchmark(samd_ring_allocator_benchmark_t4, __bvn, 65536, 4)
+		pt_benchmark(mimalloc_allocator_t1, __bvn, 65536, 1)
 		{
-
-		}
-		pt_benchmark(samd_ring_allocator_benchmark_t8, __bvn, 65536, 8)
-		{
-
+			__bvn.measure([&](size_t __index)
+			{
+				void *a = heap_allocate(
+					8, align_val_t(16));
+				heap_deallocate(a);
+				return a;
+			});
 		}
 	}
 
@@ -60,7 +69,7 @@ namespace pul
 	// SPMC Queue
 	// TODO
 
-	// MPSC Singly List
+	// MPSC Unbuffered Queue
 	// TODO
 
 

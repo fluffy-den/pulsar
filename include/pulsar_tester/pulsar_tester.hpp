@@ -346,4 +346,6 @@ public:																											                   \
 pf_decl_static pf_decl_inline __pt_generate_benchmark_instance_name(name);     \
 void __pt_generate_benchmark_type(name)::process(pul::__tester_benchmark &bvn)
 
+// TODO: Write down second to greater!
+
 #endif // !PULSAR_TESTER_HPP

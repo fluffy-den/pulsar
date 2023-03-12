@@ -212,7 +212,7 @@ namespace pul
 				__samd_ring_buffer_header_t *as_header;
 			};
 			as_header = this->head;
-			while (as_header->next > 0 && as_header->ismarked.test(atomic_order::relaxed))
+			while (this->count > 0 && as_header->ismarked.test(atomic_order::relaxed))
 			{
 				--this->count;
 				as_byte += as_header->next;

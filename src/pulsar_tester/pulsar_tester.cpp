@@ -250,9 +250,10 @@ namespace pul
 		}
 		var = nanoseconds_t(var.count() / __c);
 		nanoseconds_t ect = nanoseconds_t(static_cast<int64_t>(std::sqrt(static_cast<float64_t>(var.count()))));
-		nanoseconds_t q1	= __rts[__c / 4];
-		nanoseconds_t q2	= __rts[__c / 2];
-		nanoseconds_t q3	= __rts[__c * 3 / 4];
+		std::sort(union_cast<int64_t*>(&__rts[0]), union_cast<int64_t*>(&__rts[0] + __c));// TODO: TSORT
+		nanoseconds_t q1 = __rts[__c / 4];
+		nanoseconds_t q2 = __rts[__c / 2];
+		nanoseconds_t q3 = __rts[__c * 3 / 4];
 
 		// 2. Print
 		pf_print(

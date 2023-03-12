@@ -646,6 +646,9 @@ namespace pul
 	{
 		return !greater(__ba, __ea, __bb);
 	}
+
+	/// ALGORITHM: Sort
+	// TODO
 }
 
 #endif // !PULSAR_ALGORITHM_HPP
