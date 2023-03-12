@@ -87,25 +87,69 @@ namespace pul
 	}
 
 	/// UTILITY: Address <=> Pointer
-	pf_hint_nodiscard pf_decl_constexpr size_t
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
 	addressof(
 		const void *__ptr) pf_attr_noexcept
 	{
 		return union_cast<size_t>(__ptr);
 	}
 	template<typename _Ty>
-	pf_hint_nodiscard pf_decl_constexpr _Ty*
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _Ty*
 	addrtoptr(
 		size_t __addr) pf_attr_noexcept
 	{
 		return union_cast<_Ty*>(__addr);
 	}
 	template<typename _Ty>
-	pf_hint_nodiscard pf_decl_constexpr const _Ty*
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const _Ty*
 	addrtocptr(
 		size_t __addr) pf_attr_noexcept
 	{
 		return union_cast<const _Ty*>(__addr);
+	}
+
+	/// UTILITY: Distance
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr diff_t
+	diffof(
+		const void *__beg,
+		const void *__end) pf_attr_noexcept
+	{
+		return union_cast<diff_t>(__end) - union_cast<diff_t>(__beg);
+	}
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
+	distof(
+		const void *__beg,
+		const void *__end) pf_attr_noexcept
+	{
+		if (__end >= __beg)
+		{
+			return union_cast<size_t>(__end) - union_cast<size_t>(__beg);
+		}
+		return union_cast<size_t>(__beg) - union_cast<size_t>(__end);
+	}
+
+	/// UTILITY: Count
+	template <typename _Ty>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
+	countof(
+		const _Ty *__beg,
+		const _Ty *__end) pf_attr_noexcept
+	{
+		if (__end >= __beg)
+		{
+			return (union_cast<size_t>(__end) - union_cast<size_t>(__beg)) / sizeof(_Ty);
+		}
+		return (union_cast<size_t>(__beg) - union_cast<size_t>(__end)) / sizeof(_Ty);
+	}
+
+	/// UTILITY: Modulo2
+	template <typename _IntegerTy>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _IntegerTy
+	modulo2(
+		_IntegerTy __val,
+		_IntegerTy __mod)
+	{
+		return (__val & (__mod - 1));
 	}
 }
 

@@ -10,10 +10,28 @@
 
 // Include: Pulsar
 #include "pulsar/debug.hpp"
+#include "pulsar/allocator.hpp"
 
 // Pulsar
 namespace pul
 {
+	/// DEBUG: Allocator
+	pf_decl_static pf_decl_inline pf_decl_thread_local samd_ring_allocator<magnifier_linear> __dbg_allocator = samd_ring_allocator(65536, magnifier_linear(65536));
+
+	/// DEBUG: Allocate / Deallocate
+	pulsar_api void*
+	__dbg_allocate(
+		size_t __size)
+	{
+		return __dbg_allocator.allocate(__size);
+	}
+	pulsar_api void
+	__dbg_deallocate(
+		void *__ptr) pf_attr_noexcept
+	{
+		return __dbg_allocator.deallocate(__ptr);
+	}
+
 	/// DEBUG: Logger
 	pulsar_api dbg_logger::dbg_logger() pf_attr_noexcept
 		: c_(nullptr)

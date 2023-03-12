@@ -104,6 +104,8 @@ namespace dbg_flags
 	pulsar_api void
 	__dbg_deallocate(
 		void *__ptr) pf_attr_noexcept;
+	pulsar_api size_t
+	__dbg_purge() pf_attr_noexcept;
 
 	/// DEBUG: UTF8 -> Types
 	// String View
@@ -720,9 +722,9 @@ namespace dbg_flags
 		fmt::text_style style;
 		switch(__level)
 		{
-		case dbg_level::low:    { lvl = "low"; style = fmt::bg(fmt::color::midnight_blue); break; }
+		case dbg_level::low:    { lvl = "low";    style = fmt::bg(fmt::color::midnight_blue); break; }
 		case dbg_level::medium: { lvl = "medium"; style = fmt::bg(fmt::color::green); break; }
-		case dbg_level::high:   { lvl = "high"; style = fmt::bg(fmt::color::indian_red);  break; }
+		case dbg_level::high:   { lvl = "high";   style = fmt::bg(fmt::color::indian_red);  break; }
 		};
 		dbg_u8string prt(DBG_FMT_BUFFER_SIZE, '\0');// TODO: Good size
 		char_t *p = prt.data();

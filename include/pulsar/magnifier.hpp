@@ -124,3 +124,5 @@ namespace pul
 		}
 	};
 }
+
+#endif // !PULSAR_MAGNIFIER_HPP

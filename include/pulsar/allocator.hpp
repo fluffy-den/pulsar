@@ -105,6 +105,6 @@ namespace pul
 
 // Include: Pulsar -> Allocator
 #include "pulsar/allocator/allocator_default.hpp"
-#include "pulsar/allocator/allocator_tl_ring_buffer.hpp"
+#include "pulsar/allocator/allocator_samd_ring.hpp"
 
 #endif // !PULSAR_ALLOCATOR_HPP

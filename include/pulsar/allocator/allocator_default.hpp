@@ -27,7 +27,7 @@ namespace pul
 			align_val_t __align,
 			size_t __o) pf_attr_noexcept
 		{
-			return mi_malloc_aligned_at(__s, __align, __o);
+			return mi_malloc_aligned_at(__s, union_cast<size_t>(__align), __o);
 		}
 
 		/// Reallocate
@@ -38,7 +38,7 @@ namespace pul
 			align_val_t __align,
 			size_t __o) pf_attr_noexcept
 		{
-			return mi_realloc_aligned_at(__p, __s, __align, __o);
+			return mi_realloc_aligned_at(__p, __s, union_cast<size_t>(__align), __o);
 		}
 
 		/// Deallocate

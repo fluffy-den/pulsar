@@ -12,6 +12,7 @@
 #define PULSAR_TUPLE_HPP 1
 
 // Include: Pulsar
+#include "pulsar/pulsar.hpp"
 #include "pulsar/hash.hpp"
 
 // Pulsar
@@ -632,7 +633,6 @@ namespace pul
 
 
   /// PAIR:
-
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpedantic"
 
@@ -691,7 +691,7 @@ namespace pul
 
 
   /// NUPLE: Macro -> $
-#define $(name) xx::hash(name)
+#define $(name) xxhash::hash(name)
 
 	/// NUPLE: SFINAE -> Index
 	template <typename _Ty, size_t _Hash, size_t _Index>

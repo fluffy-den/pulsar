@@ -45,8 +45,8 @@ namespace pul
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr void*
 	align_top(
 		void *__ptr,
-		align_val_t __align = ALIGN_MAX,
-		size_t __offset			= 0) pf_attr_noexcept
+		align_val_t __align,
+		size_t __offset = 0) pf_attr_noexcept
 	{
 		byte_t *p = union_cast<byte_t*>(__ptr);
 		p += paddingof(addressof(p + __offset), __align);
@@ -199,6 +199,10 @@ namespace pul
 	{
 		_Ty *p = union_cast<_Ty*>(
 			heap_allocate(sizeof(_Ty) + __exBytes, __align, __offset));
+		if (pf_unlikely(!p)) pf_throw(
+				dbg_category_generic(), errv::bad_alloc, dbg_flags::dump_with_handle_data,
+				"Failed to create new object of type={}, size={}, align={}, offset={} with heap memory.",
+				typeid(_Ty).name(), sizeof(_Ty) + __exBytes, union_cast<size_t>(__align), __offset);
 		construct(p, std::forward<_Args>(__args)...);
 		return p;
 	}
@@ -242,6 +246,10 @@ namespace pul
 	{
 		_Ty *p = union_cast<_Ty*>(
 			allocate<_Ty>(__all, sizeof(_Ty) + __exBytes, __align, __offset));
+		if (pf_unlikely(!p)) pf_throw(
+				dbg_category_generic(), errv::bad_alloc, dbg_flags::dump_with_handle_data,
+				"Failed to create new object of type={}, size={}, align={}, offset={} with allocator={}.",
+				typeid(_Ty).name(), sizeof(_Ty) + __exBytes, union_cast<size_t>(__align), __offset, union_cast<void*>(&__all));
 		construct(p, std::forward<_Args>(__args)...);
 		return p;
 	}
@@ -347,7 +355,7 @@ namespace pul
 		_Ty *__ptr) pf_attr_noexcept
 	{
 		destroy(__ptr);
-		deallocate(__ptr);
+		heap_deallocate(__ptr);
 	}
 	template<typename _Ty, typename _Allocator>
 	pf_decl_inline pf_decl_constexpr void
