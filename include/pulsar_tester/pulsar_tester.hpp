@@ -124,7 +124,7 @@ namespace pul
       this->__measure_proc(std::move(__measureFun), this->itc_, 0, results);
 
       // 2. End Threads
-      for (size_t i = 0; i < this->ntt_; ++i)
+      for (size_t i = 1; i < this->ntt_; ++i)
       {
         if(workers[i - 1].joinable()) workers[i - 1].join();
       }
