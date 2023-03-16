@@ -24,29 +24,32 @@ namespace pul
 		// Unit
 		pt_unit(samd_ring_allocator_test)
 		{
-			samd_ring_allocator<magnifier_quadratic> all(65536);
+			allocator_samd_ring_buffer all(65536);
 			for (size_t i = 0; i < 128; ++i)
 			{
 				void *p1 = all.allocate(4096);
+				pt_require(p1);
 				void *p2 = all.allocate(4096);
+				pt_require(p2 && p2 != p1);
 				void *p3 = all.allocate(4096);
+				pt_require(p3 && p3 != p2);
 				void *p4 = all.allocate(4096);
+				pt_require(p4 && p4 != p3);
 				all.deallocate(p1);
 				all.deallocate(p2);
 				all.deallocate(p3);
 				all.deallocate(p4);
 			}
-
 		}
 
 		// Benchmarks
-		pt_benchmark(samd_ring_allocator_t1, __bvn, 65536, 1)
+		pt_benchmark(samd_ring_allocator_t1, __bvn, 1048576, 1)
 		{
-			samd_ring_allocator<magnifier_quadratic> all(1 * 65536 * (8 + sizeof(__samd_ring_buffer_header_t)));
-			void **buf = union_cast<void**>(heap_allocate(65536 * 256 * sizeof(void*), align_val_t(8)));
-			for (size_t i = 0; i < 65536 * 1; ++i)
+			allocator_samd_ring_buffer all(2ull * 1048576 * (64 + 8));
+			void **buf = union_cast<void**>(heap_allocate(1048576 * 1 * sizeof(void*), align_val_t(8)));
+			for (size_t i = 0; i < 1048576 * 1; ++i)
 			{
-				buf[i] = all.allocate(256);
+				buf[i] = all.allocate(64);
 			}
 			__bvn.measure([&](size_t __index)
 			{
@@ -55,41 +58,66 @@ namespace pul
 			});
 			heap_deallocate(buf);
 		}
-		// pt_benchmark(samd_ring_allocator_t2, __bvn, 65536, 2)
-		// {
-		// 	samd_ring_allocator<magnifier_quadratic> all(2 * 65536 * (8 + sizeof(__samd_ring_buffer_header_t)));
-		// 	void **buf = union_cast<void**>(heap_allocate(65536 * 2 * sizeof(void*), align_val_t(32)));
-		// 	for (size_t i = 0; i < 65536 * 2; ++i)
-		// 	{
-		// 		buf[i] = all.allocate(8, align_val_t(16));
-		// 	}
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		all.deallocate(buf[__index]);
-		// 		return buf[__index];
-		// 	});
-		// 	heap_deallocate(buf);
-		// }
-		// pt_benchmark(mimalloc_allocator_t1, __bvn, 65536, 1)
-		// {
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		void *a = heap_allocate(
-		// 			8, align_val_t(16));
-		// 		heap_deallocate(a);
-		// 		return a;
-		// 	});
-		// }
-		// pt_benchmark(mimalloc_allocator_t2, __bvn, 65536, 2)
-		// {
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		void *a = heap_allocate(
-		// 			8, align_val_t(16));
-		// 		heap_deallocate(a);
-		// 		return a;
-		// 	});
-		// }
+		pt_benchmark(samd_ring_allocator_t2, __bvn, 1048576, 2)
+		{
+			allocator_samd_ring_buffer all(4ull * 1048576 * (64 + 8));
+			void **buf = union_cast<void**>(heap_allocate(1048576 * 2 * sizeof(void*), align_val_t(32)));
+			for (size_t i = 0; i < 1048576 * 2; ++i)
+			{
+				buf[i] = all.allocate(64);
+			}
+			__bvn.measure([&](size_t __index)
+			{
+				all.deallocate(buf[__index]);
+				return buf[__index];
+			});
+			heap_deallocate(buf);
+		}
+		pt_benchmark(samd_ring_allocator_t8, __bvn, 1048576, 8)
+		{
+			allocator_samd_ring_buffer all(16ull * 1048576 * (64 + 8));
+			void **buf = union_cast<void**>(heap_allocate(1048576 * 8 * sizeof(void*), align_val_t(32)));
+			for (size_t i = 0; i < 1048576 * 8; ++i)
+			{
+				buf[i] = all.allocate(64);
+			}
+			__bvn.measure([&](size_t __index)
+			{
+				all.deallocate(buf[__index]);
+				return buf[__index];
+			});
+			heap_deallocate(buf);
+		}
+		pt_benchmark(mimalloc_allocator_t1, __bvn, 1048576, 1)
+		{
+			__bvn.measure([&](size_t __index)
+			{
+				void *a = heap_allocate(
+					64);
+				heap_deallocate(a);
+				return a;
+			});
+		}
+		pt_benchmark(mimalloc_allocator_t2, __bvn, 1048576, 2)
+		{
+			__bvn.measure([&](size_t __index)
+			{
+				void *a = heap_allocate(
+					64);
+				heap_deallocate(a);
+				return a;
+			});
+		}
+		pt_benchmark(mimalloc_allocator_t8, __bvn, 1048576, 8)
+		{
+			__bvn.measure([&](size_t __index)
+			{
+				void *a = heap_allocate(
+					64);
+				heap_deallocate(a);
+				return a;
+			});
+		}
 	}
 
 	// MPSC Queue

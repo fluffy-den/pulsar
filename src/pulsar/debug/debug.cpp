@@ -16,7 +16,7 @@
 namespace pul
 {
 	/// DEBUG: Allocator
-	pf_decl_static pf_decl_inline pf_decl_thread_local samd_ring_allocator<magnifier_linear> __dbg_allocator = samd_ring_allocator(65536, magnifier_linear(65536));
+	pf_decl_static pf_decl_inline pf_decl_thread_local allocator_samd_ring_buffer __dbg_allocator = allocator_samd_ring_buffer(65536);
 
 	/// DEBUG: Allocate / Deallocate
 	pulsar_api void*

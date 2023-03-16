@@ -82,8 +82,8 @@ namespace pul
 		if (this->benchHead_)
 		{
 			// Initialisation
-			high_resolution_point_t start = high_resolution_clock_t::now();
-			__tester_benchmark *p					= this->benchHead_;
+			uint64_t start				= __rdtsc();
+			__tester_benchmark *p = this->benchHead_;
 
 			// Format
 			pf_print(
@@ -108,9 +108,9 @@ namespace pul
 			}
 
 			// Print time
-			nanoseconds_t dur = high_resolution_clock_t::now() - start;
+			uint64_t dur = __rdtsc() - start;
 			pf_print(
-				"/{}/ finished after {}!\n",
+				"/{}/ finished after {} ticks!\n",
 				dbg_styled('B', dbg_style_fg(dbg_color::golden_rod)),
 				dur);
 		}
@@ -227,33 +227,29 @@ namespace pul
 	// Display
 	pulsar_api void
 	__tester_benchmark::__display_measures(
-		const nanoseconds_t *__rts,
+		uint64_t *__rts,
 		const size_t __c) pf_attr_noexcept
 	{
 		// 1. Convert
-		nanoseconds_t min = __rts[0];
-		nanoseconds_t max = __rts[0];
-		nanoseconds_t avg = __rts[0];
+		uint64_t min = __rts[0];
+		uint64_t max = __rts[0];
+		uint64_t avg = __rts[0];
+		uint64_t var = __rts[0] * __rts[0];
 		for (size_t i = 1; i < __c; ++i)
 		{
 			if (__rts[i] < min) min = __rts[i];
 			if (__rts[i] > max) max = __rts[i];
 			avg += __rts[i];
+			var += __rts[i] * __rts[i];
 		}
-		nanoseconds_t total = avg;
-		avg = nanoseconds_t(avg.count() / __c);
-		nanoseconds_t var = nanoseconds_t(0);
-		for (size_t i = 0; i < __c; ++i)
-		{
-			const nanoseconds_t k = (__rts[i] - avg);
-			var += nanoseconds_t(k.count() * k.count());
-		}
-		var = nanoseconds_t(var.count() / __c);
-		nanoseconds_t ect = nanoseconds_t(static_cast<int64_t>(std::sqrt(static_cast<float64_t>(var.count()))));
-		std::sort(union_cast<int64_t*>(&__rts[0]), union_cast<int64_t*>(&__rts[0] + __c));// TODO: TSORT
-		nanoseconds_t q1 = __rts[__c / 4];
-		nanoseconds_t q2 = __rts[__c / 2];
-		nanoseconds_t q3 = __rts[__c * 3 / 4];
+		uint64_t total = avg;
+		avg /= __c;
+		var	 = var / __c - avg * avg;
+		uint64_t ect = static_cast<uint64_t>(std::sqrt(var));
+		std::sort(&__rts[0], &__rts[0] + __c);
+		uint64_t q1 = __rts[__c / 4];
+		uint64_t q2 = __rts[__c / 2];
+		uint64_t q3 = __rts[__c * 3 / 4];
 
 		// 2. Print
 		pf_print(

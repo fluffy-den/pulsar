@@ -29,9 +29,8 @@ namespace pul
 
 	/// CONCURRENCY: Atomic
 	template <typename _Ty>
-	using atomic				= std::atomic<_Ty>;
-	using atomic_flag_t = std::atomic_flag;
-	using atomic_order	= std::memory_order;
+	using atomic			 = std::atomic<_Ty>;
+	using atomic_order = std::memory_order;
 
 	/// CONCURRENCY: Lock
 	using mutex_t				 = std::mutex;
@@ -70,7 +69,7 @@ namespace this_thread
 	}
 
 	/// ID
-	pf_decl_inline thread_id_t get_id()
+	pf_hint_nodiscard pf_decl_inline thread_id_t get_id()
 	{
 		return union_cast<thread_id_t>(std::this_thread::get_id());
 	}

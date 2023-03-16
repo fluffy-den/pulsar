@@ -122,6 +122,7 @@
 #define pf_decl_virtual       virtual
 #define pf_decl_explicit      explicit
 #define pf_decl_thread_local  thread_local
+#define pf_decl_volatile      volatile
 
 // Calls
 #define pf_defcall __cdecl

@@ -14,9 +14,13 @@
 // Include: Pulsar
 #include "pulsar/debug.hpp"
 #include "pulsar/function.hpp"
+#include "pulsar/concurrency.hpp"
 
 // Include: C++
 #include <thread>
+
+// Include: C
+#include <intrin.h>
 
 // Pulsar Tester 
 namespace pul
@@ -74,28 +78,24 @@ namespace pul
     /// Display
     pulsar_api void
     __display_measures(
-        const nanoseconds_t *__rts,
+        uint64_t *__rts,
         const size_t __c) pf_attr_noexcept; 
 
     /// Computation
     template <typename _FunTy>
     void
-    pf_decl_static __measure_proc(
+    pf_decl_inline pf_decl_static __measure_proc(
       _FunTy &&__measureFun,
       size_t __itc,
       size_t __off,
-      nanoseconds_t *__results)
+      uint64_t *__results)
     {
-      // We force CPU to maximize his state
-      const size_t bc = 16777216;
-      size_t s = 0;
-      for (size_t i = 0; i < bc; ++i) s += i % bc;
       // Measure
       for (size_t i = __off, e = __off + __itc; i != e; ++i)
       {
-        high_resolution_point_t n = high_resolution_clock_t::now();
-        pf_hint_maybe_unused auto k = __measureFun(i);
-        __results[i] = high_resolution_clock_t::now() - n;
+        uint64_t s = __rdtsc();
+        pf_hint_maybe_unused pf_decl_volatile auto k = __measureFun(i);
+        __results[i] = __rdtsc() - s;
       }
     }
     template <typename _FunTy>
@@ -103,15 +103,18 @@ namespace pul
     measure(
       _FunTy &&__measureFun)
     {
-      // 1. Measure
+      // Anti-Boil (Bandwith Overhead + Throll Overhead)
+      this_thread::sleep_for(seconds_t(1));
+
+      // Measure
       const size_t ni = this->num_iterations();
-      const size_t rs = sizeof(nanoseconds_t) * ni;
+      const size_t rs = sizeof(uint64_t) * ni;
       const size_t ss = sizeof(__tester_thread_t) * this->ntt_;
       const size_t ts = rs + ss;
       byte_t *store = union_cast<byte_t *>(heap_allocate(ts, align_val_t(32)));
       std::memset(store, 0, ts);
       __tester_thread_t *workers = union_cast<__tester_thread_t*>(&store[0]);
-      nanoseconds_t *results = union_cast<nanoseconds_t*>(&store[0] + ss);
+      uint64_t *results = union_cast<uint64_t*>(&store[0] + ss);
       for (size_t i = 1; i < this->ntt_; ++i)
       {
         workers[i - 1] = __tester_thread_t(
@@ -123,16 +126,16 @@ namespace pul
       }
       this->__measure_proc(std::move(__measureFun), this->itc_, 0, results);
 
-      // 2. End Threads
+      // End Threads
       for (size_t i = 1; i < this->ntt_; ++i)
       {
         if(workers[i - 1].joinable()) workers[i - 1].join();
       }
 
-      // 3. Compute
+      // Compute
       __display_measures(results, ni);
 
-      // 4. Deallocate
+      // Deallocate
       heap_deallocate(store);
     }
 

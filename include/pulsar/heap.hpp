@@ -62,8 +62,8 @@ namespace pul
 			byte_t *p = new byte_t[__nsize];
 			if (!__ptr) return p;
 			const size_t m = std::min(__osize, __nsize);
-			std::memcpy(p, __ptr, std::min(__osize, __nsize));
-			delete[] __ptr;
+			std::memcpy(p, __ptr, m);
+			delete[] union_cast<byte_t*>(__ptr);
 			return p;
 		}
 		else
