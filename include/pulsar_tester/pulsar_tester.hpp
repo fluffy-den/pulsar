@@ -111,7 +111,7 @@ namespace pul
       const size_t rs = sizeof(uint64_t) * ni;
       const size_t ss = sizeof(__tester_thread_t) * this->ntt_;
       const size_t ts = rs + ss;
-      byte_t *store = union_cast<byte_t *>(heap_allocate(ts, align_val_t(32)));
+      byte_t *store = union_cast<byte_t *>(halloc(ts, align_val_t(32)));
       std::memset(store, 0, ts);
       __tester_thread_t *workers = union_cast<__tester_thread_t*>(&store[0]);
       uint64_t *results = union_cast<uint64_t*>(&store[0] + ss);
@@ -136,7 +136,7 @@ namespace pul
       __display_measures(results, ni);
 
       // Deallocate
-      heap_deallocate(store);
+      hfree(store);
     }
 
     /// Name

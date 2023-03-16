@@ -24,9 +24,6 @@
 // Pulsar
 namespace pul
 {
-	/// CONCURRENCY: Constants
-	pf_decl_constexpr uint32_t CONCURRENT_ALIGNMENT = 64;
-
 	/// CONCURRENCY: Atomic
 	template <typename _Ty>
 	using atomic			 = std::atomic<_Ty>;

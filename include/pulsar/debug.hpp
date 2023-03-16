@@ -228,7 +228,7 @@ namespace dbg_flags
 			const char_t * __str,
 			size_t __count)
 			: count_(__count + 1)
-			, store_(union_cast<char_t*>(heap_allocate(this->count_ + 1, align_val_t(32), 0)))
+			, store_(union_cast<char_t*>(halloc(this->count_ + 1, align_val_t(32), 0)))
 		{
 			std::memcpy(this->store_, __str, __count);
 			*(this->data() + this->count_) = '\0';
@@ -236,7 +236,7 @@ namespace dbg_flags
 		pf_decl_constexpr pf_decl_inline dbg_u8string(
 			const char_t * __str)
 			: count_(std::strlen(__str))
-			, store_(union_cast<char_t*>(heap_allocate(this->count_ + 1, align_val_t(32), 0)))
+			, store_(union_cast<char_t*>(halloc(this->count_ + 1, align_val_t(32), 0)))
 		{
 			std::memcpy(this->store_, __str, this->count_);
 			*(this->data() + this->count_) = '\0';
@@ -245,7 +245,7 @@ namespace dbg_flags
 			size_t __count,
 			char_t __val) pf_attr_noexcept
 		: count_(__count)
-		, store_(union_cast<char_t*>(heap_allocate(this->count_ + 1, align_val_t(32), 0)))
+		, store_(union_cast<char_t*>(halloc(this->count_ + 1, align_val_t(32), 0)))
 		{
 			std::memset(this->store_, __val, __count);
 			*(this->data() + this->count_) = '\0';
@@ -265,7 +265,7 @@ namespace dbg_flags
 		pf_decl_constexpr pf_decl_inline dbg_u8string(
 			dbg_u8string_view __v) pf_attr_noexcept
 		: count_(__v.count())
-		, store_(union_cast<char_t*>(heap_allocate(__v.count() + 1, align_val_t(32), 0)))
+		, store_(union_cast<char_t*>(halloc(__v.count() + 1, align_val_t(32), 0)))
 		{
 			this->__assign_view(__v);
 		}
@@ -290,7 +290,7 @@ namespace dbg_flags
 		pf_decl_constexpr pf_decl_inline dbg_u8string &operator=(
 			dbg_u8string && __r)
 		{
-			if (this->store_) heap_deallocate(this->store_);
+			if (this->store_) hfree(this->store_);
 			this->count_ = __r.count_;
 			__r.count_	 = 0;
 			this->store_ = __r.store_;
@@ -325,11 +325,11 @@ namespace dbg_flags
 		{
 			if (__c == 0)
 			{
-				heap_deallocate(this->store_);
+				hfree(this->store_);
 			}
 			else
 			{
-				this->store_ = union_cast<char_t*>(heap_reallocate(this->store_, this->count_, __c + 1, align_val_t(32), 0));
+				this->store_ = union_cast<char_t*>(hrealloc(this->store_, this->count_, __c + 1, align_val_t(32), 0));
 				this->count_ = __c + 1;
 			}
 		}

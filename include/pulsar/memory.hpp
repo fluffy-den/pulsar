@@ -198,7 +198,7 @@ namespace pul
 	requires(std::is_constructible_v<_Ty, _Args...>)
 	{
 		_Ty *p = union_cast<_Ty*>(
-			heap_allocate(sizeof(_Ty) + __exBytes, __align, __offset));
+			halloc(sizeof(_Ty) + __exBytes, __align, __offset));
 		if (pf_unlikely(!p)) pf_throw(
 				dbg_category_generic(), errv::bad_alloc, dbg_flags::dump_with_handle_data,
 				"Failed to create new object of type={}, size={}, align={}, offset={} with heap memory.",
@@ -355,7 +355,7 @@ namespace pul
 		_Ty *__ptr) pf_attr_noexcept
 	{
 		destroy(__ptr);
-		heap_deallocate(__ptr);
+		hfree(__ptr);
 	}
 	template<typename _Ty, typename _Allocator>
 	pf_decl_inline pf_decl_constexpr void
@@ -384,7 +384,7 @@ namespace pul
 			size_t *as_size;
 		};
 		as_array = union_cast<memory_array_t*>(
-			heap_allocate(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
+			halloc(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count));
 		return union_cast<_Ty*>(&as_array->data[0]);
@@ -422,7 +422,7 @@ namespace pul
 			size_t *as_size;
 		};
 		as_array = union_cast<memory_array_t*>(
-			heap_allocate(__all, sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
+			halloc(__all, sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count));
 		return union_cast<_Ty*>(&as_array->data[0]);
@@ -464,7 +464,7 @@ namespace pul
 			size_t *as_size;
 		};
 		as_array = union_cast<memory_array_t*>(
-			heap_allocate(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
+			halloc(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count), __val);
 		return union_cast<_Ty*>(&as_array->data[0]);
@@ -506,7 +506,7 @@ namespace pul
 			size_t *as_size;
 		};
 		as_array = union_cast<memory_array_t*>(
-			heap_allocate(__all, sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
+			halloc(__all, sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count), __val);
 		return union_cast<_Ty*>(&as_array->data[0]);
@@ -551,7 +551,7 @@ namespace pul
 			size_t *as_size;
 		};
 		as_array = union_cast<memory_array_t*>(
-			heap_allocate(sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
+			halloc(sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
 		as_array->count = c;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + c), __beg);
 		return union_cast<typename _IteratorIn::value_t*>(&as_array->data[0]);
@@ -600,8 +600,7 @@ namespace pul
 			memory_array_t *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<memory_array_t*>(
-			heap_allocate(__all, sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
+		as_array				= union_cast<memory_array_t*>(halloc(__all, sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
 		as_array->count = c;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + c), __beg);
 		return union_cast<typename _IteratorIn::value_t*>(&as_array->data[0]);
@@ -648,7 +647,7 @@ namespace pul
 		_Ty *__ptr) pf_attr_noexcept
 	{
 		destroy_array(__ptr--);
-		deallocate(__ptr);
+		hfree(__ptr);
 	}
 	template<typename _Ty, typename _Allocator>
 	pf_decl_inline pf_decl_constexpr void

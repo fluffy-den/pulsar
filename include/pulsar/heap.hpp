@@ -30,7 +30,7 @@ namespace pul
 
 	/// HEAP: Allocate
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr void*
-	heap_allocate(
+	halloc(
 		size_t __size,
 		align_val_t __align = ALIGN_DEFAULT,
 		size_t __offset			= 0) pf_attr_noexcept
@@ -50,7 +50,7 @@ namespace pul
 
 	/// HEAP: Reallocate
 	pf_decl_inline pf_decl_constexpr void*
-	heap_reallocate(
+	hrealloc(
 		void *__ptr,
 		size_t __osize,
 		size_t __nsize,
@@ -74,7 +74,7 @@ namespace pul
 
 	/// HEAP: Deallocate
 	pf_decl_inline pf_decl_constexpr void
-	heap_deallocate(
+	hfree(
 		void *__ptr) pf_attr_noexcept
 	{
 		if (std::is_constant_evaluated())
@@ -89,7 +89,7 @@ namespace pul
 
 	/// HEAP: Usable Size
 	pf_decl_inline size_t
-	heap_usable_size(
+	husable(
 		void *__ptr) pf_attr_noexcept
 	{
 		return mi_usable_size(__ptr);
@@ -97,7 +97,7 @@ namespace pul
 
 	/// HEAP: Good Size
 	pf_decl_inline size_t
-	heap_good_size(
+	hgood_size(
 		size_t __size)
 	{
 		return mi_good_size(__size);

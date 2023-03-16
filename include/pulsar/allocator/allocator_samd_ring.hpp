@@ -155,6 +155,7 @@ namespace pul
 							return nullptr;
 						}
 					}
+
 					// Construct
 					as_header->marked = 0;
 					as_header->next		= __size;
@@ -167,7 +168,7 @@ namespace pul
 			}
 
 			/// Deallocate
-			pf_decl_inline void
+			void
 			__deallocate(
 				void *__p) pf_attr_noexcept
 			{
@@ -182,6 +183,7 @@ namespace pul
 				as_header->marked = 1;
 			}
 
+			/// Store
 			__header_t *head;
 			__header_t *tail;
 			const size_t size;

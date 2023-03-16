@@ -150,7 +150,7 @@ namespace pul
 			size_t __count,
 			wchar_t __val) pf_attr_noexcept
 			: count_(__count)
-			, store_(union_cast<wchar_t*>(heap_allocate((this->count_ + 1) * sizeof(wchar_t), align_val_t(32), 0)))
+			, store_(union_cast<wchar_t*>(halloc((this->count_ + 1) * sizeof(wchar_t), align_val_t(32), 0)))
 		{
 			std::memset(this->store_, __val, __count * sizeof(wchar_t));
 			*(this->data() + this->count_) = L'\0';
@@ -170,7 +170,7 @@ namespace pul
 		pf_decl_inline __dbg_wsstring(
 			__dbg_wsstring_view __v) pf_attr_noexcept
 			: count_(__v.count())
-			, store_(union_cast<wchar_t*>(heap_allocate((count_ + 1) * sizeof(wchar_t), align_val_t(32), 0)))
+			, store_(union_cast<wchar_t*>(halloc((count_ + 1) * sizeof(wchar_t), align_val_t(32), 0)))
 		{
 			std::memcpy(this->store_, __v.data(), __v.size());
 			*(this->data() + this->count_) = L'\0';
@@ -179,7 +179,7 @@ namespace pul
 		/// Destructor
 		pf_decl_inline ~__dbg_wsstring() pf_attr_noexcept
 		{
-			if (this->store_) heap_deallocate(this->store_);
+			if (this->store_) hfree(this->store_);
 		}
 
 		/// Operator =
@@ -193,7 +193,7 @@ namespace pul
 		pf_decl_inline __dbg_wsstring &operator=(
 			__dbg_wsstring &&__r) pf_attr_noexcept
 		{
-			if (this->store_) heap_deallocate(this->store_);
+			if (this->store_) hfree(this->store_);
 			this->count_ = __r.count_;
 			__r.count_	 = 0;
 			this->store_ = __r.store_;
@@ -243,11 +243,11 @@ namespace pul
 		{
 			if (__c == 0)
 			{
-				heap_deallocate(this->store_);
+				hfree(this->store_);
 			}
 			else
 			{
-				this->store_ = union_cast<wchar_t*>(heap_reallocate(this->store_, this->count_, __c + sizeof(wchar_t), align_val_t(32), 0));
+				this->store_ = union_cast<wchar_t*>(hrealloc(this->store_, this->count_, __c + sizeof(wchar_t), align_val_t(32), 0));
 				this->count_ = __c + sizeof(wchar_t);
 			}
 		}
