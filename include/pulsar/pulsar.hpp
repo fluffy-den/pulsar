@@ -155,10 +155,10 @@
 #endif
 #define pf_file                   __FILE__
 #define pf_va_args                __VA_ARGS__	// TODO: Find unused __VA_ARGS__
-#define pf_alignas(a)             alignas(a)
-#define pf_alignas_n(type, a)					 \
-				alignas(alignof(type) * a > 32 \
-							? 32										 \
+#define pf_alignas(a)             alignas(static_cast<size_t>(a))
+#define pf_alignas_n(type, a)							\
+				pf_alignas(alignof(type) * a > 32	\
+							? 32												\
 							: (alignof(type) * a < 16 ? 16 : alignof(type) * a))
 #define pf_concatenate_helper(a, b) a ## b
 #define pf_concatenate(a, b) pf_concatenate_helper(a, b)

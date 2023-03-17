@@ -141,16 +141,6 @@ namespace pul
 		}
 		return (union_cast<size_t>(__beg) - union_cast<size_t>(__end)) / sizeof(_Ty);
 	}
-
-	/// UTILITY: Modulo2
-	template <typename _IntegerTy>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _IntegerTy
-	modulo2(
-		_IntegerTy __val,
-		_IntegerTy __mod)
-	{
-		return (__val & (__mod - 1));
-	}
 }
 
 #endif // !PULSAR_UTILITY_HPP

@@ -22,14 +22,18 @@
 namespace pul
 {
 
+	/// ALLOCATOR: SAMD Ring Buffer
 	class allocator_samd_ring_buffer
 	{
 	private:
+		// Type -> Header
 		struct __header_t
 		{
 			diff_t marked : 2;
 			diff_t next : sizeof(diff_t) - 2;
 		};
+
+		// Type -> Buffer
 		struct __buffer_t
 		{
 			/// Constructors
@@ -183,11 +187,18 @@ namespace pul
 				as_header->marked = 1;
 			}
 
+			// Flexible Arrays -> Disable warning
+		#pragma GCC diagnostic push
+		#pragma GCC diagnostic ignored "-Wpedantic"
+
 			/// Store
 			__header_t *head;
 			__header_t *tail;
 			const size_t size;
 			byte_t seq[];
+
+			// Flexible Arrays
+		#pragma GCC diagnostic pop
 		};
 
 		// Buffer -> Create

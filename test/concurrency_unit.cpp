@@ -11,18 +11,191 @@
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
 #include "pulsar/allocator.hpp"
+#include "pulsar/iterable.hpp"
 
 // Include: Pulsar -> Tester
 #include "pulsar_tester/pulsar_tester.hpp"
 
+// Include: MoodyCamel
+#include "concurrentqueue.h"
+
 // Pulsar
 namespace pul
 {
+	// ATOMIC Reference
+	pt_pack(atomic_reference)
+	{
+		// Benchmarks
+		pt_benchmark(zero_test_t1, __bvn, 262144, 1)
+		{
+			size_t k = 0;
+			size_t t = 0;
+			__bvn.measure([&](size_t __index)
+			{
+				auto s										= std::chrono::high_resolution_clock::now();
+				auto b										= __rdtsc();
+				pf_decl_volatile size_t i = __index + 16;
+				auto e										= std::chrono::high_resolution_clock::now() - s;
+				auto h										= __rdtsc() - b;
+				k												 += e.count();
+				t												 += h;
+				return i;
+			});
+			const size_t tavg = t / 262144;
+			const size_t kavg = k / 262144;
+			pf_print("{} ticks = {} ns <=> 1 tick = {} ns\n", tavg, kavg, static_cast<float64_t>(kavg) / tavg);
+		}
+		pt_benchmark(atomic_load_t1, __bvn, 262144, 1)
+		{
+			pf_alignas(64) std::atomic<int32_t> k = 0;
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return k.load(atomic_order::relaxed);
+			});
+		}
+		pt_benchmark(atomic_load_t2, __bvn, 262144, 2)
+		{
+			pf_alignas(64) std::atomic<int32_t> k = 0;
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return k.load(atomic_order::relaxed);
+			});
+		}
+		pt_benchmark(atomic_load_t8, __bvn, 262144, 8)
+		{
+			pf_alignas(64) std::atomic<int32_t> k = 0;
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return k.load(atomic_order::relaxed);
+			});
+		}
+		pt_benchmark(atomic_store_t1, __bvn, 262144, 1)
+		{
+			pf_alignas(64) std::atomic<size_t> k = 0;
+			__bvn.measure([&](size_t __index)
+			{
+				k.store(__index, atomic_order::relaxed);
+				return __index;
+			});
+		}
+		pt_benchmark(atomic_store_t2, __bvn, 262144, 2)
+		{
+			pf_alignas(64) std::atomic<size_t> k = 0;
+			__bvn.measure([&](size_t __index)
+			{
+				k.store(__index, atomic_order::relaxed);
+				return __index;
+			});
+		}
+		pt_benchmark(atomic_store_t8, __bvn, 262144, 8)
+		{
+			pf_alignas(64) std::atomic<size_t> k = 0;
+			__bvn.measure([&](size_t __index)
+			{
+				k.store(__index, atomic_order::relaxed);
+				return __index;
+			});
+		}
+		pt_benchmark(atomic_fetch_add_t1, __bvn, 262144, 1)
+		{
+			pf_alignas(64) std::atomic<size_t> k = 0;
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return k.fetch_add(1, atomic_order::relaxed);
+			});
+		}
+		pt_benchmark(atomic_fetch_add_t2, __bvn, 262144, 2)
+		{
+			pf_alignas(64) std::atomic<size_t> k = 0;
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return k.fetch_add(1, atomic_order::relaxed);
+			});
+		}
+		pt_benchmark(atomic_fetch_add_t8, __bvn, 262144, 8)
+		{
+			pf_alignas(64) std::atomic<size_t> k = 0;
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return k.fetch_add(1, atomic_order::relaxed);
+			});
+		}
+		pt_benchmark(atomic_multi_cas_weak_t1, __bvn, 262144, 1)
+		{
+			pf_alignas(64) std::atomic<size_t> k = 0;
+			__bvn.measure([&](size_t __index)
+			{
+				ignore	 = __index;
+				size_t i = k.load(atomic_order::relaxed);
+				k.compare_exchange_weak(i, i + 1, atomic_order::relaxed, atomic_order::relaxed);
+				return i;
+			});
+		}
+		pt_benchmark(atomic_multi_cas_weak_t2, __bvn, 262144, 2)
+		{
+			union
+			{
+				void *as_void;
+				std::atomic<size_t> *as_size;
+			} store;
+			store.as_void = halloc(64 * 2, align_val_t(64), 0);
+			__bvn.measure([&store](size_t __index)
+			{
+				ignore												= __index;
+				pf_decl_thread_local size_t k = 0;
+				size_t i											= k;
+				do
+				{
+					size_t v = store.as_size[i].load(atomic_order::relaxed);
+					if (store.as_size[i].compare_exchange_weak(v, v + 1, atomic_order::relaxed, atomic_order::relaxed))
+					{
+						k = i;
+						return v;
+					}
+					++i;
+				} while (true);
+			});
+			hfree(store.as_void);
+		}
+		pt_benchmark(atomic_multi_cas_weak_t8, __bvn, 262144, 8)
+		{
+			union
+			{
+				void *as_void;
+				std::atomic<size_t> *as_size;
+			} store;
+			store.as_void = halloc(64 * 2, align_val_t(64), 0);
+			__bvn.measure([&store](size_t __index)
+			{
+				ignore												= __index;
+				pf_decl_thread_local size_t k = 0;
+				size_t i											= k;
+				do
+				{
+					size_t v = store.as_size[i].load(atomic_order::relaxed);
+					if (store.as_size[i].compare_exchange_weak(v, v + 1, atomic_order::relaxed, atomic_order::relaxed))
+					{
+						k = i;
+						return v;
+					}
+					++i;
+				} while (true);
+			});
+			hfree(store.as_void);
+		}
+	}
+
 	// SAMD Ring Allocator
-	pt_pack(samd_ring_allocator)
+	pt_pack(allocator_samd_ring_buffer_pack)
 	{
 		// Unit
-		pt_unit(samd_ring_allocator_test)
+		pt_unit(samd_ring_allocator_unicity)
 		{
 			allocator_samd_ring_buffer all(65536);
 			for (size_t i = 0; i < 128; ++i)
@@ -63,6 +236,7 @@ namespace pul
 			allocator_samd_ring_buffer all(2ull * 262144 * (64 + 8));
 			__bvn.measure([&](size_t __index)
 			{
+				ignore	= __index;
 				void *a = all.allocate(64);
 				all.deallocate(a);
 				return a;
@@ -102,6 +276,7 @@ namespace pul
 		{
 			__bvn.measure([&](size_t __index)
 			{
+				ignore	= __index;
 				void *a = halloc(64);
 				hfree(a);
 				return a;
@@ -111,6 +286,7 @@ namespace pul
 		{
 			__bvn.measure([&](size_t __index)
 			{
+				ignore	= __index;
 				void *a = halloc(64);
 				hfree(a);
 				return a;
@@ -120,6 +296,7 @@ namespace pul
 		{
 			__bvn.measure([&](size_t __index)
 			{
+				ignore	= __index;
 				void *a = halloc(64);
 				hfree(a);
 				return a;
@@ -127,15 +304,160 @@ namespace pul
 		}
 	}
 
-	// MPSC Queue
-	// TODO CAS vs Load + Store using fetch_add
-	// TODO
+	// MPMC Queue
+	pt_pack(mpmc_queue_pack)
+	{
+		pt_benchmark(push_t1, __bvn, 262144, 1)
+		{
+			mpmc_queue<int32_t> queue(262144);
 
-	// SPMC Queue
-	// TODO
+			int32_t *buf = new_construct_array<int32_t>(262144);
+			for (size_t i = 0; i < 262144; ++i)
+			{
+				buf[i] = i;
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				queue.push_front(&buf[__index]);
+				return __index;
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(pop_t1, __bvn, 262144, 1)
+		{
+			mpmc_queue<int32_t> queue(262144);
+
+			int32_t *buf = new_construct_array<int32_t>(262144);
+			for (size_t i = 0; i < 262144; ++i)
+			{
+				buf[i] = i;
+				queue.push_front(&buf[i]);
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_pop_back();
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(pop_t2, __bvn, 262144, 2)
+		{
+			mpmc_queue<int32_t> queue(262144 * 2);
+
+			int32_t *buf = new_construct_array<int32_t>(262144 * 2);
+			for (size_t i = 0; i < 262144 * 2; ++i)
+			{
+				buf[i] = i;
+				queue.push_front(&buf[i]);
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_pop_back();
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(pop_t8, __bvn, 262144, 8)
+		{
+			mpmc_queue<int32_t> queue(262144 * 8);
+
+			int32_t *buf = new_construct_array<int32_t>(262144 * 8);
+			for (size_t i = 0; i < 262144 * 8; ++i)
+			{
+				buf[i] = i;
+				queue.push_front(&buf[i]);
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_pop_back();
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(pop_empty_t8, __bvn, 262144, 8)
+		{
+			mpmc_queue<int32_t> queue(262144 * 8);
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_pop_back();
+			});
+		}
+	}
+
+	// MPSC Concurrent Queue
+	pt_pack(mpmc_concurrent_queue)
+	{
+		pt_benchmark(moodycamel_pop_t1, __bvn, 262144, 1)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			for (size_t i = 0; i < 262144; ++i)
+			{
+				q.enqueue(i);
+			}
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				size_t s;
+				q.try_dequeue(s);
+				return s;
+			});
+		}
+		pt_benchmark(moodycamel_pop_t2, __bvn, 262144, 2)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			for (size_t i = 0; i < 262144 * 2; ++i)
+			{
+				q.enqueue(i);
+			}
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				size_t s;
+				q.try_dequeue(s);
+				return s;
+			});
+		}
+		pt_benchmark(moodycamel_pop_t8, __bvn, 262144, 8)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			for (size_t i = 0; i < 262144 * 8; ++i)
+			{
+				q.enqueue(i);
+			}
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				size_t s;
+				q.try_dequeue(s);
+				return s;
+			});
+		}
+		pt_benchmark(moodycamel_pop_empty_t8, __bvn, 262144, 8)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				size_t s;
+				q.try_dequeue(s);
+				return s;
+			});
+		}
+	}
 
 	// MPSC Unbuffered Queue
-	// TODO
+	pt_pack(mpmc_queue_unbuffered_pack)
+	{
 
+	}
 
 }

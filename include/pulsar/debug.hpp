@@ -559,7 +559,7 @@ namespace dbg_flags
 
 	/// DEBUG: Format -> Functions
 	template <typename ..._Args>
-	pf_hint_nodiscard pf_decl_inline char_t*
+	pf_decl_inline char_t*
 	dbg_u8format_to(
 		char_t *__to,
 		dbg_u8string_format<_Args...> __fmt,

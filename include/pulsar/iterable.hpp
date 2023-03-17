@@ -16,10 +16,12 @@
 #include "pulsar/memory.hpp"
 #include "pulsar/iterator.hpp"
 #include "pulsar/allocator.hpp"
+#include "pulsar/algorithm.hpp"
 
 // Include: Pulsar -> Iterable
 #include "pulsar/iterable/array.hpp"
 #include "pulsar/iterable/sequence.hpp"
-#include "pulsar/iterable/list.hpp"
+
+#include "pulsar/iterable/mpmc_queue.hpp"
 
 #endif // !PULSAR_CONTAINER_HPP

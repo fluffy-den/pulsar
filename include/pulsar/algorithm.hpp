@@ -430,18 +430,6 @@ namespace pul
 		}
 		return c;
 	}
-	template <typename _Ty>
-	pf_hint_nodiscard pf_decl_constexpr size_t
-	countof(
-		const _Ty *__beg,
-		const _Ty *__end) pf_attr_noexcept
-	{
-		if (pf_likely(__end >= __beg))
-		{
-			return (union_cast<size_t>(__end) - union_cast<size_t>(__beg)) / sizeof(_Ty);
-		}
-		return (union_cast<size_t>(__beg) - union_cast<size_t>(__end)) / sizeof(_Ty);
-	}
 	template <typename _IteratorIn>
 	pf_hint_nodiscard pf_decl_constexpr size_t
 	countof(

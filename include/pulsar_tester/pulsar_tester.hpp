@@ -227,7 +227,7 @@ namespace pul
     __tester_benchmark *benchTail_;
     size_t numTests_;
 		size_t numFailed_;
-	};
+	};    
 
 	/// TESTER: Engine
 	// Type

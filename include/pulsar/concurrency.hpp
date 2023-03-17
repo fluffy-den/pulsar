@@ -24,6 +24,11 @@
 // Pulsar
 namespace pul
 {
+	/// CONCURRENCY: Constants
+	pf_decl_static pf_decl_inline size_t CCY_NUM_THREADS = std::thread::hardware_concurrency();
+	pf_decl_static pf_decl_inline size_t CCY_NUM_WORKERS = CCY_NUM_THREADS - 1;
+	pf_decl_constexpr align_val_t CCY_ALIGN							 = align_val_t(64);
+
 	/// CONCURRENCY: Atomic
 	template <typename _Ty>
 	using atomic			 = std::atomic<_Ty>;

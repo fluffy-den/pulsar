@@ -69,13 +69,19 @@ namespace pul
 	}
 
 	/// MEMORY: Utility -> Array Type
+	// Flexible Arrays -> Disable warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
 	template <typename _Ty>
 	struct memory_array
 	{
 		size_t count;
-		_Ty data[];	// TODO -WPedentic to ignore
+		_Ty data[];
 	};
 	using memory_array_t = memory_array<byte_t>;
+
+	// Flexible Arrays
+#pragma GCC diagnostic pop
 
 	/// MEMORY: Utility -> Construct
 	template<typename _Ty, typename ... _Args>
@@ -119,7 +125,7 @@ namespace pul
 					 && is_iterator_v<_IteratorIn>
 					 && std::is_convertible_v<typename _IteratorIn::value_t, typename _Iterator::value_t>)
 	{
-		for (; __ab != __ae; ++__bb) construct(__ab.get(), *__bb);
+		for (; __ab != __ae; ++__ab, ++__bb) construct(__ab.get(), *__bb);
 	}
 
 
@@ -177,13 +183,13 @@ namespace pul
 	{
 		union
 		{
-			memory_array_t *as_array;
+			memory_array<_Ty> *as_array;
 			_Ty *as_type;
-			size_t *as_size;
 		};
 		as_type = __ptr;
-		--as_size;
-		destroy(as_array);
+		--as_array;
+		destroy(iterator(&as_array->data[0]),
+						iterator(&as_array->data[0] + as_array->count));
 	}
 
 
@@ -380,14 +386,14 @@ namespace pul
 	{
 		union
 		{
-			memory_array_t *as_array;
+			memory_array<_Ty> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<memory_array_t*>(
+		as_array = union_cast<memory_array<_Ty>*>(
 			halloc(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count));
-		return union_cast<_Ty*>(&as_array->data[0]);
+		return &as_array->data[0];
 	}
 	template <typename _Ty>
 	pf_decl_inline pf_decl_constexpr _Ty*
@@ -418,14 +424,14 @@ namespace pul
 	{
 		union
 		{
-			memory_array_t *as_array;
+			memory_array<_Ty> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<memory_array_t*>(
+		as_array = union_cast<memory_array<_Ty>*>(
 			halloc(__all, sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count));
-		return union_cast<_Ty*>(&as_array->data[0]);
+		return &as_array->data[0];
 	}
 	template <typename _Ty, typename _Allocator>
 	pf_decl_inline pf_decl_constexpr _Ty*
@@ -460,14 +466,14 @@ namespace pul
 	{
 		union
 		{
-			memory_array_t *as_array;
+			memory_array<_Ty> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<memory_array_t*>(
+		as_array = union_cast<memory_array<_Ty>*>(
 			halloc(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count), __val);
-		return union_cast<_Ty*>(&as_array->data[0]);
+		return &as_array->data[0];
 	}
 	template <typename _Ty>
 	pf_decl_inline pf_decl_constexpr _Ty*
@@ -502,14 +508,14 @@ namespace pul
 	{
 		union
 		{
-			memory_array_t *as_array;
+			memory_array<_Ty> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<memory_array_t*>(
+		as_array = union_cast<memory_array<_Ty>*>(
 			halloc(__all, sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count), __val);
-		return union_cast<_Ty*>(&as_array->data[0]);
+		return &as_array->data[0];
 	}
 	template <typename _Ty, typename _Allocator>
 	pf_decl_inline pf_decl_constexpr _Ty*
@@ -547,14 +553,14 @@ namespace pul
 		const size_t c = countof(__beg, __end);
 		union
 		{
-			memory_array_t *as_array;
+			memory_array<typename _IteratorIn::value_t> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<memory_array_t*>(
+		as_array = union_cast<memory_array<typename _IteratorIn::value_t>*>(
 			halloc(sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
 		as_array->count = c;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + c), __beg);
-		return union_cast<typename _IteratorIn::value_t*>(&as_array->data[0]);
+		return &as_array->data[0];
 	}
 	template <typename _IteratorIn>
 	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t*
@@ -597,13 +603,14 @@ namespace pul
 		const size_t c = countof(__beg, __end);
 		union
 		{
-			memory_array_t *as_array;
+			memory_array<typename _IteratorIn::value_t> *as_array;
 			size_t *as_size;
 		};
-		as_array				= union_cast<memory_array_t*>(halloc(__all, sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
+		as_array = union_cast<memory_array<typename _IteratorIn::value_t>*>(
+			halloc(__all, sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
 		as_array->count = c;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + c), __beg);
-		return union_cast<typename _IteratorIn::value_t*>(&as_array->data[0]);
+		return &as_array->data[0];
 	}
 	template <typename _IteratorIn, typename _Allocator>
 	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t*
@@ -646,8 +653,9 @@ namespace pul
 	destroy_delete_array(
 		_Ty *__ptr) pf_attr_noexcept
 	{
-		destroy_array(__ptr--);
-		hfree(__ptr);
+		destroy_array(__ptr);
+		memory_array<_Ty> *as_array = union_cast<memory_array<_Ty>*>(__ptr);
+		hfree(--as_array);
 	}
 	template<typename _Ty, typename _Allocator>
 	pf_decl_inline pf_decl_constexpr void
@@ -656,8 +664,9 @@ namespace pul
 		_Ty *__ptr) pf_attr_noexcept
 	requires(is_allocator_v<_Allocator>)
 	{
-		destroy_array(__ptr--);
-		deallocate(__all, __ptr);
+		destroy_array(__ptr);
+		memory_array<_Ty> *as_array = union_cast<memory_array<_Ty>*>(__ptr);
+		deallocate(__all, --as_array);
 	}
 
 }
