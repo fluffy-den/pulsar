@@ -22,6 +22,59 @@
 // Pulsar
 namespace pul
 {
+	// MPSC Singly Lifo
+	pt_pack(mpsc_singly_lifo_pack)
+	{
+		pt_benchmark(push_lifo_t1, __bvn, 65536, 1)
+		{
+			mpsc_singly_lifo<size_t> msl;
+			mpsc_singly_lifo<size_t>::node_t *nodes = new_construct_array<mpsc_singly_lifo<size_t>::node_t>(65536);
+			__bvn.measure([&](size_t __index)
+			{
+				return msl.insert_tail(&nodes[__index]);
+			});
+			destroy_delete_array(nodes);
+		}
+		pt_benchmark(push_lifo_t2, __bvn, 65536, 2)
+		{
+			mpsc_singly_lifo<size_t> msl;
+			mpsc_singly_lifo<size_t>::node_t *nodes = new_construct_array<mpsc_singly_lifo<size_t>::node_t>(65536 * 2);
+			__bvn.measure([&](size_t __index)
+			{
+				return msl.insert_tail(&nodes[__index]);
+			});
+			destroy_delete_array(nodes);
+		}
+		pt_benchmark(push_lifo_t4, __bvn, 65536, 4)
+		{
+			mpsc_singly_lifo<size_t> msl;
+			mpsc_singly_lifo<size_t>::node_t *nodes = new_construct_array<mpsc_singly_lifo<size_t>::node_t>(65536 * 4);
+			__bvn.measure([&](size_t __index)
+			{
+				return msl.insert_tail(&nodes[__index]);
+			});
+			destroy_delete_array(nodes);
+		}
+		pt_benchmark(push_lifo_t8, __bvn, 65536, 8)
+		{
+			mpsc_singly_lifo<size_t> msl;
+			mpsc_singly_lifo<size_t>::node_t *nodes = new_construct_array<mpsc_singly_lifo<size_t>::node_t>(65536 * 8);
+			__bvn.measure([&](size_t __index)
+			{
+				return msl.insert_tail(&nodes[__index]);
+			});
+			destroy_delete_array(nodes);
+		}
+		pt_benchmark(pop_empty_lifo_t8, __bvn, 65536, 8)
+		{
+			mpsc_singly_lifo<size_t> msl;
+			__bvn.measure([&](size_t __index)
+			{
+				return msl.remove_head();
+			});
+		}
+	}
+
 	// MPMC Queue
 	pt_pack(mpmc_queue_pack)
 	{
@@ -312,12 +365,6 @@ namespace pul
 				return s;
 			});
 		}
-	}
-
-	// MPSC Unbuffered Queue
-	pt_pack(mpmc_singly_linked_pack)
-	{
-		// TODO
 	}
 
 	// Atomic

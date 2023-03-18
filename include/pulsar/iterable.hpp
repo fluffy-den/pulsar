@@ -22,6 +22,6 @@
 #include "pulsar/iterable/array.hpp"
 #include "pulsar/iterable/sequence.hpp"
 #include "pulsar/iterable/mpmc_queue.hpp"
-#include "pulsar/iterable/mpsc_singly_list.hpp"
+#include "pulsar/iterable/mpsc_singly_lifo.hpp"
 
 #endif // !PULSAR_CONTAINER_HPP

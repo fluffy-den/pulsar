@@ -267,7 +267,9 @@ namespace pul
 			/// Constructors
 			__buffer_t(
 				size_t __seqcount) pf_attr_noexcept
-				: seqcount(__seqcount)
+				: writeCounter(0)
+				, readCounter(0)
+				, seqcount(__seqcount)
 			{
 				pf_assert(this->seqcount > CCY_NUM_THREADS * 64, "seqcount_ must be greater than {}. seqcount_={}", CCY_NUM_THREADS * 64,  this->seqcount);
 				pf_assert(is_power_of_two(this->seqcount), "seqcount_ must be a power of two!");
@@ -318,28 +320,27 @@ namespace pul
 			__try_enqueue(
 				_Ty *__ptr) pf_attr_noexcept
 			{
-				const size_t locallast = this->lastwrite;
-				size_t k							 = locallast;
+				size_t i = 0;
+				size_t k = this->writeCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
 				do
 				{
 					__header_t *c = this->__get_header(k);
 					size_t h			= c->head.load(atomic_order::relaxed);
 					size_t t			= c->tail.load(atomic_order::acquire);
 					if (t == h - 1
-							|| !c->tail.compare_exchange_strong(
+							|| !c->tail.compare_exchange_weak(
 								t, t + 1, atomic_order::release, atomic_order::relaxed))
 					{
-						++k;
-						if (k > CCY_NUM_THREADS) k = 0;
+						k = this->writeCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
+						++i;
 					}
 					else
 					{
 						std::atomic_thread_fence(atomic_order::relaxed);
-						if (k != locallast) this->lastwrite = k;// tls has slower writing
 						this->__get_list(k)[t % this->seqcount] = __ptr;
 						return true;
 					}
-				} while (k != locallast);
+				} while (i != CCY_NUM_THREADS);
 				return false;
 			}
 
@@ -347,27 +348,26 @@ namespace pul
 			pf_hint_nodiscard _Ty*
 			__try_dequeue() pf_attr_noexcept
 			{
-				const size_t locallast = this->lastread;
-				size_t k							 = locallast;
+				size_t i = 0;
+				size_t k = this->readCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
 				do
 				{
 					__header_t *c = this->__get_header(k);
 					size_t h			= c->head.load(atomic_order::acquire);
 					size_t t			= c->tail.load(atomic_order::relaxed);
 					if (h == t
-							|| !c->head.compare_exchange_strong(
+							|| !c->head.compare_exchange_weak(
 								h, h + 1, atomic_order::release, atomic_order::relaxed))
 					{
-						++k;
-						if (pf_unlikely(k > CCY_NUM_THREADS)) k = 0;
+						size_t k = this->readCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
+						++i;
 					}
 					else
 					{
 						std::atomic_thread_fence(atomic_order::relaxed);
-						if (k != locallast) this->lastread = k;	// tls has slower writing
 						return this->__get_list(k)[h % this->seqcount];
 					}
-				} while (k != locallast);
+				} while (i != CCY_NUM_THREADS);
 				return nullptr;
 			}
 
@@ -390,8 +390,8 @@ namespace pul
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 
-			pf_decl_static pf_decl_inline pf_decl_thread_local size_t lastwrite = 0;
-			pf_decl_static pf_decl_inline pf_decl_thread_local size_t lastread	= 0;
+			pf_alignas(CCY_ALIGN) atomic<size_t> writeCounter;
+			pf_alignas(CCY_ALIGN) atomic<size_t> readCounter;
 			const size_t seqcount;
 			pf_alignas(CCY_ALIGN) byte_t store[];
 
