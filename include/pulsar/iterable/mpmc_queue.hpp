@@ -40,7 +40,7 @@ namespace pul
 				, maxcount(__maxcount)
 				, seqcount(__maxcount / CCY_NUM_THREADS)
 			{
-				pf_assert(this->maxcount > 1024, "maxcount_ must be greater than 1024. maxcount_={}", this->maxcount);
+				pf_assert(this->maxcount > CCY_NUM_THREADS * 64, "maxcount_ must be greater than {}. maxcount_={}", CCY_NUM_THREADS * 64,  this->maxcount);
 				pf_assert(is_power_of_two(this->maxcount), "maxcount_ must be a power of two!");
 			}
 			__buffer_t(__buffer_t const &) = delete;
@@ -60,62 +60,56 @@ namespace pul
 				return (__index % CCY_NUM_THREADS) * this->seqcount + (__index / CCY_NUM_THREADS);
 			}
 
-			/// Push
-			bool __try_push(
+			/// enqueue
+			bool __try_enqueue(
 				_Ty *__p) pf_attr_noexcept
 			{
 				// Initialisation
-				size_t h = this->head.load(atomic_order::acquire) % this->maxcount;
-				size_t t = this->tail.load(atomic_order::acquire) % this->maxcount;
-				size_t c = writers.fetch_add(1, atomic_order::acq_rel);
+				size_t h = this->head.load(atomic_order::relaxed) % this->maxcount;
+				size_t t = this->tail.load(atomic_order::relaxed) % this->maxcount;
+				size_t c = writers.fetch_add(1, atomic_order::relaxed);
 
 				// Verify
 				size_t d			 = h <= t ? d = this->maxcount - h + t : t - h;
 				const size_t n = c + 1;
 				if ((t + n % this->maxcount) > d)
 				{
-					this->writers.fetch_sub(1, atomic_order::release);
+					this->writers.fetch_sub(1, atomic_order::relaxed);
 					return false;
 				}
 
 				// Add
-				t = this->tail.fetch_add(1, atomic_order::acq_rel);
-				this->writers.fetch_sub(1, atomic_order::release);
+				t = this->tail.fetch_add(1, atomic_order::relaxed);
+				this->writers.fetch_sub(1, atomic_order::relaxed);
 				t									= this->__shuffle(t);
 				this->elements[t] = __p;
 				return false;
 			}
-			void __push(
+			void __enqueue(
 				_Ty *__p)
 			{
 				// Add
-				size_t t = this->tail.fetch_add(1, atomic_order::acq_rel);
+				size_t t = this->tail.fetch_add(1, atomic_order::relaxed);
 				this->elements[this->__shuffle(t)] = __p;
 			}
 
-			/// Pop
+			/// dequeue
 			pf_hint_nodiscard _Ty*
-			__try_pop() pf_attr_noexcept
+			__try_dequeue() pf_attr_noexcept
 			{
-				size_t h = this->head.load(atomic_order::acquire) % this->maxcount;
-				size_t t = this->tail.load(atomic_order::acquire) % this->maxcount;
-				if (pf_unlikely(h == t)) return nullptr;
-				size_t c = readers.fetch_add(1, atomic_order::acquire);
+				size_t h = this->head.load(atomic_order::relaxed) % this->maxcount;
+				size_t t = this->tail.load(atomic_order::relaxed) % this->maxcount;
+				if (h == t) return nullptr;
+				size_t c = readers.fetch_add(1, atomic_order::relaxed);
 
 				// Verify
-				size_t d			 = h <= t ? t - h : d = this->maxcount - h + t;
-				const size_t n = c + 1;
-				if ((t + n % this->maxcount) > d)
-				{
-					this->writers.fetch_sub(1, atomic_order::release);
-					return nullptr;
-				}
+				// TODO
 
 				// Add
-				t = this->head.fetch_add(1, atomic_order::acq_rel);
-				this->readers.fetch_sub(1, atomic_order::release);
-				t = this->__shuffle(t);
-				return this->elements[t];
+				h = this->head.fetch_add(1, atomic_order::relaxed);
+				this->readers.fetch_sub(1, atomic_order::relaxed);
+				h = this->__shuffle(h);
+				return this->elements[h];
 			}
 
 			/// Store
@@ -151,11 +145,11 @@ namespace pul
 		{}
 		mpmc_queue(mpmc_queue<_Ty> const &__r)
 		{
-
+			// TODO
 		}
 		mpmc_queue(mpmc_queue<_Ty> && __r)
 		{
-
+			// TODO
 		}
 
 		/// Destructor
@@ -168,35 +162,236 @@ namespace pul
 		mpmc_queue<_Ty> &operator=(
 			mpmc_queue<_Ty> const &__r) pf_attr_noexcept
 		{
-
+			// TODO
 		}
 		mpmc_queue<_Ty> &operator=(
 			mpmc_queue<_Ty> &&__r) pf_attr_noexcept
 		{
-
+			// TODO
 		}
 
-		/// Push
-		bool try_push_front(
+		/// enqueue
+		bool try_enqueue(
 			_Ty *__p) pf_attr_noexcept
 		{
-			return this->buf_->__try_push(__p);
+			return this->buf_->__try_enqueue(__p);
 		}
-		void push_front(
+		void enqueue(
 			_Ty *__p) pf_attr_noexcept
 		{
-			return this->buf_->__push(__p);
+			return this->buf_->__enqueue(__p);
 		}
 
-		/// Pop
+		/// dequeue
 		pf_hint_nodiscard _Ty*
-		try_pop_back() pf_attr_noexcept
+		try_dequeue() pf_attr_noexcept
 		{
-			return this->buf_->__try_pop();
+			return this->buf_->__try_dequeue();
 		}
 
 	private:
 		// Store
+		__buffer_t *buf_;
+	};
+
+	/// QUEUE: MPMC 2 (Multi-CAS)
+	template <typename _Ty>
+	class mpmc_queue2
+	{
+	private:
+		/// Type -> Header
+		struct __header_t
+		{
+			/// Constructors
+			__header_t() pf_attr_noexcept
+				: head(0)
+				, tail(0)
+			{}
+			__header_t(__header_t const &) = delete;
+			__header_t(__header_t &&)			 = delete;
+
+			/// Destructor
+			~__header_t() pf_attr_noexcept = default;
+
+			/// Operator =
+			__header_t &operator=(__header_t const &) = delete;
+			__header_t &operator=(__header_t &&)			= delete;
+
+			/// Store
+			pf_alignas(CCY_ALIGN) atomic<size_t> head;
+			pf_alignas(CCY_ALIGN) atomic<size_t> tail;
+		};
+
+		// [b ][H1][H2][..][HN][L1][L2][..][LN]
+
+		/// Type -> Buffer
+		struct __buffer_t
+		{
+			/// Constructors
+			__buffer_t(
+				size_t __seqcount) pf_attr_noexcept
+				: seqcount(__seqcount)
+			{
+				pf_assert(this->seqcount > CCY_NUM_THREADS * 64, "seqcount_ must be greater than {}. seqcount_={}", CCY_NUM_THREADS * 64,  this->seqcount);
+				pf_assert(is_power_of_two(this->seqcount), "seqcount_ must be a power of two!");
+
+				// Construct lists
+				for (size_t i = 0; i < CCY_NUM_THREADS; ++i)
+				{
+					construct(this->__get_list(i));
+				}
+			}
+			__buffer_t(__buffer_t const &) = delete;
+			__buffer_t(__buffer_t &&)			 = delete;
+
+			/// Destructor
+			~__buffer_t() pf_attr_noexcept
+			{
+				// Destroy lists
+				for (size_t i = 0; i < CCY_NUM_THREADS; ++i)
+				{
+					destroy(this->__get_list(i));
+				}
+			}
+
+			/// Operator =
+			__buffer_t &operator=(__buffer_t const &) = delete;
+			__buffer_t &operator=(__buffer_t &&)			= delete;
+
+			/// Get Header
+			pf_hint_nodiscard pf_decl_inline __header_t*
+			__get_header(
+				size_t __k) pf_attr_noexcept
+			{
+				return union_cast<__header_t*>(
+					&this->store[0] + __k * sizeof(__header_t));
+			}
+
+			/// Get list
+			pf_hint_nodiscard pf_decl_inline _Ty**
+			__get_list(
+				size_t __k) pf_attr_noexcept
+			{
+				return union_cast<_Ty**>(
+					&this->store[0] + CCY_NUM_THREADS * sizeof(__header_t) + __k * this->seqcount * sizeof(_Ty*));
+			}
+
+			/// Enqueue
+			bool
+			__try_enqueue(
+				_Ty *__ptr) pf_attr_noexcept
+			{
+				const size_t locallast = this->lastwrite;
+				size_t k							 = locallast;
+				do
+				{
+					__header_t *c = this->__get_header(k);
+					size_t h			= c->head.load(atomic_order::relaxed);
+					size_t t			= c->tail.load(atomic_order::acquire);
+					if (t == h - 1
+							|| !c->tail.compare_exchange_strong(
+								t, t + 1, atomic_order::release, atomic_order::relaxed))
+					{
+						++k;
+						if (k > CCY_NUM_THREADS) k = 0;
+					}
+					else
+					{
+						std::atomic_thread_fence(atomic_order::relaxed);
+						if (k != locallast) this->lastwrite = k;// tls has slower writing
+						this->__get_list(k)[t % this->seqcount] = __ptr;
+						return true;
+					}
+				} while (k != locallast);
+				return false;
+			}
+
+			/// Dequeue
+			pf_hint_nodiscard _Ty*
+			__try_dequeue() pf_attr_noexcept
+			{
+				const size_t locallast = this->lastread;
+				size_t k							 = locallast;
+				do
+				{
+					__header_t *c = this->__get_header(k);
+					size_t h			= c->head.load(atomic_order::acquire);
+					size_t t			= c->tail.load(atomic_order::relaxed);
+					if (h == t
+							|| !c->head.compare_exchange_strong(
+								h, h + 1, atomic_order::release, atomic_order::relaxed))
+					{
+						++k;
+						if (pf_unlikely(k > CCY_NUM_THREADS)) k = 0;
+					}
+					else
+					{
+						std::atomic_thread_fence(atomic_order::relaxed);
+						if (k != locallast) this->lastread = k;	// tls has slower writing
+						return this->__get_list(k)[h % this->seqcount];
+					}
+				} while (k != locallast);
+				return nullptr;
+			}
+
+			/// Store
+			pf_decl_static pf_decl_inline pf_decl_thread_local size_t lastwrite = 0;
+			pf_decl_static pf_decl_inline pf_decl_thread_local size_t lastread	= 0;
+			const size_t seqcount;
+			byte_t store[];
+		};
+
+		/// Buffer -> New
+		pf_hint_nodiscard __buffer_t*
+		__new_buffer(
+			size_t __seqcount) pf_attr_noexcept
+		{
+			return new_construct_ex<__buffer_t>(sizeof(__buffer_t) + CCY_NUM_THREADS * (sizeof(__header_t) + __seqcount * sizeof(_Ty*)), __seqcount);
+		}
+
+		/// Buffer -> Delete
+		void
+		__delete_buffer(
+			__buffer_t *__buffer) pf_attr_noexcept
+		{
+			destroy_delete(__buffer);
+		}
+
+	public:
+		/// Constructors
+		mpmc_queue2(
+			size_t __seqcount)
+			: buf_(this->__new_buffer(__seqcount))
+		{}
+		// TODO
+
+		/// Operator =
+		// TODO
+
+		/// Destructor
+		~mpmc_queue2() pf_attr_noexcept
+		{
+			this->__delete_buffer(this->buf_);
+		}
+
+		/// Enqueue
+		bool
+		try_enqueue(
+			_Ty *__ptr) pf_attr_noexcept
+		{
+			return this->buf_->__try_enqueue(__ptr);
+		}
+
+		/// Dequeue
+		pf_hint_nodiscard _Ty*
+		try_dequeue() pf_attr_noexcept
+		{
+			return this->buf_->__try_dequeue();
+		}
+
+
+	private:
+		/// Store
 		__buffer_t *buf_;
 	};
 }

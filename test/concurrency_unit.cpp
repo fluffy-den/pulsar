@@ -22,8 +22,253 @@
 // Pulsar
 namespace pul
 {
-	// ATOMIC Reference
-	pt_pack(atomic_reference)
+	// MPMC Queue
+	pt_pack(mpmc_queue_pack)
+	{
+		pt_benchmark(push_t1, __bvn, 65536, 1)
+		{
+			mpmc_queue<int32_t> queue(65536 * 2);
+
+			int32_t *buf = new_construct_array<int32_t>(65536);
+			for (size_t i = 0; i < 65536; ++i)
+			{
+				buf[i] = i;
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				queue.enqueue(&buf[__index]);
+				return __index;
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(pop_t1, __bvn, 262144, 1)
+		{
+			mpmc_queue<int32_t> queue(262144 * 2);
+
+			int32_t *buf = new_construct_array<int32_t>(262144);
+			for (size_t i = 0; i < 262144; ++i)
+			{
+				buf[i] = i;
+				queue.enqueue(&buf[i]);
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_dequeue();
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(pop_t2, __bvn, 262144, 2)
+		{
+			mpmc_queue<int32_t> queue(262144 * 4);
+
+			int32_t *buf = new_construct_array<int32_t>(262144 * 2);
+			for (size_t i = 0; i < 262144 * 2; ++i)
+			{
+				buf[i] = i;
+				queue.enqueue(&buf[i]);
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_dequeue();
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(pop_t8, __bvn, 262144, 8)
+		{
+			mpmc_queue<int32_t> queue(262144 * 16);
+
+			int32_t *buf = new_construct_array<int32_t>(262144 * 8 + 1);
+			for (size_t i = 0; i < 262144 * 8; ++i)
+			{
+				buf[i] = i;
+				queue.enqueue(&buf[i]);
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_dequeue();
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(pop_empty_t8, __bvn, 262144, 8)
+		{
+			mpmc_queue<int32_t> queue(262144 * 8);
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_dequeue();
+			});
+		}
+	}
+
+	// MPMC Queue2
+	pt_pack(mpmc_queue2_pack)
+	{
+		pt_benchmark(push2_t1, __bvn, 65536, 1)
+		{
+			mpmc_queue2<int32_t> queue(65536 * 2);
+
+			int32_t *buf = new_construct_array<int32_t>(65536);
+			for (size_t i = 0; i < 65536; ++i)
+			{
+				buf[i] = i;
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				queue.try_enqueue(&buf[__index]);
+				return __index;
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(pop2_t1, __bvn, 262144, 1)
+		{
+			mpmc_queue2<int32_t> queue(262144 * 2);
+
+			int32_t *buf = new_construct_array<int32_t>(262144);
+			for (size_t i = 0; i < 262144; ++i)
+			{
+				buf[i] = i;
+				queue.try_enqueue(&buf[i]);
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_dequeue();
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(pop2_t2, __bvn, 262144, 2)
+		{
+			mpmc_queue2<int32_t> queue(262144 * 4);
+
+			int32_t *buf = new_construct_array<int32_t>(262144 * 2);
+			for (size_t i = 0; i < 262144 * 2; ++i)
+			{
+				buf[i] = i;
+				queue.try_enqueue(&buf[i]);
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_dequeue();
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(pop2_t8, __bvn, 262144, 8)
+		{
+			mpmc_queue2<int32_t> queue(262144 * 16);
+
+			int32_t *buf = new_construct_array<int32_t>(262144 * 8 + 1);
+			for (size_t i = 0; i < 262144 * 8; ++i)
+			{
+				buf[i] = i;
+				queue.try_enqueue(&buf[i]);
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_dequeue();
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(pop2_empty_t8, __bvn, 262144, 8)
+		{
+			mpmc_queue2<int32_t> queue(262144 * 8);
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_dequeue();
+			});
+		}
+	}
+
+	// MPSC Concurrent Queue
+	pt_pack(moodycamel_queue)
+	{
+		pt_benchmark(moodycamel_pop_t1, __bvn, 262144, 1)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			for (size_t i = 0; i < 262144; ++i)
+			{
+				q.enqueue(i);
+			}
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				size_t s;
+				q.try_dequeue(s);
+				return s;
+			});
+		}
+		pt_benchmark(moodycamel_pop_t2, __bvn, 262144, 2)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			for (size_t i = 0; i < 262144 * 2; ++i)
+			{
+				q.enqueue(i);
+			}
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				size_t s;
+				q.try_dequeue(s);
+				return s;
+			});
+		}
+		pt_benchmark(moodycamel_pop_t8, __bvn, 262144, 8)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			for (size_t i = 0; i < 262144 * 8; ++i)
+			{
+				q.enqueue(i);
+			}
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				size_t s;
+				q.try_dequeue(s);
+				return s;
+			});
+		}
+		pt_benchmark(moodycamel_pop_empty_t8, __bvn, 262144, 8)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				size_t s;
+				q.try_dequeue(s);
+				return s;
+			});
+		}
+	}
+
+	// MPSC Unbuffered Queue
+	pt_pack(mpmc_singly_linked_pack)
+	{
+		// TODO
+	}
+
+	// Atomic
+	pt_pack(atomic_pack)
 	{
 		// Benchmarks
 		pt_benchmark(zero_test_t1, __bvn, 262144, 1)
@@ -302,162 +547,6 @@ namespace pul
 				return a;
 			});
 		}
-	}
-
-	// MPMC Queue
-	pt_pack(mpmc_queue_pack)
-	{
-		pt_benchmark(push_t1, __bvn, 262144, 1)
-		{
-			mpmc_queue<int32_t> queue(262144);
-
-			int32_t *buf = new_construct_array<int32_t>(262144);
-			for (size_t i = 0; i < 262144; ++i)
-			{
-				buf[i] = i;
-			}
-
-			__bvn.measure([&](size_t __index)
-			{
-				queue.push_front(&buf[__index]);
-				return __index;
-			});
-
-			destroy_delete_array(buf);
-		}
-		pt_benchmark(pop_t1, __bvn, 262144, 1)
-		{
-			mpmc_queue<int32_t> queue(262144);
-
-			int32_t *buf = new_construct_array<int32_t>(262144);
-			for (size_t i = 0; i < 262144; ++i)
-			{
-				buf[i] = i;
-				queue.push_front(&buf[i]);
-			}
-
-			__bvn.measure([&](size_t __index)
-			{
-				ignore = __index;
-				return queue.try_pop_back();
-			});
-
-			destroy_delete_array(buf);
-		}
-		pt_benchmark(pop_t2, __bvn, 262144, 2)
-		{
-			mpmc_queue<int32_t> queue(262144 * 2);
-
-			int32_t *buf = new_construct_array<int32_t>(262144 * 2);
-			for (size_t i = 0; i < 262144 * 2; ++i)
-			{
-				buf[i] = i;
-				queue.push_front(&buf[i]);
-			}
-
-			__bvn.measure([&](size_t __index)
-			{
-				ignore = __index;
-				return queue.try_pop_back();
-			});
-
-			destroy_delete_array(buf);
-		}
-		pt_benchmark(pop_t8, __bvn, 262144, 8)
-		{
-			mpmc_queue<int32_t> queue(262144 * 8);
-
-			int32_t *buf = new_construct_array<int32_t>(262144 * 8);
-			for (size_t i = 0; i < 262144 * 8; ++i)
-			{
-				buf[i] = i;
-				queue.push_front(&buf[i]);
-			}
-
-			__bvn.measure([&](size_t __index)
-			{
-				ignore = __index;
-				return queue.try_pop_back();
-			});
-
-			destroy_delete_array(buf);
-		}
-		pt_benchmark(pop_empty_t8, __bvn, 262144, 8)
-		{
-			mpmc_queue<int32_t> queue(262144 * 8);
-			__bvn.measure([&](size_t __index)
-			{
-				ignore = __index;
-				return queue.try_pop_back();
-			});
-		}
-	}
-
-	// MPSC Concurrent Queue
-	pt_pack(mpmc_concurrent_queue)
-	{
-		pt_benchmark(moodycamel_pop_t1, __bvn, 262144, 1)
-		{
-			moodycamel::ConcurrentQueue<size_t> q;
-			for (size_t i = 0; i < 262144; ++i)
-			{
-				q.enqueue(i);
-			}
-			__bvn.measure([&](size_t __index)
-			{
-				ignore = __index;
-				size_t s;
-				q.try_dequeue(s);
-				return s;
-			});
-		}
-		pt_benchmark(moodycamel_pop_t2, __bvn, 262144, 2)
-		{
-			moodycamel::ConcurrentQueue<size_t> q;
-			for (size_t i = 0; i < 262144 * 2; ++i)
-			{
-				q.enqueue(i);
-			}
-			__bvn.measure([&](size_t __index)
-			{
-				ignore = __index;
-				size_t s;
-				q.try_dequeue(s);
-				return s;
-			});
-		}
-		pt_benchmark(moodycamel_pop_t8, __bvn, 262144, 8)
-		{
-			moodycamel::ConcurrentQueue<size_t> q;
-			for (size_t i = 0; i < 262144 * 8; ++i)
-			{
-				q.enqueue(i);
-			}
-			__bvn.measure([&](size_t __index)
-			{
-				ignore = __index;
-				size_t s;
-				q.try_dequeue(s);
-				return s;
-			});
-		}
-		pt_benchmark(moodycamel_pop_empty_t8, __bvn, 262144, 8)
-		{
-			moodycamel::ConcurrentQueue<size_t> q;
-			__bvn.measure([&](size_t __index)
-			{
-				ignore = __index;
-				size_t s;
-				q.try_dequeue(s);
-				return s;
-			});
-		}
-	}
-
-	// MPSC Unbuffered Queue
-	pt_pack(mpmc_queue_unbuffered_pack)
-	{
-
 	}
 
 }
