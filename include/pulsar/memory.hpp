@@ -69,19 +69,20 @@ namespace pul
 	}
 
 	/// MEMORY: Utility -> Array Type
-	// Flexible Arrays -> Disable warning
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
 	template <typename _Ty>
 	struct memory_array
 	{
+		// Flexible Arrays -> Disable warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 		size_t count;
 		_Ty data[];
+
+		// Flexible Arrays
+#pragma GCC diagnostic pop
 	};
 	using memory_array_t = memory_array<byte_t>;
-
-	// Flexible Arrays
-#pragma GCC diagnostic pop
 
 	/// MEMORY: Utility -> Construct
 	template<typename _Ty, typename ... _Args>

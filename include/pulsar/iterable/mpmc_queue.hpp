@@ -60,17 +60,17 @@ namespace pul
 				return (__index % CCY_NUM_THREADS) * this->seqcount + (__index / CCY_NUM_THREADS);
 			}
 
-			/// enqueue
+			/// Enqueue
 			bool __try_enqueue(
 				_Ty *__p) pf_attr_noexcept
 			{
 				// Initialisation
 				size_t h = this->head.load(atomic_order::relaxed) % this->maxcount;
-				size_t t = this->tail.load(atomic_order::relaxed) % this->maxcount;
+				size_t t = this->tail.load(atomic_order::acquire) % this->maxcount;
 				size_t c = writers.fetch_add(1, atomic_order::relaxed);
 
 				// Verify
-				size_t d			 = h <= t ? d = this->maxcount - h + t : t - h;
+				size_t d			 = h <= t ? this->maxcount - h + t : t - h;
 				const size_t n = c + 1;
 				if ((t + n % this->maxcount) > d)
 				{
@@ -93,17 +93,23 @@ namespace pul
 				this->elements[this->__shuffle(t)] = __p;
 			}
 
-			/// dequeue
+			/// Dequeue
 			pf_hint_nodiscard _Ty*
 			__try_dequeue() pf_attr_noexcept
 			{
-				size_t h = this->head.load(atomic_order::relaxed) % this->maxcount;
+				size_t h = this->head.load(atomic_order::acquire) % this->maxcount;
 				size_t t = this->tail.load(atomic_order::relaxed) % this->maxcount;
 				if (h == t) return nullptr;
 				size_t c = readers.fetch_add(1, atomic_order::relaxed);
 
 				// Verify
-				// TODO
+				size_t d			 = h <= t ? t - h : this->maxcount - h + t;
+				const size_t n = c + 1;
+				if ((t + n % this->maxcount) > d)
+				{
+					this->readers.fetch_sub(1, atomic_order::relaxed);
+					return nullptr;
+				}
 
 				// Add
 				h = this->head.fetch_add(1, atomic_order::relaxed);
@@ -112,7 +118,18 @@ namespace pul
 				return this->elements[h];
 			}
 
+			/// Empty
+			pf_hint_nodiscard bool
+			__empty() const pf_attr_noexcept
+			{
+				return this->head.load(atomic_order::relaxed) == this->tail.load(atomic_order::relaxed);
+			}
+
 			/// Store
+			// Flexible Arrays -> Disable warning
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wpedantic"
+
 			pf_alignas(CCY_ALIGN) atomic<size_t> head;
 			pf_alignas(CCY_ALIGN) atomic<size_t> tail;
 			pf_alignas(CCY_ALIGN) atomic<size_t> writers;
@@ -120,6 +137,9 @@ namespace pul
 			const size_t maxcount;
 			const size_t seqcount;
 			pf_alignas(CCY_ALIGN) _Ty *elements[];
+
+			// Flexible Arrays
+	#pragma GCC diagnostic pop
 		};
 
 		/// Buffer -> New
@@ -144,12 +164,12 @@ namespace pul
 			: buf_(this->__new_buffer(__maxcount))
 		{}
 		mpmc_queue(mpmc_queue<_Ty> const &__r)
-		{
-			// TODO
-		}
+			: buf_(this->__new_buffer(__r.buf_->maxcount))
+		{}
 		mpmc_queue(mpmc_queue<_Ty> && __r)
+			: buf_(__r.buf_)
 		{
-			// TODO
+			__r.buf_ = this->__new_buffer(__r.buf_->maxcount);
 		}
 
 		/// Destructor
@@ -162,12 +182,25 @@ namespace pul
 		mpmc_queue<_Ty> &operator=(
 			mpmc_queue<_Ty> const &__r) pf_attr_noexcept
 		{
-			// TODO
+			if (pf_likely(this != __r))
+			{
+				pf_assert(this->__empty(), "Deleting not empty buffer!");
+				this->__delete_buffer(this->buf_);
+				this->buf_ = this->__new_buffer(__r.buf_->seqcount);
+			}
+			return *this;
 		}
 		mpmc_queue<_Ty> &operator=(
 			mpmc_queue<_Ty> &&__r) pf_attr_noexcept
 		{
-			// TODO
+			if (pf_likely(this != __r))
+			{
+				pf_assert(this->__empty(), "Deleting not empty buffer!");
+				this->__delete_buffer(this->buf_);
+				this->buf_ = __r.buf_;
+				__r.buf_	 = this->__new_buffer(__r.buf_->seqcount);
+			}
+			return *this;
 		}
 
 		/// enqueue
@@ -205,7 +238,9 @@ namespace pul
 			/// Constructors
 			__header_t() pf_attr_noexcept
 				: head(0)
+				, padd1{ 0 }
 				, tail(0)
+				, padd2{ 0 }
 			{}
 			__header_t(__header_t const &) = delete;
 			__header_t(__header_t &&)			 = delete;
@@ -219,7 +254,9 @@ namespace pul
 
 			/// Store
 			pf_alignas(CCY_ALIGN) atomic<size_t> head;
+			byte_t padd1[static_cast<size_t>(CCY_ALIGN) - sizeof(atomic<size_t>)];
 			pf_alignas(CCY_ALIGN) atomic<size_t> tail;
+			byte_t padd2[static_cast<size_t>(CCY_ALIGN) - sizeof(atomic<size_t>)];
 		};
 
 		// [b ][H1][H2][..][HN][L1][L2][..][LN]
@@ -334,11 +371,32 @@ namespace pul
 				return nullptr;
 			}
 
+			/// Empty
+			pf_hint_nodiscard bool
+			__empty() const pf_attr_noexcept
+			{
+				for (size_t i = 0; i < CCY_NUM_THREADS; ++i)
+				{
+					__header_t *c = this->__get_header(i);
+					size_t h			= c->head.load(atomic_order::relaxed);
+					size_t t			= c->tail.load(atomic_order::relaxed);
+					if (h != t) return false;
+				}
+				return true;
+			}
+
 			/// Store
+			// Flexible Arrays -> Disable warning
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+
 			pf_decl_static pf_decl_inline pf_decl_thread_local size_t lastwrite = 0;
 			pf_decl_static pf_decl_inline pf_decl_thread_local size_t lastread	= 0;
 			const size_t seqcount;
-			byte_t store[];
+			pf_alignas(CCY_ALIGN) byte_t store[];
+
+			// Flexible Arrays
+#pragma GCC diagnostic pop
 		};
 
 		/// Buffer -> New
@@ -363,10 +421,43 @@ namespace pul
 			size_t __seqcount)
 			: buf_(this->__new_buffer(__seqcount))
 		{}
-		// TODO
+		mpmc_queue2(
+			mpmc_queue2<_Ty> const& __r)
+			: buf_(this->__new_buffer(__r.buf_->seqcount))
+		{}
+		mpmc_queue2(
+			mpmc_queue2<_Ty> && __r)
+			: buf_(__r.buf_)
+		{
+			__r.buf_ = this->__new_buffer(__r.buf_->seqcount);
+		}
 
 		/// Operator =
-		// TODO
+		mpmc_queue2<_Ty>&
+		operator=(
+			mpmc_queue2<_Ty> const &__r)
+		{
+			if (pf_likely(this != __r))
+			{
+				pf_assert(this->__empty(), "Deleting not empty buffer!");
+				this->__delete_buffer(this->buf_);
+				this->buf_ = this->__new_buffer(__r.buf_->seqcount);
+			}
+			return *this;
+		}
+		mpmc_queue2<_Ty>&
+		operator=(
+			mpmc_queue2<_Ty> &&__r)
+		{
+			if (pf_likely(this != __r))
+			{
+				pf_assert(this->__empty(), "Deleting not empty buffer!");
+				this->__delete_buffer(this->buf_);
+				this->buf_ = __r.buf_;
+				__r.buf_	 = this->__new_buffer(__r.buf_->seqcount);
+			}
+			return *this;
+		}
 
 		/// Destructor
 		~mpmc_queue2() pf_attr_noexcept
@@ -388,7 +479,6 @@ namespace pul
 		{
 			return this->buf_->__try_dequeue();
 		}
-
 
 	private:
 		/// Store

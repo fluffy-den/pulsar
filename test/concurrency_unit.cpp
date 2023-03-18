@@ -81,6 +81,25 @@ namespace pul
 
 			destroy_delete_array(buf);
 		}
+		pt_benchmark(pop_t4, __bvn, 262144, 4)
+		{
+			mpmc_queue<int32_t> queue(262144 * 8);
+
+			int32_t *buf = new_construct_array<int32_t>(262144 * 4);
+			for (size_t i = 0; i < 262144 * 4; ++i)
+			{
+				buf[i] = i;
+				queue.enqueue(&buf[i]);
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_dequeue();
+			});
+
+			destroy_delete_array(buf);
+		}
 		pt_benchmark(pop_t8, __bvn, 262144, 8)
 		{
 			mpmc_queue<int32_t> queue(262144 * 16);
@@ -170,6 +189,25 @@ namespace pul
 
 			destroy_delete_array(buf);
 		}
+		pt_benchmark(pop2_t4, __bvn, 262144, 4)
+		{
+			mpmc_queue2<int32_t> queue(262144 * 8);
+
+			int32_t *buf = new_construct_array<int32_t>(262144 * 4);
+			for (size_t i = 0; i < 262144 * 4; ++i)
+			{
+				buf[i] = i;
+				queue.try_enqueue(&buf[i]);
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_dequeue();
+			});
+
+			destroy_delete_array(buf);
+		}
 		pt_benchmark(pop2_t8, __bvn, 262144, 8)
 		{
 			mpmc_queue2<int32_t> queue(262144 * 16);
@@ -222,6 +260,21 @@ namespace pul
 		{
 			moodycamel::ConcurrentQueue<size_t> q;
 			for (size_t i = 0; i < 262144 * 2; ++i)
+			{
+				q.enqueue(i);
+			}
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				size_t s;
+				q.try_dequeue(s);
+				return s;
+			});
+		}
+		pt_benchmark(moodycamel_pop_t4, __bvn, 262144, 4)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			for (size_t i = 0; i < 262144 * 4; ++i)
 			{
 				q.enqueue(i);
 			}

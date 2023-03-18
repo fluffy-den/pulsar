@@ -29,21 +29,34 @@ namespace pul
 		struct __node_t
 		{
 			__node_t *next;
-			_Ty *store[];
+			const size_t idx;
+			_Ty *ptr;
+		};
+		struct __cache_t
+		{
+			atomic<__node_t*> node;
+			byte_t pad[union_cast<size_t>(CCY_ALIGN) - sizeof(atomic<__node_t*>)];
 		};
 
 		/// Type -> Buffer
 		struct __buffer_t
 		{
+			// Flexible Arrays -> Disable warning
+	#pragma GCC diagnostic push
+	#pragma GCC diagnostic ignored "-Wpedantic"
 
+			pf_alignas(CCY_ALIGN) atomic<size_t> counter;
+			pf_alignas(CCY_ALIGN) atomic<__node_t*> head;
+			pf_alignas(CCY_ALIGN) atomic<__node_t*> tail;
+			pf_alignas(CCY_ALIGN) __cache_t cache[];
 
-
+			// Flexible Arrays
+	#pragma GCC diagnostic pop
 		};
 
 	public:
 
 	private:
-
 	};
 }
 
