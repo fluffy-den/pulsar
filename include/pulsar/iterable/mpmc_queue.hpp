@@ -253,9 +253,9 @@ namespace pul
 			__header_t &operator=(__header_t &&)			= delete;
 
 			/// Store
-			pf_alignas(CCY_ALIGN) atomic<size_t> head;
+			pf_alignas(CCY_ALIGN) atomic<uint32_t> head;
 			byte_t padd1[static_cast<size_t>(CCY_ALIGN) - sizeof(atomic<size_t>)];
-			pf_alignas(CCY_ALIGN) atomic<size_t> tail;
+			pf_alignas(CCY_ALIGN) atomic<uint32_t> tail;
 			byte_t padd2[static_cast<size_t>(CCY_ALIGN) - sizeof(atomic<size_t>)];
 		};
 
@@ -300,8 +300,9 @@ namespace pul
 			/// Get Header
 			pf_hint_nodiscard pf_decl_inline __header_t*
 			__get_header(
-				size_t __k) pf_attr_noexcept
+				uint32_t __k) pf_attr_noexcept
 			{
+
 				return union_cast<__header_t*>(
 					&this->store[0] + __k * sizeof(__header_t));
 			}
@@ -309,7 +310,7 @@ namespace pul
 			/// Get list
 			pf_hint_nodiscard pf_decl_inline _Ty**
 			__get_list(
-				size_t __k) pf_attr_noexcept
+				uint32_t __k) pf_attr_noexcept
 			{
 				return union_cast<_Ty**>(
 					&this->store[0] + CCY_NUM_THREADS * sizeof(__header_t) + __k * this->seqcount * sizeof(_Ty*));
@@ -320,16 +321,16 @@ namespace pul
 			__try_enqueue(
 				_Ty *__ptr) pf_attr_noexcept
 			{
-				size_t i = 0;
-				size_t k = this->writeCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
+				uint32_t i = 0;
+				uint32_t k = this->writeCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
 				do
 				{
 					__header_t *c = this->__get_header(k);
-					size_t h			= c->head.load(atomic_order::relaxed);
-					size_t t			= c->tail.load(atomic_order::acquire);
+					uint32_t h		= c->head.load(atomic_order::relaxed);
+					uint32_t t		= c->tail.load(atomic_order::relaxed);
 					if (t == h - 1
-							|| !c->tail.compare_exchange_weak(
-								t, t + 1, atomic_order::release, atomic_order::relaxed))
+							|| !c->tail.compare_exchange_strong(
+								t, t + 1, atomic_order::relaxed, atomic_order::relaxed))
 					{
 						k = this->writeCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
 						++i;
@@ -348,18 +349,18 @@ namespace pul
 			pf_hint_nodiscard _Ty*
 			__try_dequeue() pf_attr_noexcept
 			{
-				size_t i = 0;
-				size_t k = this->readCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
+				uint32_t i = 0;
+				uint32_t k = this->readCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
 				do
 				{
 					__header_t *c = this->__get_header(k);
-					size_t h			= c->head.load(atomic_order::acquire);
-					size_t t			= c->tail.load(atomic_order::relaxed);
+					uint32_t h		= c->head.load(atomic_order::relaxed);
+					uint32_t t		= c->tail.load(atomic_order::relaxed);
 					if (h == t
-							|| !c->head.compare_exchange_weak(
-								h, h + 1, atomic_order::release, atomic_order::relaxed))
+							|| !c->head.compare_exchange_strong(
+								h, h + 1, atomic_order::relaxed, atomic_order::relaxed))
 					{
-						size_t k = this->readCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
+						k = this->readCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
 						++i;
 					}
 					else
@@ -378,8 +379,8 @@ namespace pul
 				for (size_t i = 0; i < CCY_NUM_THREADS; ++i)
 				{
 					__header_t *c = this->__get_header(i);
-					size_t h			= c->head.load(atomic_order::relaxed);
-					size_t t			= c->tail.load(atomic_order::relaxed);
+					uint32_t h		= c->head.load(atomic_order::relaxed);
+					uint32_t t		= c->tail.load(atomic_order::relaxed);
 					if (h != t) return false;
 				}
 				return true;
@@ -390,8 +391,8 @@ namespace pul
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 
-			pf_alignas(CCY_ALIGN) atomic<size_t> writeCounter;
-			pf_alignas(CCY_ALIGN) atomic<size_t> readCounter;
+			pf_alignas(CCY_ALIGN) atomic<uint32_t> writeCounter;
+			pf_alignas(CCY_ALIGN) atomic<uint32_t> readCounter;
 			const size_t seqcount;
 			pf_alignas(CCY_ALIGN) byte_t store[];
 

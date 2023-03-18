@@ -80,7 +80,7 @@ namespace pul
 			/// Get k cache
 			pf_hint_nodiscard __list_t*
 			__get_list(
-				size_t __k) pf_attr_noexcept
+				uint32_t __k) pf_attr_noexcept
 			{
 				return union_cast<__list_t*>(&this->store[0] + __k * sizeof(__list_t));
 			}
@@ -90,13 +90,13 @@ namespace pul
 			__insert_tail(
 				__node_t *__n) pf_attr_noexcept
 			{
-				size_t i = counter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
+				uint32_t i = counter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
 				while(true)
 				{
 					__list_t *l = this->__get_list(i);
 					__node_t *b = l->tail.load(atomic_order::relaxed);
 					__node_t *t = b;
-					if (l->tail.compare_exchange_weak(t, __n, atomic_order::release, atomic_order::relaxed))
+					if (l->tail.compare_exchange_strong(t, __n, atomic_order::release, atomic_order::relaxed))
 					{
 						if (pf_unlikely(!t))
 						{
@@ -160,7 +160,7 @@ namespace pul
 	#pragma GCC diagnostic ignored "-Wpedantic"
 
 			/// Store
-			pf_alignas(CCY_ALIGN) atomic<size_t> counter;
+			pf_alignas(CCY_ALIGN) atomic<uint32_t> counter;
 			pf_alignas(CCY_ALIGN) byte_t store[1];
 
 			// Flexible Arrays
