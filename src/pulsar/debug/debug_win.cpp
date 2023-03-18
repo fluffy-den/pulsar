@@ -154,7 +154,7 @@ namespace pul
 			_IMAGEHLP_SYMBOL64 as_symbol;
 			BYTE as_buffer[sizeof(as_symbol) + DBG_FMT_NAME_LEN * sizeof(CHAR)];
 		};
-		std::memset(union_cast<byte_t*>(&as_symbol), 0, sizeof(as_symbol) + sizeof(as_buffer) - 1);
+		std::memset(union_cast<byte_t*>(&as_buffer), 0, sizeof(as_buffer));
 		as_symbol.SizeOfStruct	= sizeof(as_symbol);
 		as_symbol.MaxNameLength = DBG_FMT_NAME_LEN;
 		// module of the symbol

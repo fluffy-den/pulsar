@@ -267,9 +267,7 @@ namespace pul
 			/// Constructors
 			__buffer_t(
 				size_t __seqcount) pf_attr_noexcept
-				: writeCounter(0)
-				, readCounter(0)
-				, seqcount(__seqcount)
+				: seqcount(__seqcount)
 			{
 				pf_assert(this->seqcount > CCY_NUM_THREADS * 64, "seqcount_ must be greater than {}. seqcount_={}", CCY_NUM_THREADS * 64,  this->seqcount);
 				pf_assert(is_power_of_two(this->seqcount), "seqcount_ must be a power of two!");
@@ -321,27 +319,26 @@ namespace pul
 			__try_enqueue(
 				_Ty *__ptr) pf_attr_noexcept
 			{
-				uint32_t i = 0;
-				uint32_t k = this->writeCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
+				const size_t id = (this_thread::id - 1) % CCY_NUM_THREADS;
+				uint32_t i			= id % CCY_NUM_THREADS;
 				do
 				{
-					__header_t *c = this->__get_header(k);
+					__header_t *c = this->__get_header(i);
 					uint32_t h		= c->head.load(atomic_order::relaxed);
-					uint32_t t		= c->tail.load(atomic_order::relaxed);
+					uint32_t t		= c->tail.load(atomic_order::acquire);
 					if (t == h - 1
 							|| !c->tail.compare_exchange_strong(
-								t, t + 1, atomic_order::relaxed, atomic_order::relaxed))
+								t, t + 1, atomic_order::release, atomic_order::relaxed))
 					{
-						k = this->writeCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
-						++i;
+						i = (i + 1) % CCY_NUM_THREADS;
 					}
 					else
 					{
 						std::atomic_thread_fence(atomic_order::relaxed);
-						this->__get_list(k)[t % this->seqcount] = __ptr;
+						this->__get_list(i)[t % this->seqcount] = __ptr;
 						return true;
 					}
-				} while (i != CCY_NUM_THREADS);
+				} while (i != id);
 				return false;
 			}
 
@@ -349,26 +346,25 @@ namespace pul
 			pf_hint_nodiscard _Ty*
 			__try_dequeue() pf_attr_noexcept
 			{
-				uint32_t i = 0;
-				uint32_t k = this->readCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
+				const size_t id = (this_thread::id - 1) % CCY_NUM_THREADS;
+				uint32_t i			= id % CCY_NUM_THREADS;
 				do
 				{
-					__header_t *c = this->__get_header(k);
-					uint32_t h		= c->head.load(atomic_order::relaxed);
+					__header_t *c = this->__get_header(i);
+					uint32_t h		= c->head.load(atomic_order::acquire);
 					uint32_t t		= c->tail.load(atomic_order::relaxed);
 					if (h == t
 							|| !c->head.compare_exchange_strong(
-								h, h + 1, atomic_order::relaxed, atomic_order::relaxed))
+								h, h + 1, atomic_order::release, atomic_order::relaxed))
 					{
-						k = this->readCounter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
-						++i;
+						i = (i + 1) % CCY_NUM_THREADS;
 					}
 					else
 					{
 						std::atomic_thread_fence(atomic_order::relaxed);
-						return this->__get_list(k)[h % this->seqcount];
+						return this->__get_list(i)[h % this->seqcount];
 					}
-				} while (i != CCY_NUM_THREADS);
+				} while (i != id);
 				return nullptr;
 			}
 
@@ -391,8 +387,6 @@ namespace pul
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 
-			pf_alignas(CCY_ALIGN) atomic<uint32_t> writeCounter;
-			pf_alignas(CCY_ALIGN) atomic<uint32_t> readCounter;
 			const size_t seqcount;
 			pf_alignas(CCY_ALIGN) byte_t store[];
 
