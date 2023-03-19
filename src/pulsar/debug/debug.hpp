@@ -20,7 +20,7 @@
 namespace pul
 {
 	/// DEBUG: Internal Allocator -> Constant
-	pf_decl_constexpr size_t DBG_ALLOCATOR_SIZE = 131072;
+	pf_decl_constexpr size_t DBG_ALLOCATOR_SIZE = 65536;
 
 	/// DEBUG: Internal Allocator
 	class __dbg_internal_allocator_t
