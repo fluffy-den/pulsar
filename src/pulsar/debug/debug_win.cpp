@@ -195,7 +195,7 @@ namespace pul
 			SymGetLineFromAddr64(phdl, sf.AddrPC.Offset, &ld, &l);
 			--cn;
 			__where = dbg_u8format_to(
-				__where, "                  at function={}, in module={} at file={}:{}\n",
+				__where, "                 at function={}, in module={} at file={}:{}\n",
 				&as_symbol.Name[0],
 				&m.ModuleName[0],
 				&l.FileName[0] ? &l.FileName[0] : "???",
@@ -207,7 +207,7 @@ namespace pul
 			SymGetSymFromAddr64(phdl, sf.AddrPC.Offset, &sd, &as_symbol);
 			SymGetModuleInfo64(phdl, sf.AddrPC.Offset, &m);
 			__where = dbg_u8format_to(
-				__where, "                  at function={}, in module={}\n",
+				__where, "                 at function={}, in module={}\n",
 				&as_symbol.Name[0],
 				&m.ModuleName[0]);
 		#endif

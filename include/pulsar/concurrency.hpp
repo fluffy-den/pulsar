@@ -13,6 +13,7 @@
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
+#include "pulsar/tuple.hpp"
 
 // Include: C++
 #include <thread>
@@ -35,15 +36,12 @@ namespace pul
 	using atomic_order = std::memory_order;
 
 	/// CONCURRENCY: Lock
-	using mutex_t				 = std::mutex;
-	using mutex_shared_t = std::shared_mutex;
+	using mutex_t = std::mutex;
 	template <typename _Lock>
 	using lock_unique = std::unique_lock<_Lock>;
-	template <typename _Lock>
-	using lock_shared = std::shared_lock<_Lock>;
 
 	/// CONCURRENCY: Condition Variable
-	using condition_variable = std::condition_variable;
+	using condition_variable_t = std::condition_variable;
 
 	/// CONCURRENCY: Thread
 	using thread_t		= std::thread;
@@ -80,145 +78,69 @@ namespace this_thread
 	pf_decl_static pf_decl_thread_local const thread_id_t id = this_thread::get_id();
 }
 
-	/*
-	   /// CONCURRENCY: Job -> Task
-	   struct __job_task
-	   {
-	   fun_ptr<void(void*)> fun;
-	   // task args
-	   };
+	/// CONCURRENCY: Job -> future
+	template <typename _RetTy>
+	class future_store
+	{
+	};
+	template <typename _RetTy>
+	class future
+	{
+	// TODO
+	};
 
-	   /// CONCURRENCY: Job
-	   struct __job
-	   {
-	   size_t count_;
-	   };
+	/// CONCURRENCY: Job
+	pulsar_api void __submit_job_0_base(
+		fun_ptr<void(void*)> __fun,
+		void *__data) pf_attr_noexcept;
+	pulsar_api void __submit_job_base(
+		fun_ptr<void(void*)> __fun,
+		void *__data) pf_attr_noexcept;
+	template <typename _Fun, typename ... _Args>
+	void submit_job_0(
+		_Fun && __fun,
+		_Args && ... __args) pf_attr_noexcept
+	{
 
-	   // void fun(int32_t __i)
-	   //
-	   //
-	   //
+	}
+	template <typename _Fun, typename ... _Args>
+	void submit_job(
+		_Fun && __fun,
+		_Args && ... __args) pf_attr_noexcept
+	{
 
-	   template <typename ... _Args>
-	   struct type
-	   {
+	}
+	template <typename _Fun, typename ... _Args>
+	__submit_future_task(
+		future_store<std::invoke_result_t<_Fun, _Args...>> *__store,
+		_Fun && __fun,
+		_Args && ... __args)
+	{
 
-	   private:
-	    _Ty val1_;
-	    int64_t val_;
-	   };
+	}
+	template <typename _Fun, typename ... _Args>
+	future<_RetTy> submit_future_0(
+		_Fun && __fun,
+		_Args && ... __args) pf_attr_noexcept
+	{
 
-	   /// CONCURRENCY: Job -> Future
-	   template <typename _Ret>
-	   struct alignas(alignof(_Ret)) job_future
-	   {
+	}
+	template <typename _Fun, typename ... _Args>
+	future<_RetTy> submit_future(
+		_Fun && __fun,
+		_Args && ... __args) pf_attr_noexcept
+	{
 
-	   private:
-	    byte_t value_[sizeof(_Ret)];
-	    atomic_flag_t finished_;
-	    // TODO: Padding
-	   };
+	}
 
-	   /// CONCURRENCY: Job Ring Buffer
-	   class pf_alignas(8) __job_ring_buffer pf_attr_final	// Ring Buffer
-	   {
-	   /// Lock & Grow
-	   void
-	   __lock_and_grow(
-	   size_t __req)
-	   {
-	   size_t wnt = __req;
-	   {	// TODO Critical Section
+	/// CONCURRENCY: Job -> Lock
+	// TODO
 
-	   }
-	   }
-
-	   public:
-	   /// Constructors
-	   __job_ring_buffer(
-	    size_t __grow) pf_attr_noexcept
-	   {
-	    // TODO
-	   }
-	   __job_ring_buffer(
-	    __job_ring_buffer const &) = delete;
-	   __job_ring_buffer(
-	    __job_ring_buffer &&) = delete;
-
-	   /// Destructor
-	   ~__job_ring_buffer() pf_attr_noexcept
-	   {
-	    // TODO
-	   }
-
-	   /// Alloc
-	   __job*
-	   insert_job()
-	   {
-	    // TODO
-	   }
-	   __job*
-	   remove_front()
-	   {
-	    // TODO
-	   }
-
-	   /// Shrink
-	   size_t
-	   shrink_to_magnifier() pf_attr_noexcept
-	   {
-	    // TODO
-	   }
-	   size_t
-	   shrink_to_fit() pf_attr_noexcept
-	   {
-	    // TODO
-	   }
-
-	   private:
-	   byte_t *store_;
-	   // mutex mutex_;
-	   magnifier_linear magnifier_;
-	   size_t end_;
-	   atomic<size_t> beg_;
-	   // TODO Padding
-	   };
-
-	   /// CONCURRENCY: Job Worker Storage
-	   class __job_worker_storage pf_attr_final
-	   {
-
-	   private:
-	   __job_worker_storage *next_;
-	   __job_ring_buffer rb_;
-	   };
-
-	   /// CONCURRENCY: Job Worker Storage -> Iterator
-	   class __job_worker_storage_iterator pf_attr_final
-	   {
-	   private:
-	   __job_worker_storage *cur_;
-	   };
-
-	   /// CONCURRENCY: Job Worker
-	   class __job_worker pf_attr_final
-	   {
-	   private:
-	   __job_worker_storage store_;
-	   std::thread worker_;
-	   };
-
-	   /// CONCURRENCY: Job Scheduler
-	   class alignas(8) __job_scheduler pf_attr_final
-	   {
-	   private:
-	   __job_worker *ws_;
-	   __job_worker_storage ms_;
-	   condition_variable cond_;
-	   atomic<size_t> numjobs_;
-	   // TODO PADDING + ALIGNMENT
-	   };
-	 */
+	/// CONCURRENCY: Job -> Functions
+	pulsar_api bool
+	job_process() pf_attr_noexcept;
+	pulsar_api bool
+	job_process0();
 }
 
 #endif // !PULSAR_ATOMIC_CONTAINERS_HPP

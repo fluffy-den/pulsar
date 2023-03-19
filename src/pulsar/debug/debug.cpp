@@ -9,27 +9,50 @@
  */
 
 // Include: Pulsar
-#include "pulsar/debug.hpp"
-#include "pulsar/allocator.hpp"
+#include "pulsar/debug/debug.hpp"
 
 // Pulsar
 namespace pul
 {
-	/// DEBUG: Allocator
-	pf_decl_static pf_decl_inline pf_decl_thread_local allocator_samd_ring_buffer __dbg_allocator = allocator_samd_ring_buffer(65536);
+	/// DEBUG: Internal Allocator
+	__dbg_internal_allocator_t::__dbg_internal_allocator_t()
+	{
+		// Allocate
+		this->store_ = union_cast<allocator_samd_ring_buffer*>(halloc(allocator_samd_ring_buffer * CCY_NUM_THREADS));
+
+		// Construct
+		for (size_t i = 0; i < CCY_NUM_THREADS; ++i)
+		{
+			construct(&this->store_[i], DBG_ALLOCATOR_SIZE);
+		}
+	}
+	__dbg_internal_allocator_t::~__dbg_internal_allocator_t() pf_attr_noexcept
+	{
+		// Destroy
+		for (size_t i = 0; i < CCY_NUM_THREADS; ++i)
+		{
+			destroy(&this->store_[i]);
+		}
+
+		// Deallocate
+		hfree(this->store_);
+	}
+
+	/// DEBUG: Internal Allocator -> Instance
+	__dbg_internal_allocator_t __dbg_internal_allocator;
 
 	/// DEBUG: Allocate / Deallocate
 	pulsar_api void*
 	__dbg_allocate(
 		size_t __size)
 	{
-		return __dbg_allocator.allocate(__size);
+		return __dbg_internal_allocator.allocate(__size);
 	}
 	pulsar_api void
 	__dbg_deallocate(
 		void *__ptr) pf_attr_noexcept
 	{
-		return __dbg_allocator.deallocate(__ptr);
+		return __dbg_internal_allocator.deallocate(__ptr);
 	}
 
 	/// DEBUG: Logger
@@ -63,11 +86,11 @@ namespace pul
 		uint64_t elapsed = union_cast<uint64_t>(logger.elapsed_time().count());
 		return dbg_u8format_to(
 			__where,
-			"[{:0>4}:{:0>2}:{:0>2}:{:0>4}]",
+			"[{:0>4}:{:0>2}:{:0>2}:{:0>3}]",
 			(elapsed / 3600000000000ull),
 			(elapsed / 60000000000ull) % 100ull,
 			(elapsed / 1000000000ull) % 100ull,
-			(elapsed / 1000000ull) % 10000ull);
+			(elapsed / 1000000ull) % 1000ull);
 	}
 	pulsar_api char_t*
 	dbg_reformat_newlines_to(
@@ -94,13 +117,13 @@ namespace pul
 			if (*__w == '\n')
 			{
 				++__w;
-				for (char_t *k = e + 18; k != __w + 17; --k)
+				for (char_t *k = e + 17; k != __w + 16; --k)
 				{
-					*k = *(k - 18);
+					*k = *(k - 17);
 				}
-				std::memset(__w, ' ', 18);
-				__w += 18;
-				e		+= 18;
+				std::memset(__w, ' ', 17);
+				__w += 17;
+				e		+= 17;
 			}
 		}
 		e += n;

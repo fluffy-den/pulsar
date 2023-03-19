@@ -12,7 +12,6 @@
 #define PULSAR_SAMD_RING_HPP 1
 
 // Include: Pulsar
-#include "pulsar/allocator.hpp"
 #include "pulsar/concurrency.hpp"
 #include "pulsar/debug.hpp"
 #include "pulsar/memory.hpp"
@@ -172,7 +171,7 @@ namespace pul
 			}
 
 			/// Deallocate
-			void
+			pf_decl_static void
 			__deallocate(
 				void *__p) pf_attr_noexcept
 			{
@@ -273,11 +272,11 @@ namespace pul
 		}
 
 		/// Deallocate
-		void
+		pf_decl_static void
 		deallocate(
 			void *__ptr) pf_attr_noexcept
 		{
-			return this->buffer_->__deallocate(__ptr);
+			return __buffer_t::__deallocate(__ptr);
 		}
 
 		/// Store

@@ -691,7 +691,7 @@ namespace pul
 
 
   /// NUPLE: Macro -> $
-#define $(name) xxhash::hash(name)
+// #define $(name) xxhash::hash(name)
 
 	/// NUPLE: SFINAE -> Index
 	template <typename _Ty, size_t _Hash, size_t _Index>

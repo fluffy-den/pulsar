@@ -70,6 +70,7 @@ namespace pul
 			mpsc_singly_lifo<size_t> msl;
 			__bvn.measure([&](size_t __index)
 			{
+				ignore = __index;
 				return msl.remove_head();
 			});
 		}
@@ -279,6 +280,15 @@ namespace pul
 			});
 
 			destroy_delete_array(buf);
+		}
+		pt_benchmark(pop2_empty_t1, __bvn, 262144, 1)
+		{
+			mpmc_queue2<int32_t> queue(262144);
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_dequeue();
+			});
 		}
 		pt_benchmark(pop2_empty_t8, __bvn, 262144, 8)
 		{

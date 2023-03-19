@@ -227,6 +227,9 @@ namespace pul
 		__buffer_t *buf_;
 	};
 
+
+
+
 	/// QUEUE: MPMC 2 (Multi-CAS)
 	template <typename _Ty>
 	class mpmc_queue2
@@ -238,9 +241,7 @@ namespace pul
 			/// Constructors
 			__header_t() pf_attr_noexcept
 				: head(0)
-				, padd1{ 0 }
 				, tail(0)
-				, padd2{ 0 }
 			{}
 			__header_t(__header_t const &) = delete;
 			__header_t(__header_t &&)			 = delete;
@@ -254,9 +255,7 @@ namespace pul
 
 			/// Store
 			pf_alignas(CCY_ALIGN) atomic<uint32_t> head;
-			byte_t padd1[static_cast<size_t>(CCY_ALIGN) - sizeof(atomic<size_t>)];
 			pf_alignas(CCY_ALIGN) atomic<uint32_t> tail;
-			byte_t padd2[static_cast<size_t>(CCY_ALIGN) - sizeof(atomic<size_t>)];
 		};
 
 		// [b ][H1][H2][..][HN][L1][L2][..][LN]
@@ -300,7 +299,6 @@ namespace pul
 			__get_header(
 				uint32_t __k) pf_attr_noexcept
 			{
-
 				return union_cast<__header_t*>(
 					&this->store[0] + __k * sizeof(__header_t));
 			}
@@ -325,7 +323,8 @@ namespace pul
 				{
 					__header_t *c = this->__get_header(i);
 					uint32_t h		= c->head.load(atomic_order::relaxed);
-					uint32_t t		= c->tail.load(atomic_order::acquire);
+					uint32_t t		= c->tail.load(atomic_order::relaxed);
+					std::atomic_thread_fence(atomic_order::relaxed);
 					if (t == h - 1
 							|| !c->tail.compare_exchange_strong(
 								t, t + 1, atomic_order::release, atomic_order::relaxed))
@@ -334,7 +333,6 @@ namespace pul
 					}
 					else
 					{
-						std::atomic_thread_fence(atomic_order::relaxed);
 						this->__get_list(i)[t % this->seqcount] = __ptr;
 						return true;
 					}
@@ -351,8 +349,9 @@ namespace pul
 				do
 				{
 					__header_t *c = this->__get_header(i);
-					uint32_t h		= c->head.load(atomic_order::acquire);
+					uint32_t h		= c->head.load(atomic_order::relaxed);
 					uint32_t t		= c->tail.load(atomic_order::relaxed);
+					std::atomic_thread_fence(atomic_order::relaxed);
 					if (h == t
 							|| !c->head.compare_exchange_strong(
 								h, h + 1, atomic_order::release, atomic_order::relaxed))
@@ -361,7 +360,6 @@ namespace pul
 					}
 					else
 					{
-						std::atomic_thread_fence(atomic_order::relaxed);
 						return this->__get_list(i)[h % this->seqcount];
 					}
 				} while (i != id);
@@ -399,7 +397,9 @@ namespace pul
 		__new_buffer(
 			size_t __seqcount) pf_attr_noexcept
 		{
-			return new_construct_ex<__buffer_t>(sizeof(__buffer_t) + CCY_NUM_THREADS * (sizeof(__header_t) + __seqcount * sizeof(_Ty*)), __seqcount);
+			__buffer_t *b = new_construct_ex<__buffer_t>(CCY_NUM_THREADS * (sizeof(__header_t) + __seqcount * sizeof(_Ty*)), __seqcount);
+			std::memset(&b->store[0] + CCY_NUM_THREADS * sizeof(__header_t), 0, __seqcount * sizeof(_Ty*) * CCY_NUM_THREADS);
+			return b;
 		}
 
 		/// Buffer -> Delete

@@ -730,7 +730,7 @@ namespace dbg_flags
 		char_t *p = prt.data();
 		if (__type == dbg_type::extension)
 		{
-			p = fmt::format_to(p, "                  ");
+			p = fmt::format_to(p, "                 ");
 		}
 		else
 		{
@@ -763,7 +763,7 @@ namespace dbg_flags
 		// 2. Print
 		dbg_u8string prt(DBG_FMT_BUFFER_SIZE, '\0');// TODO: Good size
 		char_t *p = prt.data();
-		p = fmt::format_to(p, "                  ");
+		p = fmt::format_to(p, "                 ");
 		char_t *k = p;
 		p = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
 		p = dbg_reformat_newlines_to(k);
