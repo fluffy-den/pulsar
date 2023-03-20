@@ -88,24 +88,25 @@ namespace pul
 			/// Insert Tail
 			pf_hint_nodiscard bool
 			__insert_tail(
-				__node_t *__n) pf_attr_noexcept
+				__node_t *__b,
+				__node_t *__e) pf_attr_noexcept
 			{
 				uint32_t i = counter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
 				while(true)
 				{
 					__list_t *l = this->__get_list(i);
-					__node_t *b = l->tail.load(atomic_order::relaxed);
+					__node_t *b = l->tail.load(atomic_order::acquire);
 					__node_t *t = b;
-					if (l->tail.compare_exchange_strong(t, __n, atomic_order::release, atomic_order::relaxed))
+					if (l->tail.compare_exchange_strong(t, __e, atomic_order::release, atomic_order::relaxed))
 					{
+						std::atomic_thread_fence(atomic_order::release);
 						if (pf_unlikely(!t))
 						{
-							std::atomic_thread_fence(atomic_order::relaxed);
-							l->head = __n;
+							l->head = __b;
 						}
 						else
 						{
-							b->next = __n;
+							b->next = __b;
 						}
 						return true;
 					}
@@ -129,9 +130,9 @@ namespace pul
 				{
 					__list_t *l = this->__get_list(i);
 					h = l->head;
-					if (l->tail.load(atomic_order::relaxed))
+					if (l->tail.load(atomic_order::acquire))
 					{
-						std::atomic_thread_fence(atomic_order::relaxed);
+						std::atomic_thread_fence(atomic_order::release);
 						l->head = nullptr;
 						t				= l->tail.exchange(nullptr, atomic_order::release);
 					}
@@ -142,12 +143,12 @@ namespace pul
 				while (i < CCY_NUM_THREADS)
 				{
 					__list_t *l = this->__get_list(i);
-					if (l->tail.load(atomic_order::relaxed))
+					if (l->tail.load(atomic_order::acquire))
 					{
-						std::atomic_thread_fence(atomic_order::relaxed);
+						std::atomic_thread_fence(atomic_order::acq_rel);
 						t->next = l->head;
 						l->head = nullptr;
-						t				= l->tail.exchange(nullptr, atomic_order::relaxed);
+						t				= l->tail.exchange(nullptr, atomic_order::acq_rel);
 						++i;
 					}
 				}
@@ -229,15 +230,27 @@ namespace pul
 		}
 
 		/// Insert Tail
-		bool
+		pf_decl_inline bool
+		insert_tail(
+			node_t *__b,
+			node_t *__e) pf_attr_noexcept
+		{
+	#ifdef PF_DEBUG
+			node_t *l = __b;
+			while (l->next) l = l->next;
+			pf_assert(l == __e, "last of begin isn't equal to end!");
+	#endif
+			return this->buf_->__insert_tail(__b, __e);
+		}
+		pf_decl_inline bool
 		insert_tail(
 			node_t *__n) pf_attr_noexcept
 		{
-			return this->buf_->__insert_tail(__n);
+			return this->insert_tail(__n, __n);
 		}
 
 		/// Remove Head
-		pf_hint_nodiscard node_t*
+		pf_hint_nodiscard pf_decl_inline node_t*
 		remove_head() pf_attr_noexcept
 		{
 			return this->buf_->__remove_head();

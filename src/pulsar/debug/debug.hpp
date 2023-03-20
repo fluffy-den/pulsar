@@ -44,8 +44,8 @@ namespace pul
 		pf_hint_nodiscard pf_decl_inline void*
 		allocate(
 			size_t __size,
-			align_val_t __align,
-			size_t __offset) pf_attr_noexcept
+			align_val_t __align = ALIGN_DEFAULT,
+			size_t __offset			= 0) pf_attr_noexcept
 		{
 			return this->store_[(this_thread::id - 1) % CCY_NUM_THREADS].allocate(__size, __align, __offset);
 		}

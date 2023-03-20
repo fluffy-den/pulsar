@@ -313,18 +313,17 @@ namespace pul
 			}
 
 			/// Enqueue
-			bool
+			size_t
 			__try_enqueue(
 				_Ty *__ptr) pf_attr_noexcept
 			{
-				const size_t id = (this_thread::id - 1) % CCY_NUM_THREADS;
-				uint32_t i			= id % CCY_NUM_THREADS;
+				const thread_id_t id = (this_thread::id - 1) % CCY_NUM_THREADS;
+				uint32_t i					 = id % CCY_NUM_THREADS;
 				do
 				{
-					__header_t *c = this->__get_header(i);
-					uint32_t h		= c->head.load(atomic_order::relaxed);
-					uint32_t t		= c->tail.load(atomic_order::relaxed);
-					std::atomic_thread_fence(atomic_order::relaxed);
+					__header_t *c		 = this->__get_header(i);
+					uint32_t t			 = c->tail.load(atomic_order::acquire);
+					const uint32_t h = c->head.load(atomic_order::relaxed);
 					if (t == h - 1
 							|| !c->tail.compare_exchange_strong(
 								t, t + 1, atomic_order::release, atomic_order::relaxed))
@@ -333,25 +332,63 @@ namespace pul
 					}
 					else
 					{
-						this->__get_list(i)[t % this->seqcount] = __ptr;
-						return true;
+						std::atomic_thread_fence(atomic_order::release);
+						auto l = this->__get_list(i);
+						l[t % this->seqcount] = __ptr;
+						return 1;
 					}
 				} while (i != id);
-				return false;
+				return 0;
+			}
+			template <typename _IteratorIn>
+			size_t
+			__try_enqueue_bulk(
+				_IteratorIn __beg,
+				_IteratorIn __end) pf_attr_noexcept
+			requires(is_iterator_v<_IteratorIn>
+							 && std::is_same_v<value_type_t<_IteratorIn>, _Ty*>)
+			{
+				const uint32_t count = distof(__beg, __end);
+				if (pf_unlikely(count == 0 || count > this->seqcount)) return 0;
+				const thread_id_t id = (this_thread::id - 1) % CCY_NUM_THREADS;
+				uint32_t i					 = id % CCY_NUM_THREADS;
+				do
+				{
+					__header_t *c		 = this->__get_header(i);
+					uint32_t t			 = c->tail.load(atomic_order::acquire);
+					const uint32_t h = c->head.load(atomic_order::relaxed);
+					const uint32_t n = (t + count);
+					if ((n > h - 1 && n > union_cast<uint32_t>(-1) - count)
+							|| !c->tail.compare_exchange_strong(
+								t, t + count, atomic_order::release, atomic_order::relaxed))
+					{
+						i = (i + 1) % CCY_NUM_THREADS;
+					}
+					else
+					{
+						std::atomic_thread_fence(atomic_order::release);
+						auto l = this->__get_list(i);
+						for (uint32_t k = 0; k < count; ++k)
+						{
+							l[(t + k) % this->seqcount] = __beg[k];
+						}
+						return count;
+					}
+				} while (i != id);
+				return 0;
 			}
 
 			/// Dequeue
 			pf_hint_nodiscard _Ty*
 			__try_dequeue() pf_attr_noexcept
 			{
-				const size_t id = (this_thread::id - 1) % CCY_NUM_THREADS;
-				uint32_t i			= id % CCY_NUM_THREADS;
+				const uint32_t id = (this_thread::id - 1) % CCY_NUM_THREADS;
+				uint32_t i				= id % CCY_NUM_THREADS;
 				do
 				{
-					__header_t *c = this->__get_header(i);
-					uint32_t h		= c->head.load(atomic_order::relaxed);
-					uint32_t t		= c->tail.load(atomic_order::relaxed);
-					std::atomic_thread_fence(atomic_order::relaxed);
+					__header_t *c		 = this->__get_header(i);
+					uint32_t h			 = c->head.load(atomic_order::acquire);
+					const uint32_t t = c->tail.load(atomic_order::relaxed);
 					if (h == t
 							|| !c->head.compare_exchange_strong(
 								h, h + 1, atomic_order::release, atomic_order::relaxed))
@@ -360,10 +397,50 @@ namespace pul
 					}
 					else
 					{
-						return this->__get_list(i)[h % this->seqcount];
+						std::atomic_thread_fence(atomic_order::acquire);
+						auto l = this->__get_list(i);
+						return l[h % this->seqcount];
 					}
 				} while (i != id);
 				return nullptr;
+			}
+			template <typename _IteratorOut>
+			pf_hint_nodiscard size_t
+			__try_dequeue_bulk(
+				_IteratorOut __beg,
+				_IteratorOut __end) pf_attr_noexcept
+			requires(is_iterator_v<_IteratorOut>
+							 && std::is_same_v<value_type_t<_IteratorOut>, _Ty*>)
+			{
+				const uint32_t id = (this_thread::id - 1) % CCY_NUM_THREADS;
+				uint32_t count		= distof(__beg, __end);
+				uint32_t i				= id % CCY_NUM_THREADS;
+				do
+				{
+					__header_t *c						 = this->__get_header(i);
+					uint32_t h							 = c->head.load(atomic_order::acquire);
+					const uint32_t t				 = c->tail.load(atomic_order::relaxed);
+					const uint32_t available = t - h;
+					if (count > available)
+						count = available;
+					if (count == 0
+							|| !c->head.compare_exchange_strong(
+								h, h + count, atomic_order::release, atomic_order::relaxed))
+					{
+						i = (i + 1) % CCY_NUM_THREADS;
+					}
+					else
+					{
+						std::atomic_thread_fence(atomic_order::acquire);
+						auto l = this->__get_list(i);
+						for (size_t k = 0; k < count; ++k)
+						{
+							__beg[k] = l[(h + k) % this->seqcount];
+						}
+						return count;
+					}
+				} while (i != id);
+				return 0;
 			}
 
 			/// Empty
@@ -461,18 +538,38 @@ namespace pul
 		}
 
 		/// Enqueue
-		bool
+		pf_decl_inline bool
 		try_enqueue(
 			_Ty *__ptr) pf_attr_noexcept
 		{
 			return this->buf_->__try_enqueue(__ptr);
 		}
+		template <typename _IteratorIn>
+		pf_decl_inline bool
+		try_enqueue_bulk(
+			_IteratorIn __beg,
+			_IteratorIn __end) pf_attr_noexcept
+		requires(is_iterator_v<_IteratorIn>
+						 && std::is_same_v<value_type_t<_IteratorIn>, _Ty*>)
+		{
+			return this->buf_->__try_enqueue_bulk(__beg, __end);
+		}
 
 		/// Dequeue
-		pf_hint_nodiscard _Ty*
+		pf_hint_nodiscard pf_decl_inline _Ty*
 		try_dequeue() pf_attr_noexcept
 		{
 			return this->buf_->__try_dequeue();
+		}
+		template <typename _IteratorOut>
+		pf_hint_nodiscard pf_decl_inline size_t
+		try_dequeue_bulk(
+			_IteratorOut __beg,
+			_IteratorOut __end) pf_attr_noexcept
+		requires(is_iterator_v<_IteratorOut>
+						 && std::is_same_v<value_type_t<_IteratorOut>, _Ty*>)
+		{
+			return this->buf_->__try_dequeue_bulk(__beg, __end);
 		}
 
 	private:

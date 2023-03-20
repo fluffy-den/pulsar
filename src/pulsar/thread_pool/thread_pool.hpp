@@ -20,13 +20,13 @@
 // Pulsar
 namespace pul
 {
-	/// JOB: Constants
-	pf_decl_constexpr size_t JOBS_MAX_NUM				 = 65536 * 16;
-	pf_decl_constexpr size_t JOBS_MAX_NUM_0			 = 4096 * 16;
-	pf_decl_constexpr size_t JOBS_ALLOCATOR_SIZE = 16777216 * 16;
+	/// task: Constants
+	pf_decl_constexpr size_t taskS_MAX_NUM				= 65536 * 16;
+	pf_decl_constexpr size_t taskS_MAX_NUM_0			= 4096 * 16;
+	pf_decl_constexpr size_t taskS_ALLOCATOR_SIZE = 16777216 * 16;
 
-	/// JOB: Pool
-	class __job_pool_t
+	/// task: Pool
+	class __task_pool_t
 	{
 	private:
 		/// Type -> Task
@@ -35,14 +35,6 @@ namespace pul
 			/// Store
 			fun_ptr<void(void*)> fun;
 			byte_t store[];
-		};
-
-		/// Type -> Job
-		struct __job_t
-		{
-			/// Store
-			__job_t *next;
-			__task_t *head;
 		};
 
 		/// Type -> Buffer
@@ -71,12 +63,12 @@ namespace pul
 				uint32_t __index) pf_attr_noexcept;
 
 			/// Store
-			pf_alignas(CCY_ALIGN) atomic<size_t> numjobs;
+			pf_alignas(CCY_ALIGN) atomic<size_t> numTasks;
 			pf_alignas(CCY_ALIGN) atomic<bool> running;
 			mutex_t mutex;
 			condition_variable_t cv;
-			mpmc_queue2<__job_t> queue;
-			mpmc_queue2<__job_t> queue0;
+			mpmc_queue2<__task_t> queue;
+			mpmc_queue2<__task_t> queue0;
 			byte_t store[];	// [a1][a2]...[an] [t1][t2][tn-1]
 											//   allocators        workers
 		};
@@ -100,23 +92,23 @@ namespace pul
 		}
 
 		/// Constructors
-		__job_pool_t()
+		__task_pool_t()
 			: buf_(this->__make_buffer())
 		{}
-		__job_pool_t(__job_pool_t const &) = delete;
-		__job_pool_t(__job_pool_t &&)			 = delete;
+		__task_pool_t(__task_pool_t const &) = delete;
+		__task_pool_t(__task_pool_t &&)			 = delete;
 
 		/// Destructor
-		~__job_pool_t() pf_attr_noexcept
+		~__task_pool_t() pf_attr_noexcept
 		{
 			this->__delete_buffer(this->buf_);
 		}
 
 		/// Operator =
-		__job_pool_t &operator=(
-			__job_pool_t const&) = delete;
-		__job_pool_t &operator=(
-			__job_pool_t &&) = delete;
+		__task_pool_t &operator=(
+			__task_pool_t const&) = delete;
+		__task_pool_t &operator=(
+			__task_pool_t &&) = delete;
 
 		/// Submit
 		// TODO
@@ -129,8 +121,8 @@ namespace pul
 		__buffer_t *buf_;
 	};
 
-	/// JOB: Pool -> Instance
-	pf_decl_extern __job_pool_t __job_pool;
+	/// task: Pool -> Instance
+	pf_decl_extern __task_pool_t __task_pool;
 }
 
 #endif // !PULSAR_THREAD_POOL_HPP

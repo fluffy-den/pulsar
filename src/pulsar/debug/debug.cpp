@@ -18,7 +18,7 @@ namespace pul
 	__dbg_internal_allocator_t::__dbg_internal_allocator_t()
 	{
 		// Allocate
-		this->store_ = union_cast<allocator_samd_ring_buffer*>(halloc(allocator_samd_ring_buffer * CCY_NUM_THREADS));
+		this->store_ = union_cast<allocator_samd_ring_buffer*>(halloc(sizeof(allocator_samd_ring_buffer) * CCY_NUM_THREADS));
 
 		// Construct
 		for (size_t i = 0; i < CCY_NUM_THREADS; ++i)
@@ -46,7 +46,7 @@ namespace pul
 	__dbg_allocate(
 		size_t __size)
 	{
-		return __dbg_internal_allocator.allocate(__size);
+		return __dbg_internal_allocator.allocate(__size, align_val_t(32), 0);
 	}
 	pulsar_api void
 	__dbg_deallocate(

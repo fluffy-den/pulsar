@@ -45,7 +45,7 @@ namespace pul
 
 	/// CONCURRENCY: Thread
 	using thread_t		= std::thread;
-	using thread_id_t = uint16_t;
+	using thread_id_t = uint32_t;
 
 	/// CONCURRENCY: This Thread
 namespace this_thread
@@ -110,28 +110,28 @@ namespace this_thread
 	{
 
 	}
-	template <typename _Fun, typename ... _Args>
-	__submit_future_task(
-		future_store<std::invoke_result_t<_Fun, _Args...>> *__store,
-		_Fun && __fun,
-		_Args && ... __args)
-	{
-
-	}
-	template <typename _Fun, typename ... _Args>
-	future<_RetTy> submit_future_0(
-		_Fun && __fun,
-		_Args && ... __args) pf_attr_noexcept
-	{
-
-	}
-	template <typename _Fun, typename ... _Args>
-	future<_RetTy> submit_future(
-		_Fun && __fun,
-		_Args && ... __args) pf_attr_noexcept
-	{
-
-	}
+	// template <typename _Fun, typename ... _Args>
+	// void __submit_future_task(
+	// 	future_store<std::invoke_result_t<_Fun, _Args...>> *__store,
+	// 	_Fun && __fun,
+	// 	_Args && ... __args)
+	// {
+	//
+	// }
+	// template <typename _Fun, typename ... _Args>
+	// future<std::invoke_result_t<_Fun, _Args...>> submit_future_0(
+	// 	_Fun && __fun,
+	// 	_Args && ... __args) pf_attr_noexcept
+	// {
+	//
+	// }
+	// template <typename _Fun, typename ... _Args>
+	// future<std::invoke_result_t<_Fun, _Args...>> submit_future(
+	// 	_Fun && __fun,
+	// 	_Args && ... __args) pf_attr_noexcept
+	// {
+	//
+	// }
 
 	/// CONCURRENCY: Job -> Lock
 	// TODO

@@ -187,12 +187,66 @@ namespace pul
 	// MPMC Queue2
 	pt_pack(mpmc_queue2_pack)
 	{
-		pt_benchmark(push2_t1, __bvn, 65536, 1)
+		pt_benchmark(push2_t1, __bvn, 262144, 1)
 		{
-			mpmc_queue2<int32_t> queue(65536 * 2);
+			mpmc_queue2<int32_t> queue(262144 * 2);
 
-			int32_t *buf = new_construct_array<int32_t>(65536);
-			for (size_t i = 0; i < 65536; ++i)
+			int32_t *buf = new_construct_array<int32_t>(262144);
+			for (size_t i = 0; i < 262144; ++i)
+			{
+				buf[i] = i;
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				queue.try_enqueue(&buf[__index]);
+				return __index;
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(push2_t2, __bvn, 262144, 2)
+		{
+			mpmc_queue2<int32_t> queue(262144 * 4);
+
+			int32_t *buf = new_construct_array<int32_t>(262144 * 2);
+			for (size_t i = 0; i < 262144 * 2; ++i)
+			{
+				buf[i] = i;
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				queue.try_enqueue(&buf[__index]);
+				return __index;
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(push2_t4, __bvn, 262144, 4)
+		{
+			mpmc_queue2<int32_t> queue(262144 * 8);
+
+			int32_t *buf = new_construct_array<int32_t>(262144 * 4);
+			for (size_t i = 0; i < 262144 * 4; ++i)
+			{
+				buf[i] = i;
+			}
+
+			__bvn.measure([&](size_t __index)
+			{
+				queue.try_enqueue(&buf[__index]);
+				return __index;
+			});
+
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(push2_t8, __bvn, 262144, 8)
+		{
+			mpmc_queue2<int32_t> queue(262144 * 16);
+
+			int32_t *buf = new_construct_array<int32_t>(262144 * 8);
+			for (size_t i = 0; i < 262144 * 8; ++i)
 			{
 				buf[i] = i;
 			}
@@ -304,6 +358,38 @@ namespace pul
 	// MPSC Concurrent Queue
 	pt_pack(moodycamel_queue)
 	{
+		pt_benchmark(moodycamel_push_t1, __bvn, 262144, 1)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			__bvn.measure([&](size_t __index)
+			{
+				return q.enqueue(__index);
+			});
+		}
+		pt_benchmark(moodycamel_push_t2, __bvn, 262144, 2)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			__bvn.measure([&](size_t __index)
+			{
+				return q.enqueue(__index);
+			});
+		}
+		pt_benchmark(moodycamel_push_t4, __bvn, 262144, 4)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			__bvn.measure([&](size_t __index)
+			{
+				return q.enqueue(__index);
+			});
+		}
+		pt_benchmark(moodycamel_push_t8, __bvn, 262144, 8)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			__bvn.measure([&](size_t __index)
+			{
+				return q.enqueue(__index);
+			});
+		}
 		pt_benchmark(moodycamel_pop_t1, __bvn, 262144, 1)
 		{
 			moodycamel::ConcurrentQueue<size_t> q;
