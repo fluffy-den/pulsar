@@ -29,7 +29,7 @@ namespace pul
 		// for now, stacktrace is used only on this process
 		// !! no need to get stacktrace of another thread, or another process (for now) !!
 		CONTEXT ctx;
-		std::memset(&ctx, 0, sizeof(ctx));
+		memset(&ctx, 0, sizeof(ctx));
 		RtlCaptureContext(&ctx);
 		// 2. Call
 		return __dbg_format_walk_to_win(__where, &ctx, __ignore);

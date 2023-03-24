@@ -22,7 +22,7 @@ namespace pul
 	__task_pool_t::__buffer_t::__buffer_t() pf_attr_noexcept
 		: numTasks(0)
 		, run(true)
-		, numRunning(0)
+		, numRunning(CCY_NUM_WORKERS)
 		, queue(CCY_TASKS_MAX_NUM)
 		, queue0(CCY_TASKS_MAX_NUM_0)
 	{}
@@ -123,17 +123,18 @@ namespace pul
 	__task_pool_t::__allocate(
 		size_t __size) pf_attr_noexcept
 	{
-		return halloc(__size);
-		//auto *all = this->buf_->__get_allocator(this_thread::get_idx());
-		//return all->allocate(__size);
+		auto *all = this->buf_->__get_allocator(this_thread::get_id());
+		void *ptr = all->allocate(__size);
+		pf_print("{}\n", ptr);
+		pf_assert(ptr, "ptr is nullptr!");
+		return ptr;
 	}
 	void
 	__task_pool_t::__deallocate(
 		void *__ptr) pf_attr_noexcept
 	{
-		hfree(__ptr);
-		// auto *all = this->buf_->__get_allocator(this_thread::get_idx());
-		// return all->deallocate(__ptr);
+		auto *all = this->buf_->__get_allocator(this_thread::get_id());
+		return all->deallocate(__ptr);
 	}
 
 	/// Submit
@@ -146,6 +147,7 @@ namespace pul
 		{
 			// TODO: Exception
 		}
+		this->buf_->numTasks.fetch_add(1, atomic_order::relaxed);
 		// Wake-up?
 		if (this->buf_->numRunning.load(atomic_order::relaxed) <= CCY_NUM_WORKERS)
 		{
@@ -179,7 +181,7 @@ namespace pul
 	__task_pool_t::__process_0()
 	{
 		__task_t *t[CCY_CACHE_NUM0] = { nullptr };
-		const uint32_t i						= this->buf_->queue.try_dequeue_bulk(begin(t), end(t));
+		const uint32_t i						= this->buf_->queue0.try_dequeue_bulk(begin(t), end(t));
 		uint32_t j									= 0;
 		while(j != i)
 		{

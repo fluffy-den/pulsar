@@ -96,10 +96,10 @@ namespace pul
 					if (buf_->numTasks.load(atomic_order::relaxed) == 0)
 					{
 						buf_->numRunning.fetch_sub(1, atomic_order::relaxed);
-						buf_->cv.wait(lck, [&]() pf_attr_noexcept
+						buf_->cv.wait(lck, [&]() pf_attr_noexcept->bool
 						{
 							return !buf_->run.load(atomic_order::acquire)
-							|| buf_->numTasks.load(atomic_order::relaxed);
+							|| buf_->numTasks.load(atomic_order::acquire) > 0;
 						});
 						buf_->numRunning.fetch_add(1, atomic_order::relaxed);
 					}

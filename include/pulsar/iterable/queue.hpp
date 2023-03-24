@@ -349,7 +349,7 @@ namespace pul
 			requires(is_iterator_v<_IteratorIn>
 							 && std::is_same_v<value_type_t<_IteratorIn>, _Ty*>)
 			{
-				const uint32_t count = distof(__beg, __end);
+				const uint32_t count = countof(__beg, __end);
 				if (pf_unlikely(count == 0 || count > this->seqcount)) return 0;
 				const thread_id_t id = this_thread::get_id();
 				uint32_t i					 = id % CCY_NUM_THREADS;
@@ -413,7 +413,7 @@ namespace pul
 							 && std::is_same_v<value_type_t<_IteratorOut>, _Ty*>)
 			{
 				const thread_id_t id = this_thread::get_id();
-				uint32_t count			 = distof(__beg, __end);
+				uint32_t count			 = countof(__beg, __end);
 				uint32_t i					 = id % CCY_NUM_THREADS;
 				do
 				{

@@ -53,16 +53,18 @@ namespace pul
 		pf_hint_nodiscard bool
 		__wait() pf_attr_noexcept
 		{
-			bool f = this->finished.load(atomic_order::acquire);
-			if (!f)
+      bool b = this->finished.load(atomic_order::relaxed);
+      if (b) return false;
+      while (!b)
 			{
-				this->finished.wait(f, atomic_order::acquire);
-			}
-			return f;
-		}
+        this_thread::yield();
+        b = this->finished.load(atomic_order::relaxed);
+      }
+      return !b;
+    }
 
 		/// Val
-		pf_hint_nodiscard _RetTy&
+		pf_hint_nodiscard _RetTy
 		__value() pf_attr_noexcept
 		{
 			pf_assert(this->__is_finished(), "Cannot get value of unfinished task!");
@@ -111,14 +113,14 @@ namespace pul
 		}
 
 		/// Wait
-		pf_hint_nodiscard pf_decl_inline bool
+		pf_decl_inline bool
 		wait() const pf_attr_noexcept
 		{
 			return this->store_->__wait();
 		}
 
 		/// Val
-		pf_hint_nodiscard pf_decl_inline _RetTy&
+		pf_hint_nodiscard pf_decl_inline _RetTy
 		value() pf_attr_noexcept
 		{
 			return this->store_->__value();
@@ -187,7 +189,7 @@ namespace pul
 	{
 		/// Constructors
 		__task_f(
-			__future_store<std::invoke_result_t<_FunTy>> *__store,
+			__future_store<std::invoke_result_t<_FunTy, _Args...>> *__store,
 			_FunTy && __fun,
 			_Args && ... __args) pf_attr_noexcept
 		: store(__store)
@@ -208,14 +210,13 @@ namespace pul
 		pf_decl_inline void
 		__call() pf_attr_override
 		{
-			*union_cast<std::invoke_result_t<_FunTy>*>(&this->store->retVal[0]) = tuple_apply(this->fun, std::move(this->args));
-			this->store->finished_.store(atomic_order::release);
-			this->store->finished.notify_all();
+			*union_cast<std::invoke_result_t<_FunTy, _Args...>*>(&this->store->retVal[0]) = tuple_apply(this->fun, std::move(this->args));
+			this->store->finished.store(true, atomic_order::release);
 			__task_destroy_delete(this);
 		}
 
 		/// Store
-		__future_store<std::invoke_result_t<_FunTy>> *store;
+		__future_store<std::invoke_result_t<_FunTy, _Args...>> *store;
 		_FunTy fun;
 		tuple<_Args...> args;
 	};
@@ -288,14 +289,14 @@ namespace pul
 	template <
 		typename _FunTy,
 		typename ... _Args>
-	pf_decl_static future<std::invoke_result_t<_FunTy>>
+	pf_decl_static future<std::invoke_result_t<_FunTy, _Args...>>
 	submit_future_task(
 		_FunTy&& __fun,
 		_Args&& ... __args) pf_attr_noexcept
-	requires(!std::is_void_v<std::invoke_result_t<_FunTy>> 
+	requires(!std::is_void_v<std::invoke_result_t<_FunTy, _Args...>> 
            && std::is_invocable_v<_FunTy, _Args...>)
 	{
-		auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy>>>();
+		auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
 		auto *t = __task_new_construct<__task_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
 		__task_enqueue(t);
 		return s;
@@ -303,15 +304,15 @@ namespace pul
 	template <
 		typename _FunTy,
 		typename ... _Args>
-	pf_decl_static future<std::invoke_result_t<_FunTy>>
+	pf_decl_static future<std::invoke_result_t<_FunTy, _Args...>>
 	submit_future_task_0(
 		_FunTy&& __fun,
 		_Args&& ... __args) pf_attr_noexcept
-	requires(!std::is_void_v<std::invoke_result_t<_FunTy>> 
+	requires(!std::is_void_v<std::invoke_result_t<_FunTy, _Args...>> 
            && std::is_invocable_v<_FunTy, _Args...>)
 	{
-		auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy>>>();
-		auto *t = __task_new_construct<__task_f<_FunTy, _Args...>>(s, fun_ptr(std::move(__fun)), std::forward<_Args>(__args)...);
+		auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
+		auto *t = __task_new_construct<__task_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
 		__task_enqueue_0(t);
 		return s;
 	}

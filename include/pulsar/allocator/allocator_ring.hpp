@@ -26,8 +26,8 @@ namespace pul
 	/// Type -> Header
 	struct __header_t
 	{
-		int32_t marked : 2;
-		int32_t next : sizeof(int32_t) - 2;
+		int32_t marked;
+		int32_t next;
 	};
 
 	/// Type -> Buffer
@@ -36,7 +36,7 @@ namespace pul
 		/// Constructor
 		__buffer_t() pf_attr_noexcept
 			: head(nullptr)
-			, tail(nullptr)
+			, tail(union_cast<__header_t*>(&this->seq[0]))
 		{}
 		__buffer_t(__buffer_t const&) = delete;
 		__buffer_t(__buffer_t &&)			= delete;
@@ -107,32 +107,35 @@ namespace pul
 				byte_t *nb = as_byte + __size;
 				byte_t *hb = union_cast<byte_t*>(this->head);
 				byte_t *tb = union_cast<byte_t*>(this->tail);
-				bool bad	 = (this->head > this->tail && nb > hb) || (nb > hb && as_byte <= tb);
+				bool bad	 = as_byte >= hb && as_byte <= tb && nb > hb && nb < tb;
 				if (pf_unlikely(bad))
 				{
 					size_t reclaimed = 0;
+					__header_t *lst	 = as_header;
+					as_header = this->head;
 					while (as_header != this->tail && as_header->marked)
 					{
-						const size_t n = as_header->next;
+						const int32_t n = as_header->next;
 						as_byte += n;
 						if (n > 0) reclaimed += n;
+						else reclaimed += distof(as_header, this->seq + __seqsize);
 					}
 					if(this->head == this->tail)
 					{
 						// Store
 						this->tail = as_header;
-						// this->head.store(as_header, atomic_order::relaxed);
 						this->head = as_header;
 					}
 					else if (pf_unlikely(reclaimed < __size))
 					{
 						return nullptr;
 					}
+					as_header = lst;
 				}
 
 				// Construct
 				as_header->marked = 0;
-				as_header->next		= __size;
+				as_header->next		= union_cast<int32_t>(__size);
 
 				// Store
 				this->tail->next = diffof(this->tail, as_byte);
