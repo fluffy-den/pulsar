@@ -14,32 +14,8 @@
 // Pulsar
 namespace pul
 {
-	/// DEBUG: Internal Allocator
-	__dbg_internal_allocator_t::__dbg_internal_allocator_t()
-	{
-		// Allocate
-		this->store_ = union_cast<allocator_samd_ring_buffer*>(halloc(sizeof(allocator_samd_ring_buffer) * CCY_NUM_THREADS));
-
-		// Construct
-		for (size_t i = 0; i < CCY_NUM_THREADS; ++i)
-		{
-			construct(&this->store_[i], DBG_ALLOCATOR_SIZE);
-		}
-	}
-	__dbg_internal_allocator_t::~__dbg_internal_allocator_t() pf_attr_noexcept
-	{
-		// Destroy
-		for (size_t i = 0; i < CCY_NUM_THREADS; ++i)
-		{
-			destroy(&this->store_[i]);
-		}
-
-		// Deallocate
-		hfree(this->store_);
-	}
-
 	/// DEBUG: Internal Allocator -> Instance
-	__dbg_internal_allocator_t __dbg_internal_allocator;
+	allocator_mamd_ring_buffer __dbg_internal_allocator = allocator_mamd_ring_buffer(65536);
 
 	/// DEBUG: Allocate / Deallocate
 	pulsar_api void*

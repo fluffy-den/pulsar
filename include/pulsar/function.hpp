@@ -42,7 +42,7 @@ namespace pul
 	class fun_ptr<_RetTy(_Args ...)>
 	{
 	public:
-		using return_type = _RetTy;
+		using return_t = _RetTy;
 
 		/// Constructors
 		/*! @brief Default constructor.
@@ -329,8 +329,8 @@ namespace pul
 				__fun_buf_base<_RetTy, _Args...> *as_base;
 			} t;
 			t.as_byte = &this->base_[0];
-			std::memcpy(t.as_byte, &__r.base_[0], sizeof(this->base_));
-			std::memset(&__r.base_[0], 0, sizeof(__r.base_));
+			memcpy(t.as_byte, &__r.base_[0], sizeof(this->base_));
+			memset(&__r.base_[0], 0, sizeof(__r.base_));
 		}
 		template<typename _FunTy>
 		pf_decl_inline pf_decl_constexpr
@@ -431,6 +431,9 @@ namespace pul
 		typename _Functor,
 		typename _Signature = typename __fun_helper<decltype(&_Functor::operator())>::type>
 	fun_buf(_Functor)->fun_buf<_Signature>;
+
+
+	// TODO: function signals
 }
 
 

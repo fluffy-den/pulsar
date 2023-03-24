@@ -16,6 +16,7 @@
 #include "pulsar/heap.hpp"
 #include "pulsar/function.hpp"
 #include "pulsar/chrono.hpp"
+#include "pulsar/concurrency.hpp"
 
 // Include: Fmt
 #include "fmt/color.h"
@@ -792,7 +793,7 @@ namespace dbg_flags
 		p = dbg_format_chrono_to(p);
 		p = fmt::format_to(
 			p, " T={} /{}/ message=",
-			union_cast<size_t>(std::this_thread::get_id()),
+			this_thread::get_id(),
 			fmt::styled('A', fmt::fg(fmt::color::orange) | fmt::bg(fmt::color::black)));
 		char_t *k = p;
 		p	 = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);

@@ -16,6 +16,7 @@
 #include "pulsar/heap.hpp"
 #include "pulsar/iterator.hpp"
 #include "pulsar/utility.hpp"
+#include "pulsar/debug.hpp"
 
 // Include: C++
 #include <concepts>
@@ -260,22 +261,6 @@ namespace pul
 	{
 		destroy(iterator(&__ptr->data[0]), iterator(&__ptr->data[0] + __ptr->count));
 	}
-	template <typename _Ty>
-	pf_decl_inline pf_decl_constexpr void
-	destroy_array(
-		_Ty *__ptr) pf_attr_noexcept
-	{
-		union
-		{
-			memory_array<_Ty> *as_array;
-			_Ty *as_type;
-		};
-		as_type = __ptr;
-		--as_array;
-		destroy(iterator(&as_array->data[0]),
-						iterator(&as_array->data[0] + as_array->count));
-	}
-
 
 	/// MEMORY: New Construct
 	template <typename _Ty, typename ... _Args>
@@ -737,9 +722,9 @@ namespace pul
 	destroy_delete_array(
 		_Ty *__ptr) pf_attr_noexcept
 	{
-		destroy_array(__ptr);
-		memory_array<_Ty> *as_array = union_cast<memory_array<_Ty>*>(__ptr);
-		hfree(--as_array);
+		memory_array<_Ty> *as_array = union_cast<memory_array<_Ty>*>(__ptr) - 1;
+		destroy(as_array);
+		hfree(as_array);
 	}
 	template<typename _Ty, typename _Allocator>
 	pf_decl_inline pf_decl_constexpr void
@@ -748,9 +733,9 @@ namespace pul
 		_Ty *__ptr) pf_attr_noexcept
 	requires(is_allocator_v<_Allocator>)
 	{
-		destroy_array(__ptr);
-		memory_array<_Ty> *as_array = union_cast<memory_array<_Ty>*>(__ptr);
-		deallocate(__all, --as_array);
+		memory_array<_Ty> *as_array = union_cast<memory_array<_Ty>*>(__ptr) - 1;
+		destroy(as_array);
+		deallocate(__all, as_array);
 	}
 
 }

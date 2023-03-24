@@ -1,19 +1,20 @@
-/*! @file   atomic_container.hpp
+/*! @file   concurrency.hpp
  *  @author Louis-Quentin Noé (noe.louis-quentin@hotmail.fr)
  *  @brief  Implementation of atomic (thread-safe) containers.
  *  @date   31-12-2022
  *
  *  @copyright Copyright (c) 2023 - Pulsar Software
  *
- *  @since 0.1.3
+ *  @since 0.1.4
  */
 
-#ifndef PULSAR_ATOMIC_CONTAINERS_HPP
-#define PULSAR_ATOMIC_CONTAINERS_HPP 1
+#ifndef PULSAR_CONCURRENCY_HPP
+#define PULSAR_CONCURRENCY_HPP 1
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
-#include "pulsar/tuple.hpp"
+#include "pulsar/utility.hpp"
+#include "pulsar/chrono.hpp"
 
 // Include: C++
 #include <thread>
@@ -44,13 +45,11 @@ namespace pul
 	using condition_variable_t = std::condition_variable;
 
 	/// CONCURRENCY: Thread
-	using thread_t		= std::thread;
 	using thread_id_t = uint32_t;
 
 	/// CONCURRENCY: This Thread
 namespace this_thread
 {
-	/// Sleep
 	pf_decl_inline void sleep_for(
 		nanoseconds_t __s)
 	{
@@ -61,86 +60,16 @@ namespace this_thread
 	{
 		std::this_thread::sleep_until(__p);
 	}
-
-	/// Yield
 	pf_decl_inline void yield()
 	{
 		std::this_thread::yield();
 	}
-
-	/// ID
-	pf_hint_nodiscard pf_decl_inline thread_id_t get_id()
+	pf_hint_nodiscard pf_decl_inline thread_id_t
+	get_id() pf_attr_noexcept
 	{
-		return union_cast<thread_id_t>(std::this_thread::get_id());
+		return union_cast<thread_id_t>(std::this_thread::get_id()) - 1;
 	}
-
-	// Local ID
-	pf_decl_static pf_decl_thread_local const thread_id_t id = this_thread::get_id();
+}
 }
 
-	/// CONCURRENCY: Job -> future
-	template <typename _RetTy>
-	class future_store
-	{
-	};
-	template <typename _RetTy>
-	class future
-	{
-	// TODO
-	};
-
-	/// CONCURRENCY: Job
-	pulsar_api void __submit_job_0_base(
-		fun_ptr<void(void*)> __fun,
-		void *__data) pf_attr_noexcept;
-	pulsar_api void __submit_job_base(
-		fun_ptr<void(void*)> __fun,
-		void *__data) pf_attr_noexcept;
-	template <typename _Fun, typename ... _Args>
-	void submit_job_0(
-		_Fun && __fun,
-		_Args && ... __args) pf_attr_noexcept
-	{
-
-	}
-	template <typename _Fun, typename ... _Args>
-	void submit_job(
-		_Fun && __fun,
-		_Args && ... __args) pf_attr_noexcept
-	{
-
-	}
-	// template <typename _Fun, typename ... _Args>
-	// void __submit_future_task(
-	// 	future_store<std::invoke_result_t<_Fun, _Args...>> *__store,
-	// 	_Fun && __fun,
-	// 	_Args && ... __args)
-	// {
-	//
-	// }
-	// template <typename _Fun, typename ... _Args>
-	// future<std::invoke_result_t<_Fun, _Args...>> submit_future_0(
-	// 	_Fun && __fun,
-	// 	_Args && ... __args) pf_attr_noexcept
-	// {
-	//
-	// }
-	// template <typename _Fun, typename ... _Args>
-	// future<std::invoke_result_t<_Fun, _Args...>> submit_future(
-	// 	_Fun && __fun,
-	// 	_Args && ... __args) pf_attr_noexcept
-	// {
-	//
-	// }
-
-	/// CONCURRENCY: Job -> Lock
-	// TODO
-
-	/// CONCURRENCY: Job -> Functions
-	pulsar_api bool
-	job_process() pf_attr_noexcept;
-	pulsar_api bool
-	job_process0();
-}
-
-#endif // !PULSAR_ATOMIC_CONTAINERS_HPP
+#endif // !PULSAR_CONCURRENCY_HPP

@@ -14,6 +14,7 @@
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
 #include "pulsar/hash.hpp"
+#include "pulsar/utility.hpp"
 
 // Pulsar
 namespace pul
@@ -616,16 +617,19 @@ namespace pul
 
 	/// TUPLE: Apply
 	template<typename _Fun, typename _Tuple, size_t... _Is>
-	pf_hint_nodiscard pf_decl_constexpr auto
-	__tuple_apply(_Fun &&__fun, _Tuple &&__tuple, index_sequence<_Is...>)
+	pf_decl_inline pf_decl_constexpr auto
+	__tuple_apply(
+    _Fun &&__fun, 
+    _Tuple &&__tuple, 
+    index_sequence<_Is...>)
 	{
-		return std::invoke(std::forward<_Fun>(__fun),
-											 i_get<_Is>(std::forward<_Tuple>(__tuple))...);
+		return __fun(i_get<_Is>(std::forward<_Tuple>(__tuple))...);
 	}
 	template<typename _Fun, typename _Tuple>
-	pf_hint_nodiscard pf_decl_constexpr auto
-	tuple_apply(_Fun &&__fun,
-							_Tuple &&__tuple)
+	pf_decl_inline pf_decl_constexpr auto
+	tuple_apply(
+    _Fun &&__fun,
+    _Tuple &&__tuple)
 	{
 		return __tuple_apply(std::forward<_Fun>(__fun), std::forward<_Tuple>(__tuple), make_index_sequence<tuple_size_v<_Tuple>>{});
 	}

@@ -186,8 +186,6 @@ CPMAddPackage(
   GIT_TAG v2.0.9
   GITHUB_REPOSITORY microsoft/mimalloc
   OPTION MI_OVERRIDE=ON)
-target_compile_definitions(
-  mimalloc-static PUBLIC MI_SECURE=3)
 target_link_libraries(
   ${PULSAR_LIBRARY_NAME}
   PUBLIC mimalloc-static

@@ -17,6 +17,8 @@
 // Pulsar
 namespace pul
 {
+  // TODO: https://github.com/Cyan4973/xxHash/blob/dev/xxhash.h
+
 	/// XXHASH: Impl
 namespace xxhash
 {

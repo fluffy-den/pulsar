@@ -13,7 +13,6 @@
 
 // Include: Pulsar
 #include "pulsar/debug.hpp"
-#include "pulsar/pulsar.hpp"
 
 // Include: C++
 #include <type_traits>

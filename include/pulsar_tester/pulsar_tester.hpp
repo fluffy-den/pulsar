@@ -14,13 +14,12 @@
 // Include: Pulsar
 #include "pulsar/debug.hpp"
 #include "pulsar/function.hpp"
-#include "pulsar/concurrency.hpp"
+#include "pulsar/memory.hpp"
+#include "pulsar/thread_pool.hpp"
+#include "pulsar/intrin.hpp"
 
 // Include: C++
 #include <thread>
-
-// Include: C
-#include <intrin.h>
 
 // Pulsar Tester 
 namespace pul
@@ -57,9 +56,6 @@ namespace pul
 	/// TESTER: Benchmark
 	class __tester_benchmark
 	{
-		/// Type
-    using __tester_thread_t = std::thread;
-
   public:
 		/// Constructor
     pulsar_api __tester_benchmark(
@@ -86,57 +82,70 @@ namespace pul
     void
     pf_decl_inline pf_decl_static __measure_proc(
       _FunTy &&__measureFun,
+      atomic<bool> *__lck,
+      atomic<uint32_t> *__numfinished,
       size_t __itc,
       size_t __off,
       uint64_t *__results)
     {
-      // Measure
-      for (size_t i = __off, e = __off + __itc; i != e; ++i)
+      // Wait
+      if (!__lck->load(atomic_order::relaxed))
       {
-        uint64_t s = __rdtsc();
-        pf_hint_maybe_unused pf_decl_volatile auto k = __measureFun(i);
-        __results[i] = __rdtsc() - s;
+        __lck->wait(false, atomic_order::acquire);
       }
+
+      // Measure
+      for (size_t i = __off, t = __off, e = __off + __itc; i != e; ++i)
+      {
+        uint64_t b = static_cast<uint64_t>(-1);
+        for (size_t j = 0; j < 9; ++j, ++t)
+        {
+          uint64_t s = __rdtsc();
+          pf_hint_maybe_unused pf_decl_volatile auto k = __measureFun(t);
+          uint64_t f = __rdtsc() - s;
+          if (f < b) b = f;
+        }
+        __results[i] = b;
+      }
+
+      // Finished
+      __numfinished->fetch_add(1, atomic_order::relaxed);
     }
     template <typename _FunTy>
     void
     measure(
       _FunTy &&__measureFun)
     {
-      // Anti-Boil (Bandwith Overhead + Throll Overhead)
-      this_thread::sleep_for(seconds_t(1));
+      // Allocate
+      const size_t num = this->num_iterations();
+      uint64_t *results = new_construct_array<uint64_t>(this->itc_ * this->ntt_);
 
-      // Measure
-      const size_t ni = this->num_iterations();
-      const size_t rs = sizeof(uint64_t) * ni;
-      const size_t ss = sizeof(__tester_thread_t) * this->ntt_;
-      const size_t ts = rs + ss;
-      byte_t *store = union_cast<byte_t *>(halloc(ts, align_val_t(32)));
-      std::memset(store, 0, ts);
-      __tester_thread_t *workers = union_cast<__tester_thread_t*>(&store[0]);
-      uint64_t *results = union_cast<uint64_t*>(&store[0] + ss);
+      // Submit Tasks & Measure
+      pf_alignas(CCY_ALIGN) atomic<bool> ready = false;
+      pf_alignas(CCY_ALIGN) atomic<uint32_t> numFinished = 0;
       for (size_t i = 1; i < this->ntt_; ++i)
       {
-        workers[i - 1] = __tester_thread_t(
-          this->__measure_proc<_FunTy>,
-          std::move(__measureFun), 
-          this->itc_, 
-          this->itc_ * i, 
-          results);
+        submit_task(
+             this->__measure_proc<_FunTy>,
+             std::move(__measureFun),
+             &ready,
+             &numFinished,
+             this->itc_,
+             this->itc_ * i,
+             results);
       }
-      this->__measure_proc(std::move(__measureFun), this->itc_, 0, results);
+      ready.store(true, atomic_order::relaxed);
+      ready.notify_all();
+      this->__measure_proc(std::move(__measureFun), &ready, &numFinished, this->itc_, 0, results);
 
-      // End Threads
-      for (size_t i = 1; i < this->ntt_; ++i)
-      {
-        if(workers[i - 1].joinable()) workers[i - 1].join();
-      }
+      // End
+      while (numFinished.load(atomic_order::relaxed) != this->ntt_) process_0();
 
       // Compute
-      __display_measures(results, ni);
+      __display_measures(results, num / 10);
 
       // Deallocate
-      hfree(store);
+      destroy_delete_array(results);
     }
 
     /// Name
@@ -150,7 +159,7 @@ namespace pul
     pf_decl_inline pf_decl_constexpr size_t 
     num_iterations() const pf_attr_noexcept
     {
-      return this->itc_ * this->ntt_;
+      return this->itc_ * this->ntt_ * 10;
     }
 
     /// Num Threads
@@ -348,7 +357,5 @@ public:																											                   \
 };                                                                             \
 pf_decl_static pf_decl_inline __pt_generate_benchmark_instance_name(name);     \
 void __pt_generate_benchmark_type(name)::process(pul::__tester_benchmark &bvn)
-
-// TODO: Write down second to greater!
 
 #endif // !PULSAR_TESTER_HPP
