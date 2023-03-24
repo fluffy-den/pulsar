@@ -414,7 +414,8 @@ namespace pul
 			{
 				const thread_id_t id = this_thread::get_id();
 				uint32_t count			 = countof(__beg, __end);
-				uint32_t i					 = id;
+				if (pf_unlikely(count == 0)) return 0;
+				uint32_t i = id;
 				do
 				{
 					__header_t *c						 = this->__get_header(i);
