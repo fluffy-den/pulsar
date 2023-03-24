@@ -33,7 +33,7 @@ namespace pul
 	using __thread_t = std::thread;
 
 	/// task: Pool
-	class __task_pool_t
+	class __thread_pool_t
 	{
 	private:
 		/// Type -> Buffer
@@ -85,65 +85,21 @@ namespace pul
 	public:
 		/// Thread -> Process
 		pf_decl_static int32_t
-		__thread_process() pf_attr_noexcept
-		{
-			while(true)
-			{
-				// Stop?
-				{
-					lock_unique lck(buf_->mutex);
-					if (!buf_->run.load(atomic_order::relaxed)) return 0;
-					if (buf_->numTasks.load(atomic_order::relaxed) == 0)
-					{
-						buf_->numRunning.fetch_sub(1, atomic_order::relaxed);
-						buf_->cv.wait(lck, [&]() pf_attr_noexcept->bool
-						{
-							return !buf_->run.load(atomic_order::acquire)
-							|| buf_->numTasks.load(atomic_order::acquire) > 0;
-						});
-						buf_->numRunning.fetch_add(1, atomic_order::relaxed);
-					}
-				}
-
-				// Process
-				while (buf_->numTasks.load(atomic_order::relaxed) > 0)
-				{
-					uint32_t i	= 0;
-					__task_t *t = buf_->queue.try_dequeue();
-					while (t)
-					{
-						try
-						{
-							t->__call();
-						}
-						catch (dbg_exception const& __e)
-						{
-							// TODO: Move exception to main thread!
-						}
-						t = buf_->queue.try_dequeue();
-						++i;
-					}
-					if (i > 0) buf_->numTasks.fetch_sub(i, atomic_order::relaxed);
-				}
-			}
-
-			// Success
-			return 0;
-		}
+		__thread_process() pf_attr_noexcept;
 
 		/// Constructors
-		__task_pool_t();
-		__task_pool_t(__task_pool_t const &) = delete;
-		__task_pool_t(__task_pool_t &&)			 = delete;
+		__thread_pool_t();
+		__thread_pool_t(__thread_pool_t const &) = delete;
+		__thread_pool_t(__thread_pool_t &&)			 = delete;
 
 		/// Destructor
-		~__task_pool_t() pf_attr_noexcept;
+		~__thread_pool_t() pf_attr_noexcept;
 
 		/// Operator =
-		__task_pool_t &operator=(
-			__task_pool_t const&) = delete;
-		__task_pool_t &operator=(
-			__task_pool_t &&) = delete;
+		__thread_pool_t &operator=(
+			__thread_pool_t const&) = delete;
+		__thread_pool_t &operator=(
+			__thread_pool_t &&) = delete;
 
 		/// Allocate
 		pf_hint_nodiscard void*
@@ -169,7 +125,7 @@ namespace pul
 	};
 
 	/// CONCURRENCY: Thread Pool -> Instance
-	pf_decl_extern __task_pool_t __task_pool;
+	pf_decl_extern __thread_pool_t __task_pool;
 }
 
 #endif // !PULSAR_SRC_THREAD_POOL_HPP

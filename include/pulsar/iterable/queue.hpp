@@ -319,7 +319,7 @@ namespace pul
 				_Ty *__ptr) pf_attr_noexcept
 			{
 				const thread_id_t id = this_thread::get_id();
-				uint32_t i					 = id % CCY_NUM_THREADS;
+				uint32_t i					 = id;
 				do
 				{
 					__header_t *c		 = this->__get_header(i);
@@ -352,7 +352,7 @@ namespace pul
 				const uint32_t count = countof(__beg, __end);
 				if (pf_unlikely(count == 0 || count > this->seqcount)) return 0;
 				const thread_id_t id = this_thread::get_id();
-				uint32_t i					 = id % CCY_NUM_THREADS;
+				uint32_t i					 = id;
 				do
 				{
 					__header_t *c		 = this->__get_header(i);
@@ -384,7 +384,7 @@ namespace pul
 			__try_dequeue() pf_attr_noexcept
 			{
 				const thread_id_t id = this_thread::get_id();
-				uint32_t i					 = id % CCY_NUM_THREADS;
+				uint32_t i					 = id;
 				do
 				{
 					__header_t *c		 = this->__get_header(i);
@@ -414,7 +414,7 @@ namespace pul
 			{
 				const thread_id_t id = this_thread::get_id();
 				uint32_t count			 = countof(__beg, __end);
-				uint32_t i					 = id % CCY_NUM_THREADS;
+				uint32_t i					 = id;
 				do
 				{
 					__header_t *c						 = this->__get_header(i);

@@ -38,7 +38,7 @@ namespace pul
 		pt_unit(future_task_submit_0)
 		{
 			auto f = submit_future_task_0([](size_t __i){ return __i;}, 10);
-			process_0();
+			process_tasks_0();
 			f.wait();
 			auto r = f.value();
 		}

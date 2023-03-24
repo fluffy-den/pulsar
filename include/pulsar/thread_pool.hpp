@@ -22,6 +22,12 @@
 // Pulsar
 namespace pul
 {
+  
+	/// CONCURRENCY: Task -> Process
+	pulsar_api bool
+	process_tasks();
+	pulsar_api uint32_t
+	process_tasks_0();
 
 	/// CONCURRENCY: Task -> Future
 	template <typename _RetTy>
@@ -57,7 +63,17 @@ namespace pul
       if (b) return false;
       while (!b)
 			{
-        this_thread::yield();
+        if (this_thread::get_id() == 0)
+        {
+          if (process_tasks_0() == 0)
+          {
+            process_tasks();
+          }
+        }
+        else
+        {
+          process_tasks();
+        }
         b = this->finished.load(atomic_order::relaxed);
       }
       return !b;
@@ -316,12 +332,6 @@ namespace pul
 		__task_enqueue_0(t);
 		return s;
 	}
-
-	/// CONCURRENCY: Task -> Process
-	pulsar_api bool
-	process();
-	pulsar_api uint32_t
-	process_0();
 }
 
 #endif // !PULSAR_THREAD_POOL_HPP

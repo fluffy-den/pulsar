@@ -278,166 +278,40 @@ namespace pul
 	// MPMC Queue2
 	pt_pack(mpmc_lifo2_pack)
 	{
-		// pt_benchmark(pop2_t1, __bvn, 262144, 1)
+		pt_benchmark(pop2_t8, __bvn, 4096, 8)
+		{
+			mpmc_lifo2<size_t> queue(4096 * 128);
+			size_t *buf = new_construct_array<size_t>(__bvn.num_iterations());
+			for (size_t i = 0; i < __bvn.num_iterations(); ++i)
+			{
+				buf[i] = i;
+				queue.try_enqueue(&buf[i]);
+			}
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				return queue.try_dequeue();
+			});
+			destroy_delete_array(buf);
+		}
+		pt_benchmark(push2_t8, __bvn, 4096, 8)
+		{
+			mpmc_lifo2<size_t> queue(4096 * 128);
+			size_t *buf = new_construct_array<size_t>(__bvn.num_iterations());
+			for (size_t i = 0; i < __bvn.num_iterations(); ++i)
+			{
+				buf[i] = i;
+			}
+			__bvn.measure([&](size_t __index)
+			{
+				queue.try_enqueue(&buf[__index]);
+				return __index;
+			});
+			destroy_delete_array(buf);
+		}
+		// pt_benchmark(pop2_empty_t8, __bvn, 4096, 8)
 		// {
-		// 	mpmc_lifo2<size_t> queue(262144 * 2);
-
-		// 	size_t *buf = new_construct_array<size_t>(262144);
-		// 	for (size_t i = 0; i < 262144; ++i)
-		// 	{
-		// 		buf[i] = i;
-		// 		queue.try_enqueue(&buf[i]);
-		// 	}
-
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		ignore = __index;
-		// 		return queue.try_dequeue();
-		// 	});
-
-		// 	destroy_delete_array(buf);
-		// }
-		// pt_benchmark(pop2_t2, __bvn, 262144, 2)
-		// {
-		// 	mpmc_lifo2<size_t> queue(262144 * 4);
-
-		// 	size_t *buf = new_construct_array<size_t>(262144 * 2);
-		// 	for (size_t i = 0; i < 262144 * 2; ++i)
-		// 	{
-		// 		buf[i] = i;
-		// 		queue.try_enqueue(&buf[i]);
-		// 	}
-
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		ignore = __index;
-		// 		return queue.try_dequeue();
-		// 	});
-
-		// 	destroy_delete_array(buf);
-		// }
-		// pt_benchmark(pop2_t4, __bvn, 262144, 4)
-		// {
-		// 	mpmc_lifo2<size_t> queue(262144 * 8);
-
-		// 	size_t *buf = new_construct_array<size_t>(262144 * 4);
-		// 	for (size_t i = 0; i < 262144 * 4; ++i)
-		// 	{
-		// 		buf[i] = i;
-		// 		queue.try_enqueue(&buf[i]);
-		// 	}
-
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		ignore = __index;
-		// 		return queue.try_dequeue();
-		// 	});
-
-		// 	destroy_delete_array(buf);
-		// }
-		// pt_benchmark(pop2_t8, __bvn, 262144, 8)
-		// {
-		// 	mpmc_lifo2<size_t> queue(262144 * 16);
-
-		// 	size_t *buf = new_construct_array<size_t>(262144 * 8 + 1);
-		// 	for (size_t i = 0; i < 262144 * 8; ++i)
-		// 	{
-		// 		buf[i] = i;
-		// 		queue.try_enqueue(&buf[i]);
-		// 	}
-
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		ignore = __index;
-		// 		return queue.try_dequeue();
-		// 	});
-
-		// 	destroy_delete_array(buf);
-		// }
-		// pt_benchmark(push2_t1, __bvn, 262144, 1)
-		// {
-		// 	mpmc_lifo2<size_t> queue(262144 * 2);
-
-		// 	size_t *buf = new_construct_array<size_t>(262144);
-		// 	for (size_t i = 0; i < 262144; ++i)
-		// 	{
-		// 		buf[i] = i;
-		// 	}
-
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		queue.try_enqueue(&buf[__index]);
-		// 		return __index;
-		// 	});
-
-		// 	destroy_delete_array(buf);
-		// }
-		// pt_benchmark(push2_t2, __bvn, 262144, 2)
-		// {
-		// 	mpmc_lifo2<size_t> queue(262144 * 4);
-
-		// 	size_t *buf = new_construct_array<size_t>(262144 * 2);
-		// 	for (size_t i = 0; i < 262144 * 2; ++i)
-		// 	{
-		// 		buf[i] = i;
-		// 	}
-
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		queue.try_enqueue(&buf[__index]);
-		// 		return __index;
-		// 	});
-
-		// 	destroy_delete_array(buf);
-		// }
-		// pt_benchmark(push2_t4, __bvn, 262144, 4)
-		// {
-		// 	mpmc_lifo2<size_t> queue(262144 * 8);
-
-		// 	size_t *buf = new_construct_array<size_t>(262144 * 4);
-		// 	for (size_t i = 0; i < 262144 * 4; ++i)
-		// 	{
-		// 		buf[i] = i;
-		// 	}
-
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		queue.try_enqueue(&buf[__index]);
-		// 		return __index;
-		// 	});
-
-		// 	destroy_delete_array(buf);
-		// }
-		// pt_benchmark(push2_t8, __bvn, 262144, 8)
-		// {
-		// 	mpmc_lifo2<size_t> queue(262144 * 16);
-
-		// 	size_t *buf = new_construct_array<size_t>(262144 * 8);
-		// 	for (size_t i = 0; i < 262144 * 8; ++i)
-		// 	{
-		// 		buf[i] = i;
-		// 	}
-
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		queue.try_enqueue(&buf[__index]);
-		// 		return __index;
-		// 	});
-
-		// 	destroy_delete_array(buf);
-		// }
-		// pt_benchmark(pop2_empty_t1, __bvn, 262144, 1)
-		// {
-		// 	mpmc_lifo2<size_t> queue(262144);
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		ignore = __index;
-		// 		return queue.try_dequeue();
-		// 	});
-		// }
-		// pt_benchmark(pop2_empty_t8, __bvn, 262144, 8)
-		// {
-		// 	mpmc_lifo2<size_t> queue(262144 * 8);
+		// 	mpmc_lifo2<size_t> queue(4096 * 128);
 		// 	__bvn.measure([&](size_t __index)
 		// 	{
 		// 		ignore = __index;
@@ -449,109 +323,40 @@ namespace pul
 	// MPSC Concurrent Queue
 	pt_pack(moodycamel_queue)
 	{
-		// pt_benchmark(moodycamel_push_t1, __bvn, 262144, 1)
-		// {
-		// 	moodycamel::ConcurrentQueue<size_t> q;
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		return q.enqueue(__index);
-		// 	});
-		// }
-		// pt_benchmark(moodycamel_push_t2, __bvn, 262144, 2)
-		// {
-		// 	moodycamel::ConcurrentQueue<size_t> q;
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		return q.enqueue(__index);
-		// 	});
-		// }
-		// pt_benchmark(moodycamel_push_t4, __bvn, 262144, 4)
-		// {
-		// 	moodycamel::ConcurrentQueue<size_t> q;
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		return q.enqueue(__index);
-		// 	});
-		// }
-		// pt_benchmark(moodycamel_push_t8, __bvn, 262144, 8)
-		// {
-		// 	moodycamel::ConcurrentQueue<size_t> q;
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		return q.enqueue(__index);
-		// 	});
-		// }
-		// pt_benchmark(moodycamel_pop_t1, __bvn, 262144, 1)
-		// {
-		// 	moodycamel::ConcurrentQueue<size_t> q;
-		// 	for (size_t i = 0; i < 262144; ++i)
-		// 	{
-		// 		q.enqueue(i);
-		// 	}
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		ignore = __index;
-		// 		size_t s;
-		// 		q.try_dequeue(s);
-		// 		return s;
-		// 	});
-		// }
-		// pt_benchmark(moodycamel_pop_t2, __bvn, 262144, 2)
-		// {
-		// 	moodycamel::ConcurrentQueue<size_t> q;
-		// 	for (size_t i = 0; i < 262144 * 2; ++i)
-		// 	{
-		// 		q.enqueue(i);
-		// 	}
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		ignore = __index;
-		// 		size_t s;
-		// 		q.try_dequeue(s);
-		// 		return s;
-		// 	});
-		// }
-		// pt_benchmark(moodycamel_pop_t4, __bvn, 262144, 4)
-		// {
-		// 	moodycamel::ConcurrentQueue<size_t> q;
-		// 	for (size_t i = 0; i < 262144 * 4; ++i)
-		// 	{
-		// 		q.enqueue(i);
-		// 	}
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		ignore = __index;
-		// 		size_t s;
-		// 		q.try_dequeue(s);
-		// 		return s;
-		// 	});
-		// }
-		// pt_benchmark(moodycamel_pop_t8, __bvn, 262144, 8)
-		// {
-		// 	moodycamel::ConcurrentQueue<size_t> q;
-		// 	for (size_t i = 0; i < 262144 * 8; ++i)
-		// 	{
-		// 		q.enqueue(i);
-		// 	}
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		ignore = __index;
-		// 		size_t s;
-		// 		q.try_dequeue(s);
-		// 		return s;
-		// 	});
-		// }
-		// pt_benchmark(moodycamel_pop_empty_t8, __bvn, 262144, 8)
-		// {
-		// 	moodycamel::ConcurrentQueue<size_t> q;
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		ignore = __index;
-		// 		size_t s;
-		// 		q.try_dequeue(s);
-		// 		return s;
-		// 	});
-		// }
+		pt_benchmark(moodycamel_push_t8, __bvn, 4096, 8)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			__bvn.measure([&](size_t __index)
+			{
+				return q.enqueue(__index);
+			});
+		}
+		pt_benchmark(moodycamel_pop_t8, __bvn, 4096, 8)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			for (size_t i = 0; i < __bvn.num_iterations(); ++i)
+			{
+				q.enqueue(i);
+			}
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				size_t s;
+				q.try_dequeue(s);
+				return s;
+			});
+		}
+		pt_benchmark(moodycamel_pop_empty_t8, __bvn, 4096, 8)
+		{
+			moodycamel::ConcurrentQueue<size_t> q;
+			__bvn.measure([&](size_t __index)
+			{
+				ignore = __index;
+				size_t s;
+				q.try_dequeue(s);
+				return s;
+			});
+		}
 	}
 
 	// Atomic

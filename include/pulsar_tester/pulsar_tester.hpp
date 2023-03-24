@@ -139,7 +139,7 @@ namespace pul
       this->__measure_proc(std::move(__measureFun), &ready, &numFinished, this->itc_, 0, results);
 
       // End
-      while (numFinished.load(atomic_order::relaxed) != this->ntt_) process_0();
+      while (numFinished.load(atomic_order::relaxed) != this->ntt_) process_tasks_0();
 
       // Compute
       __display_measures(results, num / 10);
