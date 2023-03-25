@@ -18,6 +18,7 @@
 #include "pulsar/memory.hpp"
 #include "pulsar/utility.hpp"
 #include "pulsar/intrin.hpp"
+#include "pulsar/iterable.hpp"
 
 // Pulsar
 namespace pul
@@ -31,7 +32,7 @@ namespace pul
 
 	/// CONCURRENCY: Task -> Future
 	template <typename _RetTy>
-	struct __future_store
+	struct __future_store pf_attr_final
 	{
 		/// Constructors
 		__future_store() pf_attr_noexcept
@@ -92,7 +93,7 @@ namespace pul
 		byte_t retVal[sizeof(_RetTy)];
 	};
 	template <typename _RetTy>
-	class future
+	class future pf_attr_final
 	{
 	public:
 		/// Constructors
@@ -139,7 +140,8 @@ namespace pul
 		pf_hint_nodiscard pf_decl_inline _RetTy
 		value() pf_attr_noexcept
 		{
-			return this->store_->__value();
+      this->wait();
+      return this->store_->__value();
 		}
 
 	private:
@@ -174,7 +176,7 @@ namespace pul
 			_FunTy && __fun,
 			_Args && ... __args) pf_attr_noexcept
 		: fun(std::move(__fun))
-		, args{ std::forward<_Args>(__args)... }
+		, args(std::forward<_Args>(__args)...)
 		{}
 		__task(__task<_FunTy, _Args...> const &) = delete;
 		__task(__task<_FunTy, _Args...> &&)			 = delete;
@@ -210,7 +212,7 @@ namespace pul
 			_Args && ... __args) pf_attr_noexcept
 		: store(__store)
 		, fun(std::move(__fun))
-		, args(std::move(__args)...)
+		, args(std::forward<_Args>(__args)...)
 		{}
 		__task_f(__task_f const &) = delete;
 		__task_f(__task_f &&)			 = delete;
@@ -305,7 +307,7 @@ namespace pul
 	template <
 		typename _FunTy,
 		typename ... _Args>
-	pf_decl_static future<std::invoke_result_t<_FunTy, _Args...>>
+	pf_hint_nodiscard pf_decl_static future<std::invoke_result_t<_FunTy, _Args...>>
 	submit_future_task(
 		_FunTy&& __fun,
 		_Args&& ... __args) pf_attr_noexcept
@@ -320,7 +322,7 @@ namespace pul
 	template <
 		typename _FunTy,
 		typename ... _Args>
-	pf_decl_static future<std::invoke_result_t<_FunTy, _Args...>>
+	pf_hint_nodiscard pf_decl_static future<std::invoke_result_t<_FunTy, _Args...>>
 	submit_future_task_0(
 		_FunTy&& __fun,
 		_Args&& ... __args) pf_attr_noexcept
@@ -332,6 +334,363 @@ namespace pul
 		__task_enqueue_0(t);
 		return s;
 	}
+
+  /// CONCURRENCY: Task -> Pool
+  struct __task_pool_store_t
+  {
+    /// Constructors
+    __task_pool_store_t() pf_attr_noexcept
+      : state(0)
+    {}
+    __task_pool_store_t(__task_pool_store_t const &) = delete;
+    __task_pool_store_t(__task_pool_store_t &&)      = delete;
+
+    /// Destructor
+    ~__task_pool_store_t() pf_attr_noexcept
+    {
+      this->__wait();
+    }
+
+    /// Operator =
+    __task_pool_store_t &operator=(__task_pool_store_t const &) = delete;
+    __task_pool_store_t &operator=(__task_pool_store_t &&)      = delete;
+
+    /// Process
+    pf_decl_static void __process(
+      __task_pool_store_t *__store)
+    {
+      while(true)
+      {
+        auto b = __store->pool.remove_head();
+        while(b)
+        {
+          auto c = b;
+          auto t = c->store;
+          b = c->next;
+          __task_destroy_delete(c);
+          t->__call();
+        }
+
+        uint32_t v = __store->state.load(atomic_order::relaxed);
+        uint32_t n = ((v & 2) == 0) ? 0 : 1;
+        if (__store->state.compare_exchange_strong(v, n, atomic_order::release, atomic_order::relaxed) && n == 0)
+        {
+          return;
+        }
+      }
+    }
+
+    /// Submit
+    template <
+      typename _FunTy,
+      typename ... _Args>
+    void
+    __submit_task(
+      _FunTy&& __fun,
+      _Args && ... __args) pf_attr_noexcept
+    {
+      /// Initializing
+      using node_t = mpsc_singly_lifo<__task_t*>::node_t;
+      auto *n  = __task_new_construct<node_t>();
+      n->store = __task_new_construct<__task<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+      n->next  = nullptr;
+      this->pool.insert_tail(n);
+
+      /// Launch
+      if (this->__is_finished())
+      {
+        this->state.fetch_or(1, atomic_order::relaxed);
+        submit_task(__process, this);
+      }
+      else
+      {
+        this->state.fetch_or(2, atomic_order::relaxed);
+      }
+    }
+    template <
+      typename _FunTy,
+      typename ... _Args>
+    void
+    __submit_task_0(
+      _FunTy&& __fun,
+      _Args && ... __args) pf_attr_noexcept
+    {
+      /// Initializing
+      using node_t = mpsc_singly_lifo<__task_t*>::node_t;
+      auto *n  = __task_new_construct<node_t>();
+      n->store = __task_new_construct<__task<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+      n->next  = nullptr;
+      this->pool.insert_tail(n);
+
+      /// Launch
+      if (this->__is_finished())
+      {
+        this->state.fetch_or(1, atomic_order::relaxed);
+        submit_task_0(__process, this);
+      }
+      else
+      {
+        this->state.fetch_or(2, atomic_order::relaxed);
+      }
+    }
+
+    /// Submit Future
+    template <
+      typename _FunTy,
+      typename ... _Args>
+    pf_hint_nodiscard future<std::invoke_result_t<_FunTy, _Args...>>
+    __submit_future_task(
+      _FunTy&& __fun,
+      _Args&& ... __args) pf_attr_noexcept
+    {
+      /// Initializing
+      using node_t = mpsc_singly_lifo<__task_t*>::node_t;
+      auto *n  = __task_new_construct<node_t>();
+      auto *s  = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
+      n->store = __task_new_construct<__task_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+      n->next  = nullptr;
+      this->pool.insert_tail(n);
+
+      /// Launch
+      if (this->__is_finished())
+      {
+        this->state.fetch_or(1, atomic_order::relaxed);
+        submit_task(__process, this);
+      }
+      else
+      {
+        this->state.fetch_or(2, atomic_order::relaxed);
+      }
+
+      /// Return
+      return s;
+    }
+    template <
+      typename _FunTy,
+      typename ... _Args>
+    pf_hint_nodiscard future<std::invoke_result_t<_FunTy, _Args...>>
+    __submit_future_task_0(
+      _FunTy&& __fun,
+      _Args&& ... __args) pf_attr_noexcept
+    {
+      /// Initializing
+      using node_t = mpsc_singly_lifo<__task_t*>::node_t;
+      auto *n  = __task_new_construct<node_t>();
+      auto *s  = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
+      n->store = __task_new_construct<__task_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+      n->next  = nullptr;
+      this->pool.insert_tail(n);
+
+      /// Launch
+      if (this->__is_finished())
+      {
+        this->state.fetch_or(1, atomic_order::relaxed);
+        submit_task_0(__process, this);
+      }
+      else
+      {
+        this->state.fetch_or(2, atomic_order::relaxed);
+      }
+
+      /// Return
+      return s;
+    }
+
+    /// Finished
+    pf_hint_nodiscard bool
+    __is_finished() const pf_attr_noexcept
+    {
+      return this->state.load(atomic_order::relaxed) == 0;
+    }
+
+    /// Wait
+    bool
+    __wait() const pf_attr_noexcept
+    {
+      bool b = this->state.load(atomic_order::relaxed) == 0;
+      if (b) return false;
+      while (!b)
+      {
+        if (this_thread::get_id() == 0)
+        {
+          if (process_tasks_0() == 0)
+          {
+            process_tasks();
+          }
+        }
+        else
+        {
+          process_tasks();
+        }
+        b = this->state.load(atomic_order::relaxed) == 0;
+      }
+      return !b;
+    }
+
+    /// Store
+    pf_alignas(CCY_ALIGN) atomic<uint32_t> state; // 0 = waiting, 1 = running, 2 = enqueued
+    mpsc_singly_lifo<__task_t*> pool;
+  };
+  class task_pool_t pf_attr_final
+  {
+  public:
+    /// Constructors
+    task_pool_t()
+      : buf_(new_construct<__task_pool_store_t>())
+    {}
+    task_pool_t(task_pool_t const &) = delete;
+    task_pool_t(task_pool_t &&__r)
+      : buf_(__r.buf_)
+    {
+      __r.buf_ = nullptr;
+    }
+
+    /// Destructor
+    ~task_pool_t() pf_attr_noexcept
+    {
+      if (this->buf_) destroy_delete(this->buf_);
+    }
+
+    /// Operator =
+    task_pool_t &operator=(
+        task_pool_t const &) = delete;
+    task_pool_t &operator=(
+        task_pool_t &&__r) pf_attr_noexcept
+    {
+      if (pf_likely(this != &__r))
+      {
+        if (this->buf_) destroy_delete(this->buf_);
+        this->buf_ = __r.buf_;
+        __r.buf_ = nullptr;
+      }
+      return *this;
+    }
+
+    /// Submit
+    template <
+      typename _FunTy,
+      typename ... _Args>
+    void 
+    submit_task(
+      _FunTy&& __fun,
+      _Args&& ... __args) pf_attr_noexcept
+    {
+      this->buf_->__submit_task(std::move(__fun), std::forward<_Args>(__args)...);
+    }
+
+    /// Submit Future
+    template <
+      typename _FunTy,
+      typename ... _Args>
+    pf_hint_nodiscard future<std::invoke_result_t<_FunTy, _Args...>>
+    submit_future_task(
+      _FunTy&& __fun,
+      _Args&& ... __args) pf_attr_noexcept
+    requires(!std::is_void_v<std::invoke_result_t<_FunTy, _Args...>> 
+            && std::is_invocable_v<_FunTy, _Args...>)
+    {
+      return this->buf_->__submit_future_task(std::move(__fun), std::forward<_Args>(__args)...);
+    }
+
+    /// Finished
+    pf_hint_nodiscard bool
+    is_finished() const pf_attr_noexcept
+    {
+      return this->buf_->__is_finished();
+    }
+
+    /// Wait
+    bool
+    wait() const pf_attr_noexcept
+    {
+      return this->buf_->__wait();
+    }
+
+  private:
+    /// Store
+    __task_pool_store_t *buf_;
+  };
+
+  /// CONCURRENCY: Task -> Pool
+  class task_pool_0_t pf_attr_final
+  {
+  public:
+    /// Constructors
+    task_pool_0_t()
+      : buf_(new_construct<__task_pool_store_t>())
+    {}
+    task_pool_0_t(task_pool_0_t const &) = delete;
+    task_pool_0_t(task_pool_0_t &&__r)
+      : buf_(__r.buf_)
+    {
+      __r.buf_ = nullptr;
+    }
+    
+    /// Destructor
+    ~task_pool_0_t() pf_attr_noexcept
+    {
+      if (this->buf_) destroy_delete(this->buf_);
+    }
+
+    /// Operator =
+    task_pool_0_t &operator=(
+        task_pool_0_t const &) = delete;
+    task_pool_0_t &operator=(
+        task_pool_0_t &&__r) pf_attr_noexcept
+    {
+      if (pf_likely(this != &__r))
+      {
+        if (this->buf_) destroy_delete(this->buf_);
+        this->buf_ = __r.buf_;
+        __r.buf_ = nullptr;
+      }
+      return *this;
+    }
+
+    /// Submit
+    template <
+      typename _FunTy,
+      typename ... _Args>
+    void 
+    submit_task_0(
+      _FunTy&& __fun,
+      _Args&& ... __args) pf_attr_noexcept
+    {
+      this->buf_->__submit_task_0(std::move(__fun), std::forward<_Args>(__args)...);
+    }
+
+    /// Submit Future
+    template <
+      typename _FunTy,
+      typename ... _Args>
+    pf_hint_nodiscard future<std::invoke_result_t<_FunTy, _Args...>>
+    submit_future_task_0(
+      _FunTy&& __fun,
+      _Args&& ... __args) pf_attr_noexcept
+    requires(!std::is_void_v<std::invoke_result_t<_FunTy, _Args...>> 
+            && std::is_invocable_v<_FunTy, _Args...>)
+    {
+      return this->buf_->__submit_future_task_0(std::move(__fun), std::forward<_Args>(__args)...);
+    }
+
+    /// Finished
+    pf_hint_nodiscard bool
+    is_finished() const pf_attr_noexcept
+    {
+      return this->buf_->__is_finished();
+    }
+
+    /// Wait
+    bool
+    wait() const pf_attr_noexcept
+    {
+      return this->buf_->__wait();
+    }
+
+  private:
+    /// Store
+    __task_pool_store_t *buf_;
+  };
 }
 
 #endif // !PULSAR_THREAD_POOL_HPP

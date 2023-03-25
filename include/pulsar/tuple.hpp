@@ -151,7 +151,7 @@ namespace pul
 	{};
 
 	/// TUPLE: SFINAE -> Size
-	template<typename _Tuple>
+	template<typename _Tuple>           
 	struct tuple_size;
 	template<typename ... _Ts>
 	struct tuple_size<__tuple_base<_Ts...>>
@@ -428,14 +428,37 @@ namespace pul
 		pf_decl_constexpr
 		tuple(tuple<_Ts...> &&__r) = default;
 
+    /// Destructor
+    ~tuple() pf_attr_noexcept = default;
+
 		/// Operator=
 		pf_decl_constexpr tuple<_Ts...> &
 		operator=(tuple<_Ts...> const &__r) = default;
 		pf_decl_constexpr tuple<_Ts...> &
 		operator=(tuple<_Ts...> &&__r) = default;
 	};
+  template <>
+  struct tuple<> // Empty Tuple fix!
+  {
+    /// Constructors
+		pf_decl_constexpr
+		tuple() pf_attr_noexcept = default;
+    pf_decl_constexpr
+		tuple(tuple<> const &__r) = default;
+		pf_decl_constexpr
+		tuple(tuple<> &&__r) = default;
 
-	/// TUPLE: SFINAE -> Is Tuple
+    /// Destructor
+    ~tuple() pf_attr_noexcept = default;
+
+		/// Operator=
+		pf_decl_constexpr tuple<> &
+		operator=(tuple<> const &__r) = default;
+		pf_decl_constexpr tuple<> &
+		operator=(tuple<> &&__r) = default;
+  };
+
+  /// TUPLE: SFINAE -> Is Tuple
 	template<typename _Tuple>
 	struct is_tuple : std::false_type
 	{};
@@ -837,8 +860,28 @@ namespace pul
 		pf_decl_constexpr nuple<_Ts ...> &
 		operator =(nuple<_Ts ...> &&__r)			= default;
 	};
+  template <>
+  struct nuple<> /// Empty Nuple fix!
+  {
+    /// Constructors
+    pf_decl_constexpr
+		nuple() pf_attr_noexcept = default;
+    pf_decl_constexpr
+		nuple(nuple<> const &) = default;
+		pf_decl_constexpr
+		nuple(nuple<> &&) = default;
 
-	/// NUPLE: SFINAE -> Tuple Size
+    /// Destructor
+    ~nuple() pf_attr_noexcept = default;
+
+    /// Operator =
+    pf_decl_constexpr nuple<> &
+		operator =(nuple<> const &__r) = default;
+		pf_decl_constexpr nuple<> &
+		operator =(nuple<> &&__r) = default;
+  };
+
+  /// NUPLE: SFINAE -> Tuple Size
 	template <typename ..._Ts>
 	struct tuple_size<nuple<_Ts ...>> : std::integral_constant<size_t, sizeof...(_Ts)>
 	{};

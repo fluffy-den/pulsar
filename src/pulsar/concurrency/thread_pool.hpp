@@ -64,8 +64,8 @@ namespace pul
 				__buffer_t &&) = delete;
 
 			/// Store
-			pf_alignas(CCY_ALIGN) atomic<size_t> numTasks;
 			pf_alignas(CCY_ALIGN) atomic<bool> run;
+			pf_alignas(CCY_ALIGN) atomic<uint32_t> numTasks;
 			pf_alignas(CCY_ALIGN) atomic<uint32_t> numRunning;
 			mutex_t mutex;
 			condition_variable_t cv;

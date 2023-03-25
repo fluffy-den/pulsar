@@ -172,7 +172,7 @@ namespace pul
 			: count_(__v.count())
 			, store_(union_cast<wchar_t*>(halloc((count_ + 1) * sizeof(wchar_t), align_val_t(32), 0)))
 		{
-			std::memcpy(this->store_, __v.data(), __v.size());
+			memcpy(this->store_, __v.data(), __v.size());
 			*(this->data() + this->count_) = L'\0';
 		}
 
@@ -223,7 +223,7 @@ namespace pul
 		{
 			const size_t c = std::wcslen(__str);
 			iterator_t p	 = this->data() + std::wcslen(this->data());
-			std::memcpy(p, __str, std::wcslen(__str) * sizeof(wchar_t));
+			memcpy(p, __str, std::wcslen(__str) * sizeof(wchar_t));
 			this->count_ += c;
 			p						 += c;
 			*p = '\0';

@@ -20,9 +20,9 @@ namespace pul
 
 	/// Buffer
 	__thread_pool_t::__buffer_t::__buffer_t() pf_attr_noexcept
-		: numTasks(0)
-		, run(true)
-		, numRunning(CCY_NUM_WORKERS)
+		: run(true)
+		, numTasks(0)
+		, numRunning(0)
 		, queue(CCY_TASKS_MAX_NUM)
 		, queue0(CCY_TASKS_MAX_NUM_0)
 	{}
@@ -75,30 +75,28 @@ namespace pul
 	int32_t
 	__thread_pool_t::__thread_process() pf_attr_noexcept
 	{
-		while(true)
+		do
 		{
 			// Stop?
 			{
 				lock_unique lck(buf_->mutex);
-				if (!buf_->run.load(atomic_order::relaxed)) return 0;
 				if (buf_->numTasks.load(atomic_order::relaxed) == 0)
 				{
-					buf_->numRunning.fetch_sub(1, atomic_order::relaxed);
 					buf_->cv.wait(lck, [&]() pf_attr_noexcept->bool
 					{
-						return !buf_->run.load(atomic_order::acquire)
-						|| buf_->numTasks.load(atomic_order::acquire) > 0;
+						return !buf_->run.load(atomic_order::relaxed)
+						|| buf_->numTasks.load(atomic_order::relaxed) > 0;
 					});
 					buf_->numRunning.fetch_add(1, atomic_order::relaxed);
 				}
 			}
 
 			// Process
-			while (buf_->numTasks.load(atomic_order::relaxed) > 0)
+			while(uint32_t k = buf_->numTasks.load(atomic_order::relaxed) > 0)
 			{
 				uint32_t i	= 0;
 				__task_t *t = buf_->queue.try_dequeue();
-				while (t)
+				while(t)
 				{
 					try
 					{
@@ -110,10 +108,14 @@ namespace pul
 					}
 					t = buf_->queue.try_dequeue();
 					++i;
-				}
+				};
 				if (i > 0) buf_->numTasks.fetch_sub(i, atomic_order::relaxed);
+			};
+			{
+				lock_unique lck(buf_->mutex);
+				buf_->numRunning.fetch_sub(1, atomic_order::relaxed);
 			}
-		}
+		} while (buf_->run.load(atomic_order::relaxed));
 
 		// Success
 		return 0;
@@ -193,11 +195,15 @@ namespace pul
 		// Add
 		if(!this->buf_->queue.try_enqueue(__task))
 		{
+			return;
 			// TODO: Exception
 		}
-		this->buf_->numTasks.fetch_add(1, atomic_order::relaxed);
+
+		// Information
+		auto i = this->buf_->numTasks.fetch_add(1, atomic_order::relaxed);
+
 		// Wake-up?
-		if (this->buf_->numRunning.load(atomic_order::relaxed) <= CCY_NUM_WORKERS)
+		if (this->buf_->numRunning.load(atomic_order::relaxed) < CCY_NUM_WORKERS)
 		{
 			this->buf_->cv.notify_one();
 		}
@@ -208,6 +214,7 @@ namespace pul
 	{
 		if(!this->buf_->queue0.try_enqueue(__task))
 		{
+			return;
 			// TODO: Exception
 		}
 	}

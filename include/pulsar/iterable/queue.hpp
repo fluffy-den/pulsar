@@ -270,7 +270,6 @@ namespace pul
 				: seqcount(__seqcount)
 			{
 				pf_assert(this->seqcount > CCY_NUM_THREADS * 64, "seqcount_ must be greater than {}. seqcount_={}", CCY_NUM_THREADS * 64,  this->seqcount);
-				pf_assert(is_power_of_two(this->seqcount), "seqcount_ must be a power of two!");
 
 				// Construct lists
 				for (size_t i = 0; i < CCY_NUM_THREADS; ++i)
@@ -585,6 +584,8 @@ namespace pul
 		/// Type -> Node
 		struct __node_t
 		{
+			/// Constructor
+
 			// Flexible Arrays -> Disable warning
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpedantic"
@@ -648,7 +649,7 @@ namespace pul
 				__node_t *__b,
 				__node_t *__e) pf_attr_noexcept
 			{
-				uint32_t i = counter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
+				uint32_t i = this_thread::get_id();
 				while(true)
 				{
 					__list_t *l = this->__get_list(i);
@@ -706,8 +707,8 @@ namespace pul
 						t->next = l->head;
 						l->head = nullptr;
 						t				= l->tail.exchange(nullptr, atomic_order::acq_rel);
-						++i;
 					}
+					++i;
 				}
 				if (pf_likely(t)) t->next = nullptr;// Security
 				return h;

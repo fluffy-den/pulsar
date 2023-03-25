@@ -16,16 +16,13 @@
 // Include: Pulsar -> Tester
 #include "pulsar_tester/pulsar_tester.hpp"
 
-// Include: MoodyCamel
-#include "concurrentqueue.h"
-
 // Pulsar
 namespace pul
 {
 	// IDX benchmarks
 	pt_pack(idx_pack)
 	{
-		pt_benchmark(idx_get_t1, __bvn, 4096, 1)
+		pt_benchmark(idx_get_t1, __bvn, 16192, 1)
 		{
 			__bvn.measure([&](size_t __index)
 			{
@@ -33,7 +30,7 @@ namespace pul
 				return this_thread::get_id();
 			});
 		}
-		pt_benchmark(idx_get_t8, __bvn, 4096, 8)
+		pt_benchmark(idx_get_t8, __bvn, 16192, 8)
 		{
 			__bvn.measure([&](size_t __index)
 			{
@@ -278,9 +275,9 @@ namespace pul
 	// MPMC Queue2
 	pt_pack(mpmc_lifo2_pack)
 	{
-		pt_benchmark(pop2_t8, __bvn, 4096, 8)
+		pt_benchmark(pop2_t8, __bvn, 16192, 8)
 		{
-			mpmc_lifo2<size_t> queue(4096 * 128);
+			mpmc_lifo2<size_t> queue(16192 * 128);
 			size_t *buf = new_construct_array<size_t>(__bvn.num_iterations());
 			for (size_t i = 0; i < __bvn.num_iterations(); ++i)
 			{
@@ -294,9 +291,9 @@ namespace pul
 			});
 			destroy_delete_array(buf);
 		}
-		pt_benchmark(push2_t8, __bvn, 4096, 8)
+		pt_benchmark(push2_t8, __bvn, 16192, 8)
 		{
-			mpmc_lifo2<size_t> queue(4096 * 128);
+			mpmc_lifo2<size_t> queue(16192 * 128);
 			size_t *buf = new_construct_array<size_t>(__bvn.num_iterations());
 			for (size_t i = 0; i < __bvn.num_iterations(); ++i)
 			{
@@ -309,52 +306,13 @@ namespace pul
 			});
 			destroy_delete_array(buf);
 		}
-		// pt_benchmark(pop2_empty_t8, __bvn, 4096, 8)
-		// {
-		// 	mpmc_lifo2<size_t> queue(4096 * 128);
-		// 	__bvn.measure([&](size_t __index)
-		// 	{
-		// 		ignore = __index;
-		// 		return queue.try_dequeue();
-		// 	});
-		// }
-	}
-
-	// MPSC Concurrent Queue
-	pt_pack(moodycamel_queue)
-	{
-		pt_benchmark(moodycamel_push_t8, __bvn, 4096, 8)
+		pt_benchmark(pop2_empty_t8, __bvn, 16192, 8)
 		{
-			moodycamel::ConcurrentQueue<size_t> q;
-			__bvn.measure([&](size_t __index)
-			{
-				return q.enqueue(__index);
-			});
-		}
-		pt_benchmark(moodycamel_pop_t8, __bvn, 4096, 8)
-		{
-			moodycamel::ConcurrentQueue<size_t> q;
-			for (size_t i = 0; i < __bvn.num_iterations(); ++i)
-			{
-				q.enqueue(i);
-			}
+			mpmc_lifo2<size_t> queue(16192 * 128);
 			__bvn.measure([&](size_t __index)
 			{
 				ignore = __index;
-				size_t s;
-				q.try_dequeue(s);
-				return s;
-			});
-		}
-		pt_benchmark(moodycamel_pop_empty_t8, __bvn, 4096, 8)
-		{
-			moodycamel::ConcurrentQueue<size_t> q;
-			__bvn.measure([&](size_t __index)
-			{
-				ignore = __index;
-				size_t s;
-				q.try_dequeue(s);
-				return s;
+				return queue.try_dequeue();
 			});
 		}
 	}

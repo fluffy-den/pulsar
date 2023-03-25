@@ -204,15 +204,6 @@ target_link_libraries(
 )
 
 #
-# CPM -> MoodyCamel
-#
-CPMAddPackage(
-  NAME MoodyCamel
-  GIT_TAG master
-  GITHUB_REPOSITORY cameron314/concurrentqueue
-)
-
-#
 # Testing
 #
 set(PULSAR_TESTER_INTERNAL_LIBRARY_NAME
@@ -255,7 +246,7 @@ if(BUILD_TESTING)
     add_executable(${BINARY_NAME} ${TEST_SOURCE})
     target_link_libraries(
       ${BINARY_NAME}
-      PUBLIC ${PULSAR_TESTER_LIBRARY_NAME} concurrentqueue)
+      PUBLIC ${PULSAR_TESTER_LIBRARY_NAME})
     target_include_directories(
       ${BINARY_NAME}
       PRIVATE src)

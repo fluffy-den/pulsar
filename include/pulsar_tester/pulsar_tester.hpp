@@ -89,10 +89,7 @@ namespace pul
       uint64_t *__results)
     {
       // Wait
-      if (!__lck->load(atomic_order::relaxed))
-      {
-        __lck->wait(false, atomic_order::acquire);
-      }
+      while (!__lck->load(atomic_order::relaxed)) this_thread::yield();
 
       // Measure
       for (size_t i = __off, t = __off, e = __off + __itc; i != e; ++i)
@@ -135,7 +132,6 @@ namespace pul
              results);
       }
       ready.store(true, atomic_order::relaxed);
-      ready.notify_all();
       this->__measure_proc(std::move(__measureFun), &ready, &numFinished, this->itc_, 0, results);
 
       // End
