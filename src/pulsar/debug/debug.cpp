@@ -15,7 +15,7 @@
 namespace pul
 {
 	/// DEBUG: Internal Allocator -> Instance
-	allocator_mamd_ring_buffer __dbg_internal_allocator = allocator_mamd_ring_buffer(65536);
+	allocator_mamd_ring_buffer __dbg_internal_allocator = allocator_mamd_ring_buffer(65536 * 2);
 	task_pool_t __dbg_logger_task_pool;
 
 	/// DEBUG: Allocate / Deallocate

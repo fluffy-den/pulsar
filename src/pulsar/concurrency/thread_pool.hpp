@@ -23,11 +23,11 @@
 namespace pul
 {
 	/// task: Constants
-	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM					= 65536;
-	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM_0				= 131072;
+	pf_decl_constexpr size_t CCY_TASKS_ALLOCATOR_SIZE		= 524288;
+	pf_decl_constexpr size_t CCY_TASKS_ALLOCATOR_SIZE_0 = 2097152;
+	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM					= 8192;
+	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM_0				= 4096;
 	pf_decl_constexpr size_t CCY_CACHE_NUM0							= 32;
-	pf_decl_constexpr size_t CCY_TASKS_ALLOCATOR_SIZE		= 131072;
-	pf_decl_constexpr size_t CCY_TASKS_ALLOCATOR_SIZE_0 = 524288;
 
 	/// Type -> Thread
 	using __thread_t = std::thread;
@@ -35,7 +35,7 @@ namespace pul
 	/// task: Pool
 	class __thread_pool_t
 	{
-	private:
+	public:
 		/// Type -> Buffer
 		struct __buffer_t
 		{
@@ -82,11 +82,6 @@ namespace pul
 		__delete_buffer(
 			__buffer_t *__buf) pf_attr_noexcept;
 
-	public:
-		/// Thread -> Process
-		pf_decl_static int32_t
-		__thread_process() pf_attr_noexcept;
-
 		/// Constructors
 		__thread_pool_t();
 		__thread_pool_t(__thread_pool_t const &) = delete;
@@ -121,7 +116,7 @@ namespace pul
 
 	private:
 		/// Store
-		pf_decl_static pf_decl_inline __buffer_t *buf_ = nullptr;
+		__buffer_t *buf_;
 	};
 
 	/// CONCURRENCY: Thread Pool -> Instance

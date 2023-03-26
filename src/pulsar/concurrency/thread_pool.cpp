@@ -22,7 +22,7 @@ namespace pul
 	__thread_pool_t::__buffer_t::__buffer_t() pf_attr_noexcept
 		: run(true)
 		, numTasks(0)
-		, numRunning(0)
+		, numRunning(CCY_NUM_WORKERS)
 		, queue(CCY_TASKS_MAX_NUM)
 		, queue0(CCY_TASKS_MAX_NUM_0)
 	{}
@@ -72,27 +72,35 @@ namespace pul
 
 	/// Thread -> Process
 	int32_t
-	__thread_pool_t::__thread_process() pf_attr_noexcept
+	__thread_process(
+		__thread_pool_t::__buffer_t *__buf) pf_attr_noexcept
 	{
+		// Security: Makes every threads that everyone is launched
+		if (__buf->numRunning.fetch_sub(1, atomic_order::relaxed) != 1)
+		{
+			while(__buf->numRunning.load(atomic_order::relaxed) != 0);
+		}
+
+		// Worker
 		do
 		{
 			// Stop?
-			if (buf_->numTasks.load(atomic_order::relaxed) == 0)
+			if (__buf->numTasks.load(atomic_order::relaxed) == 0)
 			{
-				lock_unique lck(buf_->mutex);
-				buf_->cv.wait(lck, [&]() pf_attr_noexcept->bool
+				lock_unique lck(__buf->mutex);
+				__buf->cv.wait(lck, [&]() pf_attr_noexcept->bool
 				{
-					return !buf_->run.load(atomic_order::relaxed)
-					|| buf_->numTasks.load(atomic_order::relaxed) > 0;
+					return !__buf->run.load(atomic_order::relaxed)
+					|| __buf->numTasks.load(atomic_order::relaxed) > 0;
 				});
+				__buf->numRunning.fetch_add(1, atomic_order::relaxed);
 			}
-			buf_->numRunning.fetch_add(1, atomic_order::relaxed);
 
 			// Process
-			while(uint32_t k = buf_->numTasks.load(atomic_order::relaxed) > 0)
+			while(__buf->numTasks.load(atomic_order::relaxed) > 0)
 			{
 				uint32_t i	= 0;
-				__task_t *t = buf_->queue.try_dequeue();
+				__task_t *t = __buf->queue.try_dequeue();
 				while(t)
 				{
 					try
@@ -103,13 +111,13 @@ namespace pul
 					{
 						// TODO: Move exception to main thread!
 					}
-					t = buf_->queue.try_dequeue();
+					t = __buf->queue.try_dequeue();
 					++i;
 				};
-				if (i > 0) buf_->numTasks.fetch_sub(i, atomic_order::relaxed);
+				if (i > 0) __buf->numTasks.fetch_sub(i, atomic_order::relaxed);
 			};
-			buf_->numRunning.fetch_sub(1, atomic_order::relaxed);
-		} while (buf_->run.load(atomic_order::relaxed));
+			__buf->numRunning.fetch_sub(1, atomic_order::relaxed);
+		} while (__buf->run.load(atomic_order::relaxed));
 
 		// Success
 		return 0;
@@ -131,8 +139,9 @@ namespace pul
 		/// Threads
 		for (size_t i = 0; i < CCY_NUM_WORKERS; ++i)
 		{
-			construct(this->buf_->__get_thread(i), this->__thread_process);
+			construct(this->buf_->__get_thread(i), __thread_process, this->buf_);
 		}
+		while (this->buf_->numRunning.load(atomic_order::relaxed) != 0);
 	}
 
 	/// Destructor
@@ -145,12 +154,12 @@ namespace pul
 		/// Threads
 		for (size_t i = 0; i < CCY_NUM_WORKERS; ++i)
 		{
-			auto *t = this->buf_->__get_thread(i);
-			if (t->joinable()) t->join();
+			auto t = this->buf_->__get_thread(i);
+			if(t->joinable()) t->join();
 		}
 
 		/// Process 0
-		while(this->__process());
+		while (this->__process());
 		while(this->__process_0() > 0);
 
 		/// Allocators
@@ -194,7 +203,7 @@ namespace pul
 		}
 
 		// Information
-		auto i = this->buf_->numTasks.fetch_add(1, atomic_order::relaxed);
+		this->buf_->numTasks.fetch_add(1, atomic_order::relaxed);
 
 		// Wake-up?
 		if (this->buf_->numRunning.load(atomic_order::relaxed) < CCY_NUM_WORKERS)
