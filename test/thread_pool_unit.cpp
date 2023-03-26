@@ -29,7 +29,7 @@ namespace pul
 		{
 			submit_task_0([](size_t __i){ return __i;}, 10);
 		}
-		pt_benchmark(task_submit_benchmark_t1, __bvn, 1024, 1)
+		pt_benchmark(task_submit_benchmark_t1, __bvn, 512, 1)
 		{
 			__bvn.measure([&](size_t __i)
 			{
@@ -37,14 +37,14 @@ namespace pul
 				return __i;
 			});
 		}
-		// pt_benchmark(task_submit_benchmark_t8, __bvn, 4096, 8)
-		// {
-		// 	__bvn.measure([&](size_t __i)
-		// 	{
-		// 		submit_task([](size_t __k){ return __k;}, __i);
-		// 		return __i;
-		// 	});
-		// }
+		pt_benchmark(task_submit_benchmark_t8, __bvn, 512, 8)
+		{
+			__bvn.measure([&](size_t __i)
+			{
+				submit_task([](size_t __k){ return __k;}, __i);
+				return __i;
+			});
+		}
 		//
 		// pt_unit(future_task_submit)
 		// {

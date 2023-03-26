@@ -79,18 +79,13 @@ namespace pul
 
     /// Computation
     template <typename _FunTy>
-    void
-    pf_decl_inline pf_decl_static __measure_proc(
+    pf_decl_static void
+    __measure_proc(
       _FunTy &&__measureFun,
-      atomic<bool> *__lck,
-      atomic<uint32_t> *__numfinished,
       size_t __itc,
       size_t __off,
       uint64_t *__results)
     {
-      // Wait
-      while (!__lck->load(atomic_order::relaxed));
-
       // Measure
       for (size_t i = __off, t = __off, e = __off + __itc; i != e; ++i)
       {
@@ -104,9 +99,25 @@ namespace pul
         }
         __results[i] = b;
       }
+    }
+    template <typename _FunTy>
+    pf_decl_static void
+    __measure_proc_worker(
+      _FunTy &&__measureFun,
+      atomic<uint32_t> *__control,
+      size_t __itc,
+      size_t __off,
+      uint64_t *__results)
+    {
+      // Wait
+      __control->fetch_add(1, atomic_order::relaxed);
+      while (__control->load(atomic_order::relaxed) != 1);
+
+      // Measure
+      __measure_proc(std::move(__measureFun), __itc, __off, __results);
 
       // Finished
-      __numfinished->fetch_add(1, atomic_order::relaxed);
+      __control->fetch_add(1, atomic_order::relaxed);
     }
     template <typename _FunTy>
     void
@@ -118,24 +129,17 @@ namespace pul
       uint64_t *results = new_construct_array<uint64_t>(this->itc_ * this->ntt_);
 
       // Submit Tasks & Measure
-      pf_alignas(CCY_ALIGN) atomic<bool> ready = false;
-      pf_alignas(CCY_ALIGN) atomic<uint32_t> numFinished = 0;
+      pf_alignas(CCY_ALIGN) atomic<uint32_t> control = 1;
       for (size_t i = 1; i < this->ntt_; ++i)
       {
-        submit_task(
-             this->__measure_proc<_FunTy>,
-             std::move(__measureFun),
-             &ready,
-             &numFinished,
-             this->itc_,
-             this->itc_ * i,
-             results);
+        submit_task(this->__measure_proc_worker<_FunTy>, std::move(__measureFun), &control, this->itc_, this->itc_ * i, results);
       }
-      ready.store(true, atomic_order::relaxed);
-      this->__measure_proc(std::move(__measureFun), &ready, &numFinished, this->itc_, 0, results);
+      while (control.load(atomic_order::relaxed) != this->ntt_);
+      control.store(1, atomic_order::relaxed);
+      this->__measure_proc(std::move(__measureFun), this->itc_, 0, results);
 
       // End
-      while (numFinished.load(atomic_order::relaxed) != this->ntt_) process_tasks_0();
+      while (control.load(atomic_order::relaxed) != this->ntt_);
 
       // Compute
       __display_measures(results, num / 10);

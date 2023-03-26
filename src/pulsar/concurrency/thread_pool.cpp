@@ -22,7 +22,7 @@ namespace pul
 	__thread_pool_t::__buffer_t::__buffer_t() pf_attr_noexcept
 		: run(true)
 		, numTasks(0)
-		, numRunning(CCY_NUM_WORKERS)
+		, numProcessing(0)
 		, queue(CCY_TASKS_MAX_NUM)
 		, queue0(CCY_TASKS_MAX_NUM_0)
 	{}
@@ -75,12 +75,6 @@ namespace pul
 	__thread_process(
 		__thread_pool_t::__buffer_t *__buf) pf_attr_noexcept
 	{
-		// Security: Makes every threads that everyone is launched
-		if (__buf->numRunning.fetch_sub(1, atomic_order::relaxed) != 1)
-		{
-			while(__buf->numRunning.load(atomic_order::relaxed) != 0);
-		}
-
 		// Worker
 		do
 		{
@@ -88,13 +82,13 @@ namespace pul
 			if (__buf->numTasks.load(atomic_order::relaxed) == 0)
 			{
 				lock_unique lck(__buf->mutex);
-				__buf->cv.wait(lck, [&]() pf_attr_noexcept->bool
+				while(__buf->run.load(atomic_order::relaxed) == true
+							&& __buf->numTasks.load(atomic_order::relaxed) < __buf->numProcessing.load(atomic_order::relaxed))
 				{
-					return !__buf->run.load(atomic_order::relaxed)
-					|| __buf->numTasks.load(atomic_order::relaxed) > 0;
-				});
-				__buf->numRunning.fetch_add(1, atomic_order::relaxed);
+					this_thread::yield();
+				}
 			}
+			__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
 
 			// Process
 			while(__buf->numTasks.load(atomic_order::relaxed) > 0)
@@ -116,8 +110,8 @@ namespace pul
 				};
 				if (i > 0) __buf->numTasks.fetch_sub(i, atomic_order::relaxed);
 			};
-			__buf->numRunning.fetch_sub(1, atomic_order::relaxed);
-		} while (__buf->run.load(atomic_order::relaxed));
+			__buf->numProcessing.fetch_sub(1, atomic_order::relaxed);
+		} while (__buf->run.load(atomic_order::relaxed) == true);
 
 		// Success
 		return 0;
@@ -141,7 +135,6 @@ namespace pul
 		{
 			construct(this->buf_->__get_thread(i), __thread_process, this->buf_);
 		}
-		while (this->buf_->numRunning.load(atomic_order::relaxed) != 0);
 	}
 
 	/// Destructor
@@ -204,12 +197,6 @@ namespace pul
 
 		// Information
 		this->buf_->numTasks.fetch_add(1, atomic_order::relaxed);
-
-		// Wake-up?
-		if (this->buf_->numRunning.load(atomic_order::relaxed) < CCY_NUM_WORKERS)
-		{
-			this->buf_->cv.notify_one();
-		}
 	}
 	void
 	__thread_pool_t::__submit_0(

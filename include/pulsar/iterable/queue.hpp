@@ -66,7 +66,7 @@ namespace pul
 			{
 				// Initialisation
 				size_t h = this->head.load(atomic_order::relaxed) % this->maxcount;
-				size_t t = this->tail.load(atomic_order::acquire) % this->maxcount;
+				size_t t = this->tail.load(atomic_order::relaxed) % this->maxcount;
 				size_t c = writers.fetch_add(1, atomic_order::relaxed);
 
 				// Verify
@@ -97,7 +97,7 @@ namespace pul
 			pf_hint_nodiscard _Ty*
 			__try_dequeue() pf_attr_noexcept
 			{
-				size_t h = this->head.load(atomic_order::acquire) % this->maxcount;
+				size_t h = this->head.load(atomic_order::relaxed) % this->maxcount;
 				size_t t = this->tail.load(atomic_order::relaxed) % this->maxcount;
 				if (h == t) return nullptr;
 				size_t c = readers.fetch_add(1, atomic_order::relaxed);
@@ -322,11 +322,11 @@ namespace pul
 				do
 				{
 					__header_t *c		 = this->__get_header(i);
-					const uint32_t h = c->head.load(atomic_order::acquire);
+					const uint32_t h = c->head.load(atomic_order::relaxed);
 					uint32_t t			 = c->tail.load(atomic_order::relaxed);
 					if (t == h - 1
 							|| !c->tail.compare_exchange_strong(
-								t, t + 1, atomic_order::release, atomic_order::relaxed))
+								t, t + 1, atomic_order::relaxed, atomic_order::relaxed))
 					{
 						i = (i + 1) % CCY_NUM_THREADS;
 					}
@@ -355,12 +355,12 @@ namespace pul
 				do
 				{
 					__header_t *c		 = this->__get_header(i);
-					const uint32_t h = c->head.load(atomic_order::acquire);
+					const uint32_t h = c->head.load(atomic_order::relaxed);
 					uint32_t t			 = c->tail.load(atomic_order::relaxed);
 					const uint32_t n = (t + count);
 					if ((n > h - 1 && n > union_cast<uint32_t>(-1) - count)
 							|| !c->tail.compare_exchange_strong(
-								t, t + count, atomic_order::release, atomic_order::relaxed))
+								t, t + count, atomic_order::relaxed, atomic_order::relaxed))
 					{
 						i = (i + 1) % CCY_NUM_THREADS;
 					}
@@ -388,10 +388,10 @@ namespace pul
 				{
 					__header_t *c		 = this->__get_header(i);
 					uint32_t h			 = c->head.load(atomic_order::relaxed);
-					const uint32_t t = c->writer.load(atomic_order::acquire);
+					const uint32_t t = c->writer.load(atomic_order::relaxed);
 					if (h == t
 							|| !c->head.compare_exchange_strong(
-								h, h + 1, atomic_order::release, atomic_order::relaxed))
+								h, h + 1, atomic_order::relaxed, atomic_order::relaxed))
 					{
 						i = (i + 1) % CCY_NUM_THREADS;
 					}
@@ -419,13 +419,13 @@ namespace pul
 				{
 					__header_t *c						 = this->__get_header(i);
 					uint32_t h							 = c->head.load(atomic_order::relaxed);
-					const uint32_t t				 = c->writer.load(atomic_order::acquire);
+					const uint32_t t				 = c->writer.load(atomic_order::relaxed);
 					const uint32_t available = t - h;
 					if (count > available)
 						count = available;
 					if (count == 0
 							|| !c->head.compare_exchange_strong(
-								h, h + count, atomic_order::release, atomic_order::relaxed))
+								h, h + count, atomic_order::relaxed, atomic_order::relaxed))
 					{
 						i = (i + 1) % CCY_NUM_THREADS;
 					}
@@ -653,11 +653,11 @@ namespace pul
 				while(true)
 				{
 					__list_t *l = this->__get_list(i);
-					__node_t *b = l->tail.load(atomic_order::acquire);
+					__node_t *b = l->tail.load(atomic_order::relaxed);
 					__node_t *t = b;
-					if (l->tail.compare_exchange_strong(t, __e, atomic_order::release, atomic_order::relaxed))
+					if (l->tail.compare_exchange_strong(t, __e, atomic_order::relaxed, atomic_order::relaxed))
 					{
-						std::atomic_thread_fence(atomic_order::release);
+						std::atomic_thread_fence(atomic_order::relaxed);
 						if (pf_unlikely(!t))
 						{
 							l->head = __b;
@@ -688,11 +688,10 @@ namespace pul
 				{
 					__list_t *l = this->__get_list(i);
 					h = l->head;
-					if (l->tail.load(atomic_order::acquire))
+					if (l->tail.load(atomic_order::relaxed))
 					{
-						std::atomic_thread_fence(atomic_order::release);
 						l->head = nullptr;
-						t				= l->tail.exchange(nullptr, atomic_order::release);
+						t				= l->tail.exchange(nullptr, atomic_order::relaxed);
 					}
 					++i;
 				} while (!t && i < CCY_NUM_THREADS);
@@ -701,12 +700,11 @@ namespace pul
 				while (i < CCY_NUM_THREADS)
 				{
 					__list_t *l = this->__get_list(i);
-					if (l->tail.load(atomic_order::acquire))
+					if (l->tail.load(atomic_order::relaxed))
 					{
-						std::atomic_thread_fence(atomic_order::acq_rel);
 						t->next = l->head;
 						l->head = nullptr;
-						t				= l->tail.exchange(nullptr, atomic_order::acq_rel);
+						t				= l->tail.exchange(nullptr, atomic_order::relaxed);
 					}
 					++i;
 				}

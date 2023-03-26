@@ -66,7 +66,7 @@ namespace pul
 			/// Store
 			pf_alignas(CCY_ALIGN) atomic<bool> run;
 			pf_alignas(CCY_ALIGN) atomic<uint32_t> numTasks;
-			pf_alignas(CCY_ALIGN) atomic<uint32_t> numRunning;
+			pf_alignas(CCY_ALIGN) atomic<uint32_t> numProcessing;
 			mutex_t mutex;
 			condition_variable_t cv;
 			mpmc_lifo2<__task_t> queue;

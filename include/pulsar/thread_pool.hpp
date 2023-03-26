@@ -229,7 +229,7 @@ namespace pul
 		__call() pf_attr_override
 		{
 			*union_cast<std::invoke_result_t<_FunTy, _Args...>*>(&this->store->retVal[0]) = tuple_apply(this->fun, std::move(this->args));
-			this->store->finished.store(true, atomic_order::release);
+			this->store->finished.store(true, atomic_order::relaxed);
 			__task_destroy_delete(this);
 		}
 
@@ -373,7 +373,7 @@ namespace pul
 
         uint32_t v = __store->state.load(atomic_order::relaxed);
         uint32_t n = ((v & 2) == 0) ? 0 : 1;
-        if (__store->state.compare_exchange_strong(v, n, atomic_order::release, atomic_order::relaxed) && n == 0)
+        if (__store->state.compare_exchange_strong(v, n, atomic_order::relaxed, atomic_order::relaxed) && n == 0)
         {
           return;
         }
