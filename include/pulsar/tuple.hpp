@@ -646,7 +646,7 @@ namespace pul
     _Tuple &&__tuple, 
     index_sequence<_Is...>)
 	{
-		return __fun(i_get<_Is>(std::forward<_Tuple>(__tuple))...);
+		return __fun(i_get<_Is>(std::move(__tuple))...);
 	}
 	template<typename _Fun, typename _Tuple>
 	pf_decl_inline pf_decl_constexpr auto
@@ -654,7 +654,7 @@ namespace pul
     _Fun &&__fun,
     _Tuple &&__tuple)
 	{
-		return __tuple_apply(std::forward<_Fun>(__fun), std::forward<_Tuple>(__tuple), make_index_sequence<tuple_size_v<_Tuple>>{});
+		return __tuple_apply(std::forward<_Fun>(__fun), std::move(__tuple), make_index_sequence<tuple_size_v<_Tuple>>{});
 	}
 
 

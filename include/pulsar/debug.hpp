@@ -586,7 +586,7 @@ namespace dbg_flags
 	pf_decl_constexpr void
 	dbg_u8print(
 		dbg_u8string_format<_Args...> __fmt,
-		_Args && ... __args) pf_attr_noexcept
+		_Args && ... __args)
 	{
 		// Print
 		fmt::print(__fmt, std::forward<_Args>(__args)...);
@@ -666,19 +666,15 @@ namespace dbg_flags
 		}
 
 		/// Write
-		pf_decl_inline void write(
-			dbg_u8string_view __msg)
-		{
-			dbg_u8print("{}", __msg.begin());
-			if (this->c_) this->c_(__msg);
-		}
+		pulsar_api void write(
+			dbg_u8string && __msg);
 		pf_decl_inline void write(
 			dbg_level __lvl,
-			dbg_u8string_view __msg)
+			dbg_u8string && __msg)
 		{
 			if (__lvl > this->lvl_)
 			{
-				this->write(__msg);
+				this->write(std::move(__msg));
 			}
 		}
 
@@ -749,7 +745,7 @@ namespace dbg_flags
 			*(p++) = '\n';
 		}
 		prt.shrink(union_cast<size_t>(p) - union_cast<size_t>(prt.data()));
-		logger.write(prt);
+		logger.write(std::move(prt));
 	}
 	template <typename ..._Args>
 	pf_decl_static void
@@ -769,7 +765,7 @@ namespace dbg_flags
 		p = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
 		p = dbg_reformat_newlines_to(k);
 		prt.shrink(union_cast<size_t>(p) - union_cast<size_t>(prt.data()));
-		logger.write(prt);
+		logger.write(std::move(prt));
 	}
 	template <typename ..._Args>
 	pf_decl_static void
@@ -812,14 +808,14 @@ namespace dbg_flags
 		dbg_category const *__cat,
 		uint32_t __code,
 		uint32_t __flags,
-		dbg_u8string_view __msg)
+		dbg_u8string&& __msg)
 	{
-		throw(dbg_exception(__cat, __code, __flags, __msg));
+		throw(dbg_exception(__cat, __code, __flags, std::move(__msg)));
 	}
 	pf_hint_noreturn pf_decl_static pf_decl_inline void __dbg_assert(
-		dbg_u8string_view __msg) pf_attr_noexcept
+		dbg_u8string&& __msg) pf_attr_noexcept
 	{
-		logger.write(__msg);
+		logger.write(std::move(__msg));
 		std::abort();
 	}
 

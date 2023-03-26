@@ -71,25 +71,22 @@ namespace pul
 	}
 
 	/// Thread -> Process
-	/// Thread -> Process
 	int32_t
 	__thread_pool_t::__thread_process() pf_attr_noexcept
 	{
 		do
 		{
 			// Stop?
+			if (buf_->numTasks.load(atomic_order::relaxed) == 0)
 			{
 				lock_unique lck(buf_->mutex);
-				if (buf_->numTasks.load(atomic_order::relaxed) == 0)
+				buf_->cv.wait(lck, [&]() pf_attr_noexcept->bool
 				{
-					buf_->cv.wait(lck, [&]() pf_attr_noexcept->bool
-					{
-						return !buf_->run.load(atomic_order::relaxed)
-						|| buf_->numTasks.load(atomic_order::relaxed) > 0;
-					});
-					buf_->numRunning.fetch_add(1, atomic_order::relaxed);
-				}
+					return !buf_->run.load(atomic_order::relaxed)
+					|| buf_->numTasks.load(atomic_order::relaxed) > 0;
+				});
 			}
+			buf_->numRunning.fetch_add(1, atomic_order::relaxed);
 
 			// Process
 			while(uint32_t k = buf_->numTasks.load(atomic_order::relaxed) > 0)
@@ -111,10 +108,7 @@ namespace pul
 				};
 				if (i > 0) buf_->numTasks.fetch_sub(i, atomic_order::relaxed);
 			};
-			{
-				lock_unique lck(buf_->mutex);
-				buf_->numRunning.fetch_sub(1, atomic_order::relaxed);
-			}
+			buf_->numRunning.fetch_sub(1, atomic_order::relaxed);
 		} while (buf_->run.load(atomic_order::relaxed));
 
 		// Success

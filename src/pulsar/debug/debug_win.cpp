@@ -70,7 +70,7 @@ namespace pul
 		str.shrink(union_cast<size_t>(p) - union_cast<size_t>(str.begin()) + 1);
 
 		// 2. Print
-		logger.write(str);
+		logger.write(std::move(str));
 	}
 
 	/// DEBUG: Win -> Internal

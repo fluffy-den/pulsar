@@ -11,7 +11,7 @@
 // Include: Pulsar
 #include "pulsar/debug.hpp"
 #include "pulsar/allocator.hpp"
-#include "pulsar/concurrency.hpp"
+#include "pulsar/thread_pool.hpp"
 
 #ifndef PULSAR_SRC_DEBUG_HPP
 #define PULSAR_SRC_DEBUG_HPP 1
@@ -24,6 +24,7 @@ namespace pul
 
 	/// DEBUG: Internal Allocator -> Instance
 	pf_decl_extern allocator_mamd_ring_buffer __dbg_internal_allocator;
+	pf_decl_extern task_pool_t __dbg_logger_task_pool;
 }
 
 #endif // !PULSAR_SRC_DEBUG_HPP

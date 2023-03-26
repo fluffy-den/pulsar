@@ -89,7 +89,7 @@ namespace pul
       uint64_t *__results)
     {
       // Wait
-      while (!__lck->load(atomic_order::relaxed)) this_thread::yield();
+      while (!__lck->load(atomic_order::relaxed));
 
       // Measure
       for (size_t i = __off, t = __off, e = __off + __itc; i != e; ++i)

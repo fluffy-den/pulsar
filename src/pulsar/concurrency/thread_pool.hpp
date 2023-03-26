@@ -23,11 +23,11 @@
 namespace pul
 {
 	/// task: Constants
-	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM					= 65536 * 8;
-	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM_0				= 65536 * 4;
+	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM					= 65536;
+	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM_0				= 131072;
 	pf_decl_constexpr size_t CCY_CACHE_NUM0							= 32;
-	pf_decl_constexpr size_t CCY_TASKS_ALLOCATOR_SIZE		= 16777216 * 4;
-	pf_decl_constexpr size_t CCY_TASKS_ALLOCATOR_SIZE_0 = 16777216 * 16;
+	pf_decl_constexpr size_t CCY_TASKS_ALLOCATOR_SIZE		= 131072;
+	pf_decl_constexpr size_t CCY_TASKS_ALLOCATOR_SIZE_0 = 524288;
 
 	/// Type -> Thread
 	using __thread_t = std::thread;

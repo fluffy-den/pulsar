@@ -16,6 +16,7 @@ namespace pul
 {
 	/// DEBUG: Internal Allocator -> Instance
 	allocator_mamd_ring_buffer __dbg_internal_allocator = allocator_mamd_ring_buffer(65536);
+	task_pool_t __dbg_logger_task_pool;
 
 	/// DEBUG: Allocate / Deallocate
 	pulsar_api void*
@@ -52,6 +53,25 @@ namespace pul
 			PULSAR_VERSION_MINOR,
 			PULSAR_VERSION_PATCH);
 		dbg_u8print("{}", &buf[0]);
+	}
+
+	/// DEBUG: Logger -> Write
+	void
+	__dbg_logger_task(
+		dbg_logger::callback_t __c,
+		dbg_u8string_view __msg)
+	{
+		dbg_u8print("{}", __msg.begin());
+		if (__c) __c(__msg);
+	}
+	pulsar_api void
+	dbg_logger::write(
+		dbg_u8string&& __msg)
+	{
+		__dbg_logger_task_pool.submit_task(
+			__dbg_logger_task,
+			this->c_,
+			std::move(__msg));
 	}
 
 	/// DEBUG: Format
