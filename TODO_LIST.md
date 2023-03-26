@@ -16,17 +16,16 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 ### Thread-Pool ### (0.5)
 # iterable.hpp
 [x] lock-free ring buffer (samd ring buffer)
-[o] mpmc queue
-[o] mpsc unbuffered queue
+[x] mpmc queue
+[x] mpsc unbuffered queue
 
-[o] all_tests
-# concurrency.hpp
-
+[x] all_tests
 
 # debug.hpp
-[o] concurrent logger
+[x] concurrent logger
+[o] convert all string using __dbg_allocator
 
-[o] all_tests
+[x] all_tests
 
 ### Iterable ### (0.6)
 [o] sequence

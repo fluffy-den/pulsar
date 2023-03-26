@@ -14,10 +14,10 @@
 // Version
 #define PULSAR_VERSION_MAJOR         0
 #define PULSAR_VERSION_MINOR         1
-#define PULSAR_VERSION_PATCH         4
-#define PULSAR_VERSION_SHA_1        "876bd67"
+#define PULSAR_VERSION_PATCH         5
+#define PULSAR_VERSION_SHA_1        "cceb896"
 #define PULSAR_VERSION_BRANCH       "dev"
-#define PULSAR_VERSION_STRING       "0.1.4-dev-876bd67"
-#define PULSAR_VERSION_STRING_SHORT "0.1.4"
+#define PULSAR_VERSION_STRING       "0.1.5-dev-cceb896"
+#define PULSAR_VERSION_STRING_SHORT "0.1.5"
 
 #endif // !PULSAR_VERSION_HPP

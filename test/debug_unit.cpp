@@ -24,24 +24,27 @@ namespace pul
 	/// DBG: Test -> Allocator
 	pt_pack(dbg_allocator)
 	{
-		pt_unit(ring_buffer)
+		pt_benchmark(mimalloc_allocate_08t, __bvn, DBG_UNIT_NUM_ITERATIONS, 8)
 		{
-
-		}
-		pt_benchmark(ring_buffer_01t, __bvn, DBG_UNIT_NUM_ITERATIONS, 1)
-		{
-			__bvn.measure([&](size_t __i){ return __i;});
-			// TODO
+			const size_t n = __bvn.num_iterations();
+			void **p			 = new_construct_array<void*>(n);
+			__bvn.measure([&](size_t __i){ return p[__i] = halloc(8);});
+			for (size_t i = 0; i < n; ++i)
+			{
+				hfree(p[i]);
+			}
+			destroy_delete_array(p);
 		}
 		pt_benchmark(ring_buffer_08t, __bvn, DBG_UNIT_NUM_ITERATIONS, 8)
 		{
-			__bvn.measure([&](size_t __i){ return __i;});
-			// TODO
-		}
-		pt_benchmark(ring_buffer_16t, __bvn, DBG_UNIT_NUM_ITERATIONS, 16)
-		{
-			__bvn.measure([&](size_t __i){ return __i;});
-			// TODO
+			const size_t n = __bvn.num_iterations();
+			void **p			 = new_construct_array<void*>(n);
+			__bvn.measure([&](size_t __i){ return p[__i] = __dbg_allocate(8);});
+			for (size_t i = 0; i < n; ++i)
+			{
+				__dbg_deallocate(p[i]);
+			}
+			destroy_delete_array(p);
 		}
 	}
 
