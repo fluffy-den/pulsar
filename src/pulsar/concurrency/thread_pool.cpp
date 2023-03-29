@@ -76,7 +76,7 @@ namespace pul
 			__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
 
 			// Process
-			while(__buf->numTasks.load(atomic_order::relaxed) >= __buf->numProcessing.load(atomic_order::relaxed))// Avoid overload
+			while(__buf->numTasks.load(atomic_order::relaxed) >= __buf->numProcessing.load(atomic_order::relaxed))// NOTE: Avoid low task overhead
 			{
 				uint32_t i	= 0;
 				__task_t *t = __buf->queue.try_dequeue();

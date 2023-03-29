@@ -387,7 +387,7 @@ namespace pul
 				do
 				{
 					__header_t *c		 = this->__get_header(i);
-					uint32_t h			 = c->head.load(atomic_order::release);
+					uint32_t h			 = c->head.load(atomic_order::relaxed);
 					const uint32_t t = c->writer.load(atomic_order::acquire);
 					if (h == t
 							|| !c->head.compare_exchange_strong(
