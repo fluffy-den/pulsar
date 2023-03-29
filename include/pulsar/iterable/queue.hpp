@@ -255,7 +255,7 @@ namespace pul
 
 			/// Store
 			pf_alignas(CCY_ALIGN) atomic<uint32_t> head;
-			pf_alignas(CCY_ALIGN) atomic<uint32_t> writer;// TODO: tail writes writer
+			pf_alignas(CCY_ALIGN) atomic<uint32_t> writer;
 			pf_alignas(CCY_ALIGN) atomic<uint32_t> tail;
 		};
 

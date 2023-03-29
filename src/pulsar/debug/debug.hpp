@@ -80,11 +80,17 @@ namespace pul
 		}
 
 		/// Write
+		pf_decl_static pf_decl_inline void
+		__write_task(
+			dbg_u8string_view __str) pf_attr_noexcept
+		{
+			dbg_u8print("{}", __str.begin());
+		}
 		pf_decl_inline void
 		__write(
 			dbg_u8string &&__str) pf_attr_noexcept
 		{
-			dbg_u8print("{}", __str.begin());
+			this->pool_.submit_task(this->__write_task, std::move(__str));
 		}
 		pf_decl_inline void
 		__write(
