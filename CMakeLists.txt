@@ -91,9 +91,8 @@ if(MSVC)
   )
 else()
   set(PULSAR_COMPILER_FLAGS
-    -Wall -Wextra -Wshadow -Wformat=2 -Wunused -pedantic -Wno-unknown-pragmas -fvisibility=hidden # Warnings
-    -mmmx -msse -msse2 -mssse3 -msse3 -mfma -msse4 -msse4.1 -msse4.2 -mavx -mavx2 # Auto-Vectorisation
-    -ffunction-sections -fdata-sections)
+    -Wall -Wextra -Wshadow -Wformat=2 -Wunused -pedantic -Wno-unknown-pragmas # Warnings
+    -msse -msse2 -mssse3 -msse3 -mfma -msse4 -msse4.1 -msse4.2 -mavx -mavx2) # Auto-Vectorisation)
 endif()
 
 # Release

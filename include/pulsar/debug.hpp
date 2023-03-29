@@ -105,8 +105,6 @@ namespace dbg_flags
 	pulsar_api void
 	__dbg_deallocate(
 		void *__ptr) pf_attr_noexcept;
-	pulsar_api size_t
-	__dbg_purge() pf_attr_noexcept;
 
 	/// DEBUG: UTF8 -> Types
 	// String View
@@ -617,75 +615,31 @@ namespace dbg_flags
 		return fmt::bg(__ts);
 	}
 
-
 	/// DEBUG: Logger
-	class dbg_logger
-	{
-	public:
-		using callback_t = fun_ptr<void (dbg_u8string_view)>;
+	using dbg_logger_callback_t = fun_ptr<void (dbg_u8string_view)>;
 
-		/// Constructors
-		pulsar_api dbg_logger() pf_attr_noexcept;
-		dbg_logger(dbg_logger const &) = delete;
-		dbg_logger(dbg_logger &&)			 = delete;
+	/// Parameters
+	pf_hint_nodiscard pulsar_api dbg_level
+	dbg_log_filter() pf_attr_noexcept;
+	pf_hint_nodiscard pulsar_api dbg_logger_callback_t
+	dbg_log_callback() pf_attr_noexcept;
+	pulsar_api void
+	dbg_log_set_filter(
+		dbg_level __level) pf_attr_noexcept;
+	pulsar_api void
+	dbg_log_set_callback(
+		dbg_logger_callback_t __callback) pf_attr_noexcept;
 
-		/// Destructor
-		~dbg_logger() pf_attr_noexcept = default;
+	/// Elapsed Time
+	pulsar_api nanoseconds_t
+	dbg_elapsed_time() pf_attr_noexcept;
 
-		/// Callback
-		pf_decl_inline callback_t get_callback()
-		{
-			return this->c_;
-		}
-		pf_decl_inline void set_callback(
-			callback_t __c)
-		{
-			this->c_ = __c;
-		}
-
-		/// Level
-		pf_hint_nodiscard pf_decl_inline dbg_level
-		level() const pf_attr_noexcept
-		{
-			return this->lvl_;
-		}
-		pf_hint_nodiscard pf_decl_inline dbg_level
-		set_level(
-			dbg_level __lvl) pf_attr_noexcept
-		{
-			dbg_level lvl = this->lvl_;
-			this->lvl_ = __lvl;
-			return lvl;
-		}
-
-		/// Timer
-		pf_hint_nodiscard pf_decl_inline nanoseconds_t
-		elapsed_time() const pf_attr_noexcept
-		{
-			return high_resolution_clock_t::now() - this->timer_;
-		}
-
-		/// Write
-		pulsar_api void write(
-			dbg_u8string && __msg);
-		pf_decl_inline void write(
-			dbg_level __lvl,
-			dbg_u8string && __msg)
-		{
-			if (__lvl > this->lvl_)
-			{
-				this->write(std::move(__msg));
-			}
-		}
-
-	private:
-		callback_t c_;
-		dbg_level lvl_;
-		const high_resolution_point_t timer_;
-	};
-
-	// Instance
-	pf_decl_extern dbg_logger logger;
+	/// Logger
+	pulsar_api void dbg_log(
+		dbg_u8string &&__msg);
+	pulsar_api void dbg_log(
+		dbg_level __level,
+		dbg_u8string &&__msg);
 
 	/// DEBUG: Format
 	pf_hint_nodiscard pulsar_api char_t*
@@ -712,7 +666,7 @@ namespace dbg_flags
 		_Args && ... __args)
 	{
 		// 1. Level
-		if (__level < logger.level()) return;
+		if (__level < dbg_log_filter()) return;
 
 		// 2. Print
 		dbg_u8string_view lvl;
@@ -745,7 +699,7 @@ namespace dbg_flags
 			*(p++) = '\n';
 		}
 		prt.shrink(union_cast<size_t>(p) - union_cast<size_t>(prt.data()));
-		logger.write(std::move(prt));
+		dbg_log(std::move(prt));
 	}
 	template <typename ..._Args>
 	pf_decl_static void
@@ -755,7 +709,7 @@ namespace dbg_flags
 		_Args && ... __args)
 	{
 		// 1. Level
-		if (__level < logger.level()) return;
+		if (__level < dbg_log_filter()) return;
 
 		// 2. Print
 		dbg_u8string prt(DBG_FMT_BUFFER_SIZE, '\0');// TODO: Good size
@@ -765,7 +719,7 @@ namespace dbg_flags
 		p = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
 		p = dbg_reformat_newlines_to(k);
 		prt.shrink(union_cast<size_t>(p) - union_cast<size_t>(prt.data()));
-		logger.write(std::move(prt));
+		dbg_log(std::move(prt));
 	}
 	template <typename ..._Args>
 	pf_decl_static void
@@ -815,30 +769,9 @@ namespace dbg_flags
 	pf_hint_noreturn pf_decl_static pf_decl_inline void __dbg_assert(
 		dbg_u8string&& __msg) pf_attr_noexcept
 	{
-		logger.write(std::move(__msg));
+		dbg_log(std::move(__msg));
 		std::abort();
 	}
-
-	/// DEBUG: Initializer
-	// Type
-	class __dbg_initializer
-	{
-	public:
-		/// Constructors
-		pulsar_api __dbg_initializer() pf_attr_noexcept;
-		__dbg_initializer(__dbg_initializer const &) = delete;
-		__dbg_initializer(__dbg_initializer &&)			 = delete;
-
-		/// Destructor
-		~__dbg_initializer() pf_attr_noexcept;
-
-		/// Operator =
-		__dbg_initializer &operator=(__dbg_initializer const&) = delete;
-		__dbg_initializer &operator=(__dbg_initializer &&)		 = delete;
-	};
-
-	// Instance
-	pf_decl_extern __dbg_initializer __dbg_initializer_instance;
 }
 
 #define pf_print(...) pul::__dbg_print(__VA_ARGS__)

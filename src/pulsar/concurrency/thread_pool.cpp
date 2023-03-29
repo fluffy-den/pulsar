@@ -9,7 +9,7 @@
  */
 
 // Include: Pulsar
-#include "pulsar/concurrency/thread_pool.hpp"
+#include "pulsar/internal.hpp"
 
 // Pulsar
 namespace pul
@@ -27,20 +27,6 @@ namespace pul
 		, queue0(CCY_TASKS_MAX_NUM_0)
 	{}
 
-	/// Allocator
-	allocator_mamd_ring_buffer*
-	__thread_pool_t::__buffer_t::__get_allocator(
-		uint32_t __index) pf_attr_noexcept
-	{
-		union
-		{
-			byte_t *as_byte;
-			allocator_mamd_ring_buffer *as_allocator;
-		};
-		as_byte = &this->store[0];
-		return as_allocator + __index;
-	}
-
 	/// Thread
 	__thread_t*
 	__thread_pool_t::__buffer_t::__get_thread(
@@ -51,7 +37,7 @@ namespace pul
 			byte_t *as_byte;
 			__thread_t *as_thread;
 		};
-		as_byte = &this->store[0] + CCY_NUM_THREADS * sizeof(allocator_mamd_ring_buffer);
+		as_byte = &this->store[0];
 		return as_thread + __index;
 	}
 
@@ -60,7 +46,6 @@ namespace pul
 	__thread_pool_t::__make_buffer()
 	{
 		return new_construct_ex<__buffer_t>(
-			CCY_NUM_THREADS * sizeof(allocator_mamd_ring_buffer) +
 			CCY_NUM_WORKERS * sizeof(__thread_t));
 	}
 	void
@@ -123,13 +108,6 @@ namespace pul
 		/// Make Buffer
 		this->buf_ = this->__make_buffer();
 
-		/// Allocators
-		construct(this->buf_->__get_allocator(0), CCY_TASKS_ALLOCATOR_SIZE_0);
-		for (size_t i = 1; i < CCY_NUM_THREADS; ++i)
-		{
-			construct(this->buf_->__get_allocator(i), CCY_TASKS_ALLOCATOR_SIZE);
-		}
-
 		/// Threads
 		for (size_t i = 0; i < CCY_NUM_WORKERS; ++i)
 		{
@@ -152,35 +130,11 @@ namespace pul
 		}
 
 		/// Process 0
-		while (this->__process());
+		while(this->__process());
 		while(this->__process_0() > 0);
-
-		/// Allocators
-		for (size_t i = 0; i < CCY_NUM_THREADS; ++i)
-		{
-			destroy(this->buf_->__get_allocator(i));
-		}
 
 		/// Buffer
 		this->__delete_buffer(this->buf_);
-	}
-
-	/// Allocate
-	void*
-	__thread_pool_t::__allocate(
-		size_t __size) pf_attr_noexcept
-	{
-		auto *all = this->buf_->__get_allocator(this_thread::get_id());
-		void *ptr = all->allocate(__size);
-		pf_assert(ptr, "ptr is nullptr!");
-		return ptr;
-	}
-	void
-	__thread_pool_t::__deallocate(
-		void *__ptr) pf_attr_noexcept
-	{
-		auto *all = this->buf_->__get_allocator(this_thread::get_id());
-		return all->deallocate(__ptr);
 	}
 
 	/// Submit
@@ -234,22 +188,6 @@ namespace pul
 			++j;
 		}
 		return i;
-	}
-
-	/// CONCURRENCY: Task -> Allocation
-	pulsar_api
-	void*
-	__task_allocate(
-		size_t __size) pf_attr_noexcept
-	{
-		return __thread_pool.__allocate(__size);
-	}
-	pulsar_api
-	void
-	__task_deallocate(
-		void *__ptr) pf_attr_noexcept
-	{
-		__thread_pool.__deallocate(__ptr);
 	}
 
 	/// CONCURRENCY: Task -> Enqueue

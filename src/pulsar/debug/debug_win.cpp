@@ -9,7 +9,7 @@
  */
 
 // Include: Pulsar
-#include "pulsar/debug/debug_win.hpp"
+#include "pulsar/internal.hpp"
 
 // Windows
 #ifdef PF_OS_WINDOWS
@@ -57,7 +57,7 @@ namespace pul
 		p = dbg_format_chrono_to(p);
 		p = dbg_u8format_to(
 			p, " T={} /{}/ /{}/ ({}) message={} | ",
-			__dbg_exception_handler_win::thrower_thread_id(),
+			__internal.dbg_ex_ctx.threadID,
 			dbg_styled('E', dbg_style_fg(dbg_color::red)),
 			dbg_styled(catn.data(), dbg_style_fg(dbg_color::orange)),
 			dbg_styled(__code, dbg_style_fg(dbg_color::red)),
@@ -70,25 +70,41 @@ namespace pul
 		str.shrink(union_cast<size_t>(p) - union_cast<size_t>(str.begin()) + 1);
 
 		// 2. Print
-		logger.write(std::move(str));
+		dbg_log(std::move(str));
 	}
-
-	/// DEBUG: Win -> Internal
-	__dbg_internal_win_t __dbg_internal_win;
 
 	/// DEBUG: Win -> Exception Handler
 	/// Handle
-	LONG WINAPI __dbg_exception_handler_win::__vectored_exception_handler(
+	LONG WINAPI __dbg_exception_context_t::__vectored_exception_handler(
 		PEXCEPTION_POINTERS __info) pf_attr_noexcept
 	{
 		if (__info->ExceptionRecord->ExceptionInformation[1] == 0
-				&& __info != __dbg_internal_win.exp)
+				&& __info != __internal.dbg_ex_ctx.exp)
 		{
 			// Exception -> Ex
-			__dbg_internal_win.exid = GetCurrentThreadId();
-			__dbg_internal_win.exp	= __info;
+			__internal.dbg_ex_ctx.threadID = GetCurrentThreadId();
+			__internal.dbg_ex_ctx.exp			 = __info;
 		}
 		return EXCEPTION_CONTINUE_SEARCH;
+	}
+
+	/// Constructors
+	__dbg_exception_context_t::__dbg_exception_context_t() pf_attr_noexcept
+		: exp(nullptr)
+		, threadID(0)
+		, sehex(nullptr)
+	{
+		this->sehex = AddVectoredExceptionHandler(0, __vectored_exception_handler);
+		pf_assert(this->sehex, "[WIN] AddVectoredExceptionHandler for printing stacktrace failed! handle={}", this->sehex);
+	}
+
+	/// Destructor
+	__dbg_exception_context_t::~__dbg_exception_context_t() pf_attr_noexcept
+	{
+		if (this->sehex && !RemoveVectoredExceptionHandler(this->sehex))
+		{
+			pf_print(dbg_type::warning, dbg_level::low, "[WIN] RemoveVectoredExceptionHandler failed for handle={}!", this->sehex);
+		}
 	}
 
 	/// DEBUG: Win -> StackTrace
@@ -230,22 +246,8 @@ namespace pul
 		size_t __ignore)
 	{
 		// 1. Call
-		PEXCEPTION_POINTERS p = __dbg_exception_handler_win::current_exception();
+		PEXCEPTION_POINTERS p = __internal.dbg_ex_ctx.exp;
 		return __dbg_format_walk_to_win(__where, p->ContextRecord, __ignore);
-	}
-
-	/// Initialisers
-	void __dbg_exception_handler_win::__init() pf_attr_noexcept
-	{
-		__dbg_internal_win.sehex = AddVectoredExceptionHandler(0, __vectored_exception_handler);
-		pf_assert(__dbg_internal_win.sehex, "[WIN] AddVectoredExceptionHandler for printing stacktrace failed! handle={}", __dbg_internal_win.sehex);
-	}
-	void __dbg_exception_handler_win::__terminate() pf_attr_noexcept
-	{
-		if (__dbg_internal_win.sehex && !RemoveVectoredExceptionHandler(__dbg_internal_win.sehex))
-		{
-			pf_print(dbg_type::warning, dbg_level::low, "[WIN] RemoveVectoredExceptionHandler failed for handle={}!", __dbg_internal_win.sehex);
-		}
 	}
 
 	/// DEBUG: Win -> Convert
@@ -452,10 +454,10 @@ namespace pul
 		CONTEXT c;
 		std::memset(&c, 0, sizeof(c));
 		c.ContextFlags = CONTEXT_ALL;
-		HANDLE thread = OpenThread(THREAD_ALL_ACCESS, FALSE, __dbg_exception_handler_win::thrower_thread_id());
+		HANDLE thread = OpenThread(THREAD_ALL_ACCESS, FALSE, __internal.dbg_ex_ctx.threadID);
 		GetThreadContext(thread, &c);
-		mei.ThreadId												 = __dbg_exception_handler_win::thrower_thread_id();
-		mei.ExceptionPointers								 = __dbg_exception_handler_win::current_exception();
+		mei.ThreadId												 = __internal.dbg_ex_ctx.threadID;
+		mei.ExceptionPointers								 = __internal.dbg_ex_ctx.exp;
 		mei.ExceptionPointers->ContextRecord = &c;
 		mei.ClientPointers									 = FALSE;
 		dbg_u8string u8path = __dbg_generate_dumpbin_win(&mei, __dbg_flags_to_minidump_type_win(__flags));
@@ -649,29 +651,6 @@ namespace pul
 		/// Exit
 		std::abort();
 		#endif
-	}
-
-	/// DEBUG: Win -> Initializer
-	// Constructors
-	pulsar_api __dbg_initializer::__dbg_initializer() pf_attr_noexcept
-	{
-		__dbg_initializer_win::__init();
-	}
-	pulsar_api __dbg_initializer::~__dbg_initializer() pf_attr_noexcept
-	{
-		__dbg_initializer_win::__terminate();
-	}
-
-	/// DEBUG: Win -> Initializer
-	// Initialisers
-	void __dbg_initializer_win::__init() pf_attr_noexcept
-	{
-		__dbg_exception_handler_win::__init();
-		std::set_terminate(__dbg_terminate_win);
-	}
-	void __dbg_initializer_win::__terminate() pf_attr_noexcept
-	{
-		__dbg_exception_handler_win::__terminate();
 	}
 }
 

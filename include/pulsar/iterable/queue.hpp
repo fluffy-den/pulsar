@@ -322,11 +322,11 @@ namespace pul
 				do
 				{
 					__header_t *c		 = this->__get_header(i);
-					const uint32_t h = c->head.load(atomic_order::relaxed);
+					const uint32_t h = c->head.load(atomic_order::acquire);
 					uint32_t t			 = c->tail.load(atomic_order::relaxed);
 					if (t == h - 1
 							|| !c->tail.compare_exchange_strong(
-								t, t + 1, atomic_order::relaxed, atomic_order::relaxed))
+								t, t + 1, atomic_order::release, atomic_order::relaxed))
 					{
 						i = (i + 1) % CCY_NUM_THREADS;
 					}
@@ -355,12 +355,12 @@ namespace pul
 				do
 				{
 					__header_t *c		 = this->__get_header(i);
-					const uint32_t h = c->head.load(atomic_order::relaxed);
+					const uint32_t h = c->head.load(atomic_order::acquire);
 					uint32_t t			 = c->tail.load(atomic_order::relaxed);
 					const uint32_t n = (t + count);
 					if ((n > h - 1 && n > union_cast<uint32_t>(-1) - count)
 							|| !c->tail.compare_exchange_strong(
-								t, t + count, atomic_order::relaxed, atomic_order::relaxed))
+								t, t + count, atomic_order::release, atomic_order::relaxed))
 					{
 						i = (i + 1) % CCY_NUM_THREADS;
 					}
@@ -387,11 +387,11 @@ namespace pul
 				do
 				{
 					__header_t *c		 = this->__get_header(i);
-					uint32_t h			 = c->head.load(atomic_order::relaxed);
-					const uint32_t t = c->writer.load(atomic_order::relaxed);
+					uint32_t h			 = c->head.load(atomic_order::release);
+					const uint32_t t = c->writer.load(atomic_order::acquire);
 					if (h == t
 							|| !c->head.compare_exchange_strong(
-								h, h + 1, atomic_order::relaxed, atomic_order::relaxed))
+								h, h + 1, atomic_order::release, atomic_order::relaxed))
 					{
 						i = (i + 1) % CCY_NUM_THREADS;
 					}
@@ -419,13 +419,13 @@ namespace pul
 				{
 					__header_t *c						 = this->__get_header(i);
 					uint32_t h							 = c->head.load(atomic_order::relaxed);
-					const uint32_t t				 = c->writer.load(atomic_order::relaxed);
+					const uint32_t t				 = c->writer.load(atomic_order::acquire);
 					const uint32_t available = t - h;
 					if (count > available)
 						count = available;
 					if (count == 0
 							|| !c->head.compare_exchange_strong(
-								h, h + count, atomic_order::relaxed, atomic_order::relaxed))
+								h, h + count, atomic_order::release, atomic_order::relaxed))
 					{
 						i = (i + 1) % CCY_NUM_THREADS;
 					}
@@ -584,8 +584,6 @@ namespace pul
 		/// Type -> Node
 		struct __node_t
 		{
-			/// Constructor
-
 			// Flexible Arrays -> Disable warning
 	#pragma GCC diagnostic push
 	#pragma GCC diagnostic ignored "-Wpedantic"
@@ -600,9 +598,24 @@ namespace pul
 		/// Type -> Cache
 		struct __list_t
 		{
+			/// Constructors
+			__list_t() pf_attr_noexcept
+				: tail(nullptr)
+				, head(nullptr)
+			{}
+			__list_t(__list_t const &) = delete;
+			__list_t(__list_t &&)			 = delete;
+
+			/// Destructor
+			~__list_t() pf_attr_noexcept = default;
+
+			/// Operator =
+			__list_t &operator=(__list_t const &) = delete;
+			__list_t &operator=(__list_t &&)			= delete;
+
 			/// Store
-			pf_alignas(CCY_ALIGN) atomic<__node_t*> tail																								= nullptr;
-			__node_t *head																																							= nullptr;
+			pf_alignas(CCY_ALIGN) atomic<__node_t*> tail;
+			__node_t *head;
 			byte_t padd[static_cast<size_t>(CCY_ALIGN) - sizeof(atomic<__node_t*>) - sizeof(__node_t*)] = {0};
 		};
 
@@ -612,9 +625,10 @@ namespace pul
 			/// Constructors
 			__buffer_t() pf_attr_noexcept
 			{
-				for (size_t i = 0; i < CCY_NUM_THREADS; ++i)
+				for (size_t i = 0; i != CCY_NUM_THREADS; ++i)
 				{
-					construct(this->__get_list(i));
+					auto l = this->__get_list(i);
+					construct(l);
 				}
 			}
 			__buffer_t(__buffer_t const &) = delete;
@@ -657,7 +671,7 @@ namespace pul
 					__node_t *t = b;
 					if (l->tail.compare_exchange_strong(t, __e, atomic_order::relaxed, atomic_order::relaxed))
 					{
-						std::atomic_thread_fence(atomic_order::relaxed);
+						std::atomic_thread_fence(atomic_order::acq_rel);
 						if (pf_unlikely(!t))
 						{
 							l->head = __b;
@@ -686,6 +700,7 @@ namespace pul
 				// Initialize list
 				do
 				{
+					std::atomic_thread_fence(atomic_order::acq_rel);
 					__list_t *l = this->__get_list(i);
 					h = l->head;
 					if (l->tail.load(atomic_order::relaxed))
@@ -718,7 +733,7 @@ namespace pul
 
 			/// Store
 			pf_alignas(CCY_ALIGN) atomic<uint32_t> counter;
-			pf_alignas(CCY_ALIGN) byte_t store[1];
+			pf_alignas(CCY_ALIGN) byte_t store[];
 
 			// Flexible Arrays
 	#pragma GCC diagnostic pop

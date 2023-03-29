@@ -312,52 +312,28 @@ namespace pul
 
 	/// DEBUG: Win -> Internal
 	// Type
-	struct pf_alignas(32) __dbg_internal_win_t
+	struct pf_alignas(32) __dbg_exception_context_t
 	{
-		// Exception Handler
-		PEXCEPTION_POINTERS exp;
-		DWORD exid;
-		PVOID sehex;
-	};
+		/// Handle
+		pf_hint_nodiscard pf_decl_static LONG WINAPI __vectored_exception_handler(
+			PEXCEPTION_POINTERS __info) pf_attr_noexcept;
 
-	// Static
-	pf_decl_extern __dbg_internal_win_t __dbg_internal_win;
-
-	/// DEBUG: Win -> Exception Handler
-	class __dbg_exception_handler_win
-	{
-	/// Handle
-	pf_hint_nodiscard pf_decl_static LONG WINAPI __vectored_exception_handler(
-		PEXCEPTION_POINTERS __info) pf_attr_noexcept;
-
-	public:
 		/// Constructors
-		__dbg_exception_handler_win()																		 = delete;
-		__dbg_exception_handler_win(__dbg_exception_handler_win const &) = delete;
-		__dbg_exception_handler_win(__dbg_exception_handler_win &&)			 = delete;
-
-		/// Operator =
-		__dbg_exception_handler_win& operator=(__dbg_exception_handler_win const &) = delete;
-		__dbg_exception_handler_win& operator=(__dbg_exception_handler_win &&)			= delete;
+		__dbg_exception_context_t() pf_attr_noexcept;
+		__dbg_exception_context_t(__dbg_exception_context_t const&) = delete;
+		__dbg_exception_context_t(__dbg_exception_context_t &&)			= delete;
 
 		/// Destructor
-		~__dbg_exception_handler_win() = delete;
+		~__dbg_exception_context_t() pf_attr_noexcept;
 
-		/// Initializers
-		pf_decl_static void __init() pf_attr_noexcept;
-		pf_decl_static void __terminate() pf_attr_noexcept;
+		/// Operator =
+		__dbg_exception_context_t &operator=(__dbg_exception_context_t const &) = delete;
+		__dbg_exception_context_t &operator=(__dbg_exception_context_t &&)			= delete;
 
-		/// Current Exception
-		pf_hint_nodiscard pf_decl_static pf_decl_inline
-		DWORD thrower_thread_id() pf_attr_noexcept
-		{
-			return __dbg_internal_win.exid;
-		}
-		pf_hint_nodiscard pf_decl_static pf_decl_inline
-		PEXCEPTION_POINTERS current_exception() pf_attr_noexcept
-		{
-			return __dbg_internal_win.exp;
-		}
+		/// Exception Handler
+		PEXCEPTION_POINTERS exp;
+		DWORD threadID;
+		PVOID sehex;
 	};
 
 	/// DEBUG: Win -> StackTrace
@@ -404,27 +380,6 @@ namespace pul
 		uint32_t __flags,
 		dbg_u8string_view __what) pf_attr_noexcept;
 	pf_hint_noreturn void __dbg_terminate_win() pf_attr_noexcept;
-
-	/// DEBUG: Win -> Terminate Handler
-	class __dbg_initializer_win
-	{
-	public:
-		/// Constructors
-		__dbg_initializer_win()															= delete;
-		__dbg_initializer_win(__dbg_initializer_win const&) = delete;
-		__dbg_initializer_win(__dbg_initializer_win &&)			= delete;
-
-		/// Operator =
-		__dbg_initializer_win &operator=(__dbg_initializer_win const &) = delete;
-		__dbg_initializer_win &operator=(__dbg_initializer_win &&)			= delete;
-
-		/// Destructor
-		~__dbg_initializer_win() = delete;
-
-		/// Initializers
-		pf_decl_static void __init() pf_attr_noexcept;
-		pf_decl_static void __terminate() pf_attr_noexcept;
-	};
 }
 
 #endif // !PF_OS_WINDOWS

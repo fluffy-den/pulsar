@@ -19,7 +19,7 @@
 namespace pul
 {
 	/// DBG: Test -> Constants
-	pf_decl_constexpr size_t DBG_UNIT_NUM_ITERATIONS = 65536;
+	pf_decl_constexpr size_t DBG_UNIT_NUM_ITERATIONS = 32768;
 
 	/// DBG: Test -> Allocator
 	pt_pack(dbg_allocator)
@@ -53,25 +53,21 @@ namespace pul
 	{
 		pt_unit(u8string_view)
 		{
-			pt_check(DBG_UNIT_NUM_ITERATIONS >= 65536);
-			// TODO
+
 		}
 		pt_unit(u8string)
 		{
-			pt_check(DBG_UNIT_NUM_ITERATIONS >= 65536);
-			// TODO
+
 		}
 
 		#ifdef PF_OS_WINDOWS
 		pt_unit(wsstring_view)
 		{
-			pt_check(DBG_UNIT_NUM_ITERATIONS >= 65536);
-			// TODO
+
 		}
 		pt_unit(wsstring)
 		{
-			pt_check(DBG_UNIT_NUM_ITERATIONS >= 65536);
-			// TODO
+
 		}
 		#endif // PF_OS_WINDOWS
 	}

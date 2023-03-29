@@ -9,69 +9,65 @@
  */
 
 // Include: Pulsar
-#include "pulsar/debug/debug.hpp"
+#include "pulsar/internal.hpp"
 
 // Pulsar
 namespace pul
 {
-	/// DEBUG: Internal Allocator -> Instance
-	allocator_mamd_ring_buffer __dbg_internal_allocator = allocator_mamd_ring_buffer(65536 * 2);
-	task_pool_t __dbg_logger_task_pool;
-
 	/// DEBUG: Allocate / Deallocate
 	pulsar_api void*
 	__dbg_allocate(
 		size_t __size)
 	{
-		return __dbg_internal_allocator.allocate(__size, align_val_t(32), 0);
+		return __internal.cache.allocate(__size, align_val_t(8), 0);
 	}
 	pulsar_api void
 	__dbg_deallocate(
 		void *__ptr) pf_attr_noexcept
 	{
-		return __dbg_internal_allocator.deallocate(__ptr);
+		return __internal.cache.deallocate(__ptr);
 	}
 
 	/// DEBUG: Logger
-	pulsar_api dbg_logger::dbg_logger() pf_attr_noexcept
-		: c_(nullptr)
-		, timer_(high_resolution_clock_t::now())
+	pulsar_api dbg_level
+	dbg_log_filter() pf_attr_noexcept
 	{
-		dbg_u8string_view logo =
-			R"(
-        ██████╗ ██╗   ██╗██╗     ███████╗ █████╗ ██████╗ 
-        ██╔══██╗██║   ██║██║     ██╔════╝██╔══██╗██╔══██╗
-        ██████╔╝██║   ██║██║     ███████╗███████║██████╔╝
-        ██╔═══╝ ██║   ██║██║     ╚════██║██╔══██║██╔══██╗
-        ██║     ╚██████╔╝███████╗███████║██║  ██║██║  ██║
-        ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝  )";
-		dbg_u8print("{}", logo.begin());
-		char_t buf[64] = {'\0'};
-		dbg_u8format_to(
-			&buf[0], "v{0}.{1}.{2}\n\n",
-			PULSAR_VERSION_MAJOR,
-			PULSAR_VERSION_MINOR,
-			PULSAR_VERSION_PATCH);
-		dbg_u8print("{}", &buf[0]);
+		return __internal.dbg_logger.__get_filter();
 	}
-
-	/// DEBUG: Logger -> Write
-	void
-	__dbg_logger_task(
-		dbg_logger::callback_t __c,
-		dbg_u8string_view __msg)
+	pulsar_api dbg_logger_callback_t
+	dbg_log_callback() pf_attr_noexcept
 	{
-		dbg_u8print("{}", __msg.begin());
-		if (__c) __c(__msg);
+		return __internal.dbg_logger.__get_callback();
 	}
 	pulsar_api void
-	dbg_logger::write(
-		dbg_u8string&& __msg)
+	dbg_log_set_filter(
+		dbg_level __level) pf_attr_noexcept
 	{
-		__dbg_logger_task_pool.submit_task(
-			__dbg_logger_task,
-			this->c_,
-			std::move(__msg));
+		return __internal.dbg_logger.__set_filter(__level);
+	}
+	pulsar_api void
+	dbg_log_set_callback(
+		dbg_logger_callback_t __callback) pf_attr_noexcept
+	{
+		return __internal.dbg_logger.__set_callback(__callback);
+	}
+
+	pulsar_api nanoseconds_t
+	dbg_elapsed_time() pf_attr_noexcept
+	{
+		return __internal.dbg_logger.__get_elapsed_time();
+	}
+
+	pulsar_api void dbg_log(
+		dbg_u8string &&__msg)
+	{
+		return __internal.dbg_logger.__write(std::move(__msg));
+	}
+	pulsar_api void dbg_log(
+		dbg_level __level,
+		dbg_u8string &&__msg)
+	{
+		return __internal.dbg_logger.__write(__level, std::move(__msg));
 	}
 
 	/// DEBUG: Format
@@ -79,7 +75,7 @@ namespace pul
 	dbg_format_chrono_to(
 		char_t *__where) pf_attr_noexcept
 	{
-		uint64_t elapsed = union_cast<uint64_t>(logger.elapsed_time().count());
+		uint64_t elapsed = union_cast<uint64_t>(dbg_elapsed_time().count());
 		return dbg_u8format_to(
 			__where,
 			"[{:0>4}:{:0>2}:{:0>2}:{:0>3}]",
@@ -127,8 +123,4 @@ namespace pul
 		// Returns
 		return e;
 	}
-
-	/// DEBUG: Instance
-	pulsar_api dbg_logger logger;
-	pulsar_api __dbg_initializer initializer;
 }

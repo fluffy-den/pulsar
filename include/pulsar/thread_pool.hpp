@@ -240,14 +240,6 @@ namespace pul
 	};
 
 	/// CONCURRENCY: Task -> Allocation
-	pf_hint_nodiscard pulsar_api
-	void*
-	__task_allocate(
-		size_t __size) pf_attr_noexcept;
-	pulsar_api
-	void
-	__task_deallocate(
-		void *__ptr) pf_attr_noexcept;
 	template <
 		typename _Ty,
 		typename ... _Args>
@@ -256,8 +248,9 @@ namespace pul
 	__task_new_construct(
 		_Args&& ... __args) pf_attr_noexcept
 	{
-		_Ty *t = union_cast<_Ty*>(__task_allocate(sizeof(_Ty)));
-		construct(t, std::forward<_Args>(__args)...);
+		_Ty *t = union_cast<_Ty*>(__dbg_allocate(sizeof(_Ty)));
+    pf_assert(t != nullptr, "t is nullptr!");
+    construct(t, std::forward<_Args>(__args)...);
 		return t;
 	}
 	template <
@@ -268,7 +261,7 @@ namespace pul
 		_Ty *__ptr) pf_attr_noexcept
 	{
 		destroy(__ptr);
-		__task_deallocate(__ptr);
+		__dbg_deallocate(__ptr);
 	}
 
 	/// CONCURRENCY: Task -> Enqueue

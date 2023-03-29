@@ -87,17 +87,11 @@ namespace pul
       uint64_t *__results)
     {
       // Measure
-      for (size_t i = __off, t = __off, e = __off + __itc; i != e; ++i)
+      for (size_t i = __off, e = __off + __itc; i != e; ++i)
       {
-        uint64_t b = static_cast<uint64_t>(-1);
-        for (size_t j = 0; j < 9; ++j, ++t)
-        {
-          uint64_t s = __rdtsc();
-          pf_hint_maybe_unused pf_decl_volatile auto k = __measureFun(t);
-          uint64_t f = __rdtsc() - s;
-          if (f < b) b = f;
-        }
-        __results[i] = b;
+        uint64_t s = __rdtsc();
+        pf_hint_maybe_unused pf_decl_volatile auto k = __measureFun(i);
+        __results[i] = __rdtsc() - s;
       }
     }
     template <typename _FunTy>
@@ -142,7 +136,7 @@ namespace pul
       while (control.load(atomic_order::relaxed) != this->ntt_);
 
       // Compute
-      __display_measures(results, num / 10);
+      __display_measures(results, num);
 
       // Deallocate
       destroy_delete_array(results);
@@ -159,7 +153,7 @@ namespace pul
     pf_decl_inline pf_decl_constexpr size_t 
     num_iterations() const pf_attr_noexcept
     {
-      return this->itc_ * this->ntt_ * 10;
+      return this->itc_ * this->ntt_;
     }
 
     /// Num Threads

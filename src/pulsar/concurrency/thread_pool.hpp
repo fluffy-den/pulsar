@@ -22,17 +22,15 @@
 // Pulsar
 namespace pul
 {
-	/// task: Constants
-	pf_decl_constexpr size_t CCY_TASKS_ALLOCATOR_SIZE		= 524288;
-	pf_decl_constexpr size_t CCY_TASKS_ALLOCATOR_SIZE_0 = 2097152;
-	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM					= 8192;
-	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM_0				= 4096;
-	pf_decl_constexpr size_t CCY_CACHE_NUM0							= 32;
+	/// TASK Constants
+	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM	 = 8192;
+	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM_0 = 4096;
+	pf_decl_constexpr size_t CCY_CACHE_NUM0			 = 32;
 
 	/// Type -> Thread
 	using __thread_t = std::thread;
 
-	/// task: Pool
+	/// TASK: Pool
 	class __thread_pool_t
 	{
 	public:
@@ -46,11 +44,6 @@ namespace pul
 
 			/// Destructor
 			~__buffer_t() pf_attr_noexcept = default;
-
-			/// Allocator
-			pf_hint_nodiscard allocator_mamd_ring_buffer*
-			__get_allocator(
-				uint32_t __index) pf_attr_noexcept;
 
 			/// Thread
 			pf_hint_nodiscard __thread_t*
@@ -71,8 +64,8 @@ namespace pul
 			condition_variable_t cv;
 			mpmc_lifo2<__task_t> queue;
 			mpmc_lifo2<__task_t> queue0;// Will use bulks
-			byte_t store[];	// [a1][a2]...[an] [t1][t2][tn-1]
-											//   allocators        workers
+			byte_t store[];	// [t1][t2][tn-1]
+											//     workers
 		};
 
 		/// Buffer -> Make
@@ -96,14 +89,6 @@ namespace pul
 		__thread_pool_t &operator=(
 			__thread_pool_t &&) = delete;
 
-		/// Allocate
-		pf_hint_nodiscard void*
-		__allocate(
-			size_t __size) pf_attr_noexcept;
-		void
-		__deallocate(
-			void *__ptr) pf_attr_noexcept;
-
 		/// Submit
 		void __submit(
 			__task_t *__task);
@@ -118,9 +103,6 @@ namespace pul
 		/// Store
 		__buffer_t *buf_;
 	};
-
-	/// CONCURRENCY: Thread Pool -> Instance
-	pf_decl_extern __thread_pool_t __task_pool;
 }
 
 #endif // !PULSAR_SRC_THREAD_POOL_HPP
