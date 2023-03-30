@@ -23,7 +23,7 @@ namespace pul
 		// Task
 		pt_unit(task_submit)
 		{
-			submit_task([](size_t __i){ pf_print("{}\n", __i);}, 10);
+			submit_task([](size_t __i){ return __i;}, 10);
 		}
 		pt_unit(task_submit_0)
 		{

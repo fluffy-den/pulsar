@@ -333,7 +333,7 @@ namespace pul
 	requires(std::is_invocable_v<_FunTy, _Args...>)
 	{
 		auto *t = __dbg_new_construct<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
-		__task_enqueue(&t->task);
+    __task_enqueue(&t->task);
 	}
 	template <
 		typename _FunTy,
@@ -345,7 +345,7 @@ namespace pul
 	requires(std::is_invocable_v<_FunTy, _Args...>)
 	{
 		auto *t = __dbg_new_construct<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
-		__task_enqueue_0(&t->task);
+    __task_enqueue_0(&t->task);
 	}
 	template <
 		typename _FunTy,

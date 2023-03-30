@@ -72,10 +72,9 @@ namespace pul
 				__buf->numProcessing.fetch_sub(1, atomic_order::relaxed);
 				{
 					lock_unique lck(__buf->mutex);
-					while (__buf->run.load(atomic_order::relaxed) == true && __buf->numTasks.load(atomic_order::relaxed) <= __buf->numProcessing.load(atomic_order::relaxed))
-					{
-						this_thread::yield();
-					}
+					__buf->cv.wait(lck, [&]() pf_attr_noexcept
+												 { return __buf->run.load(atomic_order::relaxed) == false
+													 || __buf->numTasks.load(atomic_order::relaxed) > __buf->numProcessing.load(atomic_order::relaxed); });
 				}
 				__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
 			}
@@ -154,8 +153,8 @@ namespace pul
 			// TODO: Exception
 		}
 
-		// Information
-		this->buf_->numTasks.fetch_add(1, atomic_order::relaxed);
+		// Notify
+		if (this->buf_->numTasks.fetch_add(1, atomic_order::relaxed) <= CCY_NUM_WORKERS) this->buf_->cv.notify_one();
 	}
 	void
 	__thread_pool_t::__submit_0(
