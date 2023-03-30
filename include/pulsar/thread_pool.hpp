@@ -497,7 +497,7 @@ namespace pul
         ++k;
         t = n;
       }
-      return __store->numTasks.fetch_sub(k, atomic_order::relaxed);
+      return (__store->numTasks.fetch_sub(k, atomic_order::relaxed) - k);
     }
     pf_decl_static void 
     __process_auto_submit(
@@ -626,6 +626,7 @@ namespace pul
     /// Destructor
     ~task_pool_t() pf_attr_noexcept
     {
+      this->wait();
       if (this->buf_) destroy_delete(this->buf_);
     }
 
@@ -707,6 +708,7 @@ namespace pul
     /// Destructor
     ~task_pool_0_t() pf_attr_noexcept
     {
+      this->wait();
       if (this->buf_) destroy_delete(this->buf_);
     }
 

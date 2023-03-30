@@ -129,7 +129,7 @@ namespace pul
 		pf_decl_inline pf_decl_constexpr _RetTy operator ()(
 			_InArgs &&... __args) const
 		{
-			return this->ptr_(__args ...);
+			return this->ptr_(std::forward<_InArgs>(__args) ...);
 		}
 
 		/// Operator==

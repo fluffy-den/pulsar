@@ -689,13 +689,13 @@ namespace pul
 				// Initialize list
 				do
 				{
-					std::atomic_thread_fence(atomic_order::acq_rel);
 					__list_t *l = this->__get_list(i);
-					h = l->head;
 					if (l->tail.load(atomic_order::relaxed))
 					{
+						std::atomic_thread_fence(atomic_order::acq_rel);
+						h				= l->head;
 						l->head = nullptr;
-						t				= l->tail.exchange(nullptr, atomic_order::relaxed);
+						t				= l->tail.exchange(nullptr, atomic_order::acq_rel);
 					}
 					++i;
 				} while (!t && i < CCY_NUM_THREADS);
@@ -706,9 +706,10 @@ namespace pul
 					__list_t *l = this->__get_list(i);
 					if (l->tail.load(atomic_order::relaxed))
 					{
+						std::atomic_thread_fence(atomic_order::acq_rel);
 						t->next = l->head;
 						l->head = nullptr;
-						t				= l->tail.exchange(nullptr, atomic_order::relaxed);
+						t				= l->tail.exchange(nullptr, atomic_order::acq_rel);
 					}
 					++i;
 				}
@@ -728,31 +729,16 @@ namespace pul
 	#pragma GCC diagnostic pop
 		};
 
-		/// Buffer -> New
-		pf_hint_nodiscard __buffer_t*
-		__new_buffer()
-		{
-			return new_construct_ex<__buffer_t>(sizeof(__buffer_t) + sizeof(__list_t) * CCY_NUM_THREADS);
-		}
-
-		/// Buffer -> Delete
-		void
-		__delete_buffer(
-			__buffer_t *__buf) pf_attr_noexcept
-		{
-			destroy_delete(__buf);
-		}
-
 	public:
 		using node_t = _NodeTy;
 
 		/// Constructors
 		mpsc_singly_lifo()
-			: buf_(this->__new_buffer())
+			: buf_(new_construct_ex<__buffer_t>(sizeof(__buffer_t) + sizeof(__list_t) * CCY_NUM_THREADS))
 		{}
 		mpsc_singly_lifo(
 			mpsc_singly_lifo<_NodeTy> const&)
-			: buf_(this->__new_buffer())
+			: buf_(new_construct_ex<__buffer_t>(sizeof(__buffer_t) + sizeof(__list_t) * CCY_NUM_THREADS))
 		{}
 		mpsc_singly_lifo(
 			mpsc_singly_lifo<_NodeTy> &&__r)
@@ -764,10 +750,7 @@ namespace pul
 		/// Destructor
 		~mpsc_singly_lifo() pf_attr_noexcept
 		{
-			if (this->buf_)
-			{
-				this->__delete_buffer(this->buf_);
-			}
+			if (this->buf_) destroy_delete(this->buf_);
 		}
 
 		/// Operator =
