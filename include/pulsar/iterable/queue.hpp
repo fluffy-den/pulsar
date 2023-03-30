@@ -589,8 +589,8 @@ namespace pul
 		{
 			/// Constructors
 			__list_t() pf_attr_noexcept
-				: tail(nullptr)
-				, head(nullptr)
+				: head(nullptr)
+				, tail(nullptr)
 			{}
 			__list_t(__list_t const &) = delete;
 			__list_t(__list_t &&)			 = delete;
@@ -603,8 +603,8 @@ namespace pul
 			__list_t &operator=(__list_t &&)			= delete;
 
 			/// Store
+			pf_alignas(CCY_ALIGN) atomic<_NodeTy*> head;
 			pf_alignas(CCY_ALIGN) atomic<_NodeTy*> tail;
-			_NodeTy *head;
 			byte_t padd[static_cast<size_t>(CCY_ALIGN) - sizeof(atomic<_NodeTy*>) - sizeof(_NodeTy*)] = {0};
 		};
 
@@ -646,87 +646,87 @@ namespace pul
 				return union_cast<__list_t*>(&this->store[0] + __k * sizeof(__list_t));
 			}
 
-			/// Insert Tail
-			pf_hint_nodiscard bool
-			__insert_tail(
+			/// Enqueue
+			void
+			__enqueue_bulk(
 				_NodeTy *__b,
 				_NodeTy *__e) pf_attr_noexcept
 			{
+				// Initialization
 				uint32_t i = this_thread::get_id();
-				while(true)
+				auto *l		 = this->__get_list(i);
+				_NodeTy *t = l->tail.load(atomic_order::relaxed);
+
+				// Loop
+				while (!l->tail.compare_exchange_weak(t, __e, atomic_order::release, atomic_order::relaxed));
+				if (t)
 				{
-					__list_t *l = this->__get_list(i);
-					_NodeTy *b	= l->tail.load(atomic_order::relaxed);
-					_NodeTy *t	= b;
-					if (l->tail.compare_exchange_strong(t, __e, atomic_order::relaxed, atomic_order::relaxed))
-					{
-						std::atomic_thread_fence(atomic_order::acq_rel);
-						if (pf_unlikely(!t))
-						{
-							l->head = __b;
-						}
-						else
-						{
-							b->next = __b;
-						}
-						return true;
-					}
-					else
-					{
-						i = counter.fetch_add(1, atomic_order::relaxed) % CCY_NUM_THREADS;
-					}
+					std::atomic_thread_fence(atomic_order::release);
+					t->next = __b;
+				}
+				else
+				{
+					_NodeTy *h = l->head.load(atomic_order::relaxed);
+					while (h != nullptr) h = l->head.load(atomic_order::relaxed);	// SPSC dequeue
+					while (!l->head.compare_exchange_weak(h, __b, atomic_order::release, atomic_order::relaxed));
 				}
 			}
 
-			/// Remove Head
-			pf_hint_nodiscard _NodeTy*
-			__remove_head() pf_attr_noexcept
-			{
-				_NodeTy *h = nullptr;
-				_NodeTy *t = nullptr;
-				size_t i	 = 0;
 
-				// Initialize list
-				do
+			/// Dequeue
+			pf_hint_nodiscard _NodeTy*
+			__dequeue_all() pf_attr_noexcept
+			{
+				// Initialization
+				uint32_t i = 0;
+				_NodeTy *b = nullptr;
+				_NodeTy *e = nullptr;
+
+				// Create 1. list
+				while (!b && i < CCY_NUM_THREADS)
 				{
-					__list_t *l = this->__get_list(i);
-					if (l->tail.load(atomic_order::relaxed))
+					auto *l		 = this->__get_list(i);
+					_NodeTy *t = l->tail.load(atomic_order::relaxed);
+					while (!l->tail.compare_exchange_weak(t, nullptr, atomic_order::release, atomic_order::relaxed));
+					if (t)
 					{
-						std::atomic_thread_fence(atomic_order::acq_rel);
-						h				= l->head;
-						l->head = nullptr;
-						t				= l->tail.exchange(nullptr, atomic_order::acq_rel);
+						_NodeTy *h = nullptr;
+						do
+						{
+							h = l->head.exchange(nullptr, atomic_order::relaxed);	// SPSC dequeue
+						} while (!h);
+						b = h;
+						e = t;
 					}
 					++i;
-				} while (!t && i < CCY_NUM_THREADS);
+				}
 
-				// Return lists
+				// Link to 1.
 				while (i < CCY_NUM_THREADS)
 				{
-					__list_t *l = this->__get_list(i);
-					if (l->tail.load(atomic_order::relaxed))
+					auto *l		 = this->__get_list(i);
+					_NodeTy *t = l->tail.load(atomic_order::relaxed);
+					while (!l->tail.compare_exchange_weak(t, nullptr, atomic_order::release, atomic_order::relaxed));
+					if (t)
 					{
-						std::atomic_thread_fence(atomic_order::acq_rel);
-						t->next = l->head;
-						l->head = nullptr;
-						t				= l->tail.exchange(nullptr, atomic_order::acq_rel);
+						_NodeTy *h = nullptr;
+						do
+						{
+							h = l->head.exchange(nullptr, atomic_order::relaxed);	// SPSC dequeue
+						} while (!h);
+						std::atomic_thread_fence(atomic_order::release);
+						e->next = t;
+						e				= h;
 					}
 					++i;
 				}
-				if (pf_likely(t)) t->next = nullptr;// Security
-				return h;
+
+				// Return 1.
+				return b;
 			}
 
-			// Flexible Arrays -> Disable warning
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Wpedantic"
-
 			/// Store
-			pf_alignas(CCY_ALIGN) atomic<uint32_t> counter;
-			pf_alignas(CCY_ALIGN) byte_t store[];
-
-			// Flexible Arrays
-	#pragma GCC diagnostic pop
+			pf_alignas(CCY_ALIGN) byte_t store[1];
 		};
 
 	public:
@@ -734,11 +734,11 @@ namespace pul
 
 		/// Constructors
 		mpsc_singly_lifo()
-			: buf_(new_construct_ex<__buffer_t>(sizeof(__buffer_t) + sizeof(__list_t) * CCY_NUM_THREADS))
+			: buf_(new_construct_ex<__buffer_t>(sizeof(__list_t) * CCY_NUM_THREADS))
 		{}
 		mpsc_singly_lifo(
 			mpsc_singly_lifo<_NodeTy> const&)
-			: buf_(new_construct_ex<__buffer_t>(sizeof(__buffer_t) + sizeof(__list_t) * CCY_NUM_THREADS))
+			: buf_(new_construct_ex<__buffer_t>(sizeof(__list_t) * CCY_NUM_THREADS))
 		{}
 		mpsc_singly_lifo(
 			mpsc_singly_lifo<_NodeTy> &&__r)
@@ -773,30 +773,33 @@ namespace pul
 		}
 
 		/// Insert Tail
-		pf_decl_inline bool
-		insert_tail(
+		pf_decl_inline void
+		enqueue_bulk(
 			node_t *__b,
 			node_t *__e) pf_attr_noexcept
 		{
 	#ifdef PF_DEBUG
+
 			node_t *l = __b;
 			while (l->next) l = l->next;
-			pf_assert(l == __e, "last of begin isn't equal to end!");
-	#endif
-			return this->buf_->__insert_tail(__b, __e);
+			pf_assert(l == __e, "__b to __e isn't well formed!");
+
+	#endif // PF_DEBUG
+
+			return this->buf_->__enqueue_bulk(__b, __e);
 		}
-		pf_decl_inline bool
-		insert_tail(
+		pf_decl_inline void
+		enqueue(
 			node_t *__n) pf_attr_noexcept
 		{
-			return this->insert_tail(__n, __n);
+			this->enqueue_bulk(__n, __n);
 		}
 
 		/// Remove Head
 		pf_hint_nodiscard pf_decl_inline node_t*
-		remove_head() pf_attr_noexcept
+		dequeue() pf_attr_noexcept
 		{
-			return this->buf_->__remove_head();
+			return this->buf_->__dequeue_all();
 		}
 
 	private:

@@ -90,8 +90,7 @@ namespace pul
 		__write(
 			dbg_u8string &&__str) pf_attr_noexcept
 		{
-			__write_task(__str);
-			// this->pool_.submit_task(this->__write_task, std::move(__str));
+			this->pool_.submit_task(this->__write_task, std::move(__str));
 		}
 		pf_decl_inline void
 		__write(

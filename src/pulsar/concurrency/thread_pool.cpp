@@ -15,9 +15,6 @@
 namespace pul
 {
 	/// CONCURRENCY: Thread Pool
-	/// Instance
-	__thread_pool_t __thread_pool;
-
 	/// Buffer
 	__thread_pool_t::__buffer_t::__buffer_t() pf_attr_noexcept
 		: run(true)
@@ -113,7 +110,7 @@ namespace pul
 		this->buf_ = this->__make_buffer();
 
 		/// Threads
-		for (size_t i = 0; i < CCY_NUM_WORKERS; ++i)
+		for (size_t i = 0; i != CCY_NUM_WORKERS; ++i)
 		{
 			construct(this->buf_->__get_thread(i), __thread_process, this->buf_);
 		}
@@ -124,7 +121,8 @@ namespace pul
 	{
 		/// Stop the run
 		this->buf_->run.store(false, atomic_order::release);
-		this->buf_->cv.notify_all();
+		this_thread::yield();
+		while (this->buf_->numProcessing.load(atomic_order::relaxed) != CCY_NUM_WORKERS) this->buf_->cv.notify_all();
 
 		/// Threads
 		for (size_t i = 0; i < CCY_NUM_WORKERS; ++i)
@@ -154,7 +152,8 @@ namespace pul
 		}
 
 		// Notify
-		if (this->buf_->numTasks.fetch_add(1, atomic_order::relaxed) <= CCY_NUM_WORKERS) this->buf_->cv.notify_one();
+		if (this->buf_->numTasks.fetch_add(1, atomic_order::relaxed) + 1 <= CCY_NUM_WORKERS) this->buf_->cv.notify_one();
+
 	}
 	void
 	__thread_pool_t::__submit_0(
@@ -201,24 +200,24 @@ namespace pul
 	__task_enqueue_0(
 		__task_t *__task) pf_attr_noexcept
 	{
-		__thread_pool.__submit_0(__task);
+		__internal.thread_pool.__submit_0(__task);
 	}
 	pulsar_api void
 	__task_enqueue(
 		__task_t *__task) pf_attr_noexcept
 	{
-		__thread_pool.__submit(__task);
+		__internal.thread_pool.__submit(__task);
 	}
 
 	/// CONCURRENCY: Task -> Process
 	pulsar_api bool
 	process_tasks()
 	{
-		return __thread_pool.__process();
+		return __internal.thread_pool.__process();
 	}
 	pulsar_api uint32_t
 	process_tasks_0()
 	{
-		return __thread_pool.__process_0();
+		return __internal.thread_pool.__process_0();
 	}
 }

@@ -482,7 +482,7 @@ namespace pul
       __task_pool_store_t *__store)
     {
       uint32_t k = 0;
-      auto *t = __store->pool.remove_head();
+      auto *t = __store->pool.dequeue();
       while (t)
       {
         auto *n = t->next;
@@ -532,7 +532,7 @@ namespace pul
       {
         submit_task(__process_auto_submit, this);
       }
-      this->pool.insert_tail(union_cast<__node_t *>(n));
+      this->pool.enqueue(union_cast<__node_t *>(n));
     }
     template <
       typename _FunTy,
@@ -547,7 +547,7 @@ namespace pul
       {
         submit_task_0(__process_auto_submit_0, this);
       }
-      this->pool.insert_tail(union_cast<__node_t *>(n));
+      this->pool.enqueue(union_cast<__node_t *>(n));
     }
 
     /// Submit Future
@@ -565,7 +565,7 @@ namespace pul
       {
         submit_task(__process_auto_submit, this);
       }
-      this->pool.insert_tail(union_cast<__node_t *>(n));
+      this->pool.enqueue(union_cast<__node_t *>(n));
       return s;
     }
     template <
@@ -582,7 +582,7 @@ namespace pul
       {
         submit_task_0(__process_auto_submit_0, this);
       }
-      this->pool.insert_tail(union_cast<__node_t *>(n));
+      this->pool.enqueue(union_cast<__node_t *>(n));
       return s;
     }
 

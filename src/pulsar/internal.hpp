@@ -1,4 +1,4 @@
-/*! @file   internal.hpp
+/*! @file   __internal.hpp
  *  @author Louis-Quentin Noé (noe.louis-quentin@hotmail.fr)
  *  @brief
  *  @date   26-03-2023
@@ -49,15 +49,17 @@ namespace pul
 		__internal_t &operator=(__internal_t const &) = delete;
 		__internal_t &operator=(__internal_t &&)			= delete;
 
-		/// Caching
+		/// Module -> Cache
 		allocator_mamd_ring_buffer cache;
 
-		/// Debug
-		__dbg_logger_t dbg_logger;
+		/// Module -> Debug
 		__dbg_exception_context_t dbg_ex_ctx;
+		__dbg_logger_t dbg_logger;
+
+		/// Module -> Thread Pool
+		__thread_pool_t thread_pool;
 	};
 
-	/// Instance
 	pf_decl_extern __internal_t __internal;
 }
 

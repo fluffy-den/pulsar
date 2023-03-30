@@ -242,7 +242,7 @@ namespace dbg_flags
 		dbg_u8string_view __v) pf_attr_noexcept
 	{
 		this->shrink(__v.size());
-		std::memcpy(this->data(), __v.data(), this->count_);
+		memcpy(this->data(), __v.data(), this->count_);
 		*(this->data() + this->count_) = '\0';
 	}
 
@@ -262,7 +262,7 @@ namespace dbg_flags
 			: count_(__count + 1)
 			, store_(union_cast<char_t*>(halloc(this->count_ + 1, align_val_t(32), 0)))
 		{
-			std::memcpy(this->store_, __str, __count);
+			memcpy(this->store_, __str, __count);
 			*(this->data() + this->count_) = '\0';
 		}
 		pf_decl_constexpr pf_decl_inline dbg_u8string(
@@ -270,7 +270,7 @@ namespace dbg_flags
 			: count_(std::strlen(__str))
 			, store_(union_cast<char_t*>(halloc(this->count_ + 1, align_val_t(32), 0)))
 		{
-			std::memcpy(this->store_, __str, this->count_);
+			memcpy(this->store_, __str, this->count_);
 			*(this->data() + this->count_) = '\0';
 		}
 		pf_decl_constexpr pf_decl_inline dbg_u8string(
@@ -279,7 +279,7 @@ namespace dbg_flags
 		: count_(__count)
 		, store_(union_cast<char_t*>(halloc(this->count_ + 1, align_val_t(32), 0)))
 		{
-			std::memset(this->store_, __val, __count);
+			memset(this->store_, __val, __count);
 			*(this->data() + this->count_) = '\0';
 		}
 		dbg_u8string(
