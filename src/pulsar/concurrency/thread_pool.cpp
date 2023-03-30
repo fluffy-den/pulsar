@@ -69,9 +69,9 @@ namespace pul
 				__buf->numProcessing.fetch_sub(1, atomic_order::relaxed);
 				{
 					lock_unique lck(__buf->mutex);
-					__buf->cv.wait(lck, [&]() pf_attr_noexcept
-												 { return __buf->run.load(atomic_order::relaxed) == false
-													 || __buf->numTasks.load(atomic_order::relaxed) > __buf->numProcessing.load(atomic_order::relaxed); });
+					__buf->cv.wait_for(lck, microseconds_t(10), [&]() pf_attr_noexcept// NOTE: wait_for as additionnal protection for infinite blocking. 10 microseconds may be sufficient.
+														 { return __buf->run.load(atomic_order::relaxed) == false
+															 || __buf->numTasks.load(atomic_order::relaxed) > __buf->numProcessing.load(atomic_order::relaxed); });
 				}
 				__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
 			}
@@ -121,8 +121,8 @@ namespace pul
 	{
 		/// Stop the run
 		this->buf_->run.store(false, atomic_order::release);
-		this_thread::yield();
-		while (this->buf_->numProcessing.load(atomic_order::relaxed) != CCY_NUM_WORKERS) this->buf_->cv.notify_all();
+		this->buf_->cv.notify_all();
+		while (this->buf_->numProcessing.load(atomic_order::relaxed) != CCY_NUM_WORKERS) this_thread::yield();
 
 		/// Threads
 		for (size_t i = 0; i < CCY_NUM_WORKERS; ++i)
