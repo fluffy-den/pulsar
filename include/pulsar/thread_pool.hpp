@@ -58,25 +58,14 @@ namespace pul
 		}
 
 		/// Wait
-		pf_hint_nodiscard bool
+		bool
 		__wait() pf_attr_noexcept
 		{
       bool b = this->finished.load(atomic_order::relaxed);
       if (b) return false;
-      while (!b)
+      while (!this->finished.load(atomic_order::relaxed))
 			{
-        if (this_thread::get_id() == 0)
-        {
-          if (process_tasks_0() == 0)
-          {
-            process_tasks();
-          }
-        }
-        else
-        {
-          process_tasks();
-        }
-        b = this->finished.load(atomic_order::relaxed);
+        this_thread::yield();
       }
       return !b;
     }
@@ -86,7 +75,7 @@ namespace pul
 		__value()
 		{
       this->__wait();
-      if (this->exception) std::rethrow_exception(this->exception);
+      if (pf_unlikely(this->exception)) std::rethrow_exception(this->exception);
 			return std::move(*union_cast<_RetTy*>(&this->retVal[0]));
 		}
 
@@ -406,11 +395,73 @@ namespace pul
   /// CONCURRENCY: Task -> Pool
   struct __task_pool_store_t
   {
-    // TODO: Upgrade
+    /// Type -> Node
+    struct __node_t
+    {
+      __node_t *next;
+      __task_t task;
+    };
+    template <
+      typename _FunTy,
+      typename ... _Args>
+    struct __node_data
+    {
+      /// Constructors
+      __node_data(
+        _FunTy &&__fun,
+        _Args &&... __args)
+        : next(nullptr)
+        , data(std::move(__fun), std::forward<_Args>(__args)...)
+      {}
+      __node_data(
+        __node_data<_FunTy, _Args...> const&) = delete;
+      __node_data(
+        __node_data<_FunTy, _Args...> &&) = delete;
+
+      /// Destructor
+      ~__node_data() pf_attr_noexcept = default;
+
+      /// Operator =
+      __node_data<_FunTy, _Args...> &operator=(__node_data<_FunTy, _Args...> const &) = delete;
+      __node_data<_FunTy, _Args...> &operator=(__node_data<_FunTy, _Args...> &&) = delete;
+
+      /// Store
+      __node_t *next;
+      __task_store<_FunTy, _Args...> data;
+    };
+    template <
+      typename _FunTy,
+      typename ... _Args>
+    struct __node_data_f
+    {
+      /// Constructors
+      __node_data_f(
+        __future_store<std::invoke_result_t<_FunTy, _Args...>> *__s,
+        _FunTy &&__fun,
+        _Args &&... __args)
+        : next(nullptr)
+        , data(__s, std::move(__fun), std::forward<_Args>(__args)...)
+      {}
+      __node_data_f(
+        __node_data_f<_FunTy, _Args...> const&) = delete;
+      __node_data_f(
+        __node_data_f<_FunTy, _Args...> &&) = delete;
+
+      /// Destructor
+      ~__node_data_f() pf_attr_noexcept = default;
+
+      /// Operator =
+      __node_data_f<_FunTy, _Args...> &operator=(__node_data_f<_FunTy, _Args...> const &) = delete;
+      __node_data_f<_FunTy, _Args...> &operator=(__node_data_f<_FunTy, _Args...> &&) = delete;
+
+      /// Store
+      __node_t *next;
+      __task_store_f<_FunTy, _Args...> data;
+    };
 
     /// Constructors
     __task_pool_store_t() pf_attr_noexcept
-      : state(0)
+      : numTasks(0)
     {}
     __task_pool_store_t(__task_pool_store_t const &) = delete;
     __task_pool_store_t(__task_pool_store_t &&)      = delete;
@@ -426,27 +477,44 @@ namespace pul
     __task_pool_store_t &operator=(__task_pool_store_t &&)      = delete;
 
     /// Process
-    pf_decl_static void __process(
+    pf_hint_nodiscard pf_decl_static uint32_t 
+    __process(
       __task_pool_store_t *__store)
     {
-      while(true)
+      uint32_t k = 0;
+      auto *t = __store->pool.remove_head();
+      while (t)
       {
-        auto b = __store->pool.remove_head();
-        while(b)
+        auto *n = t->next;
+        try
         {
-          auto c = b;
-          auto t = c->store;
-          b = c->next;
-          t->__call();
-          __dbg_deallocate(c);
-        }
-
-        uint32_t v = __store->state.load(atomic_order::relaxed);
-        uint32_t n = ((v & 2) == 0) ? 0 : 1;
-        if (__store->state.compare_exchange_strong(v, n, atomic_order::relaxed, atomic_order::relaxed) && n == 0)
+          t->task.__call();
+        } catch(...)
         {
-          return;
+          // TODO: Move exception context
         }
+        __dbg_deallocate(t);
+        ++k;
+        t = n;
+      }
+      return __store->numTasks.fetch_sub(k, atomic_order::relaxed);
+    }
+    pf_decl_static void 
+    __process_auto_submit(
+      __task_pool_store_t *__store) pf_attr_noexcept
+    {
+      if(__process(__store) > 0)
+      {
+        submit_task(__process_auto_submit, __store);
+      }
+    }
+    pf_decl_static void 
+    __process_auto_submit_0(
+      __task_pool_store_t *__store)
+    {
+      if(__process(__store) > 0)
+      {
+        submit_task(__process_auto_submit_0, __store);
       }
     }
 
@@ -459,24 +527,12 @@ namespace pul
       _FunTy&& __fun,
       _Args && ... __args) pf_attr_noexcept
     {
-      /// Initializing
-      using node_t = mpsc_singly_lifo<__task_t*>::node_t;
-      auto *n  = __dbg_new_construct<node_t>();
-      auto *t  = __dbg_new_construct<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
-      n->store = &t->task;
-      n->next  = nullptr;
-      this->pool.insert_tail(n);
-
-      /// Launch
-      if (this->__is_finished())
+      auto* n = __dbg_new_construct<__node_data<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+      if (this->numTasks.fetch_add(1, atomic_order::relaxed) == 0)
       {
-        this->state.fetch_or(1, atomic_order::relaxed);
-        submit_task(__process, this);
+        submit_task(__process_auto_submit, this);
       }
-      else
-      {
-        this->state.fetch_or(2, atomic_order::relaxed);
-      }
+      this->pool.insert_tail(union_cast<__node_t *>(n));
     }
     template <
       typename _FunTy,
@@ -486,24 +542,12 @@ namespace pul
       _FunTy&& __fun,
       _Args && ... __args) pf_attr_noexcept
     {
-      // /// Initializing
-      // using node_t = mpsc_singly_lifo<__task_t*>::node_t;
-      // auto *n  = __dbg_new_construct<node_t>();
-      // auto *t  = __dbg_new_construct<__task<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
-      // n->store = &t->task;
-      // n->next  = nullptr;
-      // this->pool.insert_tail(n);
-      // 
-      // /// Launch
-      // if (this->__is_finished())
-      // {
-      //   this->state.fetch_or(1, atomic_order::relaxed);
-      //   submit_task_0(__process, this);
-      // }
-      // else
-      // {
-      //   this->state.fetch_or(2, atomic_order::relaxed);
-      // }
+      auto *n = __dbg_new_construct<__node_data<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+      if (this->numTasks.fetch_add(1, atomic_order::relaxed) == 0)
+      {
+        submit_task_0(__process_auto_submit_0, this);
+      }
+      this->pool.insert_tail(union_cast<__node_t *>(n));
     }
 
     /// Submit Future
@@ -515,27 +559,14 @@ namespace pul
       _FunTy&& __fun,
       _Args&& ... __args) pf_attr_noexcept
     {
-      // /// Initializing
-      // using node_t = mpsc_singly_lifo<__task_t*>::node_t;
-      // auto *n  = __dbg_new_construct_ex<node_t>();
-      // auto *s  = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
-      // n->store = __dbg_new_construct_ex<__task_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
-      // n->next  = nullptr;
-      // this->pool.insert_tail(n);
-      // 
-      // /// Launch
-      // if (this->__is_finished())
-      // {
-      //   this->state.fetch_or(1, atomic_order::relaxed);
-      //   submit_task(__process, this);
-      // }
-      // else
-      // {
-      //   this->state.fetch_or(2, atomic_order::relaxed);
-      // }
-      // 
-      // /// Return
-      // return s;
+      auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
+      auto *n = __dbg_new_construct<__node_data_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+      if (this->numTasks.fetch_add(1, atomic_order::relaxed) == 0)
+      {
+        submit_task(__process_auto_submit, this);
+      }
+      this->pool.insert_tail(union_cast<__node_t *>(n));
+      return s;
     }
     template <
       typename _FunTy,
@@ -545,63 +576,38 @@ namespace pul
       _FunTy&& __fun,
       _Args&& ... __args) pf_attr_noexcept
     {
-      // /// Initializing
-      // using node_t = mpsc_singly_lifo<__task_t*>::node_t;
-      // auto *n  = __task_new_construct<node_t>();
-      // auto *s  = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
-      // n->store = __task_new_construct<__task_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
-      // n->next  = nullptr;
-      // this->pool.insert_tail(n);
-      // 
-      // /// Launch
-      // if (this->__is_finished())
-      // {
-      //   this->state.fetch_or(1, atomic_order::relaxed);
-      //   submit_task_0(__process, this);
-      // }
-      // else
-      // {
-      //   this->state.fetch_or(2, atomic_order::relaxed);
-      // }
-      // 
-      // /// Return
-      // return s;
+      auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
+      auto *n = __dbg_new_construct<__node_data_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+      if (this->numTasks.fetch_add(1, atomic_order::relaxed) == 0)
+      {
+        submit_task_0(__process_auto_submit_0, this);
+      }
+      this->pool.insert_tail(union_cast<__node_t *>(n));
+      return s;
     }
 
     /// Finished
     pf_hint_nodiscard bool
     __is_finished() const pf_attr_noexcept
     {
-      return this->state.load(atomic_order::relaxed) == 0;
+      return this->numTasks.load(atomic_order::relaxed) == 0;
     }
 
     /// Wait
     bool
     __wait() const pf_attr_noexcept
     {
-      bool b = this->state.load(atomic_order::relaxed) == 0;
-      if (b) return false;
-      while (!b)
-      {
-        if (this_thread::get_id() == 0)
-        {
-          if (process_tasks_0() == 0)
-          {
-            process_tasks();
-          }
-        }
-        else
-        {
-          process_tasks();
-        }
-        b = this->state.load(atomic_order::relaxed) == 0;
-      }
-      return !b;
+      // No need to wait
+      if (numTasks.load(atomic_order::relaxed) == 0) return false;
+
+      // Have to wait
+      while (numTasks.load(atomic_order::relaxed) != 0);
+      return true;
     }
 
     /// Store
-    pf_alignas(CCY_ALIGN) atomic<uint32_t> state; // 0 = waiting, 1 = running, 2 = enqueued
-    mpsc_singly_lifo<__task_t*> pool;
+    pf_alignas(CCY_ALIGN) atomic<uint32_t> numTasks;
+    mpsc_singly_lifo<__node_t> pool;
   };
   class task_pool_t pf_attr_final
   {

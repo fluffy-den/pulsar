@@ -577,24 +577,13 @@ namespace pul
 	};
 
 	/// SINGLY: MPSC List
-	template <typename _Ty>
+	template <typename _NodeTy>
 	class mpsc_singly_lifo
 	{
+	pf_assert_static(!std::is_const_v<_NodeTy>, "_NodeTy is a constant type!");
+	pf_assert_static(!std::is_pointer_v<_NodeTy>, "_NodeTy is a pointer type!");
+
 	private:
-		/// Type -> Node
-		struct __node_t
-		{
-			// Flexible Arrays -> Disable warning
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Wpedantic"
-
-			__node_t *next = nullptr;
-			_Ty store;
-
-			// Flexible Arrays
-	#pragma GCC diagnostic pop
-		};
-
 		/// Type -> Cache
 		struct __list_t
 		{
@@ -614,9 +603,9 @@ namespace pul
 			__list_t &operator=(__list_t &&)			= delete;
 
 			/// Store
-			pf_alignas(CCY_ALIGN) atomic<__node_t*> tail;
-			__node_t *head;
-			byte_t padd[static_cast<size_t>(CCY_ALIGN) - sizeof(atomic<__node_t*>) - sizeof(__node_t*)] = {0};
+			pf_alignas(CCY_ALIGN) atomic<_NodeTy*> tail;
+			_NodeTy *head;
+			byte_t padd[static_cast<size_t>(CCY_ALIGN) - sizeof(atomic<_NodeTy*>) - sizeof(_NodeTy*)] = {0};
 		};
 
 		/// Type -> Buffer
@@ -660,15 +649,15 @@ namespace pul
 			/// Insert Tail
 			pf_hint_nodiscard bool
 			__insert_tail(
-				__node_t *__b,
-				__node_t *__e) pf_attr_noexcept
+				_NodeTy *__b,
+				_NodeTy *__e) pf_attr_noexcept
 			{
 				uint32_t i = this_thread::get_id();
 				while(true)
 				{
 					__list_t *l = this->__get_list(i);
-					__node_t *b = l->tail.load(atomic_order::relaxed);
-					__node_t *t = b;
+					_NodeTy *b	= l->tail.load(atomic_order::relaxed);
+					_NodeTy *t	= b;
 					if (l->tail.compare_exchange_strong(t, __e, atomic_order::relaxed, atomic_order::relaxed))
 					{
 						std::atomic_thread_fence(atomic_order::acq_rel);
@@ -690,12 +679,12 @@ namespace pul
 			}
 
 			/// Remove Head
-			pf_hint_nodiscard __node_t*
+			pf_hint_nodiscard _NodeTy*
 			__remove_head() pf_attr_noexcept
 			{
-				__node_t *h = nullptr;
-				__node_t *t = nullptr;
-				size_t i		= 0;
+				_NodeTy *h = nullptr;
+				_NodeTy *t = nullptr;
+				size_t i	 = 0;
 
 				// Initialize list
 				do
@@ -755,18 +744,18 @@ namespace pul
 		}
 
 	public:
-		using node_t = __node_t;
+		using node_t = _NodeTy;
 
 		/// Constructors
 		mpsc_singly_lifo()
 			: buf_(this->__new_buffer())
 		{}
 		mpsc_singly_lifo(
-			mpsc_singly_lifo const&)
+			mpsc_singly_lifo<_NodeTy> const&)
 			: buf_(this->__new_buffer())
 		{}
 		mpsc_singly_lifo(
-			mpsc_singly_lifo &&__r)
+			mpsc_singly_lifo<_NodeTy> &&__r)
 			: buf_(__r.buf_)
 		{
 			__r.buf_ = nullptr;
@@ -782,15 +771,15 @@ namespace pul
 		}
 
 		/// Operator =
-		mpsc_singly_lifo<_Ty> &
+		mpsc_singly_lifo<_NodeTy> &
 		operator=(
-			mpsc_singly_lifo<_Ty> const &__r) pf_attr_noexcept
+			mpsc_singly_lifo<_NodeTy> const &__r) pf_attr_noexcept
 		{
 			return *this;
 		}
-		mpsc_singly_lifo<_Ty> &
+		mpsc_singly_lifo<_NodeTy> &
 		operator=(
-			mpsc_singly_lifo<_Ty> &&__r) pf_attr_noexcept
+			mpsc_singly_lifo<_NodeTy> &&__r) pf_attr_noexcept
 		{
 			if (pf_likely(__r != this))
 			{
