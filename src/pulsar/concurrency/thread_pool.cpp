@@ -60,42 +60,47 @@ namespace pul
 	__thread_process(
 		__thread_pool_t::__buffer_t *__buf) pf_attr_noexcept
 	{
+		// Security
+		__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
+
 		// Worker
 		do
 		{
 			// Stop?
-			if (__buf->numTasks.load(atomic_order::relaxed) == 0)
+			if (__buf->numTasks.load(atomic_order::relaxed) < __buf->numProcessing.load(atomic_order::relaxed))
 			{
-				lock_unique lck(__buf->mutex);
-				while(__buf->run.load(atomic_order::relaxed) == true
-							&& __buf->numTasks.load(atomic_order::relaxed) < __buf->numProcessing.load(atomic_order::relaxed))
+				__buf->numProcessing.fetch_sub(1, atomic_order::relaxed);
 				{
-					this_thread::yield();
+					lock_unique lck(__buf->mutex);
+					while (__buf->run.load(atomic_order::relaxed) == true && __buf->numTasks.load(atomic_order::relaxed) <= __buf->numProcessing.load(atomic_order::relaxed))
+					{
+						this_thread::yield();
+					}
 				}
+				__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
 			}
-			__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
 
 			// Process
-			while(__buf->numTasks.load(atomic_order::relaxed) >= __buf->numProcessing.load(atomic_order::relaxed))// NOTE: Avoid low task overhead
+			while (__buf->numTasks.load(atomic_order::relaxed) >= __buf->numProcessing.load(atomic_order::relaxed))	// NOTE: Avoid low task overhead
 			{
 				uint32_t i	= 0;
 				__task_t *t = __buf->queue.try_dequeue();
-				while(t)
+				while (t)
 				{
 					try
 					{
 						t->__call();
 					}
-					catch (dbg_exception const& __e)
+					catch (dbg_exception const &__e)
 					{
 						// TODO: Move exception to main thread!
 					}
+					__dbg_deallocate(t);
 					t = __buf->queue.try_dequeue();
 					++i;
 				};
 				if (i > 0) __buf->numTasks.fetch_sub(i, atomic_order::relaxed);
 			};
-			__buf->numProcessing.fetch_sub(1, atomic_order::relaxed);
 		} while (__buf->run.load(atomic_order::relaxed) == true);
 
 		// Success
@@ -171,6 +176,7 @@ namespace pul
 		if (t)
 		{
 			t->__call();
+			__dbg_deallocate(t);
 			this->buf_->numTasks.fetch_sub(1, atomic_order::relaxed);
 			return true;
 		}
@@ -185,6 +191,7 @@ namespace pul
 		while(j != i)
 		{
 			t[j]->__call();
+			__dbg_deallocate(t[j]);
 			++j;
 		}
 		return i;

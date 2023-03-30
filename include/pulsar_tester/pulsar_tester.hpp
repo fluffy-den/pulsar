@@ -99,19 +99,20 @@ namespace pul
     __measure_proc_worker(
       _FunTy &&__measureFun,
       atomic<uint32_t> *__control,
+      atomic<uint32_t> *__finished,
       size_t __itc,
       size_t __off,
       uint64_t *__results)
     {
       // Wait
       __control->fetch_add(1, atomic_order::relaxed);
-      while (__control->load(atomic_order::relaxed) != 1);
+      while (__control->load(atomic_order::relaxed) != 0);
 
       // Measure
       __measure_proc(std::move(__measureFun), __itc, __off, __results);
 
       // Finished
-      __control->fetch_add(1, atomic_order::relaxed);
+      __finished->fetch_add(1, atomic_order::relaxed);
     }
     template <typename _FunTy>
     void
@@ -123,17 +124,18 @@ namespace pul
       uint64_t *results = new_construct_array<uint64_t>(this->itc_ * this->ntt_);
 
       // Submit Tasks & Measure
-      pf_alignas(CCY_ALIGN) atomic<uint32_t> control = 1;
+      pf_alignas(CCY_ALIGN) atomic<uint32_t> control  = 1;
+      pf_alignas(CCY_ALIGN) atomic<uint32_t> finished = 1;
       for (size_t i = 1; i < this->ntt_; ++i)
       {
-        submit_task(this->__measure_proc_worker<_FunTy>, std::move(__measureFun), &control, this->itc_, this->itc_ * i, results);
+        submit_task(this->__measure_proc_worker<_FunTy>, std::move(__measureFun), &control, &finished, this->itc_, this->itc_ * i, results);
       }
       while (control.load(atomic_order::relaxed) != this->ntt_);
-      control.store(1, atomic_order::relaxed);
+      control.store(0, atomic_order::relaxed);
       this->__measure_proc(std::move(__measureFun), this->itc_, 0, results);
 
-      // End
-      while (control.load(atomic_order::relaxed) != this->ntt_);
+      // Wait for benchmark
+      while (finished.load(atomic_order::relaxed) != this->ntt_);
 
       // Compute
       __display_measures(results, num);

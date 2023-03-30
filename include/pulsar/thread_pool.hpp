@@ -37,6 +37,7 @@ namespace pul
 		/// Constructors
 		__future_store() pf_attr_noexcept
 		: finished(false)
+    , exception(nullptr)
 		, retVal{ 0 }
 		{}
 		__future_store(__future_store<_RetTy> const&) = delete;
@@ -82,15 +83,17 @@ namespace pul
 
 		/// Val
 		pf_hint_nodiscard _RetTy
-		__value() pf_attr_noexcept
+		__value()
 		{
-			pf_assert(this->__is_finished(), "Cannot get value of unfinished task!");
+      this->__wait();
+      if (this->exception) std::rethrow_exception(this->exception);
 			return std::move(*union_cast<_RetTy*>(&this->retVal[0]));
 		}
 
 		/// Store
 		pf_alignas(64) atomic<bool> finished;
-		byte_t retVal[sizeof(_RetTy)];
+    dbg_exception_ptr exception;
+    byte_t retVal[sizeof(_RetTy)];
 	};
 	template <typename _RetTy>
 	class future pf_attr_final
@@ -138,9 +141,8 @@ namespace pul
 
 		/// Val
 		pf_hint_nodiscard pf_decl_inline _RetTy
-		value() pf_attr_noexcept
+		value()
 		{
-      this->wait();
       return this->store_->__value();
 		}
 
@@ -148,121 +150,180 @@ namespace pul
 		__future_store<_RetTy> *store_;
 	};
 
-	/// CONCURRENCY: Type -> Task
-	struct __task_t
+	/// CONCURRENCY: Type -> Task Function
+  using __task_fun_t = fun_ptr<void(void *)>; 
+
+  /// CONCURRENCY: Type -> Task
+  struct __task_t pf_attr_final
 	{
 		/// Constructors
-		__task_t() pf_attr_noexcept = default;
+		__task_t(
+      __task_fun_t __fun) pf_attr_noexcept
+     : task_(__fun)
+    {}
 		__task_t(__task_t const &) = delete;
 		__task_t(__task_t &&)			 = delete;
 
 		/// Destructor
-		pf_decl_virtual ~__task_t() pf_attr_noexcept = default;
+		~__task_t() pf_attr_noexcept = default;
 
 		/// Operator =
 		__task_t &operator=(__task_t const &) = delete;
 		__task_t &operator=(__task_t &&)			= delete;
 
 		/// Call
-		pf_decl_virtual void __call() = 0;
-	};
+		pf_decl_inline void __call()
+    {
+      this->task_(&this->task_ + 1);
+    }
+
+    /// Store
+    __task_fun_t task_;
+  };
 	template <
 		typename _FunTy,
 		typename ... _Args>
-	struct __task pf_attr_final : public __task_t
+	struct __task_data pf_attr_final
 	{
 		/// Constructors
-		__task(
+		__task_data(
 			_FunTy && __fun,
 			_Args && ... __args) pf_attr_noexcept
 		: fun(std::move(__fun))
 		, args(std::forward<_Args>(__args)...)
 		{}
-		__task(__task<_FunTy, _Args...> const &) = delete;
-		__task(__task<_FunTy, _Args...> &&)			 = delete;
+		__task_data(__task_data<_FunTy, _Args...> const &) = delete;
+		__task_data(__task_data<_FunTy, _Args...> &&)			 = delete;
 
 		/// Destructor
-		~__task() pf_attr_noexcept = default;
+		~__task_data() pf_attr_noexcept = default;
 
 		/// Operator =
-		__task& operator=(__task<_FunTy, _Args...> const &) = delete;
-		__task& operator=(__task<_FunTy, _Args...> &&)			= delete;
-
-		/// Call
-		pf_decl_inline void
-		__call() pf_attr_override
-		{
-			tuple_apply(this->fun, std::move(this->args));
-			__task_destroy_delete(this);
-		}
+		__task_data& operator=(__task_data<_FunTy, _Args...> const &) = delete;
+		__task_data& operator=(__task_data<_FunTy, _Args...> &&)			= delete;
 
 		/// Store
 		_FunTy fun;
 		tuple<_Args...> args;
 	};
-	template <
+  template <
+    typename _FunTy,
+    typename ... _Args>
+  pf_decl_inline void 
+  __task_data_proc(
+    void *__data) pf_attr_noexcept
+  {
+    auto data = union_cast<__task_data<_FunTy, _Args...>*>(__data);
+    try
+    {
+      tuple_apply(std::move(data->fun), std::move(data->args));
+    } catch(...)
+    {
+      // TODO: Exception moves to main thread
+    }
+    destroy(data);
+  }
+  template <
+    typename _FunTy,
+    typename ... _Args>
+  struct __task_store
+  {
+    /// Constructors
+    __task_store(
+      _FunTy &&__fun,
+      _Args && ...__args) pf_attr_noexcept
+    : task(__task_data_proc<_FunTy, _Args...>)
+    , data(std::move(__fun), std::forward<_Args>(__args)...)
+    {}
+    __task_store(__task_store<_FunTy, _Args...> const &) = delete;
+    __task_store(__task_store<_FunTy, _Args...> &&) = delete;
+
+    /// Destructor
+    ~__task_store() pf_attr_noexcept = default;
+
+    /// Operator =
+    __task_store<_FunTy, _Args...> &operator=(__task_store<_FunTy, _Args...> const &) = delete;
+    __task_store<_FunTy, _Args...> &operator=(__task_store<_FunTy, _Args...> &&) = delete;
+
+    /// Store
+    __task_t task;
+    __task_data<_FunTy, _Args...> data;
+  };
+
+  template <
 		typename _FunTy,
 		typename ... _Args>
-	struct __task_f pf_attr_final : public __task_t
+	struct __task_data_f pf_attr_final
 	{
 		/// Constructors
-		__task_f(
+		__task_data_f(
 			__future_store<std::invoke_result_t<_FunTy, _Args...>> *__store,
 			_FunTy && __fun,
-			_Args && ... __args) pf_attr_noexcept
-		: store(__store)
-		, fun(std::move(__fun))
-		, args(std::forward<_Args>(__args)...)
+			_Args && ... __args)
+      : store(__store)
+      , fun(std::move(__fun))
+      , args(std::forward<_Args>(__args)...)
 		{}
-		__task_f(__task_f const &) = delete;
-		__task_f(__task_f &&)			 = delete;
+		__task_data_f(__task_data_f<_FunTy, _Args...> const &) = delete;
+		__task_data_f(__task_data_f<_FunTy, _Args...> &&)			 = delete;
 
 		/// Destructor
-		~__task_f() pf_attr_noexcept = default;
+		~__task_data_f() pf_attr_noexcept = default;
 
 		/// Operator =
-		__task_f& operator=(__task_f const &) = delete;
-		__task_f& operator=(__task_f &&)			= delete;
-
-		/// Call
-		pf_decl_inline void
-		__call() pf_attr_override
-		{
-			*union_cast<std::invoke_result_t<_FunTy, _Args...>*>(&this->store->retVal[0]) = tuple_apply(this->fun, std::move(this->args));
-			this->store->finished.store(true, atomic_order::relaxed);
-			__task_destroy_delete(this);
-		}
+		__task_data_f<_FunTy, _Args...>& operator=(__task_data_f<_FunTy, _Args...> const &) = delete;
+		__task_data_f<_FunTy, _Args...>& operator=(__task_data_f<_FunTy, _Args...> &&)			= delete;
 
 		/// Store
 		__future_store<std::invoke_result_t<_FunTy, _Args...>> *store;
 		_FunTy fun;
 		tuple<_Args...> args;
 	};
+  template <
+    typename _FunTy,
+    typename ... _Args>
+  pf_decl_inline void 
+  __task_data_f_proc(
+    void *__data) pf_attr_noexcept
+  {
+    auto data = union_cast<__task_data_f<_FunTy, _Args...>*>(__data);
+    try
+    {
+      *union_cast<std::invoke_result_t<_FunTy, _Args...>*>(&data->store->retVal[0]) = tuple_apply(std::move(data->fun), std::move(data->args));
+    } catch(...)
+    {
+      data->store->exception = std::current_exception(); /// TODO: Exception Context Move
+    }
+    data->store->finished.store(true, atomic_order::relaxed);
+    destroy(data);
+  }
+  template <
+    typename _FunTy,
+    typename ... _Args>
+  struct __task_store_f
+  {
+    /// Constructors
+    __task_store_f(
+      __future_store<std::invoke_result_t<_FunTy, _Args...>> *__s,
+      _FunTy &&__fun,
+      _Args &&... __args)
+      : task(__task_data_f_proc<_FunTy, _Args...>)
+      , data(__s, std::move(__fun), std::forward<_Args>(__args)...)
+    {}
+    __task_store_f(__task_store_f<_FunTy, _Args...> const &) = delete;
+    __task_store_f(__task_store_f<_FunTy, _Args...> &&) = delete;
 
-	/// CONCURRENCY: Task -> Allocation
-	template <
-		typename _Ty,
-		typename ... _Args>
-	pf_hint_nodiscard pf_decl_inline
-	_Ty*
-	__task_new_construct(
-		_Args&& ... __args) pf_attr_noexcept
-	{
-		_Ty *t = union_cast<_Ty*>(__dbg_allocate(sizeof(_Ty)));
-    pf_assert(t != nullptr, "t is nullptr!");
-    construct(t, std::forward<_Args>(__args)...);
-		return t;
-	}
-	template <
-		typename _Ty>
-	pf_decl_inline
-	void
-	__task_destroy_delete(
-		_Ty *__ptr) pf_attr_noexcept
-	{
-		destroy(__ptr);
-		__dbg_deallocate(__ptr);
-	}
+    /// Destructor
+    ~__task_store_f() pf_attr_noexcept = default; 
+
+    /// Operator =
+    __task_store_f<_FunTy, _Args...> &operator=(__task_store_f<_FunTy, _Args...> const &) = delete;
+    __task_store_f<_FunTy, _Args...> &operator=(__task_store_f<_FunTy, _Args...> &&) = delete;
+
+    /// Store
+    __task_t task;
+    __task_data_f<_FunTy, _Args...> data;
+  };
 
 	/// CONCURRENCY: Task -> Enqueue
 	pulsar_api void
@@ -279,11 +340,11 @@ namespace pul
 	pf_decl_static void
 	submit_task(
 		_FunTy&& __fun,
-		_Args && ... __args) pf_attr_noexcept
+		_Args && ... __args)
 	requires(std::is_invocable_v<_FunTy, _Args...>)
 	{
-		auto *t = __task_new_construct<__task<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
-		__task_enqueue(t);
+		auto *t = __dbg_new_construct<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+		__task_enqueue(&t->task);
 	}
 	template <
 		typename _FunTy,
@@ -291,11 +352,11 @@ namespace pul
 	pf_decl_static void
 	submit_task_0(
 		_FunTy&& __fun,
-		_Args && ... __args) pf_attr_noexcept
+		_Args && ... __args)
 	requires(std::is_invocable_v<_FunTy, _Args...>)
 	{
-		auto *t = __task_new_construct<__task<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
-		__task_enqueue_0(t);
+		auto *t = __dbg_new_construct<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+		__task_enqueue_0(&t->task);
 	}
 	template <
 		typename _FunTy,
@@ -303,14 +364,21 @@ namespace pul
 	pf_hint_nodiscard pf_decl_static future<std::invoke_result_t<_FunTy, _Args...>>
 	submit_future_task(
 		_FunTy&& __fun,
-		_Args&& ... __args) pf_attr_noexcept
+		_Args&& ... __args)
 	requires(!std::is_void_v<std::invoke_result_t<_FunTy, _Args...>> 
            && std::is_invocable_v<_FunTy, _Args...>)
 	{
 		auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
-		auto *t = __task_new_construct<__task_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
-		__task_enqueue(t);
-		return s;
+    try
+    {
+      auto *t = __dbg_new_construct<__task_store_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+      __task_enqueue(&t->task);
+      return s;
+    } catch(...)
+    {
+      destroy_delete(s);
+      throw;
+    }
 	}
 	template <
 		typename _FunTy,
@@ -318,19 +386,28 @@ namespace pul
 	pf_hint_nodiscard pf_decl_static future<std::invoke_result_t<_FunTy, _Args...>>
 	submit_future_task_0(
 		_FunTy&& __fun,
-		_Args&& ... __args) pf_attr_noexcept
+		_Args&& ... __args)
 	requires(!std::is_void_v<std::invoke_result_t<_FunTy, _Args...>> 
            && std::is_invocable_v<_FunTy, _Args...>)
 	{
 		auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
-		auto *t = __task_new_construct<__task_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
-		__task_enqueue_0(t);
-		return s;
+    try
+    {
+      auto *t = __dbg_new_construct<__task_store_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+      __task_enqueue_0(&t->task);
+      return s;
+    } catch(...)
+    {
+      destroy_delete(s);
+      throw;
+    }
 	}
 
   /// CONCURRENCY: Task -> Pool
   struct __task_pool_store_t
   {
+    // TODO: Upgrade
+
     /// Constructors
     __task_pool_store_t() pf_attr_noexcept
       : state(0)
@@ -360,8 +437,8 @@ namespace pul
           auto c = b;
           auto t = c->store;
           b = c->next;
-          __task_destroy_delete(c);
           t->__call();
+          __dbg_deallocate(c);
         }
 
         uint32_t v = __store->state.load(atomic_order::relaxed);
@@ -384,8 +461,9 @@ namespace pul
     {
       /// Initializing
       using node_t = mpsc_singly_lifo<__task_t*>::node_t;
-      auto *n  = __task_new_construct<node_t>();
-      n->store = __task_new_construct<__task<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+      auto *n  = __dbg_new_construct<node_t>();
+      auto *t  = __dbg_new_construct<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+      n->store = &t->task;
       n->next  = nullptr;
       this->pool.insert_tail(n);
 
@@ -408,23 +486,24 @@ namespace pul
       _FunTy&& __fun,
       _Args && ... __args) pf_attr_noexcept
     {
-      /// Initializing
-      using node_t = mpsc_singly_lifo<__task_t*>::node_t;
-      auto *n  = __task_new_construct<node_t>();
-      n->store = __task_new_construct<__task<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
-      n->next  = nullptr;
-      this->pool.insert_tail(n);
-
-      /// Launch
-      if (this->__is_finished())
-      {
-        this->state.fetch_or(1, atomic_order::relaxed);
-        submit_task_0(__process, this);
-      }
-      else
-      {
-        this->state.fetch_or(2, atomic_order::relaxed);
-      }
+      // /// Initializing
+      // using node_t = mpsc_singly_lifo<__task_t*>::node_t;
+      // auto *n  = __dbg_new_construct<node_t>();
+      // auto *t  = __dbg_new_construct<__task<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+      // n->store = &t->task;
+      // n->next  = nullptr;
+      // this->pool.insert_tail(n);
+      // 
+      // /// Launch
+      // if (this->__is_finished())
+      // {
+      //   this->state.fetch_or(1, atomic_order::relaxed);
+      //   submit_task_0(__process, this);
+      // }
+      // else
+      // {
+      //   this->state.fetch_or(2, atomic_order::relaxed);
+      // }
     }
 
     /// Submit Future
@@ -436,27 +515,27 @@ namespace pul
       _FunTy&& __fun,
       _Args&& ... __args) pf_attr_noexcept
     {
-      /// Initializing
-      using node_t = mpsc_singly_lifo<__task_t*>::node_t;
-      auto *n  = __task_new_construct<node_t>();
-      auto *s  = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
-      n->store = __task_new_construct<__task_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
-      n->next  = nullptr;
-      this->pool.insert_tail(n);
-
-      /// Launch
-      if (this->__is_finished())
-      {
-        this->state.fetch_or(1, atomic_order::relaxed);
-        submit_task(__process, this);
-      }
-      else
-      {
-        this->state.fetch_or(2, atomic_order::relaxed);
-      }
-
-      /// Return
-      return s;
+      // /// Initializing
+      // using node_t = mpsc_singly_lifo<__task_t*>::node_t;
+      // auto *n  = __dbg_new_construct_ex<node_t>();
+      // auto *s  = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
+      // n->store = __dbg_new_construct_ex<__task_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+      // n->next  = nullptr;
+      // this->pool.insert_tail(n);
+      // 
+      // /// Launch
+      // if (this->__is_finished())
+      // {
+      //   this->state.fetch_or(1, atomic_order::relaxed);
+      //   submit_task(__process, this);
+      // }
+      // else
+      // {
+      //   this->state.fetch_or(2, atomic_order::relaxed);
+      // }
+      // 
+      // /// Return
+      // return s;
     }
     template <
       typename _FunTy,
@@ -466,27 +545,27 @@ namespace pul
       _FunTy&& __fun,
       _Args&& ... __args) pf_attr_noexcept
     {
-      /// Initializing
-      using node_t = mpsc_singly_lifo<__task_t*>::node_t;
-      auto *n  = __task_new_construct<node_t>();
-      auto *s  = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
-      n->store = __task_new_construct<__task_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
-      n->next  = nullptr;
-      this->pool.insert_tail(n);
-
-      /// Launch
-      if (this->__is_finished())
-      {
-        this->state.fetch_or(1, atomic_order::relaxed);
-        submit_task_0(__process, this);
-      }
-      else
-      {
-        this->state.fetch_or(2, atomic_order::relaxed);
-      }
-
-      /// Return
-      return s;
+      // /// Initializing
+      // using node_t = mpsc_singly_lifo<__task_t*>::node_t;
+      // auto *n  = __task_new_construct<node_t>();
+      // auto *s  = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
+      // n->store = __task_new_construct<__task_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+      // n->next  = nullptr;
+      // this->pool.insert_tail(n);
+      // 
+      // /// Launch
+      // if (this->__is_finished())
+      // {
+      //   this->state.fetch_or(1, atomic_order::relaxed);
+      //   submit_task_0(__process, this);
+      // }
+      // else
+      // {
+      //   this->state.fetch_or(2, atomic_order::relaxed);
+      // }
+      // 
+      // /// Return
+      // return s;
     }
 
     /// Finished

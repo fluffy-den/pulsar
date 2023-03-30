@@ -21,6 +21,8 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 
 [x] all_tests
 
+[o] stress_test
+
 # debug.hpp
 [x] concurrent logger
 [o] convert all string using __dbg_allocator

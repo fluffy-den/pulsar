@@ -102,9 +102,42 @@ namespace dbg_flags
 	pf_hint_nodiscard pulsar_api void*
 	__dbg_allocate(
 		size_t __size);
+	template <
+		typename _Ty,
+		typename ..._Args>
+	pf_hint_nodiscard pulsar_api _Ty*
+	__dbg_new_construct_ex(
+		size_t __ex,
+		_Args && ... __args)
+	requires(std::is_constructible_v<_Ty, _Args...>)
+	{
+		_Ty *p = union_cast<_Ty*>(__dbg_allocate(sizeof(_Ty) + __ex));
+		construct(p, std::forward<_Args>(__args)...);
+		return p;
+	}
+	template <
+		typename _Ty,
+		typename ..._Args>
+	pf_hint_nodiscard pulsar_api _Ty*
+	__dbg_new_construct(
+		_Args && ... __args)
+	requires(std::is_constructible_v<_Ty, _Args...>)
+	{
+		return __dbg_new_construct_ex<_Ty>(0, std::forward<_Args>(__args)...);
+	}
+
 	pulsar_api void
 	__dbg_deallocate(
 		void *__ptr) pf_attr_noexcept;
+	template <
+		typename _Ty>
+	void
+	__dbg_destroy_delete(
+		_Ty *__p)
+	{
+		destroy(__p);
+		__dbg_deallocate(__p);
+	}
 
 	/// DEBUG: UTF8 -> Types
 	// String View
@@ -555,6 +588,9 @@ namespace dbg_flags
 		uint32_t code_;
 		uint32_t flags_;
 	};
+
+	/// DEBUG: Exception -> Pointer
+	using dbg_exception_ptr = std::exception_ptr;
 
 	/// DEBUG: Format -> Functions
 	template <typename ..._Args>
