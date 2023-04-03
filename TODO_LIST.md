@@ -23,7 +23,7 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 
 # debug.hpp
 [o] concurrent logger
-[x] use calloc for every string
+[o] use calloc for every string
 [o] clean-up
 
 [o] all_tests
