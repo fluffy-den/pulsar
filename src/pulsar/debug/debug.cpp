@@ -115,7 +115,7 @@ namespace pul
 		size_t c = 0;
 		for (size_t i = 0; i < __st.available; ++i)
 		{
-			c += strlen(&__st.trace[DBG_FMT_NAME_LEN * i]);
+			c += strlen(&__st.trace[DBG_FMT_NAME_LEN * i]) + 2;
 		}
 		return c;
 	}
@@ -126,7 +126,7 @@ namespace pul
 	{
 		for (size_t i = 0; i < __st.available; ++i)
 		{
-			__w = fmt::format_to(__w, "     {}\n", &__st.trace[DBG_FMT_NAME_LEN * i]);
+			__w = fmt::format_to(__w, "\t{}\n", &__st.trace[DBG_FMT_NAME_LEN * i]);
 		}
 		return __w;
 	}
