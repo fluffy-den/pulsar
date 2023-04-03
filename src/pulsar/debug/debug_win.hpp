@@ -32,7 +32,7 @@ namespace pul
 {
 	/// DEBUG: Wide -> Types
 	// String View
-	class __dbg_wsstring_view	// TODO: Upgrade
+	class __dbg_wsstring_view
 	{
 	public:
 		/// Constructors
@@ -122,13 +122,12 @@ namespace pul
 	};
 
 	// String
-	class __dbg_wsstring// TODO: Upgrade
+	class __dbg_wsstring
 	{
 	/// __assign_view
 	void __assign_view(
 		__dbg_wsstring_view __v) pf_attr_noexcept
 	{
-		this->shrink(__v.size());
 		std::memcpy(this->data(), __v.data(), this->count_ * sizeof(wchar_t));
 		*(this->data() + this->count_) = L'\0';
 	}
@@ -150,7 +149,7 @@ namespace pul
 			size_t __count,
 			wchar_t __val) pf_attr_noexcept
 			: count_(__count)
-			, store_(union_cast<wchar_t*>(halloc((this->count_ + 1) * sizeof(wchar_t), align_val_t(32), 0)))
+			, store_(union_cast<wchar_t*>(calloc((this->count_ + 1) * sizeof(wchar_t), align_val_t(32), 0)))
 		{
 			std::memset(this->store_, __val, __count * sizeof(wchar_t));
 			*(this->data() + this->count_) = L'\0';
@@ -170,7 +169,7 @@ namespace pul
 		pf_decl_inline __dbg_wsstring(
 			__dbg_wsstring_view __v) pf_attr_noexcept
 			: count_(__v.count())
-			, store_(union_cast<wchar_t*>(halloc((count_ + 1) * sizeof(wchar_t), align_val_t(32), 0)))
+			, store_(union_cast<wchar_t*>(calloc((count_ + 1) * sizeof(wchar_t), align_val_t(32), 0)))
 		{
 			memcpy(this->store_, __v.data(), __v.size());
 			*(this->data() + this->count_) = L'\0';
@@ -179,7 +178,7 @@ namespace pul
 		/// Destructor
 		pf_decl_inline ~__dbg_wsstring() pf_attr_noexcept
 		{
-			if (this->store_) hfree(this->store_);
+			if (this->store_) cfree(this->store_);
 		}
 
 		/// Operator =
@@ -193,7 +192,7 @@ namespace pul
 		pf_decl_inline __dbg_wsstring &operator=(
 			__dbg_wsstring &&__r) pf_attr_noexcept
 		{
-			if (this->store_) hfree(this->store_);
+			if (this->store_) cfree(this->store_);
 			this->count_ = __r.count_;
 			__r.count_	 = 0;
 			this->store_ = __r.store_;
@@ -235,21 +234,6 @@ namespace pul
 		view() const pf_attr_noexcept
 		{
 			return __dbg_wsstring_view(&this->store_[0], this->count_);
-		}
-
-		/// Shrink
-		pf_decl_inline void shrink(
-			size_t __c) pf_attr_noexcept
-		{
-			if (__c == 0)
-			{
-				hfree(this->store_);
-			}
-			else
-			{
-				this->store_ = union_cast<wchar_t*>(hrealloc(this->store_, this->count_, __c + sizeof(wchar_t), align_val_t(32), 0));
-				this->count_ = __c + sizeof(wchar_t);
-			}
 		}
 
 		/// Begin/End
@@ -311,12 +295,21 @@ namespace pul
 	};
 
 	/// DEBUG: Win -> Internal
-	// Type
-	struct pf_alignas(32) __dbg_exception_context_t
+	class pf_alignas(32) __dbg_exception_context_t
 	{
+	private:
+		/// Type -> Buffer
+		struct __buffer_t
+		{
+			EXCEPTION_POINTERS *exp;
+			thread_id_t ID;
+		};
+
+	public:
 		/// Handle
-		pf_hint_nodiscard pf_decl_static LONG WINAPI __vectored_exception_handler(
-			PEXCEPTION_POINTERS __info) pf_attr_noexcept;
+		pf_hint_nodiscard pf_decl_static LONG WINAPI
+		__vectored_exception_handler(
+			EXCEPTION_POINTERS *__info) pf_attr_noexcept;
 
 		/// Constructors
 		__dbg_exception_context_t() pf_attr_noexcept;
@@ -330,10 +323,39 @@ namespace pul
 		__dbg_exception_context_t &operator=(__dbg_exception_context_t const &) = delete;
 		__dbg_exception_context_t &operator=(__dbg_exception_context_t &&)			= delete;
 
-		/// Exception Handler
-		PEXCEPTION_POINTERS exp;
-		DWORD threadID;
-		PVOID sehex;
+		/// Move exception to 0
+		pf_decl_inline void
+		__move_exception_to(
+			thread_id_t __ID,
+			dbg_exception_context *__ctx) pf_attr_noexcept
+		{
+			this->buffer_[__ID].exp = union_cast<EXCEPTION_POINTERS*>(__ctx->context());
+			this->buffer_[__ID].ID	= __ctx->ID();
+		}
+		pf_hint_nodiscard EXCEPTION_POINTERS*
+		__get_current_exception_pointer() pf_attr_noexcept
+		{
+			return this->buffer_[this_thread::get_id()].exp;
+		}
+		pf_hint_nodiscard EXCEPTION_POINTERS*
+		__clear_current_exception_pointer() pf_attr_noexcept
+		{
+			auto ID	 = this_thread::get_id();
+			auto exp = this->buffer_[ID].exp;
+			this->buffer_[ID].exp = nullptr;
+			this->buffer_[ID].ID	= this_thread::get_id();
+			return exp;
+		}
+		pf_hint_nodiscard thread_id_t
+		__get_ID() pf_attr_noexcept
+		{
+			return this->buffer_[this_thread::get_id()].ID;
+		}
+
+	private:
+		/// Store
+		__buffer_t *buffer_;
+		VOID *handle_;
 	};
 
 	/// DEBUG: Win -> StackTrace
@@ -384,5 +406,3 @@ namespace pul
 
 #endif // !PF_OS_WINDOWS
 #endif // !PULSAR_SRC_DEBUG_WIN_HPP
-
-// TODO: Move PEXCEPTION_POINTERS + threadID to another thread

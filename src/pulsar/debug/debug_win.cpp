@@ -20,23 +20,142 @@
 namespace pul
 {
 	/// DEBUG: Win -> Stack Trace
-	pulsar_api char_t*
-	dbg_format_stacktrace_to(
-		char_t *__where,
-		size_t __ignore) pf_attr_noexcept
+	__dbg_stacktrace_t
+	__dbg_capture_stacktrace(
+		uint32_t __ignore) pf_attr_noexcept
 	{
-		// 1. Init
-		// for now, stacktrace is used only on this process
-		// !! no need to get stacktrace of another thread, or another process (for now) !!
+		// Symbol Init
+		HANDLE thdl = GetCurrentThread();
+		HANDLE phdl = GetCurrentProcess();
+		SymSetOptions(SYMOPT_DEFERRED_LOADS);
+		if (!SymInitializeW(phdl, nullptr, TRUE))
+		{
+			pf_print(dbg_type::warning, dbg_level::high, "[WIN] SymInitialize failed! handle={}", phdl);
+			return { 0, 0 };
+		}
+
+		// StackFrame
 		CONTEXT ctx;
 		memset(&ctx, 0, sizeof(ctx));
 		RtlCaptureContext(&ctx);
-		// 2. Call
-		return __dbg_format_walk_to_win(__where, &ctx, __ignore);
+		// per platform stack frame initialisation
+		STACKFRAME64 sf;
+		memset(&sf, 0, sizeof(sf));
+		// https://docs.microsoft.com/en-us/windows/win32/api/dbghelp/ns-dbghelp-stackframe
+		// x86 platforms
+# if defined(PF_ARCHITECTURE_I386)
+		DWORD machineType = IMAGE_FILE_MACHINE_I386;
+		sf.AddrPC.Offset		= ctx.Eip;
+		sf.AddrPC.Mode			= AddrModeFlat;
+		sf.AddrFrame.Offset = ctx.Ebp;
+		sf.AddrFrame.Mode		= AddrModeFlat;
+		sf.AddrStack.Offset = ctx.Esp;
+		sf.AddrStack.Mode		= AddrModeFlat;
+		// intel itanium
+# elif defined(PF_ARCHITECTURE_IA64)
+		DWORD machineType = IMAGE_FILE_MACHINE_IA64;
+		sf.AddrPC.Offset		 = ctx.StIIP;
+		sf.AddrPC.Mode			 = AddrModeFlat;
+		sf.AddrFrame.Offset	 = ctx.IntSp;
+		sf.AddrFrame.Mode		 = AddrModeFlat;
+		sf.AddrBStore.Offset = ctx.RsBSP;
+		sf.AddrBStore.Mode	 = AddrModeFlat;
+		sf.AddrStack.Offset	 = ctx.IntSp;
+		sf.AddrStack.Mode		 = AddrModeFlat;
+		// x64 platforms
+# elif defined(PF_ARCHITECTURE_AMD64)
+		DWORD machineType = IMAGE_FILE_MACHINE_AMD64;
+		sf.AddrPC.Offset		= ctx.Rip;
+		sf.AddrPC.Mode			= AddrModeFlat;
+		sf.AddrFrame.Offset = ctx.Rsp;
+		sf.AddrFrame.Mode		= AddrModeFlat;
+		sf.AddrStack.Offset = ctx.Rsp;
+		sf.AddrStack.Mode		= AddrModeFlat;
+# else
+#   error "Platform unsupported!"
+# endif
+		// symbol handling
+		union
+		{
+			IMAGEHLP_SYMBOL64 as_symbol;
+			BYTE as_buffer[sizeof(as_symbol) + DBG_FMT_NAME_LEN * sizeof(CHAR)];
+		};
+		memset(union_cast<byte_t*>(&as_buffer), 0, sizeof(as_buffer));
+		as_symbol.SizeOfStruct	= sizeof(as_symbol);
+		as_symbol.MaxNameLength = DBG_FMT_NAME_LEN;
+		// module of the symbol
+		IMAGEHLP_MODULE64 m;
+		memset(&m, 0, sizeof(m));
+		m.SizeOfStruct = sizeof(m);
+		// number of trace
+		uint32_t cn = DBG_FMT_STACK_FRAMES - __ignore;
+
+		// "Walk" the stacktrace
+		__dbg_stacktrace_t st = { 0 };
+		while (
+			StackWalk64(
+				machineType, phdl, thdl, &sf, &ctx, nullptr,
+				SymFunctionTableAccess64, SymGetModuleBase64, nullptr)
+			&& cn > 0)
+		{
+			// Retrieve
+			// ignore
+			if (__ignore > 0)
+			{
+				--__ignore;
+				continue;
+			}
+
+			// format
+		#ifdef PF_DEBUG
+			// line, file of the symbol
+			IMAGEHLP_LINE64 l;
+			memset(&l, 0, sizeof(l));
+			l.SizeOfStruct = sizeof(l);
+			DWORD64 sd = 0;
+			char_t name[DBG_FMT_NAME_LEN];
+			SymGetSymFromAddr64(phdl, sf.AddrPC.Offset, &sd, &as_symbol);
+			UnDecorateSymbolName(&as_symbol.Name[0], &name[0], DBG_FMT_NAME_LEN, UNDNAME_COMPLETE);
+			SymGetModuleInfo64(phdl, sf.AddrPC.Offset, &m);
+			DWORD ld = 0;
+			SymGetLineFromAddr64(phdl, sf.AddrPC.Offset, &ld, &l);
+			auto *w = &st.trace[DBG_FMT_NAME_LEN * (st.available++)];
+			fmt::format_to(
+				w, "at function={}, in module={} at file={}:{}",
+				&as_symbol.Name[0],
+				&m.ModuleName[0],
+				&l.FileName[0] ? &l.FileName[0] : "???",
+				l.LineNumber);
+			--cn;
+		#else
+			DWORD64 sd = 0;
+			char_t name[DBG_FMT_NAME_LEN];
+			SymGetSymFromAddr64(phdl, sf.AddrPC.Offset, &sd, &as_symbol);
+			SymGetModuleInfo64(phdl, sf.AddrPC.Offset, &m);
+			auto *w = &st.trace[DBG_FMT_NAME_LEN * (st.available++)];
+			fmt::format_to(
+				w, "at function={}, in module={}",
+				&as_symbol.Name[0],
+				&m.ModuleName[0]);
+			--cn;
+		#endif
+		}
+
+		// Clean
+		SymCleanup(phdl);
+
+		// Return
+		return st;
+	}
+	pulsar_api __dbg_stacktrace_t
+	__dbg_retrieve_stacktrace() pf_attr_noexcept
+	{
+		return __dbg_capture_stacktrace(DBG_FMT_STACK_FRAMES_IGNORE);
 	}
 
 	/// DEBUG: Win -> Category -> System
-	pulsar_api dbg_u8string dbg_category_system_t::message(
+	pulsar_api dbg_u8string
+	dbg_category_system_t::message(
 		uint32_t __val) const pf_attr_noexcept
 	{
 		return __dbg_generate_error_message_win(__val);
@@ -49,205 +168,93 @@ namespace pul
 		uint32_t __code,
 		dbg_u8string_view __msg) pf_attr_noexcept
 	{
-		// 1. Format
-		dbg_u8string_view catn = __cat->name();
-		dbg_u8string_view catm = __cat->message(__code);
-		dbg_u8string str(DBG_FMT_BUFFER_SIZE, '\0');
+		// Initialisation
+		auto st = __dbg_retrieve_stacktrace();
+		auto ID = this_thread::get_id();
+
+		// Size
+		const size_t s = DBG_FMT_WRITE_OFFSET
+										 + fmt::formatted_size(" T={} /{}/ /{}/ ({}) message={} | ",
+																					 ID,
+																					 dbg_styled('E', dbg_style_fg(dbg_color::red)),
+																					 dbg_styled(__cat->name().data(), dbg_style_fg(dbg_color::orange)),
+																					 dbg_styled(__code, dbg_style_fg(dbg_color::red)), dbg_styled(__cat->message(__code).data(), dbg_style_fg(dbg_color::orange)))
+										 + __dbg_formatted_stacktrace_size(st) + fmt::formatted_size("{}\n", __msg.begin()) + 2;// 2 == '\0' + '\n'
+
+		// Format
+		dbg_u8string str(s, '\0');
 		char_t *p = str.begin();
-		p = dbg_format_chrono_to(p);
-		p = dbg_u8format_to(
-			p, " T={} /{}/ /{}/ ({}) message={} | ",
-			__internal.dbg_ex_ctx.threadID,
-			dbg_styled('E', dbg_style_fg(dbg_color::red)),
-			dbg_styled(catn.data(), dbg_style_fg(dbg_color::orange)),
-			dbg_styled(__code, dbg_style_fg(dbg_color::red)),
-			dbg_styled(catm.data(), dbg_style_fg(dbg_color::orange)));
-		char_t *k = p;
-		p			 = dbg_u8format_to(p, "{}", __msg.begin());
-		p			 = dbg_reformat_newlines_to(k);
-		p			 = __dbg_format_stacktrace_of_exception_to_win(p, 0);
+		p = __dbg_format_chrono_to(p);
+		p = dbg_u8format_to(p,
+												" T={} /{}/ /{}/ ({}) message={} | ",
+												ID,
+												dbg_styled('E', dbg_style_fg(dbg_color::red)),
+												dbg_styled(__cat->name().data(), dbg_style_fg(dbg_color::orange)),
+												dbg_styled(__code, dbg_style_fg(dbg_color::red)),
+												dbg_styled(__cat->message(__code).data(), dbg_style_fg(dbg_color::orange)));
+		p			 = dbg_u8format_to(p, "{}\n", __msg.begin());
+		p			 = __dbg_format_stacktrace_to(p, st);
 		*(p++) = '\n';
-		str.shrink(union_cast<size_t>(p) - union_cast<size_t>(str.begin()) + 1);
 
 		// 2. Print
 		dbg_log(std::move(str));
 	}
 
+	/// DEBUG: Exception Context -> Retrieve
+	pulsar_api dbg_exception_context
+	__dbg_retrieve_current_exception_context()
+	{
+		return dbg_exception_context(
+			std::current_exception(),
+			__internal.dbg_ex_ctx.__get_current_exception_pointer(),
+			__internal.dbg_ex_ctx.__get_ID());
+	}
+
 	/// DEBUG: Win -> Exception Handler
 	/// Handle
 	LONG WINAPI __dbg_exception_context_t::__vectored_exception_handler(
-		PEXCEPTION_POINTERS __info) pf_attr_noexcept
+		EXCEPTION_POINTERS *__info) pf_attr_noexcept
 	{
+		const uint32_t ID = this_thread::get_id();
+		__buffer_t *b			= &__internal.dbg_ex_ctx.buffer_[ID];
 		if (__info->ExceptionRecord->ExceptionInformation[1] == 0
-				&& __info != __internal.dbg_ex_ctx.exp)
+				&& __info != b->exp)
 		{
 			// Exception -> Ex
-			__internal.dbg_ex_ctx.threadID = GetCurrentThreadId();
-			__internal.dbg_ex_ctx.exp			 = __info;
+			b->ID	 = ID;
+			b->exp = __info;
 		}
 		return EXCEPTION_CONTINUE_SEARCH;
 	}
 
 	/// Constructors
 	__dbg_exception_context_t::__dbg_exception_context_t() pf_attr_noexcept
-		: exp(nullptr)
-		, threadID(0)
-		, sehex(nullptr)
+		: buffer_(union_cast<__buffer_t*>(halloc(sizeof(__buffer_t) * CCY_NUM_THREADS)))
 	{
-		this->sehex = AddVectoredExceptionHandler(0, __vectored_exception_handler);
-		pf_assert(this->sehex, "[WIN] AddVectoredExceptionHandler for printing stacktrace failed! handle={}", this->sehex);
+		this->handle_ = AddVectoredExceptionHandler(0, __vectored_exception_handler);
+		pf_assert(this->handle_, "[WIN] AddVectoredExceptionHandler for printing stacktrace failed! handle={}", this->handle_);
+		std::set_terminate(__dbg_terminate_win);
 	}
 
 	/// Destructor
 	__dbg_exception_context_t::~__dbg_exception_context_t() pf_attr_noexcept
 	{
-		if (this->sehex && !RemoveVectoredExceptionHandler(this->sehex))
+		hfree(this->buffer_);
+		if (this->handle_ && !RemoveVectoredExceptionHandler(this->handle_))
 		{
-			pf_print(dbg_type::warning, dbg_level::low, "[WIN] RemoveVectoredExceptionHandler failed for handle={}!", this->sehex);
+			pf_print(dbg_type::warning, dbg_level::low, "[WIN] RemoveVectoredExceptionHandler failed for handle={}!", this->handle_);
 		}
 	}
 
-	/// DEBUG: Win -> StackTrace
-	char_t*
-	__dbg_format_walk_to_win(
-		char_t *__where,
-		PCONTEXT __ctx,
-		size_t __ignore)
+	/// DEBUG: Exception -> Context
+	void
+	dbg_exception_context::rethrow() pf_attr_noexcept
 	{
-
-		// 1. Symbol Init
-		HANDLE thdl = GetCurrentThread();
-		HANDLE phdl = GetCurrentProcess();
-		SymSetOptions(SYMOPT_DEFERRED_LOADS);
-		pf_throw_if(
-			!SymInitialize(phdl, nullptr, TRUE),
-			dbg_category_system(),
-			GetLastError(),
-			dbg_flags::dump_with_handle_data,
-			"SymInitialize failed! handle={}",
-			union_cast<size_t>(phdl));
-
-		// 2. StackFrame
-		// per platform stack frame initialisation
-		STACKFRAME64 sf;
-		std::memset(&sf, 0, sizeof(sf));
-		// https://docs.microsoft.com/en-us/windows/win32/api/dbghelp/ns-dbghelp-stackframe
-		// x86 platforms
-# if defined(PF_ARCHITECTURE_I386)
-		DWORD machineType = IMAGE_FILE_MACHINE_I386;
-		sf.AddrPC.Offset		= __ctx->Eip;
-		sf.AddrPC.Mode			= AddrModeFlat;
-		sf.AddrFrame.Offset = __ctx->Ebp;
-		sf.AddrFrame.Mode		= AddrModeFlat;
-		sf.AddrStack.Offset = __ctx->Esp;
-		sf.AddrStack.Mode		= AddrModeFlat;
-		// intel itanium
-# elif defined(PF_ARCHITECTURE_IA64)
-		DWORD machineType = IMAGE_FILE_MACHINE_IA64;
-		sf.AddrPC.Offset		 = __ctx->StIIP;
-		sf.AddrPC.Mode			 = AddrModeFlat;
-		sf.AddrFrame.Offset	 = __ctx->IntSp;
-		sf.AddrFrame.Mode		 = AddrModeFlat;
-		sf.AddrBStore.Offset = __ctx->RsBSP;
-		sf.AddrBStore.Mode	 = AddrModeFlat;
-		sf.AddrStack.Offset	 = __ctx->IntSp;
-		sf.AddrStack.Mode		 = AddrModeFlat;
-		// x64 platforms
-# elif defined(PF_ARCHITECTURE_AMD64)
-		DWORD machineType = IMAGE_FILE_MACHINE_AMD64;
-		sf.AddrPC.Offset		= __ctx->Rip;
-		sf.AddrPC.Mode			= AddrModeFlat;
-		sf.AddrFrame.Offset = __ctx->Rsp;
-		sf.AddrFrame.Mode		= AddrModeFlat;
-		sf.AddrStack.Offset = __ctx->Rsp;
-		sf.AddrStack.Mode		= AddrModeFlat;
-# else
-#   error "Platform unsupported!"
-# endif
-		// symbol handling
-		union
+		if (this->ptr_)
 		{
-			_IMAGEHLP_SYMBOL64 as_symbol;
-			BYTE as_buffer[sizeof(as_symbol) + DBG_FMT_NAME_LEN * sizeof(CHAR)];
-		};
-		std::memset(union_cast<byte_t*>(&as_buffer), 0, sizeof(as_buffer));
-		as_symbol.SizeOfStruct	= sizeof(as_symbol);
-		as_symbol.MaxNameLength = DBG_FMT_NAME_LEN;
-		// module of the symbol
-		IMAGEHLP_MODULE64 m;
-		std::memset(&m, 0, sizeof(m));
-		m.SizeOfStruct = sizeof(m);
-		// number of trace
-		uint32_t cn = DBG_FMT_STACK_FRAMES - __ignore;
-
-		// 3. "Walk" the stacktrace
-		while (
-			StackWalk64(
-				machineType, phdl, thdl, &sf, __ctx, nullptr,
-				SymFunctionTableAccess64, SymGetModuleBase64, nullptr)
-			&& cn > 0)
-		{
-			// i. Retrieve
-			// ignore
-			if (__ignore > 0)
-			{
-				--__ignore;
-				continue;
-			}
-
-			// ii.format
-		#ifdef PF_DEBUG
-			// line, file of the symbol
-			IMAGEHLP_LINE64 l;
-			std::memset(&l, 0, sizeof(l));
-			l.SizeOfStruct = sizeof(l);
-			DWORD64 sd = 0;
-			char_t name[DBG_FMT_NAME_LEN];
-			std::memset(&name[0], 0, sizeof(name));
-			SymGetSymFromAddr64(phdl, sf.AddrPC.Offset, &sd, &as_symbol);
-			UnDecorateSymbolName(&as_symbol.Name[0], &name[0], DBG_FMT_NAME_LEN, UNDNAME_COMPLETE);
-			SymGetModuleInfo64(phdl, sf.AddrPC.Offset, &m);
-			DWORD ld = 0;
-			SymGetLineFromAddr64(phdl, sf.AddrPC.Offset, &ld, &l);
-			--cn;
-			__where = dbg_u8format_to(
-				__where, "                 at function={}, in module={} at file={}:{}\n",
-				&as_symbol.Name[0],
-				&m.ModuleName[0],
-				&l.FileName[0] ? &l.FileName[0] : "???",
-				l.LineNumber);
-		#else
-			DWORD64 sd = 0;
-			char_t name[DBG_FMT_NAME_LEN];
-			std::memset(&name[0], 0, sizeof(name));
-			SymGetSymFromAddr64(phdl, sf.AddrPC.Offset, &sd, &as_symbol);
-			SymGetModuleInfo64(phdl, sf.AddrPC.Offset, &m);
-			__where = dbg_u8format_to(
-				__where, "                 at function={}, in module={}\n",
-				&as_symbol.Name[0],
-				&m.ModuleName[0]);
-		#endif
+			__internal.dbg_ex_ctx.__move_exception_to(this_thread::get_id(), this);
+			std::rethrow_exception(this->ptr_);
 		}
-
-		// 3. Clean
-		pf_throw_if(
-			!SymCleanup(phdl),
-			dbg_category_system(),
-			GetLastError(),
-			dbg_flags::dump_with_handle_data,
-			"SymCleanup failed! handle={}",
-			union_cast<size_t>(phdl));
-
-		// 4. Return
-		return __where;
-	}
-	char_t*__dbg_format_stacktrace_of_exception_to_win(
-		char_t *__where,
-		size_t __ignore)
-	{
-		// 1. Call
-		PEXCEPTION_POINTERS p = __internal.dbg_ex_ctx.exp;
-		return __dbg_format_walk_to_win(__where, p->ContextRecord, __ignore);
 	}
 
 	/// DEBUG: Win -> Convert
@@ -260,14 +267,16 @@ namespace pul
 		const size_t r = MultiByteToWideChar(CP_UTF8, 0, __buf, __size, nullptr, 0);
 		__dbg_wsstring str(r, '\0');
 		if (pf_unlikely(!MultiByteToWideChar(CP_UTF8, 0, __buf, __size, str.begin(), str.size())))
-			pf_throw(dbg_category_system(), GetLastError(), dbg_flags::none,
-							 "[WIN] MultiByteToWideChar bad convertion! buffer={}, size={}",
-							 union_cast<void*>(__buf), __size);
+			pf_throw(
+				dbg_category_system(), GetLastError(), dbg_flags::none,
+				"[WIN] MultiByteToWideChar bad convertion! buffer={}, size={}",
+				union_cast<void*>(__buf), __size);
 
 		// 2. Returns
 		return str;
 	}
-	dbg_u8string __dbg_convert_wide_to_u8_win(
+	dbg_u8string
+	__dbg_convert_wide_to_u8_win(
 		const wchar_t *__buf,
 		size_t __count)
 	{
@@ -286,7 +295,8 @@ namespace pul
 	}
 
 	/// DEBUG: Win -> Generate
-	MINIDUMP_TYPE __dbg_flags_to_minidump_type_win(
+	MINIDUMP_TYPE
+	__dbg_flags_to_minidump_type_win(
 		uint32_t __flags) pf_attr_noexcept
 	{
 		DWORD flags = MINIDUMP_TYPE::MiniDumpNormal;
@@ -383,7 +393,7 @@ namespace pul
 		// 2. Directory
 		__dbg_wsstring str(DBG_FMT_NAME_LEN, '\0');
 		str.insert_back(known);
-		str.insert_back(L"\\PulsarSoftware\\");
+		str.insert_back(L"\\Pulsar\\");
 		CoTaskMemFree(known);
 		if(!CreateDirectoryW(str.data(), nullptr))
 		{
@@ -445,19 +455,25 @@ namespace pul
 		uint32_t __flags,
 		dbg_u8string_view __what)
 	{
-		// 1. Print
+		// Print
 		pf_print(dbg_type::info, dbg_level::high, "[WIN] Catching unhandled exception of category={}, code={}, message={}. Generating dumpbin...",
 						 __cat->name().data(), __code, __what.data());
-		// 2. Generating Dumpbin
+		auto st	 = __dbg_retrieve_stacktrace();
+		size_t s = __dbg_formatted_stacktrace_size(st);
+		dbg_u8string str(s, '\0');
+		__dbg_format_stacktrace_to(str.begin(), st);
+		__dbg_print("{}", str.begin());
+
+		// Generating Dumpbin
 		MINIDUMP_EXCEPTION_INFORMATION mei;
-		std::memset(&mei, 0, sizeof(mei));
+		memset(&mei, 0, sizeof(mei));
 		CONTEXT c;
-		std::memset(&c, 0, sizeof(c));
+		memset(&c, 0, sizeof(c));
 		c.ContextFlags = CONTEXT_ALL;
-		HANDLE thread = OpenThread(THREAD_ALL_ACCESS, FALSE, __internal.dbg_ex_ctx.threadID);
+		HANDLE thread = OpenThread(THREAD_ALL_ACCESS, FALSE, __internal.dbg_ex_ctx.__get_ID());
 		GetThreadContext(thread, &c);
-		mei.ThreadId												 = __internal.dbg_ex_ctx.threadID;
-		mei.ExceptionPointers								 = __internal.dbg_ex_ctx.exp;
+		mei.ThreadId												 = __internal.dbg_ex_ctx.__get_ID();
+		mei.ExceptionPointers								 = __internal.dbg_ex_ctx.__get_current_exception_pointer();
 		mei.ExceptionPointers->ContextRecord = &c;
 		mei.ClientPointers									 = FALSE;
 		dbg_u8string u8path = __dbg_generate_dumpbin_win(&mei, __dbg_flags_to_minidump_type_win(__flags));
@@ -487,8 +503,10 @@ namespace pul
 		}
 		catch(dbg_exception const &__e)
 		{
-			pf_print(dbg_type::warning, dbg_level::high, "[WIN] Failed to generate unknown dumpbin! category={}, code={}, message={}",
-							 __e.category()->name().data(), __e.code(), __e.what());
+			pf_print(
+				dbg_type::warning, dbg_level::high,
+				"[WIN] Failed to generate unknown dumpbin! category={}, code={}, message={}",
+				__e.category()->name().data(), __e.code(), __e.what());
 		}
 
 		// 3. Ends
@@ -558,7 +576,7 @@ namespace pul
 			{
 				__dbg_terminate_exception_dumpbin_win(
 					dbg_category_generic(),
-					union_cast<uint32_t>(errv::invalid_argument),
+					union_cast<uint32_t>(dbg_code::invalid_argument),
 					dbg_flags::none,
 					__e.what());
 			}
@@ -566,7 +584,7 @@ namespace pul
 			{
 				__dbg_terminate_exception_dumpbin_win(
 					dbg_category_generic(),
-					union_cast<uint32_t>(errv::domain_error),
+					union_cast<uint32_t>(dbg_code::domain_error),
 					dbg_flags::none,
 					__e.what());
 			}
@@ -574,7 +592,7 @@ namespace pul
 			{
 				__dbg_terminate_exception_dumpbin_win(
 					dbg_category_generic(),
-					union_cast<uint32_t>(errv::length_error),
+					union_cast<uint32_t>(dbg_code::length_error),
 					dbg_flags::none,
 					__e.what());
 			}
@@ -582,7 +600,7 @@ namespace pul
 			{
 				__dbg_terminate_exception_dumpbin_win(
 					dbg_category_generic(),
-					union_cast<uint32_t>(errv::out_of_range),
+					union_cast<uint32_t>(dbg_code::out_of_range),
 					dbg_flags::none,
 					__e.what());
 			}
@@ -590,7 +608,7 @@ namespace pul
 			{
 				__dbg_terminate_exception_dumpbin_win(
 					dbg_category_generic(),
-					union_cast<uint32_t>(errv::logic_error),
+					union_cast<uint32_t>(dbg_code::logic_error),
 					dbg_flags::none,
 					__e.what());
 			}
@@ -598,7 +616,7 @@ namespace pul
 			{
 				__dbg_terminate_exception_dumpbin_win(
 					dbg_category_generic(),
-					union_cast<uint32_t>(errv::range_error),
+					union_cast<uint32_t>(dbg_code::range_error),
 					dbg_flags::none,
 					__e.what());
 			}
@@ -606,7 +624,7 @@ namespace pul
 			{
 				__dbg_terminate_exception_dumpbin_win(
 					dbg_category_generic(),
-					union_cast<uint32_t>(errv::overflow_error),
+					union_cast<uint32_t>(dbg_code::overflow_error),
 					dbg_flags::none,
 					__e.what());
 			}
@@ -614,7 +632,7 @@ namespace pul
 			{
 				__dbg_terminate_exception_dumpbin_win(
 					dbg_category_generic(),
-					union_cast<uint32_t>(errv::underflow_error),
+					union_cast<uint32_t>(dbg_code::underflow_error),
 					dbg_flags::none,
 					__e.what());
 			}
@@ -622,7 +640,7 @@ namespace pul
 			{
 				__dbg_terminate_exception_dumpbin_win(
 					dbg_category_generic(),
-					union_cast<uint32_t>(errv::runtime_error),
+					union_cast<uint32_t>(dbg_code::runtime_error),
 					dbg_flags::none,
 					__e.what());
 			}
@@ -630,7 +648,7 @@ namespace pul
 			{
 				__dbg_terminate_exception_dumpbin_win(
 					dbg_category_generic(),
-					union_cast<uint32_t>(errv::bad_alloc),
+					union_cast<uint32_t>(dbg_code::bad_alloc),
 					dbg_flags::none,
 					__e.what());
 			}
@@ -638,7 +656,7 @@ namespace pul
 			{
 				__dbg_terminate_exception_dumpbin_win(
 					dbg_category_generic(),
-					union_cast<uint32_t>(errv::unknown),
+					union_cast<uint32_t>(dbg_code::unknown),
 					dbg_flags::none,
 					__e.what());
 			}

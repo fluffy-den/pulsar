@@ -24,6 +24,5 @@
 #include "pulsar/iterable/sequence.hpp"
 #include "pulsar/iterable/queue.hpp"
 #include "pulsar/iterable/list.hpp"
-#include "pulsar/iterable/hash_map.hpp"
 
 #endif // !PULSAR_CONTAINER_HPP

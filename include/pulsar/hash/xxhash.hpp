@@ -17,24 +17,24 @@
 // Pulsar
 namespace pul
 {
-  // TODO: https://github.com/Cyan4973/xxHash/blob/dev/xxhash.h
+	// TODO: https://github.com/Cyan4973/xxHash/blob/dev/xxhash.h
 
 	/// XXHASH: Impl
 namespace xxhash
 {
-	// TODO
+	// TODO: xxhash
 }
 
 	/// XXHASH: 32
 	class xxhash32
 	{
-	// TODO
+	// TODO: xxhash
 	};
 
 	/// XXHASH: 64
 	class xxhash64
 	{
-	// TODO
+	// TODO: xxhash
 	};
 }
 

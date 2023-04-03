@@ -59,9 +59,7 @@ namespace pul
 		__tester_unit *u = this->unitHead_;
 		if (!u && this->name_.size() != 0)
 		{
-			pf_print(
-				"/{}/ No unit to run!\n",
-				dbg_styled('T', dbg_style_fg(dbg_color::green)));
+			pf_print("- No unit to run!\n");
 		}
 		else
 		{
@@ -82,14 +80,12 @@ namespace pul
 		if (this->benchHead_)
 		{
 			// Initialisation
-			uint64_t start				= __rdtsc();
 			__tester_benchmark *p = this->benchHead_;
 
 			// Format
 			pf_print(
-				"/{}/ Launching benchmark(s)\n"
+				"- Launching benchmark(s)\n"
 				"{: <32} {: <12} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
-				dbg_styled('B', dbg_style_fg(dbg_color::golden_rod)),
 				"benchmark", "threads", "num", "min", "max", "avg", "var", "dev", "Q1", "Q2", "Q3", "total");
 
 			// Print Results
@@ -106,20 +102,12 @@ namespace pul
 					p = p->next_;
 				}
 			}
-
-			// Print time
-			uint64_t dur = __rdtsc() - start;
-			pf_print(
-				"/{}/ finished after {} ticks!\n",
-				dbg_styled('B', dbg_style_fg(dbg_color::golden_rod)),
-				dur);
 		}
 		// 4. Results
 		if (this->numFailed_ > 0)
 		{
 			pf_print(
-				"/{}/ {} | {}\n",
-				dbg_styled('T', dbg_style_fg(dbg_color::green_yellow)),
+				"- {} | {}\n",
 				dbg_styled(dbg_u8format("({}) Succeeded", this->numTests_ - this->numFailed_).data(),
 									 dbg_style_fg(dbg_color::green)),
 				dbg_styled(dbg_u8format("({}) Failed", this->numFailed_).data(),
@@ -132,15 +120,12 @@ namespace pul
 				if (this->numTests_ > 0)
 				{
 					pf_print(
-						"/{}/ ({}) Succeeded\n",
-						dbg_styled('T', dbg_style_fg(dbg_color::green_yellow)),
+						"- ({}) Succeeded\n",
 						dbg_styled(this->numTests_, dbg_style_fg(dbg_color::green)));
 				}
 				else
 				{
-					pf_print(
-						"/{}/ No test!\n",
-						dbg_styled('T', dbg_style_fg(dbg_color::green_yellow)));
+					pf_print("- No test!\n");
 				}
 			}
 		}

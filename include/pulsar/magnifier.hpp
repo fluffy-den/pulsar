@@ -59,7 +59,7 @@ namespace pul
       if (__count == 0)
         pf_throw(
             dbg_category_generic(),
-            errv::invalid_argument,
+            dbg_code::invalid_argument,
             dbg_flags::none,
             "__count can't be equal to 0!");
     }

@@ -14,18 +14,40 @@
 // Pulsar
 namespace pul
 {
-	/// DEBUG: Allocate / Deallocate
-	pulsar_api void*
-	__dbg_allocate(
-		size_t __size)
+	/// DEBUG: Exception
+	pulsar_api dbg_exception::dbg_exception(
+		dbg_category const *__cat,
+		uint32_t __code,
+		uint32_t __flags,
+		dbg_u8string_view __msg) pf_attr_noexcept
+		: cat_(__cat)
+		, msg_(__msg)
+		, code_(__code)
+		, flags_(__flags)
 	{
-		return __internal.cache.allocate(__size, align_val_t(8), 0);
-	}
-	pulsar_api void
-	__dbg_deallocate(
-		void *__ptr) pf_attr_noexcept
-	{
-		return __internal.cache.deallocate(__ptr);
+		// Size
+		auto st	 = __dbg_retrieve_stacktrace();
+		size_t s = DBG_FMT_WRITE_OFFSET
+							 + fmt::formatted_size(" /{}/ category={}, code={}, message={}|{}",
+																		 dbg_styled('E', fmt::fg(fmt::color::red)),
+																		 dbg_styled(this->cat_->name().data(), fmt::fg(fmt::color::fire_brick)),
+																		 dbg_styled(this->code_, fmt::fg(fmt::color::green_yellow)),
+																		 this->cat_->message(this->code_).data(),
+																		 this->msg_.data())
+							 + __dbg_formatted_stacktrace_size(st) + 1;
+
+		// Message
+		dbg_u8string str(s, '\0');
+		char_t *k = str.data();
+		k = __dbg_format_chrono_to(k);
+		k = fmt::format_to(k, " /{}/ category={}, code={}, message={}|{}\n",
+											 dbg_styled('E', fmt::fg(fmt::color::red)),
+											 dbg_styled(this->cat_->name().data(), fmt::fg(fmt::color::fire_brick)),
+											 dbg_styled(this->code_, fmt::fg(fmt::color::green_yellow)),
+											 this->cat_->message(this->code_).data(),
+											 this->msg_.data());
+		k = __dbg_format_stacktrace_to(k, st);
+		__dbg_print("{}", str.data());
 	}
 
 	/// DEBUG: Logger
@@ -70,9 +92,9 @@ namespace pul
 		return __internal.dbg_logger.__write(__level, std::move(__msg));
 	}
 
-	/// DEBUG: Format
+	/// DEBUG: Format -> Chrono
 	pulsar_api char_t*
-	dbg_format_chrono_to(
+	__dbg_format_chrono_to(
 		char_t *__where) pf_attr_noexcept
 	{
 		uint64_t elapsed = union_cast<uint64_t>(dbg_elapsed_time().count());
@@ -84,43 +106,28 @@ namespace pul
 			(elapsed / 1000000000ull) % 100ull,
 			(elapsed / 1000000ull) % 1000ull);
 	}
-	pulsar_api char_t*
-	dbg_reformat_newlines_to(
-		char_t *__w) pf_attr_noexcept
+
+	/// DEBUG: Stacktrace
+	pf_hint_nodiscard pulsar_api size_t
+	__dbg_formatted_stacktrace_size(
+		__dbg_stacktrace_t const &__st) pf_attr_noexcept
 	{
-		// 1. Length
-		char_t *e = __w;
-		while (*e != '\0')
+		size_t c = 0;
+		for (size_t i = 0; i < __st.available; ++i)
 		{
-			++e;
+			c += strlen(&__st.trace[DBG_FMT_NAME_LEN * i]);
 		}
-		--e;
-		size_t n = 0;
-		while (*e == '\n')
+		return c;
+	}
+	pf_hint_nodiscard pulsar_api char_t*
+	__dbg_format_stacktrace_to(
+		char_t *__w,
+		__dbg_stacktrace_t const &__st) pf_attr_noexcept
+	{
+		for (size_t i = 0; i < __st.available; ++i)
 		{
-			++n;
-			--e;
+			__w = fmt::format_to(__w, "     {}\n", &__st.trace[DBG_FMT_NAME_LEN * i]);
 		}
-		e++;
-
-		// 2. '\n' -> " ... "
-		for (; __w != e; ++__w)
-		{
-			if (*__w == '\n')
-			{
-				++__w;
-				for (char_t *k = e + 17; k != __w + 16; --k)
-				{
-					*k = *(k - 17);
-				}
-				std::memset(__w, ' ', 17);
-				__w += 17;
-				e		+= 17;
-			}
-		}
-		e += n;
-
-		// Returns
-		return e;
+		return __w;
 	}
 }

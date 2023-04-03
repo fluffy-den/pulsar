@@ -279,7 +279,7 @@ namespace pul
 	};
 
 	/// TESTER: Instances
-	pf_decl_extern __tester_engine tester_engine;
+	pulsar_api pf_decl_extern __tester_engine tester_engine;
 
 	/// TESTER: Functions
 	pf_decl_static pulsar_api void __test_require(
@@ -295,6 +295,32 @@ namespace pul
 /// TESTER: Macro -> Functions
 #define pt_check(cond) pul::tester_engine.__test(cond, __FILE__, __LINE__)
 #define pt_require(cond) pul::__test_require(cond, __FILE__, __LINE__)
+#define pt_check_catch(ex, callable, ...) \
+  try                                     \
+  {                                       \
+    callable(__VA_ARGS__);                \
+  }                                       \
+  catch (ex const &__e)                   \
+  {                                       \
+    pt_check(true);                       \
+  }                                       \
+  catch (...)                             \
+  {                                       \
+    pt_check(false);                      \
+  }                                       
+#define pt_require_catch(ex, callable, ...) \
+  try                                       \
+  {                                         \
+    callable(__VA_ARGS__);                  \
+  }                                         \
+  catch (ex const &__e)                     \
+  {                                         \
+    pt_require(true);                       \
+  }                                         \
+  catch (...)                               \
+  {                                         \
+    pt_require(false);                      \
+  }                                         
 
 /// TESTER: Macro -> Unit
 #define __pt_generate_unit_name(name) pf_stringize(name)

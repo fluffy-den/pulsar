@@ -40,6 +40,30 @@ namespace pul
 		}
 	}
 
+	// MPMC Ring Allocator
+	pt_pack(mpmc_ring_allocator)
+	{
+		pt_unit(alloc_free_loop_unit)
+		{
+			allocator_mamd_ring_buffer all(65536, 65536);
+			for (size_t i = 0; i < 16; ++i)
+			{
+				void *buf[2048] = {nullptr};
+				bool anynull		= false;
+				for (size_t j = 0; j < 2048; ++j)
+				{
+					buf[j] = all.allocate(8);
+					if (!buf[j]) anynull = true;
+				}
+				pt_check(anynull == false);
+				for (size_t j = 0; j < 2048; ++j)
+				{
+					all.deallocate(buf[j]);
+				}
+			}
+		}
+	}
+
 	// MPMC Queue2
 	pt_pack(mpmc_lifo2_pack)
 	{

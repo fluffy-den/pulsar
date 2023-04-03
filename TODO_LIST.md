@@ -5,65 +5,72 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 
 ### Test Framework ### (0.4)
 # pulsar_tester.hpp
-[x] test_benchmark
-[x] test_unit
-[x] test_suite
-[x] test_formatter
+[o] test_benchmark
+[o] test_unit
+[o] test_suite
+[o] test_formatter
 
-[x] all_tests
+[o] all_tests
 
 
 ### Thread-Pool ### (0.5)
 # iterable.hpp
-[x] lock-free ring buffer (samd ring buffer)
-[x] mpmc queue
-[x] mpsc unbuffered queue
+[o] lock-free ring buffer (samd ring buffer)
+[o] mpmc queue
+[o] mpsc unbuffered queue
 
-[x] all_tests
-
-[o] stress_test
+[o] all_tests
 
 # debug.hpp
-[x] concurrent logger
-[o] convert all string using __dbg_allocator
+[o] concurrent logger
+[x] use calloc for every string
+[o] clean-up
+
+[o] all_tests
+
+# thread_pool.hpp
+[o] exception_handling_test
+[o] stability_test
+[o] benchmarks
+
+### Iterable ### (0.6)
+[x] sequence
+[x] list
+[x] hash_map
+[x] xxhash
+[x]
 
 [x] all_tests
 
-### Iterable ### (0.6)
-[o] sequence
-[o] list
-
-[o] all_tests
-
 ### UTF-8 Everywhere ### (0.7)
-[o] utf8_string
-[o] utf8_iterator
-[o] utf8_utilities
-[o] utf8_format (fmt)
+[x] utf8_string
+[x] utf8_iterator
+[x] utf8_utilities
+[x] utf8_format (fmt)
 
-[o] all_tests
+[x] all_tests
 
 ### Filesystem ### (0.8)
-[o] file_path
-[o] file_handle
-[o] file_iterator
-[o] file_functions
-[o] file_package (.zip reformat)
-[o] file_listener
+[x] file_path
+[x] file_handle
+[x] file_iterator
+[x] file_functions
+[x] file_package (.zip reformat)
+[x] file_listener
 
-[o] all_tests
+[x] all_tests
 
 ### Live++ ### (0.9)
-[o] all_tests
+[x] all_tests
 
 ### Image Loader ### 0.10
-[o] all_tests
+[x] all_tests
 
 ### Networking ### 0.11
-[o] all_tests
+[x] all_tests
 
-### Function2 ### 0.12
-[o] function_signals
-[o] function_callbacks
+### Function Signals ### 0.12
+[x] function_signals
+[x] function_callbacks
 
-[o] all_tests
+[x] all_tests

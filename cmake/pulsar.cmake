@@ -1,7 +1,3 @@
-#
-# TODO: Header
-#
-#
 cmake_minimum_required(VERSION 3.18)
 
 #
@@ -15,18 +11,20 @@ endif()
 # Pulsar -> Git
 #
 find_package(Git)
+
 if(NOT GIT_FOUND)
   message(FATAL_ERROR "[Pulsar] Need git installed on this computer!")
 endif()
 
 #
-# Pulsar -> CXX Compiler Options 
+# Pulsar -> CXX Compiler Options
 #
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang")
   set(PF_COMPILE_OPTIONS ${PF_COMPILE_OPTIONS})
 endif()
-if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  set(PF_COMPILE_OPTIONS 
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  set(PF_COMPILE_OPTIONS
     ${PF_COMPILE_OPTIONS}
     -Wall
     -Wextra
@@ -34,18 +32,20 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     -Wno-unknown-pragmas
     -fvisibility=hidden)
 endif()
-if (CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Intel")
   set(PF_COMPILE_OPTIONS ${PF_COMPILE_OPTIONS})
 endif()
-if (MSVC)
+
+if(MSVC)
   set(PF_COMPILE_OPTIONS ${PF_COMPILE_OPTIONS}
-      /W4)
+    /W4)
 endif()
 
 #
 # Pulsar -> Output
 #
-if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(PF_OUTPUT_SYSTEM 64)
 else()
   set(PF_OUTPUT_SYSTEM 32)
@@ -68,10 +68,10 @@ endif()
 #
 # Pulsar
 #
-if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    set(PF_RUNTIME_MACRO PF_DEBUG=1)
+if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  set(PF_RUNTIME_MACRO PF_DEBUG=1)
 else()
-    set(PF_RUNTIME_MACRO PF_RELEASE=1)
+  set(PF_RUNTIME_MACRO PF_RELEASE=1)
 endif()
 
 #
@@ -86,6 +86,7 @@ option(PF_BUILD_TESTS "Build tests executables" ON)
 # Pulsar -> Include Dirs
 #
 include(GNUInstallDirs)
+
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT EQUAL TRUE)
   set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../")
 endif()
@@ -101,7 +102,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Pulsar -> Git Get Latest Version
 function(pf_find_git_version)
-
 endfunction()
 
 # Git
@@ -130,7 +130,8 @@ endif()
 
 # Expand relative path. This is important if the provided path contains a tilde (~)
 get_filename_component(CPM_DOWNLOAD_LOCATION ${CPM_DOWNLOAD_LOCATION} ABSOLUTE)
-if(NOT (EXISTS ${CPM_DOWNLOAD_LOCATION}))
+
+if(NOT(EXISTS ${CPM_DOWNLOAD_LOCATION}))
   message(STATUS "CPM: Downloading CPM.cmake to ${CPM_DOWNLOAD_LOCATION}")
   file(
     DOWNLOAD
@@ -142,35 +143,28 @@ endif()
 # Include CPM.cmake
 include(${CPM_DOWNLOAD_LOCATION})
 
-# TODO: Auto update CPM
-# TODO: Include CPM
-
 #
 # Pulsar -> Shared
 #
-if (PF_BUILD_SHARED EQUAL ON)
-
+if(PF_BUILD_SHARED EQUAL ON)
 endif()
 
 #
 # Pulsar -> Static
 #
-if (PF_BUILD_STATIC EQUAL ON)
-
+if(PF_BUILD_STATIC EQUAL ON)
 endif()
 
 #
 # Pulsar -> Object
 #
-if (PF_BUILD_OBJECT EQUAL ON)
-
+if(PF_BUILD_OBJECT EQUAL ON)
 endif()
 
 #
 # Pulsar -> Tests
 #
-if (PF_BUILD_TESTS EQUAL ON)
-
+if(PF_BUILD_TESTS EQUAL ON)
 endif()
 
 #

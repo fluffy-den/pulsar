@@ -89,9 +89,9 @@ namespace pul
 					}
 					catch (dbg_exception const &__e)
 					{
-						// TODO: Move exception to main thread!
+						__move_task_exception_to_0();
 					}
-					__dbg_deallocate(t);
+					cfree(t);
 					t = __buf->queue.try_dequeue();
 					++i;
 				};
@@ -147,8 +147,12 @@ namespace pul
 		// Add
 		if(!this->buf_->queue.try_enqueue(__task))
 		{
+			pf_throw(
+				dbg_category_generic(),
+				dbg_code::runtime_error,
+				0,
+				"Problem when adding a task to the shared queue. task={}", union_cast<void*>(__task));
 			return;
-			// TODO: Exception
 		}
 
 		// Notify
@@ -161,8 +165,12 @@ namespace pul
 	{
 		if(!this->buf_->queue0.try_enqueue(__task))
 		{
+			pf_throw(
+				dbg_category_generic(),
+				dbg_code::runtime_error,
+				0,
+				"Problem when adding a task to the main queue. task={}", union_cast<void*>(__task));
 			return;
-			// TODO: Exception
 		}
 	}
 
@@ -174,7 +182,7 @@ namespace pul
 		if (t)
 		{
 			t->__call();
-			__dbg_deallocate(t);
+			cfree(t);
 			this->buf_->numTasks.fetch_sub(1, atomic_order::relaxed);
 			return true;
 		}
@@ -189,7 +197,7 @@ namespace pul
 		while(j != i)
 		{
 			t[j]->__call();
-			__dbg_deallocate(t[j]);
+			cfree(t[j]);
 			++j;
 		}
 		return i;
@@ -219,5 +227,19 @@ namespace pul
 	process_tasks_0()
 	{
 		return __internal.thread_pool.__process_0();
+	}
+	pulsar_api void
+	__move_task_exception_to_0()
+	{
+		#ifdef PF_OS_WINDOWS
+
+		submit_task_0(
+			[](dbg_exception_context &&__ctx){ __ctx.rethrow(); },
+			dbg_exception_context(
+				std::current_exception(),
+				__internal.dbg_ex_ctx.__get_current_exception_pointer(),
+				__internal.dbg_ex_ctx.__get_ID()));
+
+		#endif // PF_OS_WINDOWS
 	}
 }

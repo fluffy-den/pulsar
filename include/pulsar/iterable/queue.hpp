@@ -8,8 +8,8 @@
  *  @since 0.1.4
  */
 
-#ifndef PULSAR_MPMC_QUEUE_HPP
-#define PULSAR_MPMC_QUEUE_HPP 1
+#ifndef PULSAR_QUEUE_HPP
+#define PULSAR_QUEUE_HPP 1
 
 // Include: Pulsar
 #include "pulsar/debug.hpp"
@@ -323,7 +323,7 @@ namespace pul
 				{
 					__header_t *c		 = this->__get_header(i);
 					const uint32_t h = c->head.load(atomic_order::acquire);
-					uint32_t t			 = c->tail.load(atomic_order::relaxed);
+					uint32_t t			 = c->tail.load(atomic_order::acquire);
 					if (t == h - 1
 							|| !c->tail.compare_exchange_strong(
 								t, t + 1, atomic_order::release, atomic_order::relaxed))
@@ -356,7 +356,7 @@ namespace pul
 				{
 					__header_t *c		 = this->__get_header(i);
 					const uint32_t h = c->head.load(atomic_order::acquire);
-					uint32_t t			 = c->tail.load(atomic_order::relaxed);
+					uint32_t t			 = c->tail.load(atomic_order::acquire);
 					const uint32_t n = (t + count);
 					if ((n > h - 1 && n > union_cast<uint32_t>(-1) - count)
 							|| !c->tail.compare_exchange_strong(
@@ -387,7 +387,7 @@ namespace pul
 				do
 				{
 					__header_t *c		 = this->__get_header(i);
-					uint32_t h			 = c->head.load(atomic_order::relaxed);
+					uint32_t h			 = c->head.load(atomic_order::acquire);
 					const uint32_t t = c->writer.load(atomic_order::acquire);
 					if (h == t
 							|| !c->head.compare_exchange_strong(
@@ -418,7 +418,7 @@ namespace pul
 				do
 				{
 					__header_t *c						 = this->__get_header(i);
-					uint32_t h							 = c->head.load(atomic_order::relaxed);
+					uint32_t h							 = c->head.load(atomic_order::acquire);
 					const uint32_t t				 = c->writer.load(atomic_order::acquire);
 					const uint32_t available = t - h;
 					if (count > available)
@@ -449,8 +449,8 @@ namespace pul
 				for (size_t i = 0; i < CCY_NUM_THREADS; ++i)
 				{
 					__header_t *c = this->__get_header(i);
-					uint32_t h		= c->head.load(atomic_order::relaxed);
-					uint32_t t		= c->tail.load(atomic_order::relaxed);
+					uint32_t h		= c->head.load(atomic_order::acquire);
+					uint32_t t		= c->tail.load(atomic_order::acquire);
 					if (h != t) return false;
 				}
 				return true;
@@ -807,4 +807,4 @@ namespace pul
 	};
 }
 
-#endif // !PULSAR_MPMC_QUEUE_HPP
+#endif // !PULSAR_QUEUE_HPP

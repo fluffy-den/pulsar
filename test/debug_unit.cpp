@@ -39,36 +39,20 @@ namespace pul
 		{
 			const size_t n = __bvn.num_iterations();
 			void **p			 = new_construct_array<void*>(n);
-			__bvn.measure([&](size_t __i){ return p[__i] = __dbg_allocate(8);});
+			__bvn.measure([&](size_t __i){ return p[__i] = calloc(8);});
 			for (size_t i = 0; i < n; ++i)
 			{
-				__dbg_deallocate(p[i]);
+				cfree(p[i]);
 			}
 			destroy_delete_array(p);
 		}
 	}
 
-	/// DBG: Test -> Types
-	pt_pack(dbg_types)
+	pt_pack(exception)
 	{
-		pt_unit(u8string_view)
+		pt_unit(throwing)
 		{
-
+			pf_throw(dbg_category_generic(), dbg_code::invalid_argument, dbg_flags::none, "Throwed!");
 		}
-		pt_unit(u8string)
-		{
-
-		}
-
-		#ifdef PF_OS_WINDOWS
-		pt_unit(wsstring_view)
-		{
-
-		}
-		pt_unit(wsstring)
-		{
-
-		}
-		#endif // PF_OS_WINDOWS
 	}
 }

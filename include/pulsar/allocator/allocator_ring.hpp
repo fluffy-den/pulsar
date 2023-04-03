@@ -273,7 +273,6 @@ namespace pul
 		{
 			thread_id_t ID = this_thread::get_id();
 			void *p				 = this->__get_buffer(ID)->__allocate(ID == 0 ? this->seqsize0_ : this->seqsize_, __size, __align, __offset);
-			pf_assert(p, "p is nullptr!");
 			return p;
 		}
 

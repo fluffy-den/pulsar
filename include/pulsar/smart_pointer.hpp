@@ -60,7 +60,7 @@ namespace pul
 						 || std::is_copy_constructible_v<_Ty>)
 		{
 			// construct(&this->store, __count, std::forward<_Args>(__args)...);
-			// TODO
+			// TODO: unique_store construct
 		}
 		unique_store(unique_store<_Ty[]> const &) = delete;
 		unique_store(unique_store<_Ty[]> &&)			= delete;
@@ -620,7 +620,7 @@ namespace pul
 			: shared(1)
 		{
 			// construct(&this->array, __count, std::forward<_Args>(__args)...);
-			// TODO
+			// TODO: shared_store construct
 		}
 		shared_store(shared_store<_Ty[]> const &) = delete;
 		shared_store(shared_store<_Ty[]> &&)			= delete;
@@ -996,7 +996,7 @@ namespace pul
 	}
 
 	/// MEMORY: Shared -> Maker -> Array
-	// TODO
+	// shared_ptr makers
 }
 
 #endif // !PULSAR_SMART_POINTER_HPP

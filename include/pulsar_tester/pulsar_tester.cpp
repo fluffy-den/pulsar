@@ -1,4 +1,4 @@
-/*! @file   pulsar_tester_main.cpp
+/*! @file   pulsar_tester.cpp
  *  @author Louis-Quentin Noé (noe.louis-quentin@hotmail.fr)
  *  @brief
  *  @date   29-01-2023

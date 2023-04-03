@@ -14,6 +14,7 @@
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
 #include "pulsar/heap.hpp"
+#include "pulsar/cache.hpp"
 #include "pulsar/function.hpp"
 #include "pulsar/chrono.hpp"
 #include "pulsar/concurrency.hpp"
@@ -32,7 +33,7 @@ namespace pul
 {
 	/// DEBUG: Constants
 	// Error Values
-	enum class errv : uint32_t {
+	enum class dbg_code : uint32_t {
 		invalid_argument,
 		domain_error,
 		length_error,
@@ -96,48 +97,6 @@ namespace dbg_flags
 	pf_decl_constexpr uint32_t DBG_FMT_STACK_FRAMES				 = 63;
 	pf_decl_constexpr uint32_t DBG_FMT_STACK_FRAMES_IGNORE = 2;
 	pf_decl_constexpr uint32_t DBG_FMT_WRITE_OFFSET				 = sizeof("[HHHH:MM:SS:MMMM]");
-	pf_decl_constexpr uint32_t DBG_FMT_BUFFER_SIZE				 = 65536;
-
-	/// DEBUG: Allocator
-	pf_hint_nodiscard pulsar_api void*
-	__dbg_allocate(
-		size_t __size);
-	template <
-		typename _Ty,
-		typename ..._Args>
-	pf_hint_nodiscard pulsar_api _Ty*
-	__dbg_new_construct_ex(
-		size_t __ex,
-		_Args && ... __args)
-	requires(std::is_constructible_v<_Ty, _Args...>)
-	{
-		_Ty *p = union_cast<_Ty*>(__dbg_allocate(sizeof(_Ty) + __ex));
-		construct(p, std::forward<_Args>(__args)...);
-		return p;
-	}
-	template <
-		typename _Ty,
-		typename ..._Args>
-	pf_hint_nodiscard pulsar_api _Ty*
-	__dbg_new_construct(
-		_Args && ... __args)
-	requires(std::is_constructible_v<_Ty, _Args...>)
-	{
-		return __dbg_new_construct_ex<_Ty>(0, std::forward<_Args>(__args)...);
-	}
-
-	pulsar_api void
-	__dbg_deallocate(
-		void *__ptr) pf_attr_noexcept;
-	template <
-		typename _Ty>
-	void
-	__dbg_destroy_delete(
-		_Ty *__p)
-	{
-		destroy(__p);
-		__dbg_deallocate(__p);
-	}
 
 	/// DEBUG: UTF8 -> Types
 	// String View
@@ -241,7 +200,6 @@ namespace dbg_flags
 	pf_decl_constexpr void __assign_view(
 		dbg_u8string_view __v) pf_attr_noexcept
 	{
-		this->shrink(__v.size());
 		memcpy(this->data(), __v.data(), this->count_);
 		*(this->data() + this->count_) = '\0';
 	}
@@ -256,33 +214,33 @@ namespace dbg_flags
 			nullptr_t) pf_attr_noexcept
 		: dbg_u8string()
 		{}
-		pf_decl_constexpr pf_decl_inline dbg_u8string(
+		pf_decl_inline dbg_u8string(
 			const char_t * __str,
 			size_t __count)
 			: count_(__count + 1)
-			, store_(union_cast<char_t*>(halloc(this->count_ + 1, align_val_t(32), 0)))
+			, store_(union_cast<char_t*>(calloc(this->count_ + 1)))
 		{
 			memcpy(this->store_, __str, __count);
 			*(this->data() + this->count_) = '\0';
 		}
-		pf_decl_constexpr pf_decl_inline dbg_u8string(
+		pf_decl_inline dbg_u8string(
 			const char_t * __str)
 			: count_(std::strlen(__str))
-			, store_(union_cast<char_t*>(halloc(this->count_ + 1, align_val_t(32), 0)))
+			, store_(union_cast<char_t*>(calloc(this->count_ + 1)))
 		{
 			memcpy(this->store_, __str, this->count_);
 			*(this->data() + this->count_) = '\0';
 		}
-		pf_decl_constexpr pf_decl_inline dbg_u8string(
+		pf_decl_inline dbg_u8string(
 			size_t __count,
 			char_t __val) pf_attr_noexcept
 		: count_(__count)
-		, store_(union_cast<char_t*>(halloc(this->count_ + 1, align_val_t(32), 0)))
+		, store_(union_cast<char_t*>(calloc(this->count_ + 1)))
 		{
 			memset(this->store_, __val, __count);
 			*(this->data() + this->count_) = '\0';
 		}
-		dbg_u8string(
+		pf_decl_inline dbg_u8string(
 			dbg_u8string && __r) pf_attr_noexcept
 		: count_(__r.count_)
 		, store_(__r.store_)
@@ -290,14 +248,14 @@ namespace dbg_flags
 			__r.count_ = 0;
 			__r.store_ = nullptr;
 		}
-		dbg_u8string(
+		pf_decl_inline dbg_u8string(
 			dbg_u8string const & __r) pf_attr_noexcept
 		: dbg_u8string(__r.data())
 		{}
-		pf_decl_constexpr pf_decl_inline dbg_u8string(
+		pf_decl_inline dbg_u8string(
 			dbg_u8string_view __v) pf_attr_noexcept
 		: count_(__v.count())
-		, store_(union_cast<char_t*>(halloc(__v.count() + 1, align_val_t(32), 0)))
+		, store_(union_cast<char_t*>(calloc(__v.count() + 1)))
 		{
 			this->__assign_view(__v);
 		}
@@ -305,10 +263,7 @@ namespace dbg_flags
 		/// Destructor
 		pf_decl_constexpr pf_decl_inline ~dbg_u8string() pf_attr_noexcept
 		{
-			if (this->store_)
-			{
-				mi_free(this->store_);
-			}
+			if (this->store_) cfree(this->store_);
 		}
 
 		/// Operator =
@@ -322,7 +277,7 @@ namespace dbg_flags
 		pf_decl_constexpr pf_decl_inline dbg_u8string &operator=(
 			dbg_u8string && __r)
 		{
-			if (this->store_) hfree(this->store_);
+			if (this->store_) cfree(this->store_);
 			this->count_ = __r.count_;
 			__r.count_	 = 0;
 			this->store_ = __r.store_;
@@ -349,21 +304,6 @@ namespace dbg_flags
 		view() const pf_attr_noexcept
 		{
 			return dbg_u8string_view(&this->store_[0], this->count_);
-		}
-
-		/// Shrink
-		pf_decl_constexpr pf_decl_inline void shrink(
-			size_t __c) pf_attr_noexcept
-		{
-			if (__c == 0)
-			{
-				hfree(this->store_);
-			}
-			else
-			{
-				this->store_ = union_cast<char_t*>(hrealloc(this->store_, this->count_, __c + 1, align_val_t(32), 0));
-				this->count_ = __c + 1;
-			}
 		}
 
 		/// Begin/End
@@ -469,17 +409,17 @@ namespace dbg_flags
 		message(
 			uint32_t __val) const pf_attr_noexcept pf_attr_override
 		{
-			switch(union_cast<errv>(__val))
+			switch(union_cast<dbg_code>(__val))
 			{
-			case errv::invalid_argument: return "Invalid argument";
-			case errv::domain_error:     return "Domain error";
-			case errv::length_error:     return "Length error";
-			case errv::out_of_range:     return "Out of range";
-			case errv::logic_error:      return "Logic error";
-			case errv::overflow_error:   return "Overflow error";
-			case errv::underflow_error:  return "Underflow error";
-			case errv::runtime_error:    return "Runtime error";
-			case errv::bad_alloc:        return "Bad alloc";
+			case dbg_code::invalid_argument: return "Invalid argument";
+			case dbg_code::domain_error:     return "Domain error";
+			case dbg_code::length_error:     return "Length error";
+			case dbg_code::out_of_range:     return "Out of range";
+			case dbg_code::logic_error:      return "Logic error";
+			case dbg_code::overflow_error:   return "Overflow error";
+			case dbg_code::underflow_error:  return "Underflow error";
+			case dbg_code::runtime_error:    return "Runtime error";
+			case dbg_code::bad_alloc:        return "Bad alloc";
 			default: return "Unknown";
 			};
 		}
@@ -534,16 +474,11 @@ namespace dbg_flags
 	{
 	public:
 		/// Constructors
-		pf_decl_inline dbg_exception(
+		pulsar_api dbg_exception(
 			dbg_category const *__cat,
 			uint32_t __code,
 			uint32_t __flags,
-			dbg_u8string_view __msg) pf_attr_noexcept
-		: cat_(__cat)
-		, msg_(__msg)
-		, code_(__code)
-		, flags_(__flags)
-		{}
+			dbg_u8string_view __msg) pf_attr_noexcept;
 		dbg_exception(
 			dbg_exception const &) = delete;
 		dbg_exception(
@@ -592,6 +527,93 @@ namespace dbg_flags
 	/// DEBUG: Exception -> Pointer
 	using dbg_exception_ptr = std::exception_ptr;
 
+	/// DEBUG: Exception -> Context
+	class dbg_exception_context
+	{
+	public:
+		/// Constructors
+		dbg_exception_context() pf_attr_noexcept
+		: ptr_(nullptr)
+		, exctx_(nullptr)
+		, ID_(this_thread::get_id())
+		{}
+		dbg_exception_context(
+			dbg_exception_ptr && __ptr,
+			void *__ctx,
+			thread_id_t __ID = this_thread::get_id()) pf_attr_noexcept
+		: ptr_(std::move(__ptr))
+		, exctx_(__ctx)
+		, ID_(__ID)
+		{}
+		dbg_exception_context(
+			dbg_exception_context const &) = delete;
+		dbg_exception_context(
+			dbg_exception_context && __r) pf_attr_noexcept
+		: ptr_(std::move(__r.ptr_))
+		, exctx_(__r.exctx_)
+		, ID_(__r.ID_)
+		{}
+
+		/// Destructor
+		~dbg_exception_context() pf_attr_noexcept = default;
+
+		/// Operator =
+		dbg_exception_context &operator=(
+			dbg_exception_context const &) = delete;
+		dbg_exception_context &operator=(
+			dbg_exception_context && __r) pf_attr_noexcept
+		{
+			if (pf_likely(this != &__r))
+			{
+				this->ptr_	 = std::move(__r.ptr_);
+				this->exctx_ = __r.exctx_;
+				this->ID_		 = __r.ID_;
+				__r.exctx_	 = nullptr;
+			}
+			return *this;
+		}
+
+		/// Exception Pointer
+		pf_hint_nodiscard pf_decl_inline dbg_exception_ptr
+		exception() const pf_attr_noexcept
+		{
+			return this->ptr_;
+		}
+
+		/// Context
+		pf_hint_nodiscard pf_decl_inline void*
+		context() const pf_attr_noexcept
+		{
+			return this->exctx_;
+		}
+
+		/// ID
+		pf_hint_nodiscard pf_decl_inline thread_id_t
+		ID() const pf_attr_noexcept
+		{
+			return this->ID_;
+		}
+
+		/// Rethrow
+		pulsar_api void
+		rethrow() pf_attr_noexcept;
+
+		/// Operator Bool()
+		pf_hint_nodiscard operator bool() const pf_attr_noexcept
+		{
+			return this->ptr_ != nullptr;
+		}
+
+	private:
+		dbg_exception_ptr ptr_;
+		void *exctx_;
+		thread_id_t ID_;
+	};
+
+	/// DEBUG: Exception -> Context -> Retrieve
+	pf_hint_nodiscard pulsar_api dbg_exception_context
+	__dbg_retrieve_current_exception_context();
+
 	/// DEBUG: Format -> Functions
 	template <typename ..._Args>
 	pf_decl_inline char_t*
@@ -609,11 +631,11 @@ namespace dbg_flags
 		dbg_u8string_format<_Args...> __fmt,
 		_Args && ... __args) pf_attr_noexcept
 	{
-		// 1. Format
+		// Format
 		dbg_u8string str(fmt::formatted_size(__fmt, std::forward<_Args>(__args)...), '\0');
 		fmt::format_to(str.data(), __fmt, std::forward<_Args>(__args)...);
 
-		// 2. Return
+		// Return
 		return str;
 	}
 	template <typename ... _Args>
@@ -667,7 +689,7 @@ namespace dbg_flags
 		dbg_logger_callback_t __callback) pf_attr_noexcept;
 
 	/// Elapsed Time
-	pulsar_api nanoseconds_t
+	pf_hint_nodiscard pulsar_api nanoseconds_t
 	dbg_elapsed_time() pf_attr_noexcept;
 
 	/// Logger
@@ -677,17 +699,29 @@ namespace dbg_flags
 		dbg_level __level,
 		dbg_u8string &&__msg);
 
-	/// DEBUG: Format
+	/// DEBUG: Format -> Chrono
 	pf_hint_nodiscard pulsar_api char_t*
-	dbg_format_chrono_to(
+	__dbg_format_chrono_to(
 		char_t *__w) pf_attr_noexcept;
-	pf_hint_nodiscard pulsar_api char_t*
-	dbg_format_stacktrace_to(
+
+	/// DEBUG: StackTrace
+	struct __dbg_stacktrace_t	// Handle every stack frames
+	{
+		size_t available;
+		char_t trace[DBG_FMT_NAME_LEN * DBG_FMT_STACK_FRAMES];
+	};
+	pf_hint_nodiscard pulsar_api __dbg_stacktrace_t
+	__dbg_retrieve_stacktrace() pf_attr_noexcept;
+	pf_hint_nodiscard pulsar_api size_t
+	__dbg_formatted_stacktrace_size(
+		__dbg_stacktrace_t const &__st) pf_attr_noexcept;
+	pulsar_api char_t*
+	__dbg_format_stacktrace_to(
 		char_t *__w,
-		size_t __ignore) pf_attr_noexcept;
-	pf_hint_nodiscard pulsar_api char_t*
-	dbg_reformat_newlines_to(
-		char_t *__w) pf_attr_noexcept;
+		__dbg_stacktrace_t const &__st) pf_attr_noexcept;
+
+	/// DEBUG: Print
+	template <typename ... _Args>
 	pulsar_api void
 	dbg_print_exception(
 		dbg_category const *__cat,
@@ -701,41 +735,58 @@ namespace dbg_flags
 		dbg_u8string_format<_Args...> __fmt,
 		_Args && ... __args)
 	{
-		// 1. Level
+		// Level
 		if (__level < dbg_log_filter()) return;
 
-		// 2. Print
-		dbg_u8string_view lvl;
-		fmt::text_style style;
-		switch(__level)
-		{
-		case dbg_level::low:    { lvl = "low";    style = fmt::bg(fmt::color::midnight_blue); break; }
-		case dbg_level::medium: { lvl = "medium"; style = fmt::bg(fmt::color::green); break; }
-		case dbg_level::high:   { lvl = "high";   style = fmt::bg(fmt::color::indian_red);  break; }
-		};
-		dbg_u8string prt(DBG_FMT_BUFFER_SIZE, '\0');// TODO: Good size
-		char_t *p = prt.data();
+		// By Type
 		if (__type == dbg_type::extension)
 		{
-			p = fmt::format_to(p, "                 ");
+			dbg_u8print(__fmt, std::forward<_Args>(__args)...);
 		}
 		else
 		{
-			p = dbg_format_chrono_to(p);
-			p = fmt::format_to(
-				p, " /{}/ /{}/ message=",
+			// Initialisation
+			const char_t *lvl = nullptr;
+			fmt::text_style style;
+			switch(__level)
+			{
+			case dbg_level::low:
+			{
+				lvl		= "low";
+				style = fmt::bg(fmt::color::midnight_blue);
+				break;
+			}
+			case dbg_level::medium:
+			{
+				lvl		= "medium";
+				style = fmt::bg(fmt::color::green);
+				break;
+			}
+			case dbg_level::high:
+			{
+				lvl		= "high";
+				style = fmt::bg(fmt::color::indian_red);
+				break;
+			}
+			};
+
+			// Size
+			const size_t s = DBG_FMT_WRITE_OFFSET
+											 + fmt::formatted_size(
+				" /{}/ /{}/ message=",
 				fmt::styled(union_cast<char_t>(__type), __type == dbg_type::info ? fmt::fg(fmt::color::sky_blue) : fmt::fg(fmt::color::orange_red)),
-				fmt::styled(lvl.data(), style));
-		}
-		char_t *k = p;
-		p = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
-		p = dbg_reformat_newlines_to(k);
-		if (__type != dbg_type::extension)
-		{
+				fmt::styled(lvl, style))
+											 + fmt::formatted_size(__fmt, std::forward<_Args>(__args)...) + 56;
+
+			// Print
+			dbg_u8string prt(s, '\0');
+			auto *p = prt.begin();
+			p			 = __dbg_format_chrono_to(p);
+			p			 = fmt::format_to(p, " /{}/ /{}/ message=", fmt::styled(union_cast<char_t>(__type), __type == dbg_type::info ? fmt::fg(fmt::color::sky_blue) : fmt::fg(fmt::color::orange_red)), fmt::styled(lvl, style));
+			p			 = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
 			*(p++) = '\n';
+			dbg_log(std::move(prt));
 		}
-		prt.shrink(union_cast<size_t>(p) - union_cast<size_t>(prt.data()));
-		dbg_log(std::move(prt));
 	}
 	template <typename ..._Args>
 	pf_decl_static void
@@ -744,17 +795,11 @@ namespace dbg_flags
 		dbg_u8string_format<_Args...> __fmt,
 		_Args && ... __args)
 	{
-		// 1. Level
+		// Level
 		if (__level < dbg_log_filter()) return;
 
-		// 2. Print
-		dbg_u8string prt(DBG_FMT_BUFFER_SIZE, '\0');// TODO: Good size
-		char_t *p = prt.data();
-		p = fmt::format_to(p, "                 ");
-		char_t *k = p;
-		p = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
-		p = dbg_reformat_newlines_to(k);
-		prt.shrink(union_cast<size_t>(p) - union_cast<size_t>(prt.data()));
+		// Print
+		dbg_u8string prt = dbg_u8format(__fmt, std::forward<_Args>(__args)...);
 		dbg_log(std::move(prt));
 	}
 	template <typename ..._Args>
@@ -772,24 +817,24 @@ namespace dbg_flags
 		dbg_u8string_format<_Args...> __fmt,
 		_Args && ... __args) pf_attr_noexcept
 	{
-		// 1. Format
-		dbg_u8string str(DBG_FMT_BUFFER_SIZE, '\0');// TODO: Good size
-		char_t *p				= str.data();
-		const char_t *b = p;
-		p = dbg_format_chrono_to(p);
-		p = fmt::format_to(
-			p, " T={} /{}/ message=",
-			this_thread::get_id(),
-			fmt::styled('A', fmt::fg(fmt::color::orange) | fmt::bg(fmt::color::black)));
-		char_t *k = p;
+		// Initialisation
+		auto st = __dbg_retrieve_stacktrace();
+		auto ID = this_thread::get_id();
+
+		// Size
+		const size_t s = DBG_FMT_WRITE_OFFSET + fmt::formatted_size(" T={} /{}/ message=", ID, fmt::styled('A', fmt::fg(fmt::color::orange) | fmt::bg(fmt::color::black))) + fmt::formatted_size(__fmt, std::forward<_Args>(__args)...) + __dbg_formatted_stacktrace_size(st);
+
+		// Format
+		dbg_u8string str(s, '\0');
+		char_t *p = str.data();
+		p	 = __dbg_format_chrono_to(p);
+		p	 = fmt::format_to(p, " T={} /{}/ message=", ID, fmt::styled('A', fmt::fg(fmt::color::orange) | fmt::bg(fmt::color::black)));
 		p	 = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
-		p	 = dbg_reformat_newlines_to(k);
 		*p = '\n';
 		++p;
-		p = dbg_format_stacktrace_to(p, DBG_FMT_STACK_FRAMES_IGNORE);
-		str.shrink(union_cast<size_t>(p) - union_cast<size_t>(b));
+		p = __dbg_format_stacktrace_to(p, st);
 
-		// 2. Return
+		// Return
 		return str;
 	}
 
@@ -823,5 +868,3 @@ namespace dbg_flags
 #define pf_assert_static(...) static_assert(__VA_ARGS__)
 
 #endif // !PULSAR_DEBUG_HPP
-
-// TODO: Upgrade dbg_u8string_* + dbg_wsstring_* types (memCount_ + RingBuffer)

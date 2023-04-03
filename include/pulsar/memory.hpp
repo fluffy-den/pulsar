@@ -275,7 +275,7 @@ namespace pul
 		_Ty *p = union_cast<_Ty*>(
 			halloc(sizeof(_Ty) + __exBytes, __align, __offset));
 		if (pf_unlikely(!p)) pf_throw(
-				dbg_category_generic(), errv::bad_alloc, dbg_flags::dump_with_handle_data,
+				dbg_category_generic(), dbg_code::bad_alloc, dbg_flags::dump_with_handle_data,
 				"Failed to create new object of type={}, size={}, align={}, offset={} with heap memory.",
 				typeid(_Ty).name(), sizeof(_Ty) + __exBytes, union_cast<size_t>(__align), __offset);
 		construct(p, std::forward<_Args>(__args)...);
@@ -322,7 +322,7 @@ namespace pul
 		_Ty *p = union_cast<_Ty*>(
 			allocate<_Ty>(__all, sizeof(_Ty) + __exBytes, __align, __offset));
 		if (pf_unlikely(!p)) pf_throw(
-				dbg_category_generic(), errv::bad_alloc, dbg_flags::dump_with_handle_data,
+				dbg_category_generic(), dbg_code::bad_alloc, dbg_flags::dump_with_handle_data,
 				"Failed to create new object of type={}, size={}, align={}, offset={} with allocator={}.",
 				typeid(_Ty).name(), sizeof(_Ty) + __exBytes, union_cast<size_t>(__align), __offset, union_cast<void*>(&__all));
 		construct(p, std::forward<_Args>(__args)...);

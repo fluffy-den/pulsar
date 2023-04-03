@@ -19,6 +19,7 @@
 #include "pulsar/utility.hpp"
 #include "pulsar/intrin.hpp"
 #include "pulsar/iterable.hpp"
+#include "pulsar/cache.hpp"
 
 // Pulsar
 namespace pul
@@ -30,14 +31,18 @@ namespace pul
 	pulsar_api uint32_t
 	process_tasks_0();
 
-	/// CONCURRENCY: Task -> Future
+  /// CONCURRENCY: Task -> Move exception to 0
+  pulsar_api void
+  __move_task_exception_to_0();
+
+  /// CONCURRENCY: Task -> Future
 	template <typename _RetTy>
 	struct __future_store pf_attr_final
 	{
 		/// Constructors
 		__future_store() pf_attr_noexcept
 		: finished(false)
-    , exception(nullptr)
+    , exctx()
 		, retVal{ 0 }
 		{}
 		__future_store(__future_store<_RetTy> const&) = delete;
@@ -75,13 +80,13 @@ namespace pul
 		__value()
 		{
       this->__wait();
-      if (pf_unlikely(this->exception)) std::rethrow_exception(this->exception);
+      if (pf_unlikely(this->exctx)) this->exctx.rethrow();
 			return std::move(*union_cast<_RetTy*>(&this->retVal[0]));
 		}
 
 		/// Store
 		pf_alignas(64) atomic<bool> finished;
-    dbg_exception_ptr exception;
+    dbg_exception_context exctx;
     byte_t retVal[sizeof(_RetTy)];
 	};
 	template <typename _RetTy>
@@ -208,7 +213,7 @@ namespace pul
       tuple_apply(std::move(data->fun), std::move(data->args));
     } catch(...)
     {
-      // TODO: Exception moves to main thread
+      __move_task_exception_to_0();
     }
     destroy(data);
   }
@@ -281,7 +286,7 @@ namespace pul
       *union_cast<std::invoke_result_t<_FunTy, _Args...>*>(&data->store->retVal[0]) = tuple_apply(std::move(data->fun), std::move(data->args));
     } catch(...)
     {
-      data->store->exception = std::current_exception(); /// TODO: Exception Context Move
+      data->store->exctx = __dbg_retrieve_current_exception_context();
     }
     data->store->finished.store(true, atomic_order::relaxed);
     destroy(data);
@@ -332,7 +337,7 @@ namespace pul
 		_Args && ... __args)
 	requires(std::is_invocable_v<_FunTy, _Args...>)
 	{
-		auto *t = __dbg_new_construct<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+		auto *t = cnew_construct<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
     __task_enqueue(&t->task);
 	}
 	template <
@@ -344,7 +349,7 @@ namespace pul
 		_Args && ... __args)
 	requires(std::is_invocable_v<_FunTy, _Args...>)
 	{
-		auto *t = __dbg_new_construct<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+		auto *t = cnew_construct<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
     __task_enqueue_0(&t->task);
 	}
 	template <
@@ -360,7 +365,7 @@ namespace pul
 		auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
     try
     {
-      auto *t = __dbg_new_construct<__task_store_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+      auto *t = cnew_construct<__task_store_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
       __task_enqueue(&t->task);
       return s;
     } catch(...)
@@ -382,7 +387,7 @@ namespace pul
 		auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
     try
     {
-      auto *t = __dbg_new_construct<__task_store_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+      auto *t = cnew_construct<__task_store_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
       __task_enqueue_0(&t->task);
       return s;
     } catch(...)
@@ -491,9 +496,9 @@ namespace pul
           t->task.__call();
         } catch(...)
         {
-          // TODO: Move exception context
+          __move_task_exception_to_0();
         }
-        __dbg_deallocate(t);
+        cfree(t);
         ++k;
         t = n;
       }
@@ -527,7 +532,7 @@ namespace pul
       _FunTy&& __fun,
       _Args && ... __args) pf_attr_noexcept
     {
-      auto* n = __dbg_new_construct<__node_data<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+      auto* n = cnew_construct<__node_data<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
       if (this->numTasks.fetch_add(1, atomic_order::relaxed) == 0)
       {
         submit_task(__process_auto_submit, this);
@@ -542,7 +547,7 @@ namespace pul
       _FunTy&& __fun,
       _Args && ... __args) pf_attr_noexcept
     {
-      auto *n = __dbg_new_construct<__node_data<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+      auto *n = cnew_construct<__node_data<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
       if (this->numTasks.fetch_add(1, atomic_order::relaxed) == 0)
       {
         submit_task_0(__process_auto_submit_0, this);
@@ -560,7 +565,7 @@ namespace pul
       _Args&& ... __args) pf_attr_noexcept
     {
       auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
-      auto *n = __dbg_new_construct<__node_data_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+      auto *n = cnew_construct<__node_data_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
       if (this->numTasks.fetch_add(1, atomic_order::relaxed) == 0)
       {
         submit_task(__process_auto_submit, this);
@@ -577,7 +582,7 @@ namespace pul
       _Args&& ... __args) pf_attr_noexcept
     {
       auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
-      auto *n = __dbg_new_construct<__node_data_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+      auto *n = cnew_construct<__node_data_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
       if (this->numTasks.fetch_add(1, atomic_order::relaxed) == 0)
       {
         submit_task_0(__process_auto_submit_0, this);
