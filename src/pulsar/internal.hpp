@@ -53,7 +53,7 @@ namespace pul
 		allocator_mamd_ring_buffer cache;
 
 		/// Module -> Debug
-		__dbg_exception_context_t dbg_ex_ctx;
+		__dbg_internal_t dbg_internal;
 		__dbg_logger_t dbg_logger;
 
 		/// Module -> Thread Pool

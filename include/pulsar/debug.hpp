@@ -93,10 +93,10 @@ namespace dbg_flags
 }
 
 	// Constants
-	pf_decl_constexpr uint32_t DBG_FMT_NAME_LEN						 = 1024;
-	pf_decl_constexpr uint32_t DBG_FMT_STACK_FRAMES				 = 63;
-	pf_decl_constexpr uint32_t DBG_FMT_STACK_FRAMES_IGNORE = 2;
-	pf_decl_constexpr uint32_t DBG_FMT_WRITE_OFFSET				 = sizeof("[HHHH:MM:SS:MMMM]");
+	pf_decl_constexpr uint32_t DBG_FMT_NAME_LEN							 = 1024;
+	pf_decl_constexpr uint32_t DBG_FMT_STACK_FRAMES					 = 63;
+	pf_decl_constexpr uint32_t DBG_FMT_WRITE_OFFSET					 = sizeof("[HHHH:MM:SS:MMMM]");
+	pf_decl_constexpr uint32_t DBG_FMT_STACKTRACE_MAX_LENGTH = 8192;
 
 	/// DEBUG: UTF8 -> Types
 	// String View
@@ -474,15 +474,23 @@ namespace dbg_flags
 	{
 	public:
 		/// Constructors
-		pulsar_api dbg_exception(
+		dbg_exception(
 			dbg_category const *__cat,
 			uint32_t __code,
 			uint32_t __flags,
-			dbg_u8string_view __msg) pf_attr_noexcept;
+			dbg_u8string_view __msg) pf_attr_noexcept
+		: cat_(__cat)
+		, msg_(__msg)
+		, code_(__code)
+		, flags_(__flags)
+		{}
 		dbg_exception(
 			dbg_exception const &) = delete;
 		dbg_exception(
 			dbg_exception &&) = default;
+
+		/// Destructor
+		~dbg_exception() pf_attr_noexcept = default;
 
 		/// What
 		pf_hint_nodiscard pf_decl_inline const char_t*
@@ -524,95 +532,6 @@ namespace dbg_flags
 		uint32_t flags_;
 	};
 
-	/// DEBUG: Exception -> Pointer
-	using dbg_exception_ptr = std::exception_ptr;
-
-	/// DEBUG: Exception -> Context
-	class dbg_exception_context
-	{
-	public:
-		/// Constructors
-		dbg_exception_context() pf_attr_noexcept
-		: ptr_(nullptr)
-		, exctx_(nullptr)
-		, ID_(this_thread::get_id())
-		{}
-		dbg_exception_context(
-			dbg_exception_ptr && __ptr,
-			void *__ctx,
-			thread_id_t __ID = this_thread::get_id()) pf_attr_noexcept
-		: ptr_(std::move(__ptr))
-		, exctx_(__ctx)
-		, ID_(__ID)
-		{}
-		dbg_exception_context(
-			dbg_exception_context const &) = delete;
-		dbg_exception_context(
-			dbg_exception_context && __r) pf_attr_noexcept
-		: ptr_(std::move(__r.ptr_))
-		, exctx_(__r.exctx_)
-		, ID_(__r.ID_)
-		{}
-
-		/// Destructor
-		~dbg_exception_context() pf_attr_noexcept = default;
-
-		/// Operator =
-		dbg_exception_context &operator=(
-			dbg_exception_context const &) = delete;
-		dbg_exception_context &operator=(
-			dbg_exception_context && __r) pf_attr_noexcept
-		{
-			if (pf_likely(this != &__r))
-			{
-				this->ptr_	 = std::move(__r.ptr_);
-				this->exctx_ = __r.exctx_;
-				this->ID_		 = __r.ID_;
-				__r.exctx_	 = nullptr;
-			}
-			return *this;
-		}
-
-		/// Exception Pointer
-		pf_hint_nodiscard pf_decl_inline dbg_exception_ptr
-		exception() const pf_attr_noexcept
-		{
-			return this->ptr_;
-		}
-
-		/// Context
-		pf_hint_nodiscard pf_decl_inline void*
-		context() const pf_attr_noexcept
-		{
-			return this->exctx_;
-		}
-
-		/// ID
-		pf_hint_nodiscard pf_decl_inline thread_id_t
-		ID() const pf_attr_noexcept
-		{
-			return this->ID_;
-		}
-
-		/// Rethrow
-		pulsar_api void
-		rethrow() pf_attr_noexcept;
-
-		/// Operator Bool()
-		pf_hint_nodiscard operator bool() const pf_attr_noexcept
-		{
-			return this->ptr_ != nullptr;
-		}
-
-	private:
-		dbg_exception_ptr ptr_;
-		void *exctx_;
-		thread_id_t ID_;
-	};
-
-	/// DEBUG: Exception -> Context -> Retrieve
-	pf_hint_nodiscard pulsar_api dbg_exception_context
-	__dbg_retrieve_current_exception_context();
 
 	/// DEBUG: Format -> Functions
 	template <typename ..._Args>
@@ -705,7 +624,7 @@ namespace dbg_flags
 		char_t *__w) pf_attr_noexcept;
 
 	/// DEBUG: StackTrace
-	struct __dbg_stacktrace_t	// Handle every stack frames
+	struct __dbg_stacktrace_t	// TODO: __dbg_stacktrace_formatted_message_t
 	{
 		size_t available;
 		char_t trace[DBG_FMT_NAME_LEN * DBG_FMT_STACK_FRAMES];
@@ -723,10 +642,7 @@ namespace dbg_flags
 	/// DEBUG: Print
 	template <typename ... _Args>
 	pulsar_api void
-	dbg_print_exception(
-		dbg_category const *__cat,
-		uint32_t __code,
-		dbg_u8string_view __msg) pf_attr_noexcept;
+	dbg_print_current_exception() pf_attr_noexcept;
 	template <typename ..._Args>
 	pf_decl_static void
 	__dbg_print(

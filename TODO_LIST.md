@@ -12,7 +12,6 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 
 [o] all_tests
 
-
 ### Thread-Pool ### (0.5)
 # iterable.hpp
 [o] lock-free ring buffer (samd ring buffer)
@@ -38,7 +37,6 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 [x] list
 [x] hash_map
 [x] xxhash
-[x]
 
 [x] all_tests
 
@@ -69,8 +67,8 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 ### Networking ### 0.11
 [x] all_tests
 
-### Function Signals ### 0.12
-[x] function_signals
-[x] function_callbacks
-
-[x] all_tests
+### Mathematics ### 0.12
+[x] Quaternions
+[x] Projections
+[x] Transformations
+[x] Camera

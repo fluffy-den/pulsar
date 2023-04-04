@@ -295,113 +295,94 @@ namespace pul
 	};
 
 	/// DEBUG: Win -> Internal
-	class pf_alignas(32) __dbg_exception_context_t
+	struct __dbg_context_win_t
 	{
-	private:
-		/// Type -> Buffer
-		struct __buffer_t
-		{
-			EXCEPTION_POINTERS *exp;
-			thread_id_t ID;
-		};
+		EXCEPTION_POINTERS *exp = nullptr;
+		thread_id_t ID					= 0;
+	};
+	struct __dbg_internal_t
+	{
+		public:
+			/// Handle
+			pf_hint_nodiscard pf_decl_static LONG WINAPI
+			__vectored_exception_handler(
+				EXCEPTION_POINTERS *__info) pf_attr_noexcept;
 
-	public:
-		/// Handle
-		pf_hint_nodiscard pf_decl_static LONG WINAPI
-		__vectored_exception_handler(
-			EXCEPTION_POINTERS *__info) pf_attr_noexcept;
+			/// Constructors
+			__dbg_internal_t() pf_attr_noexcept;
+			__dbg_internal_t(__dbg_internal_t const&) = delete;
+			__dbg_internal_t(__dbg_internal_t &&)			= delete;
 
-		/// Constructors
-		__dbg_exception_context_t() pf_attr_noexcept;
-		__dbg_exception_context_t(__dbg_exception_context_t const&) = delete;
-		__dbg_exception_context_t(__dbg_exception_context_t &&)			= delete;
+			/// Destructor
+			~__dbg_internal_t() pf_attr_noexcept;
 
-		/// Destructor
-		~__dbg_exception_context_t() pf_attr_noexcept;
+			/// Operator =
+			__dbg_internal_t &operator=(__dbg_internal_t const &) = delete;
+			__dbg_internal_t &operator=(__dbg_internal_t &&)			= delete;
 
-		/// Operator =
-		__dbg_exception_context_t &operator=(__dbg_exception_context_t const &) = delete;
-		__dbg_exception_context_t &operator=(__dbg_exception_context_t &&)			= delete;
+			/// Retrieve
+			pf_hint_nodiscard __dbg_context_win_t*
+			__retrieve_current_context() pf_attr_noexcept
+			{
+				return &this->buffer_[this_thread::get_id()];
+			}
 
-		/// Move exception to 0
-		pf_decl_inline void
-		__move_exception_to(
-			thread_id_t __ID,
-			dbg_exception_context *__ctx) pf_attr_noexcept
-		{
-			this->buffer_[__ID].exp = union_cast<EXCEPTION_POINTERS*>(__ctx->context());
-			this->buffer_[__ID].ID	= __ctx->ID();
-		}
-		pf_hint_nodiscard EXCEPTION_POINTERS*
-		__get_current_exception_pointer() pf_attr_noexcept
-		{
-			return this->buffer_[this_thread::get_id()].exp;
-		}
-		pf_hint_nodiscard EXCEPTION_POINTERS*
-		__clear_current_exception_pointer() pf_attr_noexcept
-		{
-			auto ID	 = this_thread::get_id();
-			auto exp = this->buffer_[ID].exp;
-			this->buffer_[ID].exp = nullptr;
-			this->buffer_[ID].ID	= this_thread::get_id();
-			return exp;
-		}
-		pf_hint_nodiscard thread_id_t
-		__get_ID() pf_attr_noexcept
-		{
-			return this->buffer_[this_thread::get_id()].ID;
-		}
-
-	private:
-		/// Store
-		__buffer_t *buffer_;
-		VOID *handle_;
+		private:
+			/// Store
+			__dbg_context_win_t *buffer_;
+			HANDLE handle_;
 	};
 
 	/// DEBUG: Win -> StackTrace
-	pf_hint_nodiscard char_t*
-	__dbg_format_walk_to_win(
-		char_t *__where,
-		PCONTEXT __ctx,
-		size_t __ignore);
-	pf_hint_nodiscard char_t*
-	__dbg_format_stacktrace_of_exception_to_win(
-		char_t *__where,
-		size_t __ignore);
+	pf_hint_nodiscard __dbg_stacktrace_t
+	__dbg_capture_stacktrace_win(
+		CONTEXT *__ctx,
+		uint32_t __ignore) pf_attr_noexcept;
+	pf_hint_nodiscard __dbg_stacktrace_t
+	__dbg_retrieve_exception_stacktrace_win() pf_attr_noexcept;
 
 	/// DEBUG: Win -> Convert
-	pf_hint_nodiscard __dbg_wsstring __dbg_convert_u8_to_wide_win(
+	pf_hint_nodiscard __dbg_wsstring
+	__dbg_convert_u8_to_wide_win(
 		const char_t *__buf,
 		size_t __size);
-	pf_hint_nodiscard dbg_u8string __dbg_convert_wide_to_u8_win(
+	pf_hint_nodiscard dbg_u8string
+	__dbg_convert_wide_to_u8_win(
 		const wchar_t *__buf,
 		size_t __count);
 
 	/// DEBUG: Win -> Generate
-	pf_hint_nodiscard dbg_u8string __dbg_generate_error_message_win(
+	pf_hint_nodiscard dbg_u8string
+	__dbg_generate_error_message_win(
 		DWORD __error);
 
 	/// DEBUG: Win -> MiniDump
-	pf_hint_nodiscard MINIDUMP_TYPE __dbg_flags_to_minidump_type_win(
+	pf_hint_nodiscard MINIDUMP_TYPE
+	__dbg_flags_to_minidump_type_win(
 		uint32_t __flags) pf_attr_noexcept;
 	void __dbg_generate_error_popup_win(
 		dbg_u8string_view __title,
 		dbg_u8string_view __msg);
-	pf_hint_nodiscard dbg_u8string __dbg_generate_dumpbin_win(
+	pf_hint_nodiscard dbg_u8string
+	__dbg_generate_dumpbin_win(
 		MINIDUMP_EXCEPTION_INFORMATION *__mei,
 		MINIDUMP_TYPE __type);
-	void __dbg_generate_exception_dumpbin_win(
+	void
+	__dbg_generate_exception_dumpbin_win(
 		dbg_category const *__cat,
 		uint32_t __code,
 		uint32_t __flags,
 		dbg_u8string_view __what);
-	pf_hint_noreturn void __dbg_terminate_unknown_dumpbin_win() pf_attr_noexcept;
-	pf_hint_noreturn void __dbg_terminate_exception_dumpbin_win(
+	pf_hint_noreturn void
+	__dbg_terminate_unknown_dumpbin_win() pf_attr_noexcept;
+	pf_hint_noreturn void
+	__dbg_terminate_exception_dumpbin_win(
 		dbg_category const *__cat,
 		uint32_t __code,
 		uint32_t __flags,
 		dbg_u8string_view __what) pf_attr_noexcept;
-	pf_hint_noreturn void __dbg_terminate_win() pf_attr_noexcept;
+	pf_hint_noreturn void
+	__dbg_terminate_win() pf_attr_noexcept;
 }
 
 #endif // !PF_OS_WINDOWS

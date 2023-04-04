@@ -31,10 +31,6 @@ namespace pul
 	pulsar_api uint32_t
 	process_tasks_0();
 
-  /// CONCURRENCY: Task -> Move exception to 0
-  pulsar_api void
-  __move_task_exception_to_0();
-
   /// CONCURRENCY: Task -> Future
 	template <typename _RetTy>
 	struct __future_store pf_attr_final
@@ -42,7 +38,6 @@ namespace pul
 		/// Constructors
 		__future_store() pf_attr_noexcept
 		: finished(false)
-    , exctx()
 		, retVal{ 0 }
 		{}
 		__future_store(__future_store<_RetTy> const&) = delete;
@@ -68,25 +63,33 @@ namespace pul
 		{
       bool b = this->finished.load(atomic_order::relaxed);
       if (b) return false;
-      while (!this->finished.load(atomic_order::relaxed))
-			{
-        this_thread::yield();
+      if (this_thread::get_id() == 0)
+      {
+        while (!this->finished.load(atomic_order::relaxed))
+        {
+          process_tasks_0();
+        }
+      }
+      else
+      {
+        while (!this->finished.load(atomic_order::relaxed))
+        {
+          this_thread::yield();
+        }
       }
       return !b;
     }
 
 		/// Val
 		pf_hint_nodiscard _RetTy
-		__value()
+		__value() pf_attr_noexcept
 		{
       this->__wait();
-      if (pf_unlikely(this->exctx)) this->exctx.rethrow();
 			return std::move(*union_cast<_RetTy*>(&this->retVal[0]));
 		}
 
 		/// Store
 		pf_alignas(64) atomic<bool> finished;
-    dbg_exception_context exctx;
     byte_t retVal[sizeof(_RetTy)];
 	};
 	template <typename _RetTy>
@@ -205,7 +208,7 @@ namespace pul
     typename ... _Args>
   pf_decl_inline void 
   __task_data_proc(
-    void *__data) pf_attr_noexcept
+    void *__data)
   {
     auto data = union_cast<__task_data<_FunTy, _Args...>*>(__data);
     try
@@ -213,7 +216,8 @@ namespace pul
       tuple_apply(std::move(data->fun), std::move(data->args));
     } catch(...)
     {
-      __move_task_exception_to_0();
+      destroy(data);
+      throw;
     }
     destroy(data);
   }
@@ -278,15 +282,18 @@ namespace pul
     typename ... _Args>
   pf_decl_inline void 
   __task_data_f_proc(
-    void *__data) pf_attr_noexcept
+    void *__data)
   {
     auto data = union_cast<__task_data_f<_FunTy, _Args...>*>(__data);
+    pf_alignas(CCY_ALIGN) atomic<bool> ctrl = false;
     try
     {
       *union_cast<std::invoke_result_t<_FunTy, _Args...>*>(&data->store->retVal[0]) = tuple_apply(std::move(data->fun), std::move(data->args));
     } catch(...)
     {
-      data->store->exctx = __dbg_retrieve_current_exception_context();
+      data->store->finished.store(true, atomic_order::relaxed);
+      destroy(data);
+      throw;
     }
     data->store->finished.store(true, atomic_order::relaxed);
     destroy(data);
@@ -490,16 +497,18 @@ namespace pul
       auto *t = __store->pool.dequeue();
       while (t)
       {
+        ++k;
         auto *n = t->next;
         try
         {
           t->task.__call();
         } catch(...)
         {
-          __move_task_exception_to_0();
+          __store->numTasks.fetch_sub(k, atomic_order::relaxed);
+          cdestroy_delete(t);
+          throw;
         }
-        cfree(t);
-        ++k;
+        cdestroy_delete(t);
         t = n;
       }
       return (__store->numTasks.fetch_sub(k, atomic_order::relaxed) - k);

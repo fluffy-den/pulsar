@@ -69,9 +69,11 @@ namespace pul
 				__buf->numProcessing.fetch_sub(1, atomic_order::relaxed);
 				{
 					lock_unique lck(__buf->mutex);
-					__buf->cv.wait_for(lck, microseconds_t(10), [&]() pf_attr_noexcept// NOTE: wait_for as additionnal protection for infinite blocking. 10 microseconds may be sufficient.
-														 { return __buf->run.load(atomic_order::relaxed) == false
-															 || __buf->numTasks.load(atomic_order::relaxed) > __buf->numProcessing.load(atomic_order::relaxed); });
+					__buf->cv.wait_for(
+						lck, microseconds_t(10), [&]() pf_attr_noexcept// NOTE: wait_for as additionnal protection for infinite blocking. 10 microseconds may be sufficient.
+																													// NOTE: condition variable may be too slow
+						{ return __buf->run.load(atomic_order::relaxed) == false
+							|| __buf->numTasks.load(atomic_order::relaxed) > __buf->numProcessing.load(atomic_order::relaxed); });
 				}
 				__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
 			}
@@ -87,11 +89,11 @@ namespace pul
 					{
 						t->__call();
 					}
-					catch (dbg_exception const &__e)
+					catch (...)
 					{
-						__move_task_exception_to_0();
+						__dbg_move_exception_context_to_0();
 					}
-					cfree(t);
+					cdestroy_delete(t);
 					t = __buf->queue.try_dequeue();
 					++i;
 				};
@@ -182,7 +184,7 @@ namespace pul
 		if (t)
 		{
 			t->__call();
-			cfree(t);
+			cdestroy_delete(t);
 			this->buf_->numTasks.fetch_sub(1, atomic_order::relaxed);
 			return true;
 		}
@@ -197,7 +199,7 @@ namespace pul
 		while(j != i)
 		{
 			t[j]->__call();
-			cfree(t[j]);
+			cdestroy_delete(t[j]);
 			++j;
 		}
 		return i;
@@ -227,19 +229,5 @@ namespace pul
 	process_tasks_0()
 	{
 		return __internal.thread_pool.__process_0();
-	}
-	pulsar_api void
-	__move_task_exception_to_0()
-	{
-		#ifdef PF_OS_WINDOWS
-
-		submit_task_0(
-			[](dbg_exception_context &&__ctx){ __ctx.rethrow(); },
-			dbg_exception_context(
-				std::current_exception(),
-				__internal.dbg_ex_ctx.__get_current_exception_pointer(),
-				__internal.dbg_ex_ctx.__get_ID()));
-
-		#endif // PF_OS_WINDOWS
 	}
 }

@@ -14,42 +14,6 @@
 // Pulsar
 namespace pul
 {
-	/// DEBUG: Exception
-	pulsar_api dbg_exception::dbg_exception(
-		dbg_category const *__cat,
-		uint32_t __code,
-		uint32_t __flags,
-		dbg_u8string_view __msg) pf_attr_noexcept
-		: cat_(__cat)
-		, msg_(__msg)
-		, code_(__code)
-		, flags_(__flags)
-	{
-		// Size
-		auto st	 = __dbg_retrieve_stacktrace();
-		size_t s = DBG_FMT_WRITE_OFFSET
-							 + fmt::formatted_size(" /{}/ category={}, code={}, message={}|{}",
-																		 dbg_styled('E', fmt::fg(fmt::color::red)),
-																		 dbg_styled(this->cat_->name().data(), fmt::fg(fmt::color::fire_brick)),
-																		 dbg_styled(this->code_, fmt::fg(fmt::color::green_yellow)),
-																		 this->cat_->message(this->code_).data(),
-																		 this->msg_.data())
-							 + __dbg_formatted_stacktrace_size(st) + 1;
-
-		// Message
-		dbg_u8string str(s, '\0');
-		char_t *k = str.data();
-		k = __dbg_format_chrono_to(k);
-		k = fmt::format_to(k, " /{}/ category={}, code={}, message={}|{}\n",
-											 dbg_styled('E', fmt::fg(fmt::color::red)),
-											 dbg_styled(this->cat_->name().data(), fmt::fg(fmt::color::fire_brick)),
-											 dbg_styled(this->code_, fmt::fg(fmt::color::green_yellow)),
-											 this->cat_->message(this->code_).data(),
-											 this->msg_.data());
-		k = __dbg_format_stacktrace_to(k, st);
-		__dbg_print("{}", str.data());
-	}
-
 	/// DEBUG: Logger
 	pulsar_api dbg_level
 	dbg_log_filter() pf_attr_noexcept

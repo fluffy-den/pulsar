@@ -107,5 +107,53 @@ namespace pul
 		dbg_logger_callback_t callback_;
 		task_pool_t pool_;
 	};
+
+
+	/// DEBUG: Context Switcher
+	// Function
+	pulsar_api void
+	__dbg_move_exception_context_to_0() pf_attr_noexcept;
+
+	// Type
+	class __dbg_exception_context_switcher_t pf_attr_final
+	{
+	public:
+		/// Constructors
+		__dbg_exception_context_switcher_t() pf_attr_noexcept
+			: ptr_(nullptr)
+			, ctrl_(nullptr)
+		{}
+		__dbg_exception_context_switcher_t(
+			std::exception_ptr && __ptr,
+			atomic<bool> *__ctrl) pf_attr_noexcept
+			: ptr_(__ptr)
+			, ctrl_(__ctrl)
+		{
+			__dbg_move_exception_context_to_0();
+		}
+		__dbg_exception_context_switcher_t(__dbg_exception_context_switcher_t const &) = delete;
+		__dbg_exception_context_switcher_t(__dbg_exception_context_switcher_t &&)			 = delete;
+
+		/// Destructor
+		~__dbg_exception_context_switcher_t() pf_attr_noexcept
+		{
+			if (this->ctrl_) this->ctrl_->store(true, atomic_order::relaxed);
+		}
+
+		/// Operator =
+		__dbg_exception_context_switcher_t &operator=(__dbg_exception_context_switcher_t const&) = delete;
+		__dbg_exception_context_switcher_t &operator=(__dbg_exception_context_switcher_t &&)		 = delete;
+
+		/// Rethrow
+		pf_hint_noreturn void
+		__rethrow() const
+		{
+			if (this->ptr_) std::rethrow_exception(this->ptr_);
+		}
+
+	private:
+		std::exception_ptr ptr_;
+		atomic<bool> *ctrl_;
+	};
 }
 #endif // !PULSAR_DEBUG_HPP
