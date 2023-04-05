@@ -425,7 +425,7 @@ namespace pul
 		dbg_u8string_view __what)
 	{
 		// Print
-		pf_print(dbg_type::info, dbg_level::high, "[WIN] Catching unhandled exception of category={}, code={}, message={}",
+		pf_print(dbg_type::info, dbg_level::high, "[WIN] catch(std::exception const&) unhandled exception of category={}, code={}, message={}",
 						 __cat->name().data(), __code, __what.data());
 		auto st	 = __dbg_retrieve_stacktrace();
 		size_t s = __dbg_formatted_stacktrace_size(st);
@@ -465,7 +465,7 @@ namespace pul
 		{
 			__dbg_generate_exception_dumpbin_win(__cat, __code, __flags, __what);
 		}
-		catch (dbg_exception const &__e)
+		catch(dbg_exception const &__e)
 		{
 			pf_print(
 				dbg_type::warning, dbg_level::high,
@@ -486,7 +486,7 @@ namespace pul
 			{
 				std::rethrow_exception(p);
 			}
-			catch (dbg_exception const &__e)
+			catch(dbg_exception const &__e)
 			{
 				__dbg_terminate_exception_dumpbin_win(
 					__e.category(),
@@ -494,21 +494,13 @@ namespace pul
 					__e.flags(),
 					__e.what());
 			}
-			catch (std::exception const &__e)
+			catch(std::exception const &__e)
 			{
 				__dbg_terminate_exception_dumpbin_win(
 					dbg_category_generic(),
 					union_cast<uint32_t>(dbg_code::unknown),
 					dbg_flags::none,
 					__e.what());
-			}
-			catch (...)
-			{
-				__dbg_terminate_exception_dumpbin_win(
-					dbg_category_generic(),
-					union_cast<uint32_t>(dbg_code::unknown),
-					dbg_flags::none,
-					"No message!");
 			}
 		}
 
@@ -531,15 +523,17 @@ namespace pul
 		c->exp = __ctx->exp;
 		c->ID	 = __ctx->ID;
 
+		// TODO: Not called!
+
 		// Rethrow exception. Since it's thrown inside a try - catch block, it'll
 		// be destroyed only if it exit it, unblocking the throwing thread.
 		try
 		{
 			throw(__dbg_exception_context_switcher_t(std::move(__ptr), __ctrl));
 		}
-		catch (__dbg_exception_context_switcher_t const& __e)
+		catch(__dbg_exception_context_switcher_t const& __e)
 		{
-			__e.__rethrow();// NOTE: Lifetime => Deleted when exit a catch block.
+			__e.__rethrow();// NOTE: Lifetime => Deleted when exit a catch block
 		}
 	}
 	pulsar_api void

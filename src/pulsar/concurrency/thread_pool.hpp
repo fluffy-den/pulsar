@@ -25,7 +25,6 @@ namespace pul
 	/// TASK Constants
 	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM	 = 8192;
 	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM_0 = 4096;
-	pf_decl_constexpr size_t CCY_CACHE_NUM0			 = 32;
 
 	/// Type -> Thread
 	using __thread_t = std::thread;

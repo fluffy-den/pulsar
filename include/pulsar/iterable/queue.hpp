@@ -241,6 +241,7 @@ namespace pul
 			/// Constructors
 			__header_t() pf_attr_noexcept
 				: head(0)
+				, writer(0)
 				, tail(0)
 			{}
 			__header_t(__header_t const &) = delete;
@@ -412,7 +413,7 @@ namespace pul
 							 && std::is_same_v<value_type_t<_IteratorOut>, _Ty*>)
 			{
 				const thread_id_t id = this_thread::get_id();
-				uint32_t count			 = countof(__beg, __end);
+				const uint32_t count = countof(__beg, __end);
 				if (pf_unlikely(count == 0)) return 0;
 				uint32_t i = id;
 				do
@@ -421,22 +422,21 @@ namespace pul
 					uint32_t h							 = c->head.load(atomic_order::acquire);
 					const uint32_t t				 = c->writer.load(atomic_order::acquire);
 					const uint32_t available = t - h;
-					if (count > available)
-						count = available;
-					if (count == 0
+					size_t num							 = count > available ? available : count;
+					if (num == 0
 							|| !c->head.compare_exchange_strong(
-								h, h + count, atomic_order::release, atomic_order::relaxed))
+								h, h + num, atomic_order::release, atomic_order::relaxed))
 					{
 						i = (i + 1) % CCY_NUM_THREADS;
 					}
 					else
 					{
 						auto l = this->__get_list(i);
-						for (size_t k = 0; k < count; ++k)
+						for (size_t k = 0; k < num; ++k)
 						{
 							__beg[k] = l[(h + k) % this->seqcount];
 						}
-						return count;
+						return num;
 					}
 				} while (i != id);
 				return 0;

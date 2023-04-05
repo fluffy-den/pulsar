@@ -128,9 +128,7 @@ namespace pul
 			atomic<bool> *__ctrl) pf_attr_noexcept
 			: ptr_(__ptr)
 			, ctrl_(__ctrl)
-		{
-			__dbg_move_exception_context_to_0();
-		}
+		{}
 		__dbg_exception_context_switcher_t(__dbg_exception_context_switcher_t const &) = delete;
 		__dbg_exception_context_switcher_t(__dbg_exception_context_switcher_t &&)			 = delete;
 

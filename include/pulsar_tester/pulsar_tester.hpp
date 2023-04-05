@@ -130,12 +130,12 @@ namespace pul
       {
         submit_task(this->__measure_proc_worker<_FunTy>, std::move(__measureFun), &control, &finished, this->itc_, this->itc_ * i, results);
       }
-      while (control.load(atomic_order::relaxed) != this->ntt_);
+      while (control.load(atomic_order::relaxed) != this->ntt_) process_tasks_0();
       control.store(0, atomic_order::relaxed);
       this->__measure_proc(std::move(__measureFun), this->itc_, 0, results);
 
       // Wait for benchmark
-      while (finished.load(atomic_order::relaxed) != this->ntt_);
+      while (finished.load(atomic_order::relaxed) != this->ntt_) process_tasks_0();
 
       // Compute
       __display_measures(results, num);
@@ -304,7 +304,7 @@ namespace pul
   {                                       \
     pt_check(true);                       \
   }                                       \
-  catch (...)                             \
+  catch (std::exception const&)           \
   {                                       \
     pt_check(false);                      \
   }                                       
@@ -317,7 +317,7 @@ namespace pul
   {                                         \
     pt_require(true);                       \
   }                                         \
-  catch (...)                               \
+  catch (std::exception const&)             \
   {                                         \
     pt_require(false);                      \
   }                                         

@@ -102,28 +102,28 @@ namespace pul
 	end(
 		_Ty (&__arr)[_Num]) pf_attr_noexcept
 	{
-		return &__arr[0] + _Num;
+		return (&__arr[0] + _Num);
 	}
 	template <typename _Ty, size_t _Num>
 	pf_hint_nodiscard pf_decl_constexpr const_iterator<_Ty>
 	end(
 		const _Ty (&__arr)[_Num]) pf_attr_noexcept
 	{
-		return &__arr[0] + _Num;
+		return (&__arr[0] + _Num);
 	}
 	template <typename _Ty, size_t _Num>
 	pf_hint_nodiscard pf_decl_constexpr const_iterator<_Ty>
 	cend(
 		_Ty (&__arr)[_Num]) pf_attr_noexcept
 	{
-		return &__arr[0] + _Num;
+		return (&__arr[0] + _Num);
 	}
 	template <typename _Ty, size_t _Num>
 	pf_hint_nodiscard pf_decl_constexpr const_iterator<_Ty>
 	cend(
 		const _Ty (&__arr)[_Num]) pf_attr_noexcept
 	{
-		return &__arr[0] + _Num;
+		return (&__arr[0] + _Num);
 	}
 
 	/// UTILITY: Reverse Begin
@@ -156,14 +156,14 @@ namespace pul
 	rbegin(
 		_Ty (&__arr)[_Num]) pf_attr_noexcept
 	{
-		return &__arr[0] + (_Num - 1);
+		return (&__arr[0] + (_Num - 1));
 	}
 	template <typename _Ty, size_t _Num>
 	pf_hint_nodiscard pf_decl_constexpr reverse_iterator<const_iterator<_Ty>>
 	rbegin(
 		const _Ty (&__arr)[_Num]) pf_attr_noexcept
 	{
-		return &__arr[0] + (_Num - 1);
+		return (&__arr[0] + (_Num - 1));
 	}
 	template <typename _Ty, size_t _Num>
 	pf_hint_nodiscard pf_decl_constexpr reverse_iterator<const_iterator<_Ty>>
@@ -177,7 +177,7 @@ namespace pul
 	crbegin(
 		const _Ty (&__arr)[_Num]) pf_attr_noexcept
 	{
-		return &__arr[0] + (_Num - 1);
+		return (&__arr[0] + (_Num - 1));
 	}
 
 	/// UTILITY: Reverse End
@@ -211,28 +211,28 @@ namespace pul
 	rend(
 		_Ty (&__arr)[_Num]) pf_attr_noexcept
 	{
-		return &__arr[0] - 1;
+		return (&__arr[0] - 1);
 	}
 	template <typename _Ty, size_t _Num>
 	pf_hint_nodiscard pf_decl_constexpr reverse_iterator<const_iterator<_Ty>>
 	rend(
 		const _Ty (&__arr)[_Num]) pf_attr_noexcept
 	{
-		return &__arr[0] - 1;
+		return (&__arr[0] - 1);
 	}
 	template <typename _Ty, size_t _Num>
 	pf_hint_nodiscard pf_decl_constexpr reverse_iterator<const_iterator<_Ty>>
 	crend(
 		_Ty (&__arr)[_Num]) pf_attr_noexcept
 	{
-		return &__arr[0] - 1;
+		return (&__arr[0] - 1);
 	}
 	template <typename _Ty, size_t _Num>
 	pf_hint_nodiscard pf_decl_constexpr reverse_iterator<const_iterator<_Ty>>
 	crend(
 		const _Ty (&__arr)[_Num]) pf_attr_noexcept
 	{
-		return &__arr[0] - 1;
+		return (&__arr[0] - 1);
 	}
 
 	/// UTILITY: Data

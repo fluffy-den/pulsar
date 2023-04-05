@@ -89,7 +89,7 @@ namespace pul
 					{
 						t->__call();
 					}
-					catch (...)
+					catch(std::exception const&)
 					{
 						__dbg_move_exception_context_to_0();
 					}
@@ -101,6 +101,7 @@ namespace pul
 			};
 		} while (__buf->run.load(atomic_order::relaxed) == true);
 
+		__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
 		// Success
 		return 0;
 	}
@@ -124,16 +125,16 @@ namespace pul
 		/// Stop the run
 		this->buf_->run.store(false, atomic_order::release);
 		this->buf_->cv.notify_all();
-		while (this->buf_->numProcessing.load(atomic_order::relaxed) != CCY_NUM_WORKERS) this_thread::yield();
+		while (this->buf_->numProcessing.load(atomic_order::relaxed) != 2 * CCY_NUM_WORKERS) process_tasks_0();	// Waits for all workers to terminate
 
 		/// Threads
 		for (size_t i = 0; i < CCY_NUM_WORKERS; ++i)
 		{
 			auto t = this->buf_->__get_thread(i);
-			if(t->joinable()) t->join();
+			if (t->joinable()) t->join();
 		}
 
-		/// Process 0
+		/// Process Remaining
 		while(this->__process());
 		while(this->__process_0() > 0);
 
@@ -193,9 +194,9 @@ namespace pul
 	uint32_t
 	__thread_pool_t::__process_0()
 	{
-		__task_t *t[CCY_CACHE_NUM0] = { nullptr };
-		const uint32_t i						= this->buf_->queue0.try_dequeue_bulk(begin(t), end(t));
-		uint32_t j									= 0;
+		__task_t *t[32]	 = { nullptr };
+		const uint32_t i = this->buf_->queue0.try_dequeue_bulk(begin(t), end(t));
+		uint32_t j			 = 0;
 		while(j != i)
 		{
 			t[j]->__call();

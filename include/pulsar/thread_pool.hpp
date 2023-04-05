@@ -214,7 +214,7 @@ namespace pul
     try
     {
       tuple_apply(std::move(data->fun), std::move(data->args));
-    } catch(...)
+    } catch(std::exception const&)
     {
       destroy(data);
       throw;
@@ -289,7 +289,7 @@ namespace pul
     try
     {
       *union_cast<std::invoke_result_t<_FunTy, _Args...>*>(&data->store->retVal[0]) = tuple_apply(std::move(data->fun), std::move(data->args));
-    } catch(...)
+    } catch(std::exception const&)
     {
       data->store->finished.store(true, atomic_order::relaxed);
       destroy(data);
@@ -375,7 +375,7 @@ namespace pul
       auto *t = cnew_construct<__task_store_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
       __task_enqueue(&t->task);
       return s;
-    } catch(...)
+    } catch(std::exception const&)
     {
       destroy_delete(s);
       throw;
@@ -397,7 +397,7 @@ namespace pul
       auto *t = cnew_construct<__task_store_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
       __task_enqueue_0(&t->task);
       return s;
-    } catch(...)
+    } catch(std::exception const&)
     {
       destroy_delete(s);
       throw;
@@ -502,7 +502,7 @@ namespace pul
         try
         {
           t->task.__call();
-        } catch(...)
+        } catch(std::exception const&)
         {
           __store->numTasks.fetch_sub(k, atomic_order::relaxed);
           cdestroy_delete(t);
