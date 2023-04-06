@@ -13,6 +13,8 @@
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
+#include "pulsar/iterable.hpp"
+#include "pulsar/utf8.hpp"
 
 // Pulsar
 namespace pul
@@ -25,41 +27,41 @@ namespace pul
 	/// INSTRUCTION: Set
 	class instruction_set
 	{
-		/// Vendor
-		void
-		__retrieve_vendor(char_t *__vendor) const pf_attr_noexcept
-		{
-			int32_t *p = union_cast<int32_t *>(__vendor);
-			*(p + 0)   = this->vendor_[1];
-			*(p + 1)   = this->vendor_[3];
-			*(p + 2)   = this->vendor_[2];
-		}
+	/// Vendor
+	void
+	__retrieve_vendor(char_t *__vendor) const pf_attr_noexcept
+	{
+		int32_t *p = union_cast<int32_t*>(__vendor);
+		*(p + 0) = this->vendor_[1];
+		*(p + 1) = this->vendor_[3];
+		*(p + 2) = this->vendor_[2];
+	}
 
-		/// Name
-		void
-		__retrieve_brand(char_t *__brand) const pf_attr_noexcept
-		{
-			iterator<const char_t> beg = union_cast<const char_t *>(this->brand1_.data());
-			copy(beg + 00, beg + 16, iterator(__brand));
-			copy(beg + 16, beg + 32, iterator(__brand));
-			copy(beg + 32, beg + 48, iterator(__brand));
-		}
+	/// Name
+	void
+	__retrieve_brand(char_t *__brand) const pf_attr_noexcept
+	{
+		iterator<const char_t> beg = union_cast<const char_t*>(this->brand1_.data());
+		copy(beg + 00, beg + 16, iterator(__brand));
+		copy(beg + 16, beg + 32, iterator(__brand));
+		copy(beg + 32, beg + 48, iterator(__brand));
+	}
 
-	 public:
+	public:
 		/// Constructors
 		instruction_set() pf_attr_noexcept
-				: brand1_{ 0 }
-				, brand2_{ 0 }
-				, brand3_{ 0 }
-				, vendor_{ 0 }
-				, nIDs_(0)
-				, nExIDs_(0)
-				, f_1_ECX_(0)
-				, f_1_EDX_(0)
-				, f_7_EBX_(0)
-				, f_7_ECX_(0)
-				, f_81_ECX_(0)
-				, f_81_EDX_(0)
+			: brand1_{ 0 }
+			, brand2_{ 0 }
+			, brand3_{ 0 }
+			, vendor_{ 0 }
+			, nIDs_(0)
+			, nExIDs_(0)
+			, f_1_ECX_(0)
+			, f_1_EDX_(0)
+			, f_7_EBX_(0)
+			, f_7_ECX_(0)
+			, f_81_ECX_(0)
+			, f_81_EDX_(0)
 		{
 			// https://learn.microsoft.com/fr-fr/cpp/intrinsics/cpuid-cpuidex?view=msvc-170
 			// Cpui
@@ -111,7 +113,7 @@ namespace pul
 			}
 		}
 		instruction_set(const instruction_set &) pf_attr_noexcept = delete;
-		instruction_set(instruction_set &&) pf_attr_noexcept      = delete;
+		instruction_set(instruction_set &&) pf_attr_noexcept			= delete;
 
 		/// Destructor
 		~instruction_set() pf_attr_noexcept = default;
@@ -428,7 +430,7 @@ namespace pul
 			return string<char_traits::ascii, magnifier_default, allocator_default>(vendor, 0x20);
 		}
 
-	 private:
+	private:
 		array<int32_t, 4> brand1_;
 		array<int32_t, 4> brand2_;
 		array<int32_t, 4> brand3_;
@@ -442,6 +444,28 @@ namespace pul
 		int32_t f_81_ECX_;
 		int32_t f_81_EDX_;
 	};
-} // namespace pul
+
+	/// SYSTEM: Memory
+	struct memory_info_t
+	{
+		size_t physTotal;
+		size_t physAvail;
+		size_t pageFileTotal;
+		size_t pageFileAvail;
+		size_t virtTotal;
+		size_t virtAvail;
+		size_t virtExtendedAvail;
+		uint32_t memoryLoad;
+	};
+
+	pf_hint_nodiscard pulsar_api memory_info_t
+	get_process_memory_usage() pf_attr_noexcept;// TODO: Impl of get_process_memory_usage
+	pf_hint_nodiscard pulsar_api memory_info_t
+	get_system_memory_usage() pf_attr_noexcept;	// TODO: Impl of get_system_memory_usage
+
+	/// SYSTEM: OS
+	pf_hint_nodiscard pulsar_api u8string_t
+	get_os_name() pf_attr_noexcept;	// TODO: Impl of get_os_name
+}
 
 #endif // !PULSAR_SYSTEM_HPP

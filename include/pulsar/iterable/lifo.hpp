@@ -1,4 +1,4 @@
-/*! @file   queue.hpp
+/*! @file   lifo.hpp
  *  @author Louis-Quentin Noé (noe.louis-quentin@hotmail.fr)
  *  @brief
  *  @date   09-03-2023
@@ -8,8 +8,8 @@
  *  @since 0.1.4
  */
 
-#ifndef PULSAR_QUEUE_HPP
-#define PULSAR_QUEUE_HPP 1
+#ifndef PULSAR_LIFO_HPP
+#define PULSAR_LIFO_HPP 1
 
 // Include: Pulsar
 #include "pulsar/debug.hpp"
@@ -807,4 +807,4 @@ namespace pul
 	};
 }
 
-#endif // !PULSAR_QUEUE_HPP
+#endif // !PULSAR_LIFO_HPP

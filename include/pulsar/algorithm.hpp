@@ -635,6 +635,9 @@ namespace pul
 		return !greater(__ba, __ea, __bb);
 	}
 
+	/// ALGORITHM: Search
+	// TODO
+
 	/// ALGORITHM: Sort
 	// TODO
 }

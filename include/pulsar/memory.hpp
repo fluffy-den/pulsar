@@ -11,18 +11,19 @@
 #ifndef PULSAR_MEMORY_HPP
 #define PULSAR_MEMORY_HPP 1
 
-// Include: Pulsar
-#include "pulsar/pulsar.hpp"
-#include "pulsar/heap.hpp"
-#include "pulsar/iterator.hpp"
-#include "pulsar/utility.hpp"
-#include "pulsar/debug.hpp"
+// Include: C
+#include <cstring>// memcpy
 
 // Include: C++
 #include <concepts>
 
-// Include: C
-#include <cstring>// memcpy
+// Include: Pulsar
+#include "pulsar/pulsar.hpp"
+#include "pulsar/malloc.hpp"
+#include "pulsar/iterator.hpp"
+#include "pulsar/utility.hpp"
+#include "pulsar/debug.hpp"
+
 
 // Pulsar
 namespace pul
@@ -58,7 +59,7 @@ namespace pul
 	{
 		if(std::is_constant_evaluated())
 		{
-			return new byte_t[__size];
+			return cevalloc(__size, __align, __offset);
 		}
 		else
 		{
@@ -75,18 +76,13 @@ namespace pul
 	reallocate(
 		_Allocator &__all,
 		void *__ptr,
-		size_t __osize,
 		size_t __nsize,
 		align_val_t __align = ALIGN_DEFAULT,
 		size_t __offset			= 0) pf_attr_noexcept
 	{
 		if (std::is_constant_evaluated())
 		{
-			byte_t *p = new byte_t[__nsize];
-			if (!__ptr) return p;
-			std::memcpy(p, __ptr, std::min(__osize, __nsize));
-			deallocate(__all, __ptr);
-			return p;
+			return cevrealloc(__ptr, __nsize, __align, __offset);
 		}
 		else
 		{
@@ -103,7 +99,7 @@ namespace pul
 	{
 		if (std::is_constant_evaluated())
 		{
-			delete[] union_cast<byte_t*>(__ptr);
+			return cevfree(__ptr);
 		}
 		else
 		{
@@ -152,22 +148,6 @@ namespace pul
 		return __base2_mod(addressof(__ptr) + __offset, union_cast<size_t>(__align)) == 0;
 	}
 
-	/// MEMORY: Utility -> Array Type
-	template <typename _Ty>
-	struct memory_array
-	{
-		// Flexible Arrays -> Disable warning
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
-
-		size_t count;
-		_Ty data[];
-
-		// Flexible Arrays
-#pragma GCC diagnostic pop
-	};
-	using memory_array_t = memory_array<byte_t>;
-
 	/// MEMORY: Utility -> Construct
 	template<typename _Ty, typename ... _Args>
 	pf_decl_inline pf_decl_constexpr void
@@ -176,7 +156,7 @@ namespace pul
 		_Args &&... __args)
 	requires(std::is_constructible_v<_Ty, _Args...>)
 	{
-		// pf_assert(__ptr, "__ptr is nullptr!"); // TODO: Exception
+		pf_assert(__ptr, "__ptr is nullptr!");
 		new(__ptr) _Ty(std::forward<_Args>(__args)...);
 	}
 	template <typename _IteratorIn>
@@ -212,30 +192,20 @@ namespace pul
 	{
 		for (; __ab != __ae; ++__ab, ++__bb) construct(__ab.get(), *__bb);
 	}
-
-
-	/// MEMORY: Utility -> Assign
 	template <typename _Ty, typename ... _Args>
 	pf_decl_inline pf_decl_constexpr void
-	assign(
-		_Ty *__ptr,
-		_Args&&... __args) pf_attr_noexcept
-	requires(std::is_assignable_v<_Ty, _Args...>)
+	construct(
+		__marray<_Ty> *__arr,
+		size_t __count,
+		_Args &&... __args)
+	requires(std::is_copy_constructible_v<_Ty>)
 	{
-		*__ptr = { std::forward<_Args>(__args) ... };
+		__arr->count = __count;
+		for (size_t i = 0; i < __count; ++i)
+		{
+			construct(&__arr[i], {std::forward<_Args>(__args)...});
+		}
 	}
-	template <typename _Ty, typename ... _Args>
-	pf_decl_inline pf_decl_constexpr void
-	assign(
-		_Ty *__ptr,
-		_Args&& ... __args) pf_attr_noexcept
-	requires(!std::is_assignable_v<_Ty, _Args...>
-					 && std::is_constructible_v<_Ty, _Args...>)
-	{
-		destroy(__ptr);
-		*__ptr = { std::forward<_Args>(__args) ... };
-	}
-
 
 	/// MEMORY: Utility -> Destroy
 	template<typename _Ty>
@@ -257,9 +227,44 @@ namespace pul
 	template <typename _Ty>
 	pf_decl_inline pf_decl_constexpr void
 	destroy(
-		memory_array<_Ty> *__ptr) pf_attr_noexcept
+		__marray<_Ty> *__ptr) pf_attr_noexcept
 	{
 		destroy(iterator(&__ptr->data[0]), iterator(&__ptr->data[0] + __ptr->count));
+	}
+
+	/// MEMORY: Cache -> New Construct
+
+	/// CACHE: Memory
+	template <
+		typename _Ty,
+		typename ... _Args>
+	pf_hint_nodiscard _Ty*
+	cnew_construct_ex(
+		size_t __exBytes,
+		_Args && ... __args)
+	{
+		_Ty *ptr = union_cast<_Ty*>(calloc(sizeof(_Ty) + __exBytes));
+		new(ptr) _Ty(std::forward<_Args>(__args)...);
+		return ptr;
+	}
+
+	template <
+		typename _Ty,
+		typename ... _Args>
+	pf_hint_nodiscard _Ty*
+	cnew_construct(
+		_Args && ... __args)
+	{
+		return cnew_construct_ex<_Ty>(0, std::forward<_Args>(__args)...);
+	}
+
+	template <
+		typename _Ty>
+	void cdestroy_delete(
+		_Ty *__p) pf_attr_noexcept
+	{
+		__p->~_Ty();
+		cfree(__p);
 	}
 
 	/// MEMORY: New Construct
@@ -455,10 +460,10 @@ namespace pul
 	{
 		union
 		{
-			memory_array<_Ty> *as_array;
+			__marray<_Ty> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<memory_array<_Ty>*>(
+		as_array = union_cast<__marray<_Ty>*>(
 			halloc(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count));
@@ -493,10 +498,10 @@ namespace pul
 	{
 		union
 		{
-			memory_array<_Ty> *as_array;
+			__marray<_Ty> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<memory_array<_Ty>*>(
+		as_array = union_cast<__marray<_Ty>*>(
 			halloc(__all, sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count));
@@ -535,10 +540,10 @@ namespace pul
 	{
 		union
 		{
-			memory_array<_Ty> *as_array;
+			__marray<_Ty> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<memory_array<_Ty>*>(
+		as_array = union_cast<__marray<_Ty>*>(
 			halloc(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count), __val);
@@ -577,10 +582,10 @@ namespace pul
 	{
 		union
 		{
-			memory_array<_Ty> *as_array;
+			__marray<_Ty> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<memory_array<_Ty>*>(
+		as_array = union_cast<__marray<_Ty>*>(
 			halloc(__all, sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count), __val);
@@ -622,10 +627,10 @@ namespace pul
 		const size_t c = countof(__beg, __end);
 		union
 		{
-			memory_array<typename _IteratorIn::value_t> *as_array;
+			__marray<typename _IteratorIn::value_t> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<memory_array<typename _IteratorIn::value_t>*>(
+		as_array = union_cast<__marray<typename _IteratorIn::value_t>*>(
 			halloc(sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
 		as_array->count = c;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + c), __beg);
@@ -672,10 +677,10 @@ namespace pul
 		const size_t c = countof(__beg, __end);
 		union
 		{
-			memory_array<typename _IteratorIn::value_t> *as_array;
+			__marray<typename _IteratorIn::value_t> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<memory_array<typename _IteratorIn::value_t>*>(
+		as_array = union_cast<__marray<typename _IteratorIn::value_t>*>(
 			halloc(__all, sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
 		as_array->count = c;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + c), __beg);
@@ -722,7 +727,7 @@ namespace pul
 	destroy_delete_array(
 		_Ty *__ptr) pf_attr_noexcept
 	{
-		memory_array<_Ty> *as_array = union_cast<memory_array<_Ty>*>(__ptr) - 1;
+		__marray<_Ty> *as_array = union_cast<__marray<_Ty>*>(__ptr) - 1;
 		destroy(as_array);
 		hfree(as_array);
 	}
@@ -733,11 +738,1262 @@ namespace pul
 		_Ty *__ptr) pf_attr_noexcept
 	requires(is_allocator_v<_Allocator>)
 	{
-		memory_array<_Ty> *as_array = union_cast<memory_array<_Ty>*>(__ptr) - 1;
+		__marray<_Ty> *as_array = union_cast<__marray<_Ty>*>(__ptr) - 1;
 		destroy(as_array);
 		deallocate(__all, as_array);
 	}
 
+
+	/// RAII: Deleter -> Default
+	template<typename _Ty>
+	class deleter_default
+	{
+	public:
+		/// Operator()
+		pf_decl_inline pf_decl_constexpr void
+		operator()(
+			_Ty *__ptr) pf_attr_noexcept
+		{
+			destroy_delete(__ptr);
+		}
+	};
+	template<typename _Ty>
+	class deleter_default<_Ty[]>
+	{
+	public:
+		/// Operator()
+		pf_decl_inline pf_decl_constexpr void
+		operator()(
+			_Ty *__ptr) pf_attr_noexcept
+		{
+			destroy_delete_array(__ptr);
+		}
+	};
+
+	/// MEMORY: Deleter -> Allocator
+	template<typename _Ty, typename _Allocator>
+	class deleter_allocator
+	{
+	public:
+		/// Constructor
+		pf_decl_inline pf_decl_constexpr
+		deleter_allocator(
+			_Allocator *__all) pf_attr_noexcept
+			: allocator_(__all)
+		{}
+
+		/// Operator()
+		pf_decl_inline pf_decl_constexpr void
+		operator()(
+			_Ty *__ptr) const pf_attr_noexcept
+		{
+			destroy(__ptr);
+			this->allocator_->deallocate(__ptr);
+		}
+
+	private:
+		_Allocator *allocator_;
+	};
+	template<typename _Ty, typename _Allocator>
+	class deleter_allocator<_Ty[], _Allocator>
+	{
+	public:
+		/// Constructor
+		pf_decl_inline pf_decl_constexpr
+		deleter_allocator(
+			_Allocator *__all) pf_attr_noexcept
+			: allocator_(__all)
+		{}
+
+		/// Operator()
+		pf_decl_inline pf_decl_constexpr void
+		operator()(
+			_Ty *__ptr) const pf_attr_noexcept
+		{
+			(__ptr);
+			this->allocator_->deallocate(__ptr, 1);
+		}
+
+	private:
+		_Allocator *allocator_;
+	};
+
+	/*
+	 * !            !
+	 *   Unique Ptr
+	 * !            !
+	 */
+
+	/// MEMORY: Unique -> Store
+	template <typename _Ty>
+	struct unique_store
+	{
+		/// Constructors
+		template <typename ..._Args>
+		pf_decl_constexpr
+		unique_store(
+			_Args && ... __args) pf_attr_noexcept
+		requires(std::is_constructible_v<_Ty, _Args ...>)
+			: store(std::forward<_Args>(__args)...)
+		{}
+		unique_store(unique_store<_Ty> const &) = delete;
+		unique_store(unique_store<_Ty> &&)			= delete;
+
+		/// Destructor
+		pf_decl_constexpr
+		~unique_store() pf_attr_noexcept = default;
+
+		/// Store
+		_Ty store;
+	};
+
+	/// MEMORY: Unique -> Array Store
+	template <typename _Ty>
+	struct unique_store<_Ty[]>
+	{
+		/// Constructor
+		template <typename ..._Args>
+		pf_decl_constexpr
+		unique_store(
+			size_t __count,
+			_Args && ... __args) pf_attr_noexcept
+		requires((sizeof...(_Args) == 0 && std::is_default_constructible_v<_Ty>)
+						 || std::is_copy_constructible_v<_Ty>)
+		{
+			construct(&this->store, __count, std::forward<_Args>(__args)...);
+		}
+		unique_store(unique_store<_Ty[]> const &) = delete;
+		unique_store(unique_store<_Ty[]> &&)			= delete;
+
+		/// Destructor
+		pf_decl_constexpr
+		~unique_store() pf_attr_noexcept
+		{
+			destroy(&this->store);
+		}
+
+		/// Store
+		__marray<_Ty> store;
+	};
+
+	/// MEMORY: Unique -> Pointer
+	template <typename _Ty, typename _Deleter>
+	class unique_ptr
+	{
+	/// Delete
+	pf_decl_constexpr void
+	__delete_no_check() pf_attr_noexcept
+	{
+		this->del_(this->ptr_);
+	}
+
+	public:
+		/// Constructors
+		pf_decl_constexpr
+		unique_ptr(
+			unique_store<_Ty> *__ptr,
+			_Deleter          && __deleter) pf_attr_noexcept
+			: ptr_(__ptr)
+			, del_(std::move(__deleter))
+		{}
+		pf_decl_constexpr
+		unique_ptr(
+			nullptr_t,
+			_Deleter &&__deleter) pf_attr_noexcept
+			: unique_ptr(nullptr, std::move(__deleter))
+		{}
+		pf_decl_constexpr
+		unique_ptr(
+			_Deleter &&__deleter) pf_attr_noexcept
+			: unique_ptr(nullptr, std::move(__deleter))
+		{}
+		pf_decl_constexpr
+		unique_ptr(
+			unique_ptr<_Ty, _Deleter> const &__r) pf_attr_noexcept = delete;
+		pf_decl_constexpr
+		unique_ptr(
+			unique_ptr<_Ty, _Deleter> &&__r) pf_attr_noexcept
+			: unique_ptr(__r.ptr_, std::move(__r.del_))
+		{
+			__r.ptr_ = nullptr;
+		}
+
+		/// Destructor
+		pf_decl_constexpr
+		~unique_ptr() pf_attr_noexcept
+		{
+			this->reset();
+		}
+
+		/// Operator=
+		pf_decl_constexpr unique_ptr<_Ty, _Deleter> &
+		operator =(
+			unique_ptr<_Ty, _Deleter> const &) pf_attr_noexcept = delete;
+		pf_decl_constexpr unique_ptr<_Ty, _Deleter> &
+		operator =(
+			unique_ptr<_Ty, _Deleter> &&__r) pf_attr_noexcept
+		{
+			if(this != &__r)
+			{
+				pf_assert(this->ptr_ != __r.ptr_, "Both unique ptr are equals!");
+				this->set(__r.ptr_);
+				__r.ptr_ = nullptr;
+				__r.del_ = std::move(__r.del_);
+			}
+			return *this;
+		}
+		pf_decl_constexpr unique_ptr<_Ty, _Deleter> &
+		operator =(
+			unique_store<_Ty> *__r) pf_attr_noexcept
+		{
+			if(this->ptr_ != __r)
+			{
+				this->set(__r);
+			}
+			return *this;
+		}
+
+		/// Operator<=> / ==
+		pf_decl_constexpr bool
+		operator ==(
+			const _Ty *__r) pf_attr_noexcept
+		{
+			return this->ptr_ == __r;
+		}
+		pf_decl_constexpr std::strong_ordering
+		operator <=>(
+			const _Ty *__r) pf_attr_noexcept
+		{
+			return this->ptr_ <=> __r;
+		}
+
+		/// Operator*
+		pf_decl_constexpr _Ty &
+		operator *() pf_attr_noexcept
+		{
+			return *this->get();
+		}
+		pf_decl_constexpr const _Ty &
+		operator *() const pf_attr_noexcept
+		{
+			return *this->get();
+		}
+
+		/// Operator->
+		pf_decl_constexpr _Ty*
+		operator->() pf_attr_noexcept
+		{
+			return this->get();
+		}
+		pf_decl_constexpr const _Ty*
+		operator->() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator _Ty*
+		pf_decl_constexpr
+		operator _Ty* () pf_attr_noexcept
+		{
+			return this->get();
+		}
+		pf_decl_constexpr
+		operator const _Ty* () const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator bool
+		pf_decl_explicit pf_decl_constexpr
+		operator bool() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Get
+		pf_decl_constexpr _Ty*
+		get() pf_attr_noexcept
+		{
+			return &this->ptr_->store;
+		}
+		pf_decl_constexpr const _Ty*
+		get() const pf_attr_noexcept
+		{
+			return &this->ptr_->store;
+		}
+
+		/// Set
+		pf_decl_constexpr void
+		set(
+			unique_store<_Ty> *__r,
+			_Deleter          && __deleter = _Deleter()) pf_attr_noexcept
+		{
+			if(this->ptr_) this->__delete_no_check();
+			this->ptr_ = __r;
+			this->del_ = std::move(__deleter);
+		}
+
+		/// Reset
+		pf_decl_constexpr void
+		reset() pf_attr_noexcept
+		{
+			if(this->ptr_)
+			{
+				this->__delete_no_check();
+				this->ptr_ = nullptr;
+			}
+		}
+
+	private:
+		/// Store
+		unique_store<_Ty> *ptr_;
+		pf_hint_nounique_address _Deleter del_;
+	};
+
+	/// MEMORY: Unique -> Pointer Array
+	template <typename _Ty, typename _Deleter>
+	class unique_ptr<_Ty[], _Deleter>
+	{
+	/// Delete
+	pf_decl_constexpr void __delete_no_check() pf_attr_noexcept
+	{
+		this->del_(this->ptr_);
+	}
+
+	public:
+		/// Constructors
+		pf_decl_constexpr
+		unique_ptr(
+			unique_store<_Ty[]> *__ptr,
+			_Deleter            && __deleter) pf_attr_noexcept
+			: ptr_(__ptr)
+			, del_(std::move(__deleter))
+		{}
+		pf_decl_constexpr
+		unique_ptr(
+			nullptr_t,
+			_Deleter &&__deleter) pf_attr_noexcept
+			: unique_ptr(nullptr, std::move(__deleter))
+		{}
+		pf_decl_constexpr
+		unique_ptr(
+			_Deleter &&__deleter) pf_attr_noexcept
+			: unique_ptr(nullptr, std::move(__deleter))
+		{}
+		pf_decl_constexpr
+		unique_ptr(
+			unique_ptr<_Ty[], _Deleter> const &__r) pf_attr_noexcept = delete;
+		pf_decl_constexpr
+		unique_ptr(
+			unique_ptr<_Ty[], _Deleter> &&__r) pf_attr_noexcept
+			: unique_ptr(__r.ptr_, std::move(__r.del_))
+		{
+			__r.ptr_ = nullptr;
+		}
+
+		/// Destructor
+		pf_decl_constexpr
+		~unique_ptr() pf_attr_noexcept
+		{
+			this->reset();
+		}
+
+		/// Operator=
+		pf_decl_constexpr unique_ptr<_Ty[], _Deleter> &
+		operator =(
+			unique_ptr<_Ty[], _Deleter> const &) pf_attr_noexcept = delete;
+		pf_decl_constexpr unique_ptr<_Ty[], _Deleter> &
+		operator =(
+			unique_ptr<_Ty[], _Deleter> &&__r) pf_attr_noexcept
+		{
+			if(this != &__r)
+			{
+				pf_assert(this->ptr_ != __r.ptr_, "Both unique ptr are equals!");
+				this->set(__r.ptr_);
+				this->del_ = std::move(__r.del_);
+				__r.ptr_	 = nullptr;
+			}
+			return *this;
+		}
+		pf_decl_constexpr unique_ptr<_Ty[], _Deleter> &
+		operator =(
+			unique_store<_Ty[]> *__s) pf_attr_noexcept
+		{
+			if(this->ptr_ != __s)
+			{
+				this->set(__s);
+			}
+			return *this;
+		}
+
+		/// Operator<=> / ==
+		pf_decl_constexpr bool
+		operator ==(
+			const _Ty *__ptr) const pf_attr_noexcept
+		{
+			return this->get() == __ptr;
+		}
+		pf_decl_constexpr std::strong_ordering
+		operator <=>(
+			const _Ty *__ptr) const pf_attr_noexcept
+		{
+			return this->get() <=> __ptr;
+		}
+
+		/// Operator[]
+		pf_decl_constexpr _Ty &operator [](
+			size_t __index) pf_attr_noexcept
+		{
+			return this->get()[__index];
+		}
+		pf_decl_constexpr const _Ty &operator [](
+			size_t __index) const pf_attr_noexcept
+		{
+			return this->get()[__index];
+		}
+
+		/// Operator _Ty*
+		pf_decl_constexpr
+		operator _Ty* () pf_attr_noexcept
+		{
+			return this->get();
+		}
+		pf_decl_constexpr
+		operator const _Ty* () const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator bool
+		pf_decl_explicit pf_decl_constexpr
+		operator bool() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Get
+		pf_decl_constexpr _Ty*
+		get() pf_attr_noexcept
+		{
+			return &this->ptr_->first;
+		}
+		pf_decl_constexpr const _Ty*
+		get() const pf_attr_noexcept
+		{
+			return &this->ptr_->first;
+		}
+
+		/// Set
+		pf_decl_constexpr void
+		set(
+			unique_store<_Ty[]> *__r,
+			_Deleter            && __deleter = _Deleter()) pf_attr_noexcept
+		{
+			if(this->ptr_) this->__delete_no_check();
+			this->ptr_ = __r;
+			this->del_ = std::move(__deleter);
+		}
+
+		/// Reset
+		pf_decl_constexpr void
+		reset() pf_attr_noexcept
+		{
+			if(this->ptr_)
+			{
+				this->__delete_no_check();
+				this->ptr_ = nullptr;
+			}
+		}
+
+	private:
+		/// Store
+		unique_store<_Ty[]> *ptr_;
+		pf_hint_nounique_address _Deleter del_;
+	};
+
+	/// MEMORY: Unique -> Maker
+	template <typename _Ty, typename ..._Args>
+	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_default<unique_store<_Ty>>>
+	make_unique(
+		_Args && ... __args)
+	requires(!std::is_array_v<_Ty>)
+	{
+		return unique_ptr(
+			new_construct<unique_store<_Ty>>(
+				std::forward<_Args>(__args)...),
+			deleter_default<unique_store<_Ty>>());
+	}
+	template <typename _Ty, typename ..._Args>
+	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_default<unique_store<_Ty>>>
+	make_unique_aligned(
+		align_val_t __align,
+		_Args && ... __args)
+	requires(!std::is_array_v<_Ty>)
+	{
+		return unique_ptr(
+			new_construct_aligned<unique_store<_Ty>>(
+				__align,
+				std::forward<_Args>(__args)...),
+			deleter_default<unique_store<_Ty>>());
+	}
+	template <typename _Ty, typename ..._Args>
+	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_default<unique_store<_Ty>>>
+	make_unique_aligned_at(
+		align_val_t __align,
+		size_t __offset,
+		_Args && ... __args)
+	requires(!std::is_array_v<_Ty>)
+	{
+		return unique_ptr(
+			new_construct_aligned_at<unique_store<_Ty>>(
+				__align,
+				__offset,
+				std::forward<_Args>(__args)...),
+			deleter_default<unique_store<_Ty>>());
+	}
+
+	/// MEMORY: Unique -> Maker -> Array
+	template <typename _Ty, typename ..._Args>
+	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_default<unique_store<_Ty>>>
+	make_unique(
+		size_t __count,
+		_Args && ... __args)
+	requires(std::is_array_v<_Ty>)
+	{
+		return unique_ptr(
+			new_construct_ex<unique_store<_Ty>>(
+				__count * sizeof(std::remove_all_extents_t<_Ty>),
+				__count,
+				std::forward<_Args>(__args)...),
+			deleter_default<unique_store<_Ty>>());
+	}
+	template <typename _Ty, typename ..._Args>
+	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_default<unique_store<_Ty>>>
+	make_unique_aligned(
+		size_t __count,
+		align_val_t __align,
+		_Args && ... __args)
+	requires(std::is_array_v<_Ty>)
+	{
+		return unique_ptr(
+			new_construct_aligned_ex<unique_store<_Ty>>(
+				__count * sizeof(std::remove_all_extents_t<_Ty>),
+				__align,
+				std::forward<_Args>(__args)...),
+			deleter_default<unique_store<_Ty>>());
+	}
+	template <typename _Ty, typename ... _Args>
+	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_default<unique_store<_Ty>>>
+	make_unique_aligned_at(
+		size_t __count,
+		align_val_t __align,
+		size_t __offset,
+		_Args && ... __args)
+	requires(std::is_array_v<_Ty>)
+	{
+		return unique_ptr(
+			new_construct_aligned_at_ex<unique_store<_Ty>>(
+				__count * sizeof(std::remove_all_extents_t<_Ty>),
+				__align,
+				__offset,
+				std::forward<_Args>(__args)...),
+			deleter_default<unique_store<_Ty>>());
+	}
+
+	/// MEMORY: Unique -> Maker -> Allocator
+	template <typename _Ty, typename _Allocator, typename ..._Args>
+	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_allocator<unique_store<_Ty>, _Allocator>>
+	make_unique(
+		_Allocator   & __all,
+		_Args && ... __args)
+	requires(is_allocator_v<_Allocator>
+					 && !std::is_array_v<_Ty>)
+	{
+		return unique_ptr(
+			new_construct<unique_store<_Ty>>(
+				__all,
+				std::forward<_Args>(__args)...),
+			deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
+	}
+	template <typename _Ty, typename _Allocator, typename ..._Args>
+	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_allocator<unique_store<_Ty>, _Allocator>>
+	make_unique_aligned(
+		_Allocator   & __all,
+		align_val_t __align,
+		_Args && ... __args)
+	requires(is_allocator_v<_Allocator>
+					 && !std::is_array_v<_Ty>)
+	{
+		return unique_ptr(
+			new_construct_aligned<unique_store<_Ty>>(
+				__all,
+				__align,
+				std::forward<_Args>(__args)...),
+			deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
+	}
+	template <typename _Ty, typename _Allocator, typename ..._Args>
+	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_allocator<unique_store<_Ty>, _Allocator>>
+	make_unique_aligned_at(
+		_Allocator& __all,
+		align_val_t __align,
+		size_t __offset,
+		_Args && ... __args)
+	requires(is_allocator_v<_Allocator>
+					 && !std::is_array_v<_Ty>)
+	{
+		return unique_ptr(
+			new_construct_aligned_at<unique_store<_Ty>>(
+				__all,
+				__align,
+				__offset,
+				std::forward<_Args>(__args)...),
+			deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
+	}
+
+	/// MEMORY: Unique -> Maker -> Allocator -> Array
+	template <typename _Ty, typename _Allocator, typename ..._Args>
+	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_allocator<unique_store<_Ty>, _Allocator>>
+	make_unique(
+		_Allocator& __all,
+		size_t __count,
+		_Args && ... __args)
+	requires(is_allocator_v<_Allocator>
+					 && std::is_array_v<_Ty>)
+	{
+		return unique_ptr(
+			new_construct_ex<unique_store<_Ty>>(
+				__all,
+				__count * sizeof(std::remove_all_extents_t<_Ty>),
+				__count,
+				std::forward<_Args>(__args)...),
+			deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
+	}
+	template <typename _Ty, typename _Allocator, typename ..._Args>
+	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_allocator<unique_store<_Ty>, _Allocator>>
+	make_unique_aligned(
+		_Allocator& __all,
+		size_t __count,
+		align_val_t __align,
+		_Args && ... __args)
+	requires(is_allocator_v<_Allocator>
+					 && std::is_array_v<_Ty>)
+	{
+		return unique_ptr(
+			new_construct_aligned_ex<unique_store<_Ty>>(
+				__all,
+				__count * sizeof(std::remove_all_extents_t<_Ty>),
+				__align,
+				__count,
+				std::forward<_Args>(__args)...),
+			deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
+	}
+	template <typename _Ty, typename _Allocator, typename ..._Args>
+	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_allocator<unique_store<_Ty>, _Allocator>>
+	make_unique_aligned_at(
+		_Allocator& __all,
+		size_t __count,
+		align_val_t __align,
+		size_t __offset,
+		_Args && ... __args)
+	requires(is_allocator_v<_Allocator>
+					 && std::is_array_v<_Ty>)
+	{
+		return unique_ptr(
+			new_construct_aligned_at_ex<unique_store<_Ty>>(
+				__all,
+				__count * sizeof(std::remove_all_extents_t<_Ty>),
+				__align,
+				__count,
+				std::forward<_Args>(__args)...),
+			deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
+	}
+
+
+	/*
+	 * !            !
+	 *   Shared Ptr
+	 * !            !
+	 */
+
+	/// MEMORY: Shared -> Store
+	template<typename _Ty>
+	struct shared_store
+	{
+		/// Constructor
+		template<typename ... _Args>
+		pf_decl_constexpr
+		shared_store(
+			_Args &&... __args) pf_attr_noexcept
+		requires(std::is_constructible_v<_Ty, _Args...>)
+			: shared(1)
+			, store(std::forward<_Args>(__args)...)
+		{}
+		shared_store(shared_store<_Ty> const &) = delete;
+		shared_store(shared_store<_Ty> &&)			= delete;
+
+		/// Destructor
+		pf_decl_constexpr ~shared_store() pf_attr_noexcept
+		{
+			pf_assert(shared == 0, "Shared count isn't equal to 0!");
+		}
+
+		/// Store
+		size_t shared;
+		_Ty store;
+	};
+
+	/// MEMORY: Shared -> Array Store
+	template<typename _Ty>
+	struct shared_store<_Ty[]>
+	{
+		/// Constructor
+		template<typename ... _Args>
+		pf_decl_constexpr
+		shared_store(
+			size_t __count,
+			_Args &&... __args) pf_attr_noexcept
+		requires((sizeof...(_Args) == 0 && std::is_default_constructible_v<_Ty>)
+						 || std::is_copy_constructible_v<_Ty>)
+			: shared(1)
+		{
+			construct(&this->array, __count, std::forward<_Args>(__args)...);
+		}
+		shared_store(shared_store<_Ty[]> const &) = delete;
+		shared_store(shared_store<_Ty[]> &&)			= delete;
+
+		/// Destructor
+		pf_decl_constexpr ~shared_store() pf_attr_noexcept
+		{
+			pf_assert(shared == 0, "Shared count isn't equal to 0!");
+			destroy(&this->array);
+		}
+
+		/// Store
+		size_t shared;
+		__marray<_Ty> array;
+	};
+
+	/// MEMORY: Shared -> Pointer
+	template<typename _Ty, typename _Deleter>
+	class shared_ptr
+	{
+	/// Delete
+	pf_decl_constexpr void
+	__increase_share_count() pf_attr_noexcept
+	{
+		if(this->ptr_) ++this->ptr_->shared;
+	}
+	pf_decl_constexpr void
+	__delete_no_check() pf_attr_noexcept
+	{
+		if(--this->ptr_->shared == 0) this->del_(this->ptr_);
+	}
+
+	public:
+		/// Constructors
+		pf_decl_constexpr
+		shared_ptr(shared_store<_Ty> *__ptr, _Deleter &&__deleter) pf_attr_noexcept
+			: ptr_(__ptr)
+			, del_(std::move(__deleter))
+		{}
+		pf_decl_constexpr
+		shared_ptr(nullptr_t, _Deleter &&__deleter) pf_attr_noexcept
+			: shared_ptr(nullptr, std::move(__deleter))
+		{}
+		pf_decl_constexpr
+		shared_ptr(_Deleter &&__deleter) pf_attr_noexcept : shared_ptr(nullptr, std::move(__deleter))
+		{}
+		pf_decl_constexpr
+		shared_ptr(shared_ptr<_Ty, _Deleter> const &__r) pf_attr_noexcept
+			: shared_ptr(__r.ptr_, __r.del_)
+		{
+			this->__increase_share_count();
+		}
+		pf_decl_constexpr
+		shared_ptr(shared_ptr<_Ty, _Deleter> &&__r) pf_attr_noexcept
+			: shared_ptr(__r.ptr_, std::move(__r.del_))
+		{
+			this->ptr_ = __r;
+			__r.ptr_	 = nullptr;
+		}
+
+		/// Destructor
+		pf_decl_constexpr ~shared_ptr() pf_attr_noexcept
+		{
+			this->reset();
+		}
+
+		/// Operator=
+		pf_decl_constexpr shared_ptr<_Ty, _Deleter> &
+		operator=(shared_ptr<_Ty, _Deleter> const &__r) pf_attr_noexcept
+		{
+			if(this != &__r) { this->set(__r.ptr, __r.del_); }
+			return *this;
+		}
+		pf_decl_constexpr shared_ptr<_Ty, _Deleter> &
+		operator=(shared_ptr<_Ty, _Deleter> &&__r) pf_attr_noexcept
+		{
+			if(this != &__r)
+			{
+				if(this->ptr_) this->__delete_no_check();
+				this->ptr_ = __r;
+				this->del_ = std::move(__r.del_);
+				__r.ptr_	 = nullptr;
+			}
+			return *this;
+		}
+		pf_decl_constexpr shared_ptr<_Ty, _Deleter> &
+		operator=(shared_store<_Ty> *__s) pf_attr_noexcept
+		{
+			if(this != &__s) { this->set(__s); }
+			return *this;
+		}
+
+		/// Operator <=> / ==
+		pf_decl_constexpr bool
+		operator==(const _Ty *__ptr) const pf_attr_noexcept
+		{
+			return this->ptr_ == __ptr;
+		}
+		pf_decl_constexpr std::strong_ordering
+		operator<=>(const _Ty *__ptr) const pf_attr_noexcept
+		{
+			return this->ptr_ <=> __ptr;
+		}
+
+		/// Operator*
+		pf_decl_constexpr _Ty &
+		operator*() pf_attr_noexcept
+		{
+			return *this->get();
+		}
+		pf_decl_constexpr const _Ty &
+		operator*() const pf_attr_noexcept
+		{
+			return *this->get();
+		}
+
+		/// Operator->
+		pf_decl_constexpr _Ty*
+		operator->() pf_attr_noexcept
+		{
+			return this->get();
+		}
+		pf_decl_constexpr const _Ty*
+		operator->() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator _Ty *
+		pf_decl_constexpr
+		operator _Ty* () pf_attr_noexcept
+		{
+			return this->get();
+		}
+		pf_decl_constexpr operator const _Ty* () const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator bool
+		pf_decl_explicit pf_decl_constexpr operator bool() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Get
+		pf_decl_constexpr _Ty*
+		get() pf_attr_noexcept
+		{
+			return &this->ptr_->first;
+		}
+		pf_decl_constexpr const _Ty*
+		get() const pf_attr_noexcept
+		{
+			return &this->ptr_->first;
+		}
+
+		/// Set
+		pf_decl_constexpr void
+		set(shared_store<_Ty> *__r, _Deleter &&__del = _Deleter()) pf_attr_noexcept
+		{
+			if(this->ptr_ && (this->ptr_ != __r))
+			{
+				this->__delete_no_check();
+				this->ptr_ = __r;
+				this->del_ = std::move(__del);
+				this->__increase_share_count();
+			}
+		}
+
+		/// Reset
+		pf_decl_constexpr void
+		reset() pf_attr_noexcept
+		{
+			if(this->ptr_)
+			{
+				this->__delete_no_check();
+				this->ptr_ = nullptr;
+			}
+		}
+
+	private:
+		/// Store
+		shared_store<_Ty> *ptr_;
+		pf_hint_nounique_address _Deleter del_;
+	};
+
+	/// MEMORY: Shared -> Array Pointer
+	template<typename _Ty, typename _Deleter>
+	class shared_ptr<_Ty[], _Deleter>
+	{
+	/// Delete
+	pf_decl_constexpr void
+	__increase_share_count() pf_attr_noexcept
+	{
+		if(this->ptr_) ++this->ptr_->shared;
+	}
+	pf_decl_constexpr void
+	__delete_no_check() pf_attr_noexcept
+	{
+		if(--this->ptr_->shared == 0) this->del_(this->ptr_);
+	}
+
+	public:
+		/// Constructors
+		pf_decl_constexpr
+		shared_ptr(shared_store<_Ty[]> *__ptr, _Deleter &&__deleter) pf_attr_noexcept
+			: ptr_(__ptr)
+			, del_(std::move(__deleter))
+		{}
+		pf_decl_constexpr
+		shared_ptr(nullptr_t, _Deleter &&__deleter) pf_attr_noexcept
+			: shared_ptr(nullptr, std::move(__deleter))
+		{}
+		pf_decl_constexpr
+		shared_ptr(_Deleter &&__deleter) pf_attr_noexcept : shared_ptr(nullptr, std::move(__deleter))
+		{}
+		pf_decl_constexpr
+		shared_ptr(shared_ptr<_Ty[], _Deleter> const &__r) pf_attr_noexcept
+			: shared_ptr(__r.ptr_, __r.del_)
+		{
+			this->__increase_share_count();
+		}
+		pf_decl_constexpr
+		shared_ptr(shared_ptr<_Ty[], _Deleter> &&__r) pf_attr_noexcept
+			: shared_ptr(__r.ptr_, std::move(__r.del_))
+		{
+			this->ptr_ = __r;
+			__r.ptr_	 = nullptr;
+		}
+
+		/// Destructor
+		pf_decl_constexpr ~shared_ptr() pf_attr_noexcept
+		{
+			this->reset();
+		}
+
+		/// Operator=
+		pf_decl_constexpr shared_ptr<_Ty[], _Deleter> &
+		operator=(shared_ptr<_Ty[], _Deleter> const &__r) pf_attr_noexcept
+		{
+			if(this != &__r) { this->set(__r.ptr_, __r.del_); }
+			return *this;
+		}
+		pf_decl_constexpr shared_ptr<_Ty[], _Deleter> &
+		operator=(shared_ptr<_Ty[], _Deleter> &&__r) pf_attr_noexcept
+		{
+			if(this != &__r)
+			{
+				if(this->ptr_) this->__delete_no_check();
+				this->ptr_ = __r;
+				this->del_ = std::move(__r.del_);
+				__r.ptr_	 = nullptr;
+			}
+			return *this;
+		}
+		pf_decl_constexpr shared_ptr<_Ty[], _Deleter> &
+		operator=(shared_store<_Ty[]> *__s) pf_attr_noexcept
+		{
+			if(this != &__s) { this->set(__s); }
+			return *this;
+		}
+
+		/// Operator <=> / ==
+		pf_decl_constexpr bool
+		operator==(const _Ty *__ptr) const pf_attr_noexcept
+		{
+			return this->ptr_ == __ptr;
+		}
+		pf_decl_constexpr std::strong_ordering
+		operator<=>(const _Ty *__ptr) const pf_attr_noexcept
+		{
+			return this->ptr_ <=> __ptr;
+		}
+
+		/// Operator[]
+		pf_decl_constexpr _Ty &
+		operator[](size_t __index) pf_attr_noexcept
+		{
+			return this->get()[__index];
+		}
+		pf_decl_constexpr const _Ty &
+		operator[](size_t __index) const pf_attr_noexcept
+		{
+			return this->get()[__index];
+		}
+
+		/// Operator _Ty *
+		pf_decl_constexpr
+		operator _Ty* () pf_attr_noexcept
+		{
+			return this->get();
+		}
+		pf_decl_constexpr operator const _Ty* () const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator bool
+		pf_decl_explicit pf_decl_constexpr operator bool() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Get
+		pf_decl_constexpr _Ty*
+		get() pf_attr_noexcept
+		{
+			return &this->ptr_->first;
+		}
+		pf_decl_constexpr const _Ty*
+		get() const pf_attr_noexcept
+		{
+			return &this->ptr_->first;
+		}
+
+		/// Set
+		pf_decl_constexpr void
+		set(shared_store<_Ty[]> *__r, _Deleter &&__del = _Deleter()) pf_attr_noexcept
+		{
+			if(this->ptr_ && (this->ptr_ != __r))
+			{
+				this->__delete_no_check();
+				this->ptr_ = __r;
+				this->del_ = std::move(__del);
+				this->__increase_share_count();
+			}
+		}
+
+		/// Reset
+		pf_decl_constexpr void
+		reset() pf_attr_noexcept
+		{
+			if(this->ptr_)
+			{
+				this->__delete_no_check();
+				this->ptr_ = nullptr;
+			}
+		}
+
+	private:
+		/// Store
+		shared_store<_Ty[]> *ptr_;
+		pf_hint_nounique_address _Deleter del_;
+	};
+
+	/// MEMORY: Shared -> Maker
+	template<typename _Ty, typename ... _Args>
+	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_default<shared_store<_Ty>>>
+	make_shared(
+		_Args &&... __args)
+	requires(!std::is_array_v<_Ty>)
+	{
+		return shared_ptr(
+			new_construct<shared_store<_Ty>>(
+				std::forward<_Args>(__args)...),
+			deleter_default<shared_store<_Ty>>());
+	}
+	template<typename _Ty, typename ... _Args>
+	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_default<shared_store<_Ty>>>
+	make_shared_aligned(
+		align_val_t __align,
+		_Args &&... __args)
+	requires(!std::is_array_v<_Ty>)
+	{
+		return shared_ptr(
+			new_construct_aligned<shared_store<_Ty>>(
+				__align,
+				std::forward<_Args>(__args)...),
+			deleter_default<shared_store<_Ty>>());
+	}
+	template<typename _Ty, typename ... _Args>
+	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_default<shared_store<_Ty>>>
+	make_shared_aligned_at(
+		align_val_t __align,
+		size_t __offset,
+		_Args &&... __args)
+	requires(!std::is_array_v<_Ty>)
+	{
+		return shared_ptr(
+			new_construct_aligned_at<shared_store<_Ty>>(
+				__align,
+				__offset,
+				std::forward<_Args>(__args)...),
+			deleter_default<shared_store<_Ty>>());
+	}
+
+	/// MEMORY: Shared -> Maker -> Array
+	template <typename _Ty, typename ... _Args>
+	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_default<shared_store<_Ty>>>
+	make_shared(
+		size_t __count,
+		_Args &&... __args)
+	requires(std::is_array_v<_Ty>)
+	{
+		return shared_ptr(
+			new_construct_ex<shared_store<_Ty>>(
+				__count * sizeof(std::remove_all_extents_t<_Ty>),
+				__count,
+				std::forward<_Args>(__args)...),
+			deleter_default<shared_store<_Ty>>());
+	}
+	template <typename _Ty, typename ... _Args>
+	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_default<shared_store<_Ty>>>
+	make_shared_aligned(
+		size_t __count,
+		align_val_t __align,
+		_Args &&... __args)
+	requires(std::is_array_v<_Ty>)
+	{
+		return shared_ptr(
+			new_construct_aligned_ex<shared_store<_Ty>>(
+				__count * sizeof(std::remove_all_extents_t<_Ty>),
+				__count,
+				__align,
+				std::forward<_Args>(__args)...),
+			deleter_default<shared_store<_Ty>>());
+	}
+	template <typename _Ty, typename ... _Args>
+	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_default<shared_store<_Ty>>>
+	make_shared_aligned_at(
+		size_t __count,
+		align_val_t __align,
+		_Args &&... __args)
+	requires(std::is_array_v<_Ty>)
+	{
+		return shared_ptr(
+			new_construct_aligned_at_ex<shared_store<_Ty>>(
+				__count * sizeof(std::remove_all_extents_t<_Ty>),
+				__count,
+				__align,
+				std::forward<_Args>(__args)...),
+			deleter_default<shared_store<_Ty>>());
+	}
+
+	/// MEMORY: Shared -> Maker -> Allocator
+	template <typename _Ty, typename _Allocator, typename ... _Args>
+	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_allocator<shared_store<_Ty>, _Allocator>>
+	make_shared(
+		_Allocator& __all,
+		_Args &&... __args)
+	requires(is_allocator_v<_Allocator>
+					 && !std::is_array_v<_Ty>)
+	{
+		return shared_ptr(
+			new_construct<shared_store<_Ty>>(
+				std::forward<_Args>(__args)...),
+			deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
+	}
+	template <typename _Ty, typename _Allocator, typename ... _Args>
+	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_allocator<shared_store<_Ty>, _Allocator>>
+	make_shared_aligned(
+		_Allocator& __all,
+		align_val_t __align,
+		_Args &&... __args)
+	requires(is_allocator_v<_Allocator>
+					 && !std::is_array_v<_Ty>)
+	{
+		return shared_ptr(
+			new_construct_aligned<shared_store<_Ty>>(
+				__align,
+				std::forward<_Args>(__args)...),
+			deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
+	}
+	template <typename _Ty, typename _Allocator, typename ... _Args>
+	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_allocator<shared_store<_Ty>, _Allocator>>
+	make_shared_aligned(
+		_Allocator& __all,
+		align_val_t __align,
+		size_t __offset,
+		_Args &&... __args)
+	requires(is_allocator_v<_Allocator>
+					 && !std::is_array_v<_Ty>)
+	{
+		return shared_ptr(
+			new_construct_aligned_at<shared_store<_Ty>>(
+				__align,
+				__offset,
+				std::forward<_Args>(__args)...),
+			deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
+	}
+
+	/// MEMORY: Shared -> Maker -> Allocator -> Array
+	template <typename _Ty, typename _Allocator, typename ... _Args>
+	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_allocator<shared_store<_Ty>, _Allocator>>
+	make_shared(
+		_Allocator& __all,
+		size_t __count,
+		_Args &&... __args)
+	requires(is_allocator_v<_Allocator>
+					 && std::is_array_v<_Ty>)
+	{
+		return shared_ptr(
+			new_construct_ex<shared_store<_Ty>>(
+				__count * sizeof(std::remove_all_extents_t<_Ty>),
+				__count,
+				std::forward<_Args>(__args)...),
+			deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
+	}
+	template <typename _Ty, typename _Allocator, typename ... _Args>
+	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_allocator<shared_store<_Ty>, _Allocator>>
+	make_shared_aligned(
+		_Allocator& __all,
+		size_t __count,
+		align_val_t __align,
+		_Args &&... __args)
+	requires(is_allocator_v<_Allocator>
+					 && std::is_array_v<_Ty>)
+	{
+		return shared_ptr(
+			new_construct_aligned_ex<shared_store<_Ty>>(
+				__count * sizeof(std::remove_all_extents_t<_Ty>),
+				__count,
+				__align,
+				std::forward<_Args>(__args)...),
+			deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
+	}
+	template <typename _Ty, typename _Allocator, typename ... _Args>
+	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_allocator<shared_store<_Ty>, _Allocator>>
+	make_shared_aligned_at(
+		_Allocator& __all,
+		size_t __count,
+		align_val_t __align,
+		size_t __offset,
+		_Args &&... __args)
+	requires(is_allocator_v<_Allocator>
+					 && std::is_array_v<_Ty>)
+	{
+		return shared_ptr(
+			new_construct_aligned_at_ex<shared_store<_Ty>>(
+				__count * sizeof(std::remove_all_extents_t<_Ty>),
+				__count,
+				__align,
+				__offset,
+				std::forward<_Args>(__args)...),
+			deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
+	}
 }
 
 #endif // !PULSAR_MEMORY_HPP

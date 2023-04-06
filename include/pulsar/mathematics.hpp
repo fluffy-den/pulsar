@@ -16,12 +16,8 @@
 
 // Include: Pulsar
 #include "pulsar/math/algorithm.hpp"
-#include "pulsar/math/geometric.hpp"
 #include "pulsar/math/matrix.hpp"
 #include "pulsar/math/quaternion.hpp"
 #include "pulsar/math/vector.hpp"
-#include "pulsar/math/common_function.hpp"
-
-// TODO: SIMD for mathematics
 
 #endif // PULSAR_MATHEMATICS_HPP

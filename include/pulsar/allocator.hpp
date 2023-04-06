@@ -12,7 +12,7 @@
 #define PULSAR_ALLOCATOR_HPP 1
 
 // Include: Pulsar
-#include "pulsar/heap.hpp"
+#include "pulsar/malloc.hpp"
 #include "pulsar/magnifier.hpp"
 #include "pulsar/utility.hpp"
 

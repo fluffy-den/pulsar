@@ -322,23 +322,30 @@ namespace pul
 
 			/// Retrieve
 			pf_hint_nodiscard __dbg_context_win_t*
-			__retrieve_current_context() pf_attr_noexcept
-			{
-				return &this->buffer_[this_thread::get_id()];
-			}
+			__retrieve_current_context() pf_attr_noexcept;
+
+			/// Terminate
+			void
+			__set_terminate(
+				dbg_terminate_handle_t __handle) pf_attr_noexcept;
+			pf_hint_nodiscard dbg_terminate_handle_t
+			__get_terminate() const pf_attr_noexcept;
+			void
+			__call_terminate() const pf_attr_noexcept;
 
 		private:
 			/// Store
 			__dbg_context_win_t *buffer_;
+			dbg_terminate_handle_t terminate_;
 			HANDLE handle_;
 	};
 
 	/// DEBUG: Win -> StackTrace
-	pf_hint_nodiscard __dbg_stacktrace_t
+	pf_hint_nodiscard __dbg_stacktrace_formatted_t
 	__dbg_capture_stacktrace_win(
 		CONTEXT *__ctx,
 		uint32_t __ignore) pf_attr_noexcept;
-	pf_hint_nodiscard __dbg_stacktrace_t
+	pf_hint_nodiscard __dbg_stacktrace_formatted_t
 	__dbg_retrieve_exception_stacktrace_win() pf_attr_noexcept;
 
 	/// DEBUG: Win -> Convert

@@ -46,41 +46,6 @@ namespace pul
 		return tmp;
 	}
 
-	/// MATH: Determinant
-	/*
-	     __m128 minor0, minor1, minor2, minor3;
-	   __m128 row0, row1, row2, row3;
-	   __m128 det, tmp1;
-	   // temp    = _mm_shuffle_ps (row0, row1, 0x44);
-	   tmp1     = _mm_castsi128_ps(_mm_shuffle_epi32(
-	                                  _mm_castps_si128(row0), 0x44));
-	   // row0    = _mm_shuffle_ps (row0, row1, 0xEE);
-	   row0     = _mm_castsi128_ps(_mm_shuffle_epi32(
-	                                  _mm_castps_si128(row0), 0xEE));
-	   // row1    = _mm_shuffle_ps (temp, row2, 0x44);
-	   row1     = _mm_shuffle_ps (tmp1, row2, 0x44);
-	   // row2    = _mm_shuffle_ps (row2, row3, 0xEE);
-	   row2     = _mm_castsi128_ps(_mm_shuffle_epi32(
-	                                  _mm_castps_si128(row2), 0xEE));
-	 */
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr float64_t pf_alignas_n(_Ty, _Num)
-	determinant(
-		matrix<_Ty, _Num, _Num> const & __m) pf_attr_noexcept
-	{
-		// TODO: https://www.geeksforgeeks.org/determinant-of-a-matrix/
-		return 0.0;
-	}
-
-	/// MATH: Inverse
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr matrix<_Ty, _Num, _Num> pf_alignas_n(_Ty, _Num)
-	inverse(
-		matrix<_Ty, _Num, _Num> const & __m) pf_attr_noexcept
-	{
-		// TODO: inverse of a matrix
-	}
-
 	/// MATH: Cast -> Vector
 	template <typename _ToTy, typename _InTy>
 	pf_hint_nodiscard pf_decl_constexpr _ToTy math_cast(

@@ -20,7 +20,7 @@
 namespace pul
 {
 	/// DEBUG: Win -> Stack Trace
-	pf_hint_nodiscard __dbg_stacktrace_t
+	pf_hint_nodiscard __dbg_stacktrace_formatted_t
 	__dbg_capture_stacktrace_win(
 		CONTEXT *__ctx,
 		uint32_t __ignore) pf_attr_noexcept
@@ -32,7 +32,7 @@ namespace pul
 		if (!SymInitializeW(phdl, nullptr, TRUE))
 		{
 			pf_print(dbg_type::warning, dbg_level::high, "[WIN] SymInitialize failed! process={}", phdl);
-			return { 0, 0 };
+			return { 0, '\0' };
 		}
 
 		// StackFrame
@@ -89,7 +89,8 @@ namespace pul
 		uint32_t cn = DBG_FMT_STACK_FRAMES - __ignore;
 
 		// "Walk" the stacktrace
-		__dbg_stacktrace_t st = { 0 };
+		__dbg_stacktrace_formatted_t st = { 0, '\0' };
+		auto *w													= &st.message[0];
 		while (
 			StackWalk64(
 				machineType, phdl, thdl, &sf, __ctx, nullptr,
@@ -116,13 +117,26 @@ namespace pul
 				SymGetModuleInfo64(phdl, sf.AddrPC.Offset, &m);
 				DWORD ld = 0;
 				SymGetLineFromAddr64(phdl, sf.AddrPC.Offset, &ld, &l);
-				auto *w = &st.trace[DBG_FMT_NAME_LEN * (st.available++)];
-				fmt::format_to(
-					w, "at function={}, in module={} at file={}:{}",
+				const size_t s = fmt::formatted_size(
+					"\nat function={}, in module={} at file={}:{}\n",
 					&as_symbol.Name[0],
 					&m.ModuleName[0],
 					&l.FileName[0] ? &l.FileName[0] : "???",
-					l.LineNumber);
+					l.LineNumber) + 11;
+				if (w + s > &st.message[0] + DBG_FMT_STACKTRACE_MAX_LENGTH)
+				{
+					w = fmt::format_to(w, "\nat ...\n");
+					break;
+				}
+				else
+				{
+					w = fmt::format_to(
+						w, "\tat function={}, in module={} at file={}:{}\n",
+						&as_symbol.Name[0],
+						&m.ModuleName[0],
+						&l.FileName[0] ? &l.FileName[0] : "???",
+						l.LineNumber);
+				}
 				--cn;
 			}
 		}
@@ -131,14 +145,15 @@ namespace pul
 		SymCleanup(phdl);
 
 		// Return
+		st.length = distof(&st.message[0], w);
 		return st;
 	}
-	pf_hint_nodiscard __dbg_stacktrace_t
+	pf_hint_nodiscard __dbg_stacktrace_formatted_t
 	__dbg_retrieve_exception_stacktrace_win() pf_attr_noexcept
 	{
 		return __dbg_capture_stacktrace_win(__internal.dbg_internal.__retrieve_current_context()->exp->ContextRecord, 2);
 	}
-	pf_hint_nodiscard pulsar_api __dbg_stacktrace_t
+	pf_hint_nodiscard pulsar_api __dbg_stacktrace_formatted_t
 	__dbg_retrieve_stacktrace() pf_attr_noexcept
 	{
 		CONTEXT ctx;
@@ -173,7 +188,7 @@ namespace pul
 																					 dbg_styled('E', dbg_style_fg(dbg_color::red)),
 																					 dbg_styled(__cat->name().data(), dbg_style_fg(dbg_color::orange)),
 																					 dbg_styled(__code, dbg_style_fg(dbg_color::red)), dbg_styled(__cat->message(__code).data(), dbg_style_fg(dbg_color::orange)))
-										 + __dbg_formatted_stacktrace_size(st) + fmt::formatted_size("{}\n", __msg.begin()) + 2;// 2 == '\0' + '\n'
+										 + st.length + fmt::formatted_size("{}\n", __msg.begin()) + 2;// 2 == '\0' + '\n'
 
 		// Format
 		dbg_u8string str(s, '\0');
@@ -187,7 +202,7 @@ namespace pul
 												dbg_styled(__code, dbg_style_fg(dbg_color::red)),
 												dbg_styled(__cat->message(__code).data(), dbg_style_fg(dbg_color::orange)));
 		p			 = dbg_u8format_to(p, "{}\n", __msg.begin());
-		p			 = __dbg_format_stacktrace_to(p, st);
+		p			 = __dbg_append_stacktrace_to(p, st);
 		*(p++) = '\n';
 
 		// Print
@@ -227,6 +242,28 @@ namespace pul
 		{
 			pf_print(dbg_type::warning, dbg_level::low, "[WIN] RemoveVectoredExceptionHandler failed for handle={}!", this->handle_);
 		}
+	}
+
+	// Retrieve
+	__dbg_context_win_t*
+	__dbg_internal_t::__retrieve_current_context() pf_attr_noexcept
+	{
+		return &this->buffer_[this_thread::get_id()];
+	}
+
+	// Terminate
+	void __dbg_internal_t::__set_terminate(
+		dbg_terminate_handle_t __handle) pf_attr_noexcept
+	{
+		this->terminate_ = __handle;
+	}
+	dbg_terminate_handle_t __dbg_internal_t::__get_terminate() const pf_attr_noexcept
+	{
+		return this->terminate_;
+	}
+	void __dbg_internal_t::__call_terminate() const pf_attr_noexcept
+	{
+		if (this->terminate_) this->terminate_();
 	}
 
 	/// DEBUG: Win -> Convert
@@ -425,12 +462,12 @@ namespace pul
 		dbg_u8string_view __what)
 	{
 		// Print
-		pf_print(dbg_type::info, dbg_level::high, "[WIN] catch(std::exception const&) unhandled exception of category={}, code={}, message={}",
+		pf_print(dbg_type::info, dbg_level::high, "[WIN] Caught unhandled exception of category={}, code={}, message={}",
 						 __cat->name().data(), __code, __what.data());
 		auto st	 = __dbg_retrieve_stacktrace();
-		size_t s = __dbg_formatted_stacktrace_size(st);
+		size_t s = st.length;
 		dbg_u8string str(s, '\0');
-		__dbg_format_stacktrace_to(str.begin(), st);
+		__dbg_append_stacktrace_to(str.begin(), st);
 		dbg_log(std::move(str));
 		pf_print(dbg_type::info, dbg_level::high, "[WIN] Generating dumpbin...");
 
@@ -505,9 +542,10 @@ namespace pul
 		}
 
 		/// Hook
-		// TODO: Hook
+		__internal.dbg_internal.__call_terminate();
 
 		/// Abort
+		process_tasks();// Write down messages
 		std::abort();
 	}
 
@@ -522,8 +560,6 @@ namespace pul
 		auto *c = __internal.dbg_internal.__retrieve_current_context();
 		c->exp = __ctx->exp;
 		c->ID	 = __ctx->ID;
-
-		// TODO: Not called!
 
 		// Rethrow exception. Since it's thrown inside a try - catch block, it'll
 		// be destroyed only if it exit it, unblocking the throwing thread.

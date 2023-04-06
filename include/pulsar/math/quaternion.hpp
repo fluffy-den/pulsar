@@ -23,6 +23,7 @@ namespace pul
 	class quaternion
 	{
 	public:
+	// TODO
 
 	private:
 		_Ty scalar_;

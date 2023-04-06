@@ -19,10 +19,10 @@
 #include "pulsar/algorithm.hpp"
 
 // Include: Pulsar -> Iterable
-#include "pulsar/iterable/view.hpp"
 #include "pulsar/iterable/array.hpp"
 #include "pulsar/iterable/sequence.hpp"
-#include "pulsar/iterable/queue.hpp"
+#include "pulsar/iterable/lifo.hpp"
 #include "pulsar/iterable/list.hpp"
+#include "pulsar/iterable/hash_map.hpp"
 
 #endif // !PULSAR_CONTAINER_HPP

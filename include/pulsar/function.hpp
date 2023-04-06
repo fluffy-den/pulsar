@@ -432,8 +432,8 @@ namespace pul
 		typename _Signature = typename __fun_helper<decltype(&_Functor::operator())>::type>
 	fun_buf(_Functor)->fun_buf<_Signature>;
 
-
-	// TODO: function signals
+	// TODO: fun in
+	// TODO: fun out
 }
 
 

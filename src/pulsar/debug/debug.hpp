@@ -13,8 +13,8 @@
 
 // Include: Pulsar
 #include "pulsar/allocator.hpp"
+#include "pulsar/malloc.hpp"
 #include "pulsar/memory.hpp"
-#include "pulsar/heap.hpp"
 #include "pulsar/chrono.hpp"
 
 // Include: Pulsar -> Src

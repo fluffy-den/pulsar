@@ -135,21 +135,11 @@ namespace pul
 		pf_hint_nodiscard pf_decl_constexpr _Ty &
 		operator[](size_t __index) pf_attr_noexcept
 		{
-			// if(pf_unlikely(__index >= _Num))
-			// throw(exception(
-			// 				exception_std(),
-			// 				err_std::invalid_argument,
-			// 				"__index out of bound!"));// TODO: pf_throw
 			return this->store_[__index];
 		}
 		pf_hint_nodiscard pf_decl_constexpr const _Ty &
 		operator[](size_t __index) const pf_attr_noexcept
 		{
-			// if(pf_unlikely(__index >= _Num))
-			// throw(exception(
-			// 				exception_std(),
-			// 				err_std::invalid_argument,
-			// 				"__index out of bound!"));// TODO: pf_throw
 			return this->store_[__index];
 		}
 

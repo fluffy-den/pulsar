@@ -11,6 +11,66 @@
 #ifndef PULSAR_UTF8_HPP
 #define PULSAR_UTF8_HPP 1
 
-// TODO: UTF8
+// Include: Pulsar
+#include "pulsar/pulsar.hpp"
+#include "pulsar/debug.hpp"
+
+// Pulsar
+namespace pul
+{
+	// https://github.com/DuffsDevice/tiny-utf8/blob/master/include/tinyutf8/tinyutf8.h
+
+	/// UTF8: Iterator
+	template <typename _StringTy>
+	class u8iterator
+	{
+	// TODO
+	};
+
+	/// UTF8: String
+	template <
+		typename _Magnifier,
+		typename _Allocator>
+	class u8string
+	{
+	// TODO
+	};
+	template <typename ... _Args>
+	using u8string_format = fmt::format_string<_Args...>;
+
+	/// UTF8: Utilities
+	// TODO
+
+	/// UTF8: Format
+	template <typename ... _Args>
+	pf_hint_nodiscard u8string<magnifier_default, allocator_default>
+	u8format(
+		u8string_format<_Args...> __fmt,
+		_Args && ... __args) pf_attr_noexcept
+	{
+		// TODO
+	}
+	template <
+		typename _IteratorTy,
+		typename ... _Args>
+	pf_hint_nodiscard _IteratorTy
+	u8format_to(
+		_IteratorTy __w,
+		u8string_format<_Args...> __fmt,
+		_Args && ... __args) pf_attr_noexcept
+	{
+		// TODO
+	}
+
+	/// UTF8: File -> Stream
+
+	/// UTF8: File -> Path
+
+	/// UTF8: File -> Iterator
+
+	/// UTF8: File -> Package
+
+	/// UTF8: File -> Listener
+}
 
 #endif // !PULSAR_UTF8_HPP

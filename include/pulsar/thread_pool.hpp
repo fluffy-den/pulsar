@@ -15,11 +15,11 @@
 #include "pulsar/concurrency.hpp"
 #include "pulsar/tuple.hpp"
 #include "pulsar/function.hpp"
+#include "pulsar/malloc.hpp"
 #include "pulsar/memory.hpp"
 #include "pulsar/utility.hpp"
 #include "pulsar/intrin.hpp"
 #include "pulsar/iterable.hpp"
-#include "pulsar/cache.hpp"
 
 // Pulsar
 namespace pul

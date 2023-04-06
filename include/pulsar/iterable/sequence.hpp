@@ -17,7 +17,9 @@
 // Pulsar
 namespace pul
 {
-	// TODO: Sequence
+	/// SEQUENCE:
+
+	/// SEQUENCE: View
 }
 
 #endif // !PULSAR_SEQUENCE_HPP

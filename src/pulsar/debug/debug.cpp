@@ -72,26 +72,24 @@ namespace pul
 	}
 
 	/// DEBUG: Stacktrace
-	pf_hint_nodiscard pulsar_api size_t
-	__dbg_formatted_stacktrace_size(
-		__dbg_stacktrace_t const &__st) pf_attr_noexcept
-	{
-		size_t c = 0;
-		for (size_t i = 0; i < __st.available; ++i)
-		{
-			c += strlen(&__st.trace[DBG_FMT_NAME_LEN * i]) + 2;
-		}
-		return c;
-	}
 	pf_hint_nodiscard pulsar_api char_t*
-	__dbg_format_stacktrace_to(
+	__dbg_append_stacktrace_to(
 		char_t *__w,
-		__dbg_stacktrace_t const &__st) pf_attr_noexcept
+		__dbg_stacktrace_formatted_t const &__st) pf_attr_noexcept
 	{
-		for (size_t i = 0; i < __st.available; ++i)
-		{
-			__w = fmt::format_to(__w, "\t{}\n", &__st.trace[DBG_FMT_NAME_LEN * i]);
-		}
-		return __w;
+		return fmt::format_to(__w, "{}", &__st.message[0]);
+	}
+
+	/// DEBUG: Terminate
+	pulsar_api void
+	dbg_set_terminate_handle(
+		dbg_terminate_handle_t __handle) pf_attr_noexcept
+	{
+		__internal.dbg_internal.__set_terminate(__handle);
+	}
+	pf_hint_nodiscard pulsar_api dbg_terminate_handle_t
+	dbg_get_terminate_handle() pf_attr_noexcept
+	{
+		return __internal.dbg_internal.__get_terminate();
 	}
 }

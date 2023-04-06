@@ -13,8 +13,7 @@
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
-#include "pulsar/heap.hpp"
-#include "pulsar/cache.hpp"
+#include "pulsar/malloc.hpp"
 #include "pulsar/function.hpp"
 #include "pulsar/chrono.hpp"
 #include "pulsar/concurrency.hpp"
@@ -552,7 +551,7 @@ namespace dbg_flags
 	{
 		// Format
 		dbg_u8string str(fmt::formatted_size(__fmt, std::forward<_Args>(__args)...), '\0');
-		fmt::format_to(str.data(), __fmt, std::forward<_Args>(__args)...);
+		dbg_u8format_to(str.data(), __fmt, std::forward<_Args>(__args)...);
 
 		// Return
 		return str;
@@ -624,20 +623,17 @@ namespace dbg_flags
 		char_t *__w) pf_attr_noexcept;
 
 	/// DEBUG: StackTrace
-	struct __dbg_stacktrace_t	// TODO: __dbg_stacktrace_formatted_message_t
+	struct __dbg_stacktrace_formatted_t
 	{
-		size_t available;
-		char_t trace[DBG_FMT_NAME_LEN * DBG_FMT_STACK_FRAMES];
+		size_t length;
+		char_t message[DBG_FMT_STACKTRACE_MAX_LENGTH];
 	};
-	pf_hint_nodiscard pulsar_api __dbg_stacktrace_t
+	pf_hint_nodiscard pulsar_api __dbg_stacktrace_formatted_t
 	__dbg_retrieve_stacktrace() pf_attr_noexcept;
-	pf_hint_nodiscard pulsar_api size_t
-	__dbg_formatted_stacktrace_size(
-		__dbg_stacktrace_t const &__st) pf_attr_noexcept;
 	pulsar_api char_t*
-	__dbg_format_stacktrace_to(
+	__dbg_append_stacktrace_to(
 		char_t *__w,
-		__dbg_stacktrace_t const &__st) pf_attr_noexcept;
+		__dbg_stacktrace_formatted_t const &__st) pf_attr_noexcept;
 
 	/// DEBUG: Print
 	template <typename ... _Args>
@@ -698,8 +694,8 @@ namespace dbg_flags
 			dbg_u8string prt(s, '\0');
 			auto *p = prt.begin();
 			p			 = __dbg_format_chrono_to(p);
-			p			 = fmt::format_to(p, " /{}/ /{}/ message=", fmt::styled(union_cast<char_t>(__type), __type == dbg_type::info ? fmt::fg(fmt::color::sky_blue) : fmt::fg(fmt::color::orange_red)), fmt::styled(lvl, style));
-			p			 = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
+			p			 = dbg_u8format_to(p, " /{}/ /{}/ message=", fmt::styled(union_cast<char_t>(__type), __type == dbg_type::info ? fmt::fg(fmt::color::sky_blue) : fmt::fg(fmt::color::orange_red)), fmt::styled(lvl, style));
+			p			 = dbg_u8format_to(p, __fmt, std::forward<_Args>(__args)...);
 			*(p++) = '\n';
 			dbg_log(std::move(prt));
 		}
@@ -738,24 +734,37 @@ namespace dbg_flags
 		auto ID = this_thread::get_id();
 
 		// Size
-		const size_t s = DBG_FMT_WRITE_OFFSET + fmt::formatted_size(" T={} /{}/ message=", ID, fmt::styled('A', fmt::fg(fmt::color::orange) | fmt::bg(fmt::color::black))) + fmt::formatted_size(__fmt, std::forward<_Args>(__args)...) + __dbg_formatted_stacktrace_size(st);
+		const size_t s = DBG_FMT_WRITE_OFFSET + fmt::formatted_size(" T={} /{}/ message=", ID, fmt::styled('A', fmt::fg(fmt::color::orange) | fmt::bg(fmt::color::black))) + fmt::formatted_size(__fmt, std::forward<_Args>(__args)...) + st.length;
 
 		// Format
 		dbg_u8string str(s, '\0');
 		char_t *p = str.data();
 		p	 = __dbg_format_chrono_to(p);
-		p	 = fmt::format_to(p, " T={} /{}/ message=", ID, fmt::styled('A', fmt::fg(fmt::color::orange) | fmt::bg(fmt::color::black)));
-		p	 = fmt::format_to(p, __fmt, std::forward<_Args>(__args)...);
+		p	 = dbg_u8format_to(p, " T={} /{}/ message=", ID, fmt::styled('A', fmt::fg(fmt::color::orange) | fmt::bg(fmt::color::black)));
+		p	 = dbg_u8format_to(p, __fmt, std::forward<_Args>(__args)...);
 		*p = '\n';
 		++p;
-		p = __dbg_format_stacktrace_to(p, st);
+		p = __dbg_append_stacktrace_to(p, st);
 
 		// Return
 		return str;
 	}
 
 	/// DEBUG: Utility
-	pf_hint_noreturn pf_decl_static pf_decl_inline void __dbg_throw(
+	/*! @brief This function throws a dbg_exception with details provided in the
+	 *  arguments.
+	 *
+	 *  @param[in] __cat   A pointer to a debug category instance.
+	 *  @param[in] __code  An error code value.
+	 * 	@param[in] __flags (optional) Additionnal parameters for the exception.
+	 *                     See dbg_flags.
+	 *  @param[in] __msg   Message
+	 *
+	 *  @note no return (optimized)
+	 *  @note thread safe
+	 */
+	pf_hint_noreturn pf_decl_static pf_decl_inline void
+	__dbg_throw(
 		dbg_category const *__cat,
 		uint32_t __code,
 		uint32_t __flags,
@@ -763,12 +772,45 @@ namespace dbg_flags
 	{
 		throw(dbg_exception(__cat, __code, __flags, std::move(__msg)));
 	}
-	pf_hint_noreturn pf_decl_static pf_decl_inline void __dbg_assert(
+	/*! @brief This function will take a dbg_u8string as an input and prints it
+	 *  on the standard output then the program aborts.
+	 *
+	 *  @param[in] __msg The message to log with the assertion.
+	 *
+	 *  @note no return (optimized)
+	 *  @note thread safe
+	 */
+	pf_hint_noreturn pf_decl_static pf_decl_inline void
+	__dbg_assert(
 		dbg_u8string&& __msg) pf_attr_noexcept
 	{
 		dbg_log(std::move(__msg));
 		std::abort();
 	}
+
+	/// DEBUG: Terminate
+	// Handle Type
+	using dbg_terminate_handle_t = fun_ptr<void (void)>;
+
+	/*! @brief This function is used to set a `dbg_terminate_handle_t` as the
+	 *  current handle for termination.
+	 *
+	 *  @param[in] __handle The handle for termination.
+	 */
+	pulsar_api void
+	dbg_set_terminate_handle(
+		dbg_terminate_handle_t __handle) pf_attr_noexcept;
+	/*! @brief This function is used to get the current handle for termination.
+	 *
+	 *  @return A `dbg_terminate_handle_t` that holds the current handle for
+	 *  termination.
+	 */
+	pf_hint_nodiscard pulsar_api dbg_terminate_handle_t
+	dbg_get_terminate_handle() pf_attr_noexcept;
+	/*! @brief This function is used to terminate the process.
+	 */
+	pf_hint_noreturn pulsar_api void
+	dbg_terminate() pf_attr_noexcept;
 }
 
 #define pf_print(...) pul::__dbg_print(__VA_ARGS__)

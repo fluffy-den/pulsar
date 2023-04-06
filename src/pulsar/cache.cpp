@@ -19,9 +19,12 @@ namespace pul
 	calloc(
 		size_t __size,
 		align_val_t __align,
-		size_t __offset) pf_attr_noexcept
+		size_t __offset)
 	{
-		return __internal.cache.allocate(__size, __align, __offset);
+		void *p = __internal.cache.allocate(__size, __align, __offset);
+		if (pf_unlikely(!p))
+			pf_throw(dbg_category_generic(), dbg_code::bad_alloc, dbg_flags::dump_with_data_segs | dbg_flags::dump_with_handle_data, "No more cache!");
+		return p;
 	}
 	void
 	cfree(

@@ -28,15 +28,20 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 [o] all_tests
 
 # thread_pool.hpp
-[o] exception_handling_test
+[o] exception_handling_test (May need some more stability tests)
 [o] stability_test
 [o] benchmarks
 
 ### Iterable ### (0.6)
 [x] sequence
-[x] list
+[x] singly_linked_list
+[x] doubly_linked_list
 [x] hash_map
+[x] flat_hash_map
 [x] xxhash
+
+[x] RAII improvements
+[x] constexpr memory header size
 
 [x] all_tests
 
@@ -53,7 +58,7 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 [x] file_handle
 [x] file_iterator
 [x] file_functions
-[x] file_package (.zip reformat)
+[x] file_package (.zip reformat) (zlib)
 [x] file_listener
 
 [x] all_tests
@@ -72,3 +77,9 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 [x] Projections
 [x] Transformations
 [x] Camera
+
+### ECS + Reflection ### 0.13
+[x] Entity
+[x] Components
+[x] Reflection
+[x] Multithreading
