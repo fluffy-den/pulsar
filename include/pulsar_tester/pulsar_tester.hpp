@@ -353,7 +353,7 @@ class __pt_generate_pack_type(name)                                     \
 	: public pul::__tester_pack                                           \
 {                                                                       \
 public:                                                                 \
-  __pt_generate_pack_type(name)() pf_attr_noexcept                      \ 
+  __pt_generate_pack_type(name)() pf_attr_noexcept                      \
     : pul::__tester_pack(__pt_generate_pack_name(name))                 \
   {}                                                                    \
 };                                                                      \
@@ -366,7 +366,7 @@ namespace
 #define __pt_generate_benchmark_type(name) pf_concatenate(pf_concatenate(__pt_benchmark_, name), _t)
 #define __pt_generate_benchmark_instance_name(name) __pt_generate_benchmark_type(name) pf_concatenate(pf_concatenate(__pt_benchmark_, name), _instance)
 
-#define pt_benchmark(name, bvn, ...)                                           \  
+#define pt_benchmark(name, bvn, ...)                                           \
 class __pt_generate_benchmark_type(name)									                     \
 	: public pul::__tester_benchmark                                             \
 {																													                     \

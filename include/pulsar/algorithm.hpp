@@ -17,258 +17,9 @@
 // Pulsar
 namespace pul
 {
-
-	/// UTILITY: Begin
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr typename _Iterable::iterator_t
-	begin(
-		_Iterable &__r) pf_attr_noexcept
-	requires(is_iterable_v<_Iterable>)
-	{
-		return __r.begin();
-	}
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr typename _Iterable::const_iterator_t
-	begin(
-		_Iterable const &__r) pf_attr_noexcept
-	requires(is_const_iterable_v<_Iterable>)
-	{
-		return __r.begin();
-	}
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr typename _Iterable::const_iterator_t
-	cbegin(
-		_Iterable const &__r) pf_attr_noexcept
-	requires(is_const_iterable_v<_Iterable>)
-	{
-		return __r.cbegin();
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr iterator<_Ty>
-	begin(
-		_Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return &__arr[0];
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr const_iterator<_Ty>
-	begin(
-		const _Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return &__arr[0];
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr const_iterator<_Ty>
-	cbegin(
-		_Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return &__arr[0];
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr const_iterator<_Ty>
-	cbegin(
-		const _Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return &__arr[0];
-	}
-
-	/// UTILITY: End
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr typename _Iterable::iterator_t
-	end(
-		_Iterable &__r) pf_attr_noexcept
-	requires(is_iterable_v<_Iterable>)
-	{
-		return __r.end();
-	}
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr typename _Iterable::const_iterator_t
-	end(
-		_Iterable const &__r) pf_attr_noexcept
-	requires(is_const_iterable_v<_Iterable>)
-	{
-		return __r.end();
-	}
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr typename _Iterable::const_iterator_t
-	cend(
-		_Iterable const &__r) pf_attr_noexcept
-	requires(is_const_iterable_v<_Iterable>)
-	{
-		return __r.cend();
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr iterator<_Ty>
-	end(
-		_Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return (&__arr[0] + _Num);
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr const_iterator<_Ty>
-	end(
-		const _Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return (&__arr[0] + _Num);
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr const_iterator<_Ty>
-	cend(
-		_Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return (&__arr[0] + _Num);
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr const_iterator<_Ty>
-	cend(
-		const _Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return (&__arr[0] + _Num);
-	}
-
-	/// UTILITY: Reverse Begin
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr typename _Iterable::reverse_iterator_t
-	rbegin(
-		_Iterable &__r) pf_attr_noexcept
-	requires(is_reverse_iterable_v<_Iterable>)
-	{
-		return __r.rbegin();
-	}
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr typename _Iterable::const_reverse_iterator_t
-	rbegin(
-		_Iterable const &__r) pf_attr_noexcept
-	requires(is_const_reverse_iterable_v<_Iterable>)
-	{
-		return __r.rbegin();
-	}
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr typename _Iterable::const_reverse_iterator_t
-	crbegin(
-		_Iterable const &__r) pf_attr_noexcept
-	requires(is_const_reverse_iterable_v<_Iterable>)
-	{
-		return __r.crbegin();
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr reverse_iterator<iterator<_Ty>>
-	rbegin(
-		_Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return (&__arr[0] + (_Num - 1));
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr reverse_iterator<const_iterator<_Ty>>
-	rbegin(
-		const _Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return (&__arr[0] + (_Num - 1));
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr reverse_iterator<const_iterator<_Ty>>
-	crbegin(
-		_Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return const_reverse_iterator(&__arr[0] + (_Num - 1));
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr reverse_iterator<const_iterator<_Ty>>
-	crbegin(
-		const _Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return (&__arr[0] + (_Num - 1));
-	}
-
-	/// UTILITY: Reverse End
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr typename _Iterable::reverse_iterator_t
-	rend(
-		_Iterable &__r) pf_attr_noexcept
-	requires(is_reverse_iterable_v<_Iterable>)
-	{
-		return __r.rend();
-	}
-
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr typename _Iterable::const_reverse_iterator_t
-	rend(
-		_Iterable const &__r) pf_attr_noexcept
-	requires(is_const_reverse_iterable_v<_Iterable>)
-	{
-		return __r.rend();
-	}
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr typename _Iterable::const_reverse_iterator_t
-	crend(
-		_Iterable const &__r) pf_attr_noexcept
-	requires(is_const_reverse_iterable_v<_Iterable>)
-	{
-		return __r.crend();
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr reverse_iterator<iterator<_Ty>>
-	rend(
-		_Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return (&__arr[0] - 1);
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr reverse_iterator<const_iterator<_Ty>>
-	rend(
-		const _Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return (&__arr[0] - 1);
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr reverse_iterator<const_iterator<_Ty>>
-	crend(
-		_Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return (&__arr[0] - 1);
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr reverse_iterator<const_iterator<_Ty>>
-	crend(
-		const _Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return (&__arr[0] - 1);
-	}
-
-	/// UTILITY: Data
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr typename _Iterable::value_t*
-	data(
-		_Iterable &__r) pf_attr_noexcept
-	requires(is_mappable_v<_Iterable>)
-	{
-		return __r.data();
-	}
-	template <typename _Iterable>
-	pf_hint_nodiscard pf_decl_constexpr const typename _Iterable::value_t*
-	data(
-		_Iterable const &__r) pf_attr_noexcept
-	requires(is_mappable_v<_Iterable>)
-	{
-		return __r.data();
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr _Ty*
-	data(
-		_Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return &__arr[0];
-	}
-	template <typename _Ty, size_t _Num>
-	pf_hint_nodiscard pf_decl_constexpr const _Ty*
-	data(
-		const _Ty (&__arr)[_Num]) pf_attr_noexcept
-	{
-		return &__arr[0];
-	}
-
 	/// ALGORITHM:: Swap
-	template <typename _Ty>
+	template <
+		typename _Ty>
 	pf_decl_constexpr void swap(
 		_Ty &__l,
 		_Ty &__r) pf_attr_noexcept
@@ -278,7 +29,8 @@ namespace pul
 		__l = std::move(__r);
 		__r = std::move(tmp);
 	}
-	template <typename _Iterable>
+	template <
+		typename _Iterable>
 	pf_decl_constexpr void swap(
 		_Iterable &__l,
 		_Iterable &__r) pf_attr_noexcept
@@ -288,7 +40,9 @@ namespace pul
 	}
 
 	/// ALGORITHM:: Copy
-	template <typename _IteratorIn, typename _IteratorOut>
+	template <
+		typename _IteratorIn,
+		typename _IteratorOut>
 	pf_decl_constexpr void copy_forward(
 		_IteratorIn __beg,
 		_IteratorIn __end,
@@ -298,7 +52,9 @@ namespace pul
 	{
 		for (; __beg != __end; ++__beg, ++__dst) *__dst = *__beg;
 	}
-	template <typename _IteratorIn, typename _IteratorOut>
+	template <
+		typename _IteratorIn,
+		typename _IteratorOut>
 	pf_decl_constexpr void copy_reverse(_IteratorIn __beg, _IteratorIn __end,
 																			_IteratorOut __dst)
 	requires(is_iterator_v<_IteratorIn>
@@ -309,7 +65,9 @@ namespace pul
 		__dst += countof(__beg, __end);
 		for (; __end != __beg; --__end, --__dst) *__dst = *__end;
 	}
-	template <typename _IteratorIn, typename _IteratorOut>
+	template <
+		typename _IteratorIn,
+		typename _IteratorOut>
 	pf_decl_constexpr void copy(
 		_IteratorIn __beg,
 		_IteratorIn __end,
@@ -326,7 +84,9 @@ namespace pul
 			copy_forward(__beg, __end, __dst);
 		}
 	}
-	template <typename _IteratorIn, typename _IteratorOut>
+	template <
+		typename _IteratorIn,
+		typename _IteratorOut>
 	pf_decl_constexpr void copy(
 		_IteratorIn __beg,
 		_IteratorIn __end,
@@ -338,7 +98,9 @@ namespace pul
 	}
 
 	/// ALGORITHM:: Move
-	template <typename _IteratorIn, typename _IteratorOut>
+	template <
+		typename _IteratorIn,
+		typename _IteratorOut>
 	pf_decl_constexpr void move_forward(
 		_IteratorIn __beg,
 		_IteratorIn __end,
@@ -347,7 +109,9 @@ namespace pul
 	{
 		for (; __beg != __end; ++__beg, ++__dst) *__dst = std::move(*__beg);
 	}
-	template <typename _IteratorIn, typename _IteratorOut>
+	template <
+		typename _IteratorIn,
+		typename _IteratorOut>
 	pf_decl_constexpr void move_reverse(
 		_IteratorIn __beg,
 		_IteratorIn __end,
@@ -359,7 +123,9 @@ namespace pul
 		__dst += distof(__beg, __end);
 		for (; __end != __beg; --__end, --__dst) __dst = std::move(*__beg);
 	}
-	template <typename _IteratorIn, typename _IteratorOut>
+	template <
+		typename _IteratorIn,
+		typename _IteratorOut>
 	pf_decl_constexpr void move(
 		_IteratorIn __beg,
 		_IteratorIn __end,
@@ -374,7 +140,8 @@ namespace pul
 	}
 
 	/// ALGORITHM: Fill
-	template <typename _IteratorOut>
+	template <
+		typename _IteratorOut>
 	pf_decl_constexpr void fill(
 		_IteratorOut __beg,
 		_IteratorOut __end,
@@ -384,29 +151,10 @@ namespace pul
 		for (; __beg != __end; ++__beg) *__beg = __val;
 	}
 
-	/// ALGORITHM: Dist
-	template <typename _Ty>
-	pf_hint_nodiscard pf_decl_constexpr diff_t
-	diffof(
-		const _Ty *__beg,
-		const _Ty *__end) pf_attr_noexcept
-	{
-		return union_cast<diff_t>(__end) - union_cast<diff_t>(__beg);
-	}
-	template <typename _Ty>
+	/// ALGORITHM: Distance Of
+	template <
+		typename _IteratorIn>
 	pf_hint_nodiscard pf_decl_constexpr size_t
-	distof(
-		const _Ty *__beg,
-		const _Ty *__end) pf_attr_noexcept
-	{
-		if (pf_likely(__end >= __beg))
-		{
-			return union_cast<size_t>(__end) - union_cast<size_t>(__beg);
-		}
-		return union_cast<size_t>(__beg) - union_cast<size_t>(__end);
-	}
-	template <typename _IteratorIn>
-	pf_hint_nodiscard pf_decl_constexpr pf_decl_inline size_t
 	distof(
 		_IteratorIn __beg,
 		_IteratorIn __end) pf_attr_noexcept
@@ -416,7 +164,8 @@ namespace pul
 	}
 
 	/// ALGORITHM: Count
-	template <typename _IteratorIn>
+	template <
+		typename _IteratorIn>
 	pf_hint_nodiscard pf_decl_constexpr size_t
 	countof(
 		_IteratorIn __beg,
@@ -430,7 +179,8 @@ namespace pul
 		}
 		return c;
 	}
-	template <typename _IteratorIn>
+	template <
+		typename _IteratorIn>
 	pf_hint_nodiscard pf_decl_constexpr size_t
 	countof(
 		_IteratorIn __beg,
@@ -441,63 +191,54 @@ namespace pul
 	}
 
 	/// ALGORITHM: Search
-	template <typename _IteratorIn1, typename _IteratorIn2>
-	pf_hint_nodiscard pf_decl_constexpr _IteratorIn1 search(
-		_IteratorIn1 __ib,
-		_IteratorIn1 __eb,
-		_IteratorIn2 __ob,
-		_IteratorIn2 __oe) pf_attr_noexcept
-	{
-		while (1) {
-			_IteratorIn1 it = __ib;
-			for (_IteratorIn2 k = __ob; *it != *k; ++it, ++k) {
-				if (k == __oe)
-					return __ib;
-				if (it == __eb)
-					return __eb;
-			}
-			++__ib;
-		}
-		return __oe;
-	}
-	template <typename _IteratorIn1, typename _IteratorIn2,
-						typename _BinaryPredicate>
-	pf_hint_nodiscard pf_decl_constexpr _IteratorIn1
-	search(
-		_IteratorIn1 __ib,
-		_IteratorIn1 __eb,
-		_IteratorIn2 __ob,
-		_IteratorIn2 __oe,
-		_BinaryPredicate &&__p) pf_attr_noexcept
-	{
-		while (1) {
-			_IteratorIn1 it = __ib;
-			for (_IteratorIn2 k = __ob; *it != __p(*it, *k); ++it, ++k) {
-				if (k == __oe)
-					return __ib;
-				if (it == __eb)
-					return __eb;
-			}
-			++__ib;
-		}
-		return __oe;
-	}
-
-	/// ALGORITHM: Find
 	template <
-		typename _IteratorIn,
-		typename _Predicate>
-	pf_hint_nodiscard pf_decl_constexpr _IteratorIn find(
-		_IteratorIn __beg,
-		_IteratorIn __end,
-		_Predicate  &&__p) pf_attr_noexcept
+		typename _IteratorInA,
+		typename _IteratorInB>
+	pf_hint_nodiscard pf_decl_constexpr _IteratorInA search(
+		_IteratorInA __ib,
+		_IteratorInA __eb,
+		_IteratorInB __ob,
+		_IteratorInB __oe) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorInA>
+					 && is_iterator_v<_IteratorInB>)
 	{
-		for (; __beg != __end; ++__beg) {
-			if (__p(*__beg)) {
-				return __beg;
+		while (1) {
+			_IteratorInA it = __ib;
+			for (_IteratorInB k = __ob; *it != *k; ++it, ++k)
+			{
+				if (k == __oe)
+					return __ib;
+				if (it == __eb)
+					return __eb;
 			}
+			++__ib;
 		}
-		return __end;
+	}
+	template <
+		typename _IteratorInA,
+		typename _IteratorInB,
+		typename _BinaryPredicate>
+	pf_hint_nodiscard pf_decl_constexpr _IteratorInA
+	search(
+		_IteratorInA __ib,
+		_IteratorInA __eb,
+		_IteratorInB __ob,
+		_IteratorInB __oe,
+		_BinaryPredicate &&__p) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorInA>
+					 && is_iterator_v<_IteratorInB>)
+	{
+		while (1) {
+			_IteratorInA it = __ib;
+			for (_IteratorInB k = __ob; *it != __p(*it, *k); ++it, ++k)
+			{
+				if (k == __oe)
+					return __ib;
+				if (it == __eb)
+					return __eb;
+			}
+			++__ib;
+		}
 	}
 
 	/// ALGORITHM: Accumulate
@@ -508,6 +249,7 @@ namespace pul
 		_IteratorIn __beg,
 		_IteratorIn __end,
 		_Ty __val) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorIn>)
 	{
 		for (; __beg != __end; ++__beg) {
 			__val = std::move(__val) + *__beg;
@@ -522,6 +264,7 @@ namespace pul
 		_IteratorIn __beg,
 		_IteratorIn __end, _Ty __val,
 		_BinaryOperation &&__p) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorIn>)
 	{
 		for (; __beg != __end; ++__beg) {
 			__val = __p(std::move(__val), *__beg);
@@ -532,14 +275,16 @@ namespace pul
 	/// ALGORITHM: Transform
 	template <
 		typename _IteratorIn,
-		typename _OutIterator,
+		typename _IteratorOut,
 		typename _UnaryOperation>
-	pf_hint_nodiscard pf_decl_constexpr _OutIterator
+	pf_hint_nodiscard pf_decl_constexpr _IteratorOut
 	transform(
 		_IteratorIn __ib,
 		_IteratorIn __ie,
-		_OutIterator __ob,
+		_IteratorOut __ob,
 		_UnaryOperation &&__op) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorIn>
+					 && is_iterator_v<_IteratorOut>)
 	{
 		while (__ib != __ie) {
 			*__ob++ = __op(*__ib++);
@@ -548,15 +293,17 @@ namespace pul
 	}
 	template <
 		typename _IteratorIn,
-		typename _OutIterator,
+		typename _IteratorOut,
 		typename _BinaryOperation>
-	pf_hint_nodiscard pf_decl_constexpr _OutIterator
+	pf_hint_nodiscard pf_decl_constexpr _IteratorOut
 	transform(
 		_IteratorIn __i1b,
 		_IteratorIn __ie,
 		_IteratorIn __i2b,
-		_OutIterator __eb,
+		_IteratorOut __eb,
 		_BinaryOperation &&__op)  pf_attr_noexcept
+	requires(is_iterator_v<_IteratorIn>
+					 && is_iterator_v<_IteratorOut>)
 	{
 		while (__i1b != __ie) {
 			*__eb++ = __op(*__i1b++, *__i2b++);
@@ -573,8 +320,24 @@ namespace pul
 		_IteratorInA __ba,
 		_IteratorInA __ea,
 		_IteratorInB __bb) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorInA>
+					 && is_iterator_v<_IteratorInB>)
 	{
-		for (; __ba != __ea; ++__ba) if (*__ba != *__bb) return false;
+		for (; __ba != __ea; ++__ba, ++__bb) if (*__ba != *__bb) return false;
+		return true;
+	}
+	template <
+		typename _IteratorInA,
+		typename _Uy>
+	pf_hint_nodiscard pf_decl_constexpr bool
+	equal(
+		_IteratorInA __ba,
+		_IteratorInA __ea,
+		_Uy const &__val)
+	requires(is_iterator_v<_IteratorInA>
+					 && !is_iterator_v<_Uy>)// TODO: is_equality_comparable_v<_IteratorInA, _Uy>
+	{
+		for (; __ba != __ea; ++__ba) if (*__ba != __val) return false;
 		return true;
 	}
 	template <
@@ -585,8 +348,23 @@ namespace pul
 		_IteratorInA __ba,
 		_IteratorInA __ea,
 		_IteratorInB __bb) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorInA>
+					 && is_iterator_v<_IteratorInB>)
 	{
 		return !equal(__ba, __ea, __bb);
+	}
+	template <
+		typename _IteratorInA,
+		typename _Uy>
+	pf_hint_nodiscard pf_decl_constexpr bool
+	not_equal(
+		_IteratorInA __ba,
+		_IteratorInA __ea,
+		_Uy const &__val)
+	requires(is_iterator_v<_IteratorInA>
+					 && !is_iterator_v<_Uy>)// TODO: is_equality_comparable_v<_IteratorInA, _Uy>
+	{
+		return !equal(__ba, __ea, __val);
 	}
 	template <
 		typename _IteratorInA,
@@ -596,8 +374,24 @@ namespace pul
 		_IteratorInA __ba,
 		_IteratorInA __ea,
 		_IteratorInB __bb) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorInA>
+					 && is_iterator_v<_IteratorInB>)
 	{
-		for (; __ba != __ea; ++__ba) if (*__ba <= *__bb) return false;
+		for (; __ba != __ea; ++__ba, ++__bb) if (*__ba <= *__bb) return false;
+		return true;
+	}
+	template <
+		typename _IteratorInA,
+		typename _Uy>
+	pf_hint_nodiscard pf_decl_constexpr bool
+	greater(
+		_IteratorInA __ba,
+		_IteratorInA __ea,
+		_Uy const &__val) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorInA>
+					 && !is_iterator_v<_Uy>)// TODO: is_equality_comparable_v<_IteratorInA, _Uy>
+	{
+		for (; __ba != __ea; ++__ba) if (*__ba <= __val) return false;
 		return true;
 	}
 	template <
@@ -608,8 +402,24 @@ namespace pul
 		_IteratorInA __ba,
 		_IteratorInA __ea,
 		_IteratorInB __bb) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorInA>
+					 && is_iterator_v<_IteratorInB>)
 	{
-		for (; __ba != __ea; ++__ba) if (*__ba < *__bb) return false;
+		for (; __ba != __ea; ++__ba, ++__bb) if (*__ba < *__bb) return false;
+		return true;
+	}
+	template <
+		typename _IteratorInA,
+		typename _Uy>
+	pf_hint_nodiscard pf_decl_constexpr bool
+	greater_equal(
+		_IteratorInA __ba,
+		_IteratorInA __ea,
+		_Uy const &__val) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorInA>
+					 && !is_iterator_v<_Uy>)// TODO: is_equality_comparable_v<_IteratorInA, _Uy>
+	{
+		for (; __ba != __ea; ++__ba) if (*__ba < __val) return false;
 		return true;
 	}
 	template <
@@ -620,8 +430,23 @@ namespace pul
 		_IteratorInA __ba,
 		_IteratorInA __ea,
 		_IteratorInB __bb) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorInA>
+					 && is_iterator_v<_IteratorInB>)
 	{
 		return !greater_equal(__ba, __ea, __bb);
+	}
+	template <
+		typename _IteratorInA,
+		typename _Uy>
+	pf_hint_nodiscard pf_decl_constexpr bool
+	smaller(
+		_IteratorInA __ba,
+		_IteratorInA __ea,
+		_Uy const& __val) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorInA>
+					 && !is_iterator_v<_Uy>)// TODO: is_equality_comparable_v<_IteratorInA, _Uy>
+	{
+		return !greater_equal(__ba, __ea, __val);
 	}
 	template <
 		typename _IteratorInA,
@@ -631,15 +456,48 @@ namespace pul
 		_IteratorInA __ba,
 		_IteratorInA __ea,
 		_IteratorInB __bb) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorInA>
+					 && is_iterator_v<_IteratorInB>)
 	{
 		return !greater(__ba, __ea, __bb);
 	}
+	template <
+		typename _IteratorInA,
+		typename _Uy>
+	pf_hint_nodiscard pf_decl_constexpr bool
+	smaller_equal(
+		_IteratorInA __ba,
+		_IteratorInA __ea,
+		_Uy const& __val) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorInA>
+					 && !is_iterator_v<_Uy>)// TODO: is_equality_comparable_v<_IteratorInA, _Uy>
+	{
+		return !greater(__ba, __ea, __val);
+	}
+
+	/// ALGORITHM: Find
+	template <
+		typename _IteratorIn,
+		typename _Predicate>
+	pf_hint_nodiscard pf_decl_constexpr _IteratorIn find(
+		_IteratorIn __beg,
+		_IteratorIn __end,
+		_Predicate  &&__p) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorIn>)
+	{
+		for (; __beg != __end; ++__beg) {
+			if (__p(*__beg)) {
+				return __beg;
+			}
+		}
+		return __end;
+	}
 
 	/// ALGORITHM: Search
-	// TODO
+	// TODO: Search Algorithms
 
 	/// ALGORITHM: Sort
-	// TODO
+	// TODO: Sort Algorithms
 }
 
 #endif // !PULSAR_ALGORITHM_HPP

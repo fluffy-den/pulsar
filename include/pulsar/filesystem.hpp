@@ -1,4 +1,4 @@
-/*! @file   sha.hpp
+/*! @file   filesystem.hpp
  *  @author Louis-Quentin Noé (noe.louis-quentin@hotmail.com)
  *  @brief
  *  @date   06-04-2023
@@ -8,16 +8,17 @@
  *  @since 0.1.6
  */
 
-#ifndef PULSAR_SHA_HPP
-#define PULSAR_SHA_HPP 1
+#ifndef PULSAR_FILESYSTEM_HPP
+#define PULSAR_FILESYSTEM_HPP 1
 
 // Include: Pulsar
-#include "pulsar/hash.hpp"
+#include "pulsar/pulsar.hpp"
+#include "pulsar/utf8.hpp"
 
 // Pulsar
 namespace pul
 {
-	// TODO: SHA
+	// TODO: Filesystem
 }	// namespace pul
 
-#endif // !PULSAR_SHA_HPP
+#endif // PULSAR_FILESYSTEM_HPP

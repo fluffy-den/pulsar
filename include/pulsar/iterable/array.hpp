@@ -19,12 +19,10 @@ namespace pul
 {
 
 	/// CONTAINER: Array
-	template <typename _Ty>
-	class sequence_view;// container/sequence.hpp
 	template<typename _Ty, size_t _Num>
 	class array
 	{
-	pf_assert_static(!std::is_const_v<_Ty>, "_Ty mustn't be a const type!");
+	pf_assert_static(!std::is_const_v<_Ty>);
 
 	public:
 		using value_t									 = _Ty;
@@ -253,14 +251,6 @@ namespace pul
 		{
 			return this->data();
 		}
-
-		/// Operator (sequence_view<value_t>)
-		pf_hint_nodiscard pf_decl_constexpr
-		operator sequence_view<value_t>() const pf_attr_noexcept
-		{
-			return sequence_view<value_t>(this->cbegin(), this->cend());
-		}
-
 	private:
 		_Ty store_[_Num];
 	};
@@ -272,6 +262,9 @@ namespace pul
 	array(_Ty (&& __il)[_Num])->array<_Ty, _Num>;
 	template<typename _Ty, typename ... _Args>
 	array(const _Ty &__arg, _Args && ... __args)->array<_Ty, sizeof...(_Args)>;
+
+	/// ARRAY: Test
+	pf_assert_static(is_iterable_v<array<int32_t, 6>>);
 }
 
 

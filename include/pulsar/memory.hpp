@@ -28,7 +28,6 @@
 // Pulsar
 namespace pul
 {
-	/// MEMORY: Allocator
 	/// ALLOCATOR: Concept
 	template <typename _Allocator>
 	concept __allocator_c = requires(
@@ -63,10 +62,7 @@ namespace pul
 		}
 		else
 		{
-			return __all.allocate(
-				__size,
-				union_cast<size_t>(__align),
-				__offset);
+			return __all.allocate(__size, union_cast<size_t>(__align), __offset);
 		}
 	}
 
@@ -149,7 +145,9 @@ namespace pul
 	}
 
 	/// MEMORY: Utility -> Construct
-	template<typename _Ty, typename ... _Args>
+	template<
+		typename _Ty,
+		typename ... _Args>
 	pf_decl_inline pf_decl_constexpr void
 	construct(
 		_Ty *__ptr,
@@ -159,7 +157,20 @@ namespace pul
 		pf_assert(__ptr, "__ptr is nullptr!");
 		new(__ptr) _Ty(std::forward<_Args>(__args)...);
 	}
-	template <typename _IteratorIn>
+	template<
+		typename _IteratorIn,
+		typename ... _Args>
+	pf_decl_inline pf_decl_constexpr void
+	construct(
+		_IteratorIn __it,
+		_Args &&... __args)
+	requires(is_iterator_v<_IteratorIn>
+					 && std::is_constructible_v<typename _IteratorIn::value_t, _Args...>)
+	{
+		return construct(__it.get(), std::forward<_Args>(__args)...);
+	}
+	template <
+		typename _IteratorIn>
 	pf_decl_inline pf_decl_constexpr void
 	construct(
 		_IteratorIn __beg,
@@ -169,7 +180,8 @@ namespace pul
 	{
 		for (; __beg != __end; ++__beg) construct(__beg.get());
 	}
-	template <typename _IteratorIn>
+	template <
+		typename _IteratorIn>
 	pf_decl_inline pf_decl_constexpr void
 	construct(
 		_IteratorIn __beg,
@@ -180,19 +192,22 @@ namespace pul
 	{
 		for (; __beg != __end; ++__beg) construct(__beg.get(), __val);
 	}
-	template <typename _Iterator, typename _IteratorIn>
+	template <
+		typename _IteratorOut,
+		typename _IteratorIn>
 	pf_decl_inline pf_decl_constexpr void
 	construct(
-		_Iterator __ab,
-		_Iterator __ae,
+		_IteratorOut __ab,
+		_IteratorOut __ae,
 		_IteratorIn __bb)
-	requires(is_iterator_v<_Iterator>
-					 && is_iterator_v<_IteratorIn>
-					 && std::is_convertible_v<typename _IteratorIn::value_t, typename _Iterator::value_t>)
+	requires(is_iterator_v<_IteratorOut>
+					 && is_iterator_v<_IteratorIn>)
 	{
 		for (; __ab != __ae; ++__ab, ++__bb) construct(__ab.get(), *__bb);
 	}
-	template <typename _Ty, typename ... _Args>
+	template <
+		typename _Ty,
+		typename ... _Args>
 	pf_decl_inline pf_decl_constexpr void
 	construct(
 		__marray<_Ty> *__arr,
@@ -208,14 +223,25 @@ namespace pul
 	}
 
 	/// MEMORY: Utility -> Destroy
-	template<typename _Ty>
+	template<
+		typename _Ty>
 	pf_decl_inline pf_decl_constexpr void
 	destroy(
 		_Ty *__ptr) pf_attr_noexcept
 	{
 		__ptr->~_Ty();
 	}
-	template <typename _IteratorIn>
+	template <
+		typename _IteratorIn>
+	pf_decl_inline pf_decl_constexpr void
+	destroy(
+		_IteratorIn __it) pf_attr_noexcept
+	requires(is_iterator_v<_IteratorIn>)
+	{
+		destroy(__it.get());
+	}
+	template <
+		typename _IteratorIn>
 	pf_decl_inline pf_decl_constexpr void
 	destroy(
 		_IteratorIn __beg,
@@ -224,7 +250,8 @@ namespace pul
 	{
 		for (; __beg != __end; ++__beg) destroy(__beg.get());
 	}
-	template <typename _Ty>
+	template <
+		typename _Ty>
 	pf_decl_inline pf_decl_constexpr void
 	destroy(
 		__marray<_Ty> *__ptr) pf_attr_noexcept
@@ -232,9 +259,88 @@ namespace pul
 		destroy(iterator(&__ptr->data[0]), iterator(&__ptr->data[0] + __ptr->count));
 	}
 
-	/// MEMORY: Cache -> New Construct
+	/// MEMORY: Utility -> Assign
+	template<
+		typename _Ty,
+		typename _Uy>
+	pf_decl_inline pf_decl_constexpr void
+	assign(
+		_Ty *__ptr,
+		_Uy const &__val)
+	requires(std::is_assignable_v<_Ty, _Uy const&>)
+	{
+		*__ptr = __val;
+	}
+	template<
+		typename _Ty,
+		typename _Uy>
+	pf_decl_inline pf_decl_constexpr void
+	assign(
+		_Ty *__ptr,
+		_Uy const &__val)
+	requires(!std::is_assignable_v<_Ty, _Uy const&> && std::is_constructible_v<_Ty, _Uy const&>)
+	{
+		destroy(__ptr);
+		construct(__ptr, __val);
+	}
+	template<
+		typename _Ty,
+		typename _Uy>
+	pf_decl_inline pf_decl_constexpr void
+	assign(
+		_Ty *__ptr,
+		_Uy&& __val)
+	requires(std::is_assignable_v<_Ty, _Uy &&>)
+	{
+		*__ptr = std::move(__val);
+	}
+	template<
+		typename _Ty,
+		typename _Uy>
+	pf_decl_inline pf_decl_constexpr void
+	assign(
+		_Ty *__ptr,
+		_Uy&& __val)
+	requires(!std::is_assignable_v<_Ty, _Uy &&> && std::is_constructible_v<_Ty, _Uy &&>)
+	{
+		destroy(__ptr);
+		construct(__ptr, std::move(__val));
+	}
+	template<
+		typename _IteratorOut,
+		typename _IteratorIn>
+	pf_decl_inline pf_decl_constexpr void
+	assign(
+		_IteratorOut __beg,
+		_IteratorOut __end,
+		_IteratorIn __in)
+	requires(is_iterator_v<_IteratorOut>
+					 && is_iterator_v<_IteratorIn>)
+	{
+		for (; __beg != __end; ++__beg, ++__in)
+		{
+			assign(__beg.get(), *__in);
+		}
+	}
+	template <
+		typename _IteratorOut,
+		typename _Uy>
+	pf_decl_inline pf_decl_constexpr void
+	assign(
+		_IteratorOut __beg,
+		_IteratorOut __end,
+		_Uy const &__val)
+	requires(is_iterator_v<_IteratorOut>
+					 && !is_iterator_v<_Uy>)
+	{
+		for (; __beg != __end; ++__beg)
+		{
+			assign(__beg.get(), __val);
+		}
+	}
+	// NOTE: May have to be updated later
 
-	/// CACHE: Memory
+	/// MEMORY: Cache -> New Construct
 	template <
 		typename _Ty,
 		typename ... _Args>
@@ -247,7 +353,6 @@ namespace pul
 		new(ptr) _Ty(std::forward<_Args>(__args)...);
 		return ptr;
 	}
-
 	template <
 		typename _Ty,
 		typename ... _Args>
@@ -727,7 +832,7 @@ namespace pul
 	destroy_delete_array(
 		_Ty *__ptr) pf_attr_noexcept
 	{
-		__marray<_Ty> *as_array = union_cast<__marray<_Ty>*>(__ptr) - 1;
+		__marray<_Ty> *as_array = __mem_get_marray_typeless<_Ty>(__ptr);
 		destroy(as_array);
 		hfree(as_array);
 	}
@@ -738,7 +843,7 @@ namespace pul
 		_Ty *__ptr) pf_attr_noexcept
 	requires(is_allocator_v<_Allocator>)
 	{
-		__marray<_Ty> *as_array = union_cast<__marray<_Ty>*>(__ptr) - 1;
+		__marray<_Ty> *as_array = __mem_get_marray_typeless<_Ty>(__ptr);
 		destroy(as_array);
 		deallocate(__all, as_array);
 	}
@@ -817,6 +922,7 @@ namespace pul
 	private:
 		_Allocator *allocator_;
 	};
+
 
 	/*
 	 * !            !

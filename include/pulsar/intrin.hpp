@@ -94,16 +94,14 @@ namespace pul
 	{
 		__x = _mm256_add_epi64(
 			__x, _mm256_castpd_si256(_mm256_set1_pd(0x0018000000000000)));
-		return _mm256_sub_pd(_mm256_castsi256_pd(__x),
-												 _mm256_set1_pd(0x0018000000000000));
+		return _mm256_sub_pd(_mm256_castsi256_pd(__x), _mm256_set1_pd(0x0018000000000000));
 	}
 	pf_hint_nodiscard pf_decl_inline m256f64_t _mm256_cvtepi64_ps_mystical(
 		m256i64_t __x) pf_attr_noexcept	// Mystical's uint64_t -> float64_t
 	{
 		__x = _mm256_or_si256(
 			__x, _mm256_castpd_si256(_mm256_set1_pd(0x0010000000000000)));
-		return _mm256_sub_pd(_mm256_castsi256_pd(__x),
-												 _mm256_set1_pd(0x0010000000000000));
+		return _mm256_sub_pd(_mm256_castsi256_pd(__x), _mm256_set1_pd(0x0010000000000000));
 	}
 	pf_hint_nodiscard pf_decl_inline m256f64_t _mm256_cvtepi64_ps(m256i64_t __x)
 	pf_attr_noexcept// converts int64_t -> float64_t

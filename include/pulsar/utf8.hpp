@@ -24,31 +24,38 @@ namespace pul
 	template <typename _StringTy>
 	class u8iterator
 	{
-	// TODO
+	// TODO: u8iterator
 	};
 
 	/// UTF8: String
 	template <
-		typename _Magnifier,
-		typename _Allocator>
+		typename _Magnifier = magnifier_default,
+		typename _Allocator = allocator_default>
 	class u8string
 	{
-	// TODO
+	// TODO: u8string
 	};
+	using u8string_t = u8string<magnifier_default, allocator_default>;
 	template <typename ... _Args>
 	using u8string_format = fmt::format_string<_Args...>;
 
-	/// UTF8: Utilities
-	// TODO
 
 	/// UTF8: Format
 	template <typename ... _Args>
-	pf_hint_nodiscard u8string<magnifier_default, allocator_default>
+	pf_hint_nodiscard u8string_t
+	u8formatted_size(
+		u8string_format<_Args...> __fmt,
+		_Args && ... __args) pf_attr_noexcept
+	{
+		return fmt::formatted_size(__fmt, std::forward<_Args>(__args)...);
+	}
+	template <typename ... _Args>
+	pf_hint_nodiscard u8string_t
 	u8format(
 		u8string_format<_Args...> __fmt,
 		_Args && ... __args) pf_attr_noexcept
 	{
-		// TODO
+		// TODO: u8format
 	}
 	template <
 		typename _IteratorTy,
@@ -59,18 +66,8 @@ namespace pul
 		u8string_format<_Args...> __fmt,
 		_Args && ... __args) pf_attr_noexcept
 	{
-		// TODO
+		// TODO: u8format_to
 	}
-
-	/// UTF8: File -> Stream
-
-	/// UTF8: File -> Path
-
-	/// UTF8: File -> Iterator
-
-	/// UTF8: File -> Package
-
-	/// UTF8: File -> Listener
 }
 
 #endif // !PULSAR_UTF8_HPP

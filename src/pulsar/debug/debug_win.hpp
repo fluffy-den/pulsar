@@ -380,15 +380,15 @@ namespace pul
 		uint32_t __code,
 		uint32_t __flags,
 		dbg_u8string_view __what);
-	pf_hint_noreturn void
+	void
 	__dbg_terminate_unknown_dumpbin_win() pf_attr_noexcept;
-	pf_hint_noreturn void
+	void
 	__dbg_terminate_exception_dumpbin_win(
 		dbg_category const *__cat,
 		uint32_t __code,
 		uint32_t __flags,
 		dbg_u8string_view __what) pf_attr_noexcept;
-	pf_hint_noreturn void
+	void
 	__dbg_terminate_win() pf_attr_noexcept;
 }
 

@@ -130,7 +130,6 @@
 
 // Attribs
 #define pf_attr_noexcept       noexcept
-#define pf_attr_noexcept_if(c) noexcept(c)
 #define pf_attr_override       override
 #define pf_attr_final          final
 #define pf_attr_malloc         __attribute__((malloc))

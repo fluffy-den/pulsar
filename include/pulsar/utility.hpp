@@ -125,7 +125,10 @@ namespace pul
 		{
 			return union_cast<size_t>(__end) - union_cast<size_t>(__beg);
 		}
-		return union_cast<size_t>(__beg) - union_cast<size_t>(__end);
+		else
+		{
+			return union_cast<size_t>(__beg) - union_cast<size_t>(__end);
+		}
 	}
 
 	/// UTILITY: Count
@@ -135,11 +138,7 @@ namespace pul
 		const _Ty *__beg,
 		const _Ty *__end) pf_attr_noexcept
 	{
-		if (__end >= __beg)
-		{
-			return (union_cast<size_t>(__end) - union_cast<size_t>(__beg)) / sizeof(_Ty);
-		}
-		return (union_cast<size_t>(__beg) - union_cast<size_t>(__end)) / sizeof(_Ty);
+		return distof(__beg, __end) / sizeof(_Ty);
 	}
 }
 

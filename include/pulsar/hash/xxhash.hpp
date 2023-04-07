@@ -8,11 +8,11 @@
  *  @since 0.1.4
  */
 
-#ifndef PULSAR_HASH_HPP
-#define PULSAR_HASH_HPP 1
+#ifndef PULSAR_XXHASH_HPP
+#define PULSAR_XXHASH_HPP 1
 
 // Include: Pulsar
-#include "pulsar/pulsar.hpp"
+#include "pulsar/hash.hpp"
 
 // Pulsar
 namespace pul
@@ -23,19 +23,24 @@ namespace pul
 namespace xxhash
 {
 	// TODO: xxhash
-}
+}	// namespace xxhash
 
 	/// XXHASH: 32
 	class xxhash32
 	{
-	// TODO: xxhash
+	// TODO: xxhash 32
 	};
 
 	/// XXHASH: 64
 	class xxhash64
 	{
-	// TODO: xxhash
+	// TODO: xxhash 64
 	};
-}
 
-#endif // !PULSAR_HASH_HPP
+	/// XXHASH: Z
+	class xxhashz
+	{
+	};
+}	// namespace pul
+
+#endif // !PULSAR_XXHASH_HPP

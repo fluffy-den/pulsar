@@ -8,5 +8,5 @@
  *  @since 0.1.4
  */
 
-// Include: Pulsar
+// Include: Pulsar -> Tester
 #include "pulsar_tester/pulsar_tester.hpp"

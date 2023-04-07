@@ -217,17 +217,21 @@ namespace pul
 	/// ITERATOR: Operator +/-
 	template <typename _Iterator>
 	pf_hint_nodiscard pf_decl_constexpr _Iterator
-	operator+(_Iterator __it, diff_t __i) pf_attr_noexcept
+	operator+(
+		_Iterator __it,
+		diff_t __i) pf_attr_noexcept
 	requires(is_incrementable_v<_Iterator>)
 	{
-		return __it += __i;
+		return (__it += __i);
 	}
 	template<typename _Iterator>
 	pf_hint_nodiscard pf_decl_constexpr _Iterator
-	operator-(_Iterator __it, diff_t __i) pf_attr_noexcept
+	operator-(
+		_Iterator __it,
+		diff_t __i) pf_attr_noexcept
 	requires(is_decrementable_v<_Iterator>)
 	{
-		return __it -= __i;
+		return (__it -= __i);
 	}
 
 	/// ITERATOR: Next/Prev
@@ -795,10 +799,21 @@ namespace pul
 		_Iterator it_;
 	};
 
+	/// SEQUENCE: Move Iterator -> Maker
+	template <typename _Iterator>
+	pf_hint_nodiscard pf_decl_constexpr pf_decl_inline move_iterator<_Iterator>
+	make_move_iterator(
+		_Iterator __it) pf_attr_noexcept
+	{
+		return move_iterator(__it);
+	}
+
 	/// SEQUENCE: Iterator
 	template<typename _Ty>
 	class iterator
 	{
+	pf_decl_friend iterator<const _Ty>;
+
 	public:
 		using value_t	 = _Ty;
 		using category = iterator_sequence_tag_t;
@@ -932,8 +947,6 @@ namespace pul
 	template<typename _Ty>
 	class iterator<const _Ty>
 	{
-	pf_decl_friend iterator<_Ty>;
-
 	public:
 		using value_t	 = const _Ty;
 		using category = iterator_sequence_tag_t;
@@ -944,8 +957,12 @@ namespace pul
 			: ptr_(__ptr)
 		{}
 		pf_decl_constexpr iterator(
-			const iterator<const _Ty> &__r) pf_attr_noexcept
-			: iterator(__r.ptr_)
+			iterator<_Ty> __it) pf_attr_noexcept
+			: iterator(__it.ptr_)
+		{}
+		pf_decl_constexpr iterator(
+			iterator<const _Ty> const &__it) pf_attr_noexcept
+			: iterator(__it.ptr_)
 		{}
 
 		/// Destructor
@@ -1041,8 +1058,12 @@ namespace pul
 	};
 
 	/// SEQUENCE: Const Iterator -> Alias
-	template<typename _Ty>
+	template <typename _Ty>
 	using const_iterator = iterator<const _Ty>;
+
+	/// SEQUENCE: Const Iterator -> CTAD
+	template <typename _Ty>
+	iterator(const _Ty*)->iterator<const _Ty>;
 
 	/// ITERABLE: Concept -> Iterable
 	template <typename _Iterable>
