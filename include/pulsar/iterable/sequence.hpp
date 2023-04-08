@@ -539,7 +539,7 @@ namespace pul
 		assign(
 		 initializer_list<_Ty> __il)
 		{
-			this->assign(iterator(__v.begin()), iterator(__v.end()));
+			this->assign(iterator(__il.begin()), iterator(__il.end()));
 		}
 
 		/// Insert
