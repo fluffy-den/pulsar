@@ -533,13 +533,13 @@ namespace pul
 		 _View __v)
 			requires(is_view_v<_View>)
 		{
-			return this->assign(__v.begin(), __v.end());
+			this->assign(__v.begin(), __v.end());
 		}
 		pf_decl_constexpr void
 		assign(
 		 initializer_list<_Ty> __il)
 		{
-			return this->assign(iterator(__v.begin()), iterator(__v.end()));
+			this->assign(iterator(__v.begin()), iterator(__v.end()));
 		}
 
 		/// Insert
