@@ -5,3 +5,4 @@ lib/*
 archive/*
 uncrustify.cfg
 .cmake-format
+.clang-format

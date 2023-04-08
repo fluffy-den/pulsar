@@ -20,4 +20,4 @@
 #include "pulsar/math/quaternion.hpp"
 #include "pulsar/math/vector.hpp"
 
-#endif // PULSAR_MATHEMATICS_HPP
+#endif	// PULSAR_MATHEMATICS_HPP

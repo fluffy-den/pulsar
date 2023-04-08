@@ -18,6 +18,6 @@
 namespace pul
 {
 	// TODO: SHA
-}	// namespace pul
+}	 // namespace pul
 
-#endif // !PULSAR_SHA_HPP
+#endif	// !PULSAR_SHA_HPP

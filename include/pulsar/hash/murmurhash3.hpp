@@ -22,6 +22,6 @@ namespace pul
 	struct murmurhash3z
 	{
 	};
-}	// namespace pul
+}	 // namespace pul
 
-#endif // !PULSAR_MURMURHASH3_HPP
+#endif	// !PULSAR_MURMURHASH3_HPP

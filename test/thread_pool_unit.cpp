@@ -23,37 +23,53 @@ namespace pul
 		// Task
 		pt_unit(task_submit)
 		{
-			submit_task([](size_t __i){ return __i;}, 10);
+			submit_task(
+			 [](size_t __i)
+			 { return __i; },
+			 10);
 		}
 		pt_unit(task_submit_0)
 		{
-			submit_task_0([](size_t __i){ return __i;}, 10);
+			submit_task_0(
+			 [](size_t __i)
+			 { return __i; },
+			 10);
 		}
 
-		pt_benchmark(task_submit_benchmark_t1, __bvn, 2048, 1)
+		pt_benchmark(task_submit_benchmark_t1, __bvn, 2'048, 1)
 		{
-			__bvn.measure([&](size_t __i)
-			{
-				submit_task([](size_t __k){ return __k;}, __i);
+			__bvn.measure(
+			 [&](size_t __i)
+			 {
+				submit_task([](size_t __k)
+										{ return __k; },
+										__i);
 				return __i;
 			});
 		}
-		pt_benchmark(task_submit_benchmark_t8, __bvn, 2048, 8)
+		pt_benchmark(task_submit_benchmark_t8, __bvn, 2'048, 8)
 		{
-			__bvn.measure([&](size_t __i)
-			{
-				submit_task([](size_t __k){ return __k;}, __i);
+			__bvn.measure(
+			 [&](size_t __i)
+			 {
+				submit_task([](size_t __k)
+										{ return __k; },
+										__i);
 				return __i;
 			});
 		}
 		pt_unit(future_task_submit)
 		{
-			auto f = submit_future_task([](size_t __i){ return __i;}, 10);
+			auto f = submit_future_task([](size_t __i)
+																	{ return __i; },
+																	10);
 			f.wait();
 		}
 		pt_unit(future_task_submit_0)
 		{
-			auto f = submit_future_task_0([](size_t __i){ return __i;}, 10);
+			auto f = submit_future_task_0([](size_t __i)
+																		{ return __i; },
+																		10);
 			process_tasks_0();
 			f.wait();
 		}
@@ -61,17 +77,25 @@ namespace pul
 		pt_unit(task_pool)
 		{
 			task_pool_t pool;
-			pool.submit_task([](size_t __i){ return __i; }, 10);
-			auto f1 = pool.submit_future_task([](){ return this_thread::get_id(); });
-			auto f2 = pool.submit_future_task([](){ return this_thread::get_id(); });
+			pool.submit_task([](size_t __i)
+											 { return __i; },
+											 10);
+			auto f1 = pool.submit_future_task([]()
+																				{ return this_thread::get_id(); });
+			auto f2 = pool.submit_future_task([]()
+																				{ return this_thread::get_id(); });
 			pt_check(f1.value() == f2.value());
 		}
 		pt_unit(task_pool_0)
 		{
 			task_pool_0_t pool;
-			pool.submit_task_0([](size_t __i){ return __i; }, 10);
-			auto f1 = pool.submit_future_task_0([](){ return this_thread::get_id(); });
-			auto f2 = pool.submit_future_task_0([](){ return this_thread::get_id(); });
+			pool.submit_task_0([](size_t __i)
+												 { return __i; },
+												 10);
+			auto f1 = pool.submit_future_task_0([]()
+																					{ return this_thread::get_id(); });
+			auto f2 = pool.submit_future_task_0([]()
+																					{ return this_thread::get_id(); });
 			pt_check(f1.value() == f2.value());
 		}
 
@@ -80,4 +104,4 @@ namespace pul
 			pf_throw(dbg_category_generic(), dbg_code::unknown, dbg_flags::none, "This is a C++ exception!");
 		}
 	}
-}
+}	 // namespace pul

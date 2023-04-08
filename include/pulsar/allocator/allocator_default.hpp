@@ -18,25 +18,26 @@
 namespace pul
 {
 	/// MEMORY: Allocator -> Default
-	class allocator_default pf_attr_final {
+	class allocator_default pf_attr_final
+	{
 	public:
 		/// Allocate
-		pf_hint_nodiscard pf_decl_inline void*
+		pf_hint_nodiscard pf_decl_inline void *
 		allocate(
-			size_t __s,
-			align_val_t __align,
-			size_t __o) pf_attr_noexcept
+		 size_t __s,
+		 align_val_t __align,
+		 size_t __o) pf_attr_noexcept
 		{
 			return mi_malloc_aligned_at(__s, union_cast<size_t>(__align), __o);
 		}
 
 		/// Reallocate
-		pf_hint_nodiscard pf_decl_inline void*
+		pf_hint_nodiscard pf_decl_inline void *
 		reallocate(
-			void *__p,
-			size_t __s,
-			align_val_t __align,
-			size_t __o) pf_attr_noexcept
+		 void *__p,
+		 size_t __s,
+		 align_val_t __align,
+		 size_t __o) pf_attr_noexcept
 		{
 			return mi_realloc_aligned_at(__p, __s, union_cast<size_t>(__align), __o);
 		}
@@ -44,11 +45,11 @@ namespace pul
 		/// Deallocate
 		pf_decl_inline void
 		deallocate(
-			void *__p) pf_attr_noexcept
+		 void *__p) pf_attr_noexcept
 		{
 			mi_free(__p);
 		}
 	};
-}
+}	 // namespace pul
 
-#endif // !PULSAR_ALLOCATOR_DEFAULT_HPP
+#endif	// !PULSAR_ALLOCATOR_DEFAULT_HPP

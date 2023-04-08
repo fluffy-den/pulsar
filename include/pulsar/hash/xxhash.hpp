@@ -20,27 +20,27 @@ namespace pul
 	// TODO: https://github.com/Cyan4973/xxHash/blob/dev/xxhash.h
 
 	/// XXHASH: Impl
-namespace xxhash
-{
-	// TODO: xxhash
-}	// namespace xxhash
+	namespace xxhash
+	{
+		// TODO: xxhash
+	}	 // namespace xxhash
 
 	/// XXHASH: 32
 	class xxhash32
 	{
-	// TODO: xxhash 32
+		// TODO: xxhash 32
 	};
 
 	/// XXHASH: 64
 	class xxhash64
 	{
-	// TODO: xxhash 64
+		// TODO: xxhash 64
 	};
 
 	/// XXHASH: Z
 	class xxhashz
 	{
 	};
-}	// namespace pul
+}	 // namespace pul
 
-#endif // !PULSAR_XXHASH_HPP
+#endif	// !PULSAR_XXHASH_HPP

@@ -28,15 +28,12 @@ namespace pul
 		}
 		pt_unit(sequence_const_iterator_unit)
 		{
-
 		}
 		pt_unit(sequence_reverse_iterator_unit)
 		{
-
 		}
 		pt_unit(sequence_const_reverse_iterator_unit)
 		{
-
 		}
 		pt_unit(sequence_view_unit)
 		{
@@ -64,7 +61,7 @@ namespace pul
 			sequence_view v2b = arr1;
 			pt_check(v2b.begin() == v2.begin());
 			pt_check(v2b.count() == v2.count());
-			v2b = sequence_view(arr2.data(), arr2s);
+			v2b								= sequence_view(arr2.data(), arr2s);
 			sequence_view v2c = arr2;
 			pt_check(v2c.begin() == v2b.begin());
 			pt_check(v2c.count() == v2b.count());
@@ -106,7 +103,7 @@ namespace pul
 			pt_check(s2.size() == s2c * sizeof(int32_t));
 			pt_check(s2.alignment() == s2a);
 			pt_check(s2.capacity() >= s2.count());
-			pt_check(s2.reserved() >= s2.size());
+			pt_check(s2.storage_size() >= s2.size());
 
 			// sequence(begin, end, align)
 			const size_t arr1c	= 8;
@@ -143,7 +140,7 @@ namespace pul
 			pt_check(s6.count() == 0);
 			pt_check(s6.size() == 0);
 			pt_check(s6.capacity() == 0);
-			pt_check(s6.reserved() == 0);
+			pt_check(s6.storage_size() == 0);
 			pt_check(s7.count() == s2.count());
 			pt_check(equal(s7.begin(), s7.end(), s2.begin()));
 
@@ -152,7 +149,7 @@ namespace pul
 			pt_check(s7.count() == 0);
 			pt_check(s7.size() == 0);
 			pt_check(s7.capacity() == 0);
-			pt_check(s7.reserved() == 0);
+			pt_check(s7.storage_size() == 0);
 			pt_check(s8.count() == s2.count());
 			pt_check(equal(s8.begin(), s8.end(), s2.begin()));
 
@@ -194,7 +191,9 @@ namespace pul
 			pt_check(equal(s2.begin(), s2.end(), v2.begin()));
 
 			// insert_back(...)
-			sequence s9 = {{ 1, 2, 3, 4 }};
+			sequence s9 = {
+				{1, 2, 3, 4}
+			};
 			s9.insert_back(5);
 			// { 1, 2, 3, 4, 5 }
 			pt_check(s9.back() == 5);
@@ -225,84 +224,113 @@ namespace pul
 			s9.insert(s9.begin() + 1, 4);
 			pt_check(s9[1] == 4);
 			// { 1, 4, 2, 3, 4, 5, 6, 7, 7, 7, 7, 7, 8, 9, 10 }
+
 			s9.insert(s9.begin() + 3, 6);
 			pt_check(s9[3] == 6);
-			// { 1, 4, 2, 6, 4, 5, 6, 7, 7, 7, 7, 7, 8, 9, 10 }
+			// { 1, 4, 2, 6, 3, 4, 5, 6, 7, 7, 7, 7, 7, 8, 9, 10 }
+
 			// insert(w, val, count)
 			s9.insert(s9.begin() + 1, 2, 2);
 			pt_check(equal(s9.begin() + 1, s9.begin() + 3, 2));
-			// { 1, 2, 2, 4, 2, 6, 4, 5, 6, 7, 7, 7, 7, 7, 8, 9, 10 }
+			// { 1, 2, 2, 4, 2, 6, 3, 4, 5, 6, 7, 7, 7, 7, 7, 8, 9, 10 }
+
 			// insert(w, view) => insert(w, beg, end)
 			s9.insert(s9.begin() + 0, v3);
 			pt_check(equal(s9.begin(), s9.begin() + 3, v3.begin()));
+			// { 8, 9, 10, 1, 2, 2, 4, 2, 6, 3, 4, 5, 6, 7, 7, 7, 7, 7, 8, 9, 10 }
 
 			// remove_back
 			s9.remove_back();
 			pt_check(s9.back() == 9);
-			// { 1, 2, 2, 4, 2, 6, 4, 5, 6, 7, 7, 7, 7, 7, 8, 9 }
+			// { 8, 9, 10, 1, 2, 2, 4, 2, 6, 3, 4, 5, 6, 7, 7, 7, 7, 7, 8, 9 }
 
 			// remove(w)
 			s9.remove(s9.begin() + 2);
-			pt_check(s9[2] == 4);
-			// { 1, 2, 4, 2, 6, 4, 5, 6, 7, 7, 7, 7, 7, 8, 9, 10 }
+			pt_check(s9[2] == 1);
+			// { 8, 9, 1, 2, 2, 4, 2, 6, 3, 4, 5, 6, 7, 7, 7, 7, 7, 8, 9 }
 
 			// remove(beg, end)
-			s9.remove(s9.begin() + 7, s9.begin() + 12);
-			pt_check(s9[8] == 8);
-			// { 1, 2, 4, 2, 6, 4, 5, 6, 8, 9, 10 }
+			s9.remove(s9.begin() + 12, s9.begin() + 17);
+			pt_check(s9[12] == 8);
+			// { 8, 9, 1, 2, 2, 4, 2, 6, 3, 4, 5, 6, 8, 9 }
 
 			// replace(w, ...)
+			s9.replace(s9.begin() + 4, 3);
+			pt_check(s9[4] == 3);
+			s9.replace(s9.begin() + 6, 5);
+			pt_check(s9[6] == 5);
+			// { 8, 9, 1, 2, 3, 4, 5, 6, 3, 4, 5, 6, 8, 9 }
+
 			// replace(w, val, count)
-			// replace(w, beg, end)
-			// replace(w, v)
+			s9.replace(s9.begin() + 0, 0, 2);
+			pt_check(equal(s9.begin() + 0, s9.begin() + 2, 0));
+			// { 0, 0, 9, 1, 2, 3, 4, 5, 6, 3, 4, 5, 6, 8, 9 }
+
+			// replace(w, v) -> replace(w, beg, end)
+			sequence_view v4 = { -2, -1 };
+			s9.replace(s9.begin() + 0, v4);
+			pt_check(equal(s9.begin() + 0, s9.begin() + 2, v4.begin()));
+			// { -2, -1, 0, 9, 1, 2, 3, 4, 5, 6, 3, 4, 5, 6, 8, 9 }
 
 			// replace(wbeg, wend, val, count)
+			s9.replace(s9.begin() + 3, s9.begin() + 16, 9, 7);
+			pt_check(equal(s9.begin() + 3, s9.begin() + 8, 9));
+			// { -2, -1, 0, 9, 9, 9, 9, 9, 9, 9 }
 			// replace(wbeg, wend, ibeg, iend)
+			v4 = { -5, -4, -3, -2, -1 };
+			s9.replace(s9.begin() + 0, s9.begin() + 2, v4);
+			pt_check(equal(s9.begin() + 0, s9.begin() + 5, v4.begin()));
+			// { -5, -4, -3, -2, -1, 0, 9, 9, 9, 9, 9, 9 }
+			v4 = { 1, 2, 3, 4, 5 };
+			s9.replace(s9.begin() + 6, s9.begin() + 13, v4);
+			pt_check(equal(s9.begin() + 6, s9.begin() + 11, v4.begin()));
+			// { -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 }
 
-			// shrink(val)
+			// shrink(val) + reserve(val)
+			pt_check(s9.reserve(30) == 9);	// NOTE: Last capacity={21}
+			pt_check(s9.shrink(15) == 15);
+
 			// shrink_to_fit()
-			// shrink_to_magnifier()
+			pt_check(s9.shrink_to_fit() == 4);
 
-			// reserve(c)
-			// reserve(c, align)
-			// reserve_with_magnifier(c)
-			// reserve_with_magnifier(c, align)
+			// shrink_to_magnifier() + reserve_with_magnifier(val)
+			sequence<int32_t, magnifier_linear> s10({ 1, 2, 3, 4, 5 }, align_val_t(8), magnifier_linear(16));
+			pt_check((s10.magnifier()(63) - s10.capacity()) == s10.reserve_with_magnifier(63));
+			pt_check((s10.capacity() - s10.magnifier()(s10.count())) == s10.shrink_to_magnifier());
 
 			// resize(val, count)
+			s10.resize(0, 32);
 
 			// realign(align)
+			s10.realign(align_val_t(32));
+			pt_check(s10.alignment() == align_val_t(32));
+			pt_check(s10.count() == 32);
 
 			// clear()
+			s9.clear();
+			pt_check(!s9.is_allocated());
+			pt_check(s9.is_empty());
+			pt_check(s9.capacity() == 0);
+			pt_check(s9.storage_size() == 0);
+			pt_check(s9.count() == 0);
+			pt_check(s9.size() == 0);
 
-			// begin()
-			// end()
 			// rbegin()
 			// rend()
-
-			// data()
-
-			// size()
-
-			// count()
-
-			// reserved()
-
-			// capacity()
-
-			// alignment()
-
-			// view()
-
-			// magnifier()
-
-			// allocator()
+			pt_check(s10.begin() == (s10.rend() - 1));
+			pt_check(s10.end() == (s10.rbegin() - 1));
 
 			// is_allocated()
+			pt_check(s10.is_allocated());
+			pt_check(!s10.is_empty());
 
 			// is_empty()
+			sequence<int32_t> s11;
+			pt_check(!s11.is_allocated());
+			pt_check(s11.is_empty());
 
 			// sequence -> sequence_view by CTAD
 			v2 = s1;
 		}
 	}
-}
+}	 // namespace pul

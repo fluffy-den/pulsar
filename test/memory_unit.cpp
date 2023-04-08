@@ -26,13 +26,16 @@ namespace pul
 			}
 
 			/// Operator =
-			__constructing_or_assigning_t &operator=(__constructing_or_assigning_t const &)
+			__constructing_or_assigning_t &
+			operator=(__constructing_or_assigning_t const &)
 			{
 				pf_print("Copy Operator= Called!\n");
 				return *this;
 			}
-			__constructing_or_assigning_t &operator=(__constructing_or_assigning_t &&) = delete;
-			__constructing_or_assigning_t &operator=(int32_t __i)
+			__constructing_or_assigning_t &
+			operator=(__constructing_or_assigning_t &&) = delete;
+			__constructing_or_assigning_t &
+			operator=(int32_t __i)
 			{
 				ignore = __i;
 				pf_print("Assignment Operator= Called!\n");
@@ -42,9 +45,12 @@ namespace pul
 
 		pt_unit(construct_unit)
 		{
-			__constructing_or_assigning_t *c = union_cast<__constructing_or_assigning_t*>(halloc(sizeof(__constructing_or_assigning_t)));
+			__constructing_or_assigning_t *c = union_cast<__constructing_or_assigning_t *>(halloc(sizeof(__constructing_or_assigning_t)));
 			construct(c, 103);
 			assign(c, 485);
 		}
 	}
-}
+
+	// TODO: unique_ptr unit tests
+	// TODO: shared_ptr unit tests
+}	 // namespace pul

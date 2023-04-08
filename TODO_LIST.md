@@ -33,7 +33,7 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 [o] benchmarks
 
 ### Iterable ### (0.6)
-[x] sequence
+[o] sequence
 [x] singly_linked_list
 [x] doubly_linked_list
 [x] hash_map

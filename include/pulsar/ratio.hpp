@@ -21,7 +21,7 @@
 namespace pul
 {
 	/// UTILITY: Ratio
-	template <size_t _Num, size_t _Denom = 1>
+	template<size_t _Num, size_t _Denom = 1>
 	using ratio = std::ratio<_Num, _Denom>;
 	using atto	= std::atto;
 	using femto = std::femto;
@@ -42,6 +42,6 @@ namespace pul
 
 	/// UTILITY: Ratio -> Distance / Size
 	// TODO: Inches, Feet, miles ratios
-}
+}	 // namespace pul
 
-#endif // !PULSAR_RATIO_HPP
+#endif	// !PULSAR_RATIO_HPP

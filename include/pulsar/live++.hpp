@@ -18,6 +18,6 @@
 namespace pul
 {
 	// TODO: Live++
-}	// namespace pul
+}	 // namespace pul
 
-#endif // !PULSAR_LIVEPP_HPP
+#endif	// !PULSAR_LIVEPP_HPP

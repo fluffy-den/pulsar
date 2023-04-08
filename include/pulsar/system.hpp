@@ -27,33 +27,33 @@ namespace pul
 	/// INSTRUCTION: Set
 	class instruction_set
 	{
-	/// Vendor
-	void
-	__retrieve_vendor(char_t *__vendor) const pf_attr_noexcept
-	{
-		int32_t *p = union_cast<int32_t*>(__vendor);
-		*(p + 0) = this->vendor_[1];
-		*(p + 1) = this->vendor_[3];
-		*(p + 2) = this->vendor_[2];
-	}
+		/// Vendor
+		void
+		__retrieve_vendor(char_t *__vendor) const pf_attr_noexcept
+		{
+			int32_t *p = union_cast<int32_t *>(__vendor);
+			*(p + 0)	 = this->vendor_[1];
+			*(p + 1)	 = this->vendor_[3];
+			*(p + 2)	 = this->vendor_[2];
+		}
 
-	/// Name
-	void
-	__retrieve_brand(char_t *__brand) const pf_attr_noexcept
-	{
-		iterator<const char_t> beg = union_cast<const char_t*>(this->brand1_.data());
-		copy(beg + 00, beg + 16, iterator(__brand));
-		copy(beg + 16, beg + 32, iterator(__brand));
-		copy(beg + 32, beg + 48, iterator(__brand));
-	}
+		/// Name
+		void
+		__retrieve_brand(char_t *__brand) const pf_attr_noexcept
+		{
+			iterator<const char_t> beg = union_cast<const char_t *>(this->brand1_.data());
+			copy(beg + 00, beg + 16, iterator(__brand));
+			copy(beg + 16, beg + 32, iterator(__brand));
+			copy(beg + 32, beg + 48, iterator(__brand));
+		}
 
 	public:
 		/// Constructors
 		instruction_set() pf_attr_noexcept
-			: brand1_{ 0 }
-			, brand2_{ 0 }
-			, brand3_{ 0 }
-			, vendor_{ 0 }
+			: brand1_ { 0 }
+			, brand2_ { 0 }
+			, brand3_ { 0 }
+			, vendor_ { 0 }
 			, nIDs_(0)
 			, nExIDs_(0)
 			, f_1_ECX_(0)
@@ -90,25 +90,25 @@ namespace pul
 			}
 
 			// CpuiEx
-			__cpuid(cpui.data(), 0x80000000);
+			__cpuid(cpui.data(), 0x80'00'00'00);
 			this->nExIDs_ = cpui[0];
 
 			// load bitset with flags for function 0x80000001
-			if(this->nExIDs_ >= union_cast<int32_t>(0x80000001))
+			if(this->nExIDs_ >= union_cast<int32_t>(0x80'00'00'01))
 			{
-				__cpuidex(cpui.data(), 0x80000001, 0);
+				__cpuidex(cpui.data(), 0x80'00'00'01, 0);
 				f_81_ECX_ = cpui[2];
 				f_81_EDX_ = cpui[3];
 			}
 
 			// Brand
-			if(this->nExIDs_ >= union_cast<int32_t>(0x80000004))
+			if(this->nExIDs_ >= union_cast<int32_t>(0x80'00'00'04))
 			{
-				__cpuidex(cpui.data(), 0x80000002, 0);
+				__cpuidex(cpui.data(), 0x80'00'00'02, 0);
 				this->brand1_ = cpui;
-				__cpuidex(cpui.data(), 0x80000003, 0);
+				__cpuidex(cpui.data(), 0x80'00'00'03, 0);
 				this->brand2_ = cpui;
-				__cpuidex(cpui.data(), 0x80000004, 0);
+				__cpuidex(cpui.data(), 0x80'00'00'04, 0);
 				this->brand3_ = cpui;
 			}
 		}
@@ -459,13 +459,13 @@ namespace pul
 	};
 
 	pf_hint_nodiscard pulsar_api memory_info_t
-	get_process_memory_usage() pf_attr_noexcept;// TODO: Impl of get_process_memory_usage
+	get_process_memory_usage() pf_attr_noexcept;	// TODO: Impl of get_process_memory_usage
 	pf_hint_nodiscard pulsar_api memory_info_t
-	get_system_memory_usage() pf_attr_noexcept;	// TODO: Impl of get_system_memory_usage
+	get_system_memory_usage() pf_attr_noexcept;		// TODO: Impl of get_system_memory_usage
 
 	/// SYSTEM: OS
 	pf_hint_nodiscard pulsar_api u8string_t
-	get_os_name() pf_attr_noexcept;	// TODO: Impl of get_os_name
-}
+	get_os_name() pf_attr_noexcept;	 // TODO: Impl of get_os_name
+}	 // namespace pul
 
-#endif // !PULSAR_SYSTEM_HPP
+#endif	// !PULSAR_SYSTEM_HPP

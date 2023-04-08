@@ -17,4 +17,4 @@ namespace pul
 	// TODO: Cryptography
 }
 
-#endif // !PULSAR_CRYPTOGRAPHY_HPP
+#endif	// !PULSAR_CRYPTOGRAPHY_HPP

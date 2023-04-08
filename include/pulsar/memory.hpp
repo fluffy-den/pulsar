@@ -12,7 +12,7 @@
 #define PULSAR_MEMORY_HPP 1
 
 // Include: C
-#include <cstring>// memcpy
+#include <cstring>	// memcpy
 
 // Include: C++
 #include <concepts>
@@ -29,32 +29,33 @@
 namespace pul
 {
 	/// ALLOCATOR: Concept
-	template <typename _Allocator>
-	concept __allocator_c = requires(
-		_Allocator & __all)
+	template<typename _Allocator>
+	concept __allocator_c =
+	 requires(	// clang-format off
+	 _Allocator &__all) 
 	{
-		{ __all.allocate(std::declval<size_t>(), std::declval<align_val_t>(), std::declval<size_t>()) }->std::convertible_to<void*>;
-		{ __all.reallocate(std::declval<void*>(), std::declval<size_t>(), std::declval<align_val_t>(), std::declval<size_t>()) }->std::convertible_to<void*>;
-		__all.deallocate(std::declval<void*>());
-	};
-	template <typename _Allocator>
+		{ __all.allocate(std::declval<size_t>(), std::declval<align_val_t>(), std::declval<size_t>()) } -> std::convertible_to<void *>;
+		{ __all.reallocate(std::declval<void *>(), std::declval<size_t>(), std::declval<align_val_t>(), std::declval<size_t>()) } -> std::convertible_to<void *>;
+		__all.deallocate(std::declval<void *>());
+	};	 // clang-format on
+	template<typename _Allocator>
 	struct is_allocator : std::false_type
 	{};
-	template <__allocator_c _Allocator>
+	template<__allocator_c _Allocator>
 	struct is_allocator<_Allocator> : std::true_type
 	{};
-	template <typename _Allocator>
+	template<typename _Allocator>
 	pf_decl_static pf_decl_constexpr bool is_allocator_v = is_allocator<_Allocator>::value;
 
 	/// ALLOCATOR: Allocate
-	template <typename _Allocator>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr void*
+	template<typename _Allocator>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr void *
 	allocate(
-		_Allocator &__all,
-		size_t __size,
-		align_val_t __align = ALIGN_DEFAULT,
-		size_t __offset			= 0) pf_attr_noexcept
-	requires(is_allocator_v<_Allocator>)
+	 _Allocator &__all,
+	 size_t __size,
+	 align_val_t __align = ALIGN_DEFAULT,
+	 size_t __offset		 = 0) pf_attr_noexcept
+		requires(is_allocator_v<_Allocator>)
 	{
 		if(std::is_constant_evaluated())
 		{
@@ -67,16 +68,16 @@ namespace pul
 	}
 
 	/// ALLOCATOR: Reallocate
-	template <typename _Allocator>
-	pf_decl_inline pf_decl_constexpr void*
+	template<typename _Allocator>
+	pf_decl_inline pf_decl_constexpr void *
 	reallocate(
-		_Allocator &__all,
-		void *__ptr,
-		size_t __nsize,
-		align_val_t __align = ALIGN_DEFAULT,
-		size_t __offset			= 0) pf_attr_noexcept
+	 _Allocator &__all,
+	 void *__ptr,
+	 size_t __nsize,
+	 align_val_t __align = ALIGN_DEFAULT,
+	 size_t __offset		 = 0) pf_attr_noexcept
 	{
-		if (std::is_constant_evaluated())
+		if(std::is_constant_evaluated())
 		{
 			return cevrealloc(__ptr, __nsize, __align, __offset);
 		}
@@ -87,13 +88,13 @@ namespace pul
 	}
 
 	/// ALLOCATOR: Deallocate
-	template <typename _Allocator>
+	template<typename _Allocator>
 	pf_decl_inline pf_decl_constexpr void
 	deallocate(
-		_Allocator &__all,
-		void *__ptr) pf_attr_noexcept
+	 _Allocator &__all,
+	 void *__ptr) pf_attr_noexcept
 	{
-		if (std::is_constant_evaluated())
+		if(std::is_constant_evaluated())
 		{
 			return cevfree(__ptr);
 		}
@@ -106,429 +107,436 @@ namespace pul
 	/// MEMORY: Utility
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr bool
 	is_power_of_two(
-		size_t __val) pf_attr_noexcept
+	 size_t __val) pf_attr_noexcept
 	{
 		return (__val & (__val - 1)) == 0;
 	}
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
 	paddingof(
-		size_t __addr,
-		align_val_t __align) pf_attr_noexcept
+	 size_t __addr,
+	 align_val_t __align) pf_attr_noexcept
 	{
 		const size_t a = union_cast<size_t>(__align);
 		return (a - (__addr & (a - 1))) & (a - 1);
 	}
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr void*
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr void *
 	align_top(
-		void *__ptr,
-		align_val_t __align,
-		size_t __offset = 0) pf_attr_noexcept
+	 void *__ptr,
+	 align_val_t __align,
+	 size_t __offset = 0) pf_attr_noexcept
 	{
-		byte_t *p = union_cast<byte_t*>(__ptr);
-		p += paddingof(addressof(p + __offset), __align);
+		byte_t *p = union_cast<byte_t *>(__ptr);
+		p				 += paddingof(addressof(p + __offset), __align);
 		return p;
 	}
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
 	__base2_mod(
-		size_t __x,
-		size_t __y) pf_attr_noexcept
+	 size_t __x,
+	 size_t __y) pf_attr_noexcept
 	{
 		return __y & (__y - 1) ? __x % __y : __x & (__y - 1);
 	}
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr bool
 	is_aligned(
-		const void *__ptr,
-		align_val_t __align,
-		size_t __offset = 0)
+	 const void *__ptr,
+	 align_val_t __align,
+	 size_t __offset = 0)
 	{
 		return __base2_mod(addressof(__ptr) + __offset, union_cast<size_t>(__align)) == 0;
 	}
 
 	/// MEMORY: Utility -> Construct
 	template<
-		typename _Ty,
-		typename ... _Args>
+	 typename _Ty,
+	 typename... _Args>
 	pf_decl_inline pf_decl_constexpr void
 	construct(
-		_Ty *__ptr,
-		_Args &&... __args)
-	requires(std::is_constructible_v<_Ty, _Args...>)
+	 _Ty *__ptr,
+	 _Args &&...__args)
+		requires(std::is_constructible_v<_Ty, _Args...>)
 	{
 		pf_assert(__ptr, "__ptr is nullptr!");
 		new(__ptr) _Ty(std::forward<_Args>(__args)...);
 	}
 	template<
-		typename _IteratorIn,
-		typename ... _Args>
+	 typename _IteratorIn,
+	 typename... _Args>
 	pf_decl_inline pf_decl_constexpr void
 	construct(
-		_IteratorIn __it,
-		_Args &&... __args)
-	requires(is_iterator_v<_IteratorIn>
-					 && std::is_constructible_v<typename _IteratorIn::value_t, _Args...>)
+	 _IteratorIn __it,
+	 _Args &&...__args)
+		requires(is_iterator_v<_IteratorIn> && std::is_constructible_v<typename _IteratorIn::value_t, _Args...>)
 	{
 		return construct(__it.get(), std::forward<_Args>(__args)...);
 	}
-	template <
-		typename _IteratorIn>
+	template<
+	 typename _IteratorIn>
 	pf_decl_inline pf_decl_constexpr void
 	construct(
-		_IteratorIn __beg,
-		_IteratorIn __end)
-	requires(is_iterator_v<_IteratorIn>
-					 && std::is_default_constructible_v<typename _IteratorIn::value_t>)
+	 _IteratorIn __beg,
+	 _IteratorIn __end)
+		requires(is_iterator_v<_IteratorIn> && std::is_default_constructible_v<typename _IteratorIn::value_t>)
 	{
-		for (; __beg != __end; ++__beg) construct(__beg.get());
+		for(; __beg != __end; ++__beg) construct(__beg.get());
 	}
-	template <
-		typename _IteratorIn>
+	template<
+	 typename _IteratorIn>
 	pf_decl_inline pf_decl_constexpr void
 	construct(
-		_IteratorIn __beg,
-		_IteratorIn __end,
-		typename _IteratorIn::value_t const &__val)
-	requires(is_iterator_v<_IteratorIn>
-					 && std::is_copy_constructible_v<typename _IteratorIn::value_t>)
+	 _IteratorIn __beg,
+	 _IteratorIn __end,
+	 typename _IteratorIn::value_t const &__val)
+		requires(is_iterator_v<_IteratorIn> && std::is_copy_constructible_v<typename _IteratorIn::value_t>)
 	{
-		for (; __beg != __end; ++__beg) construct(__beg.get(), __val);
+		for(; __beg != __end; ++__beg) construct(__beg.get(), __val);
 	}
-	template <
-		typename _IteratorOut,
-		typename _IteratorIn>
+	template<
+	 typename _IteratorOut,
+	 typename _IteratorIn>
 	pf_decl_inline pf_decl_constexpr void
 	construct(
-		_IteratorOut __ab,
-		_IteratorOut __ae,
-		_IteratorIn __bb)
-	requires(is_iterator_v<_IteratorOut>
-					 && is_iterator_v<_IteratorIn>)
+	 _IteratorOut __ab,
+	 _IteratorOut __ae,
+	 _IteratorIn __bb)
+		requires(is_iterator_v<_IteratorOut> && is_iterator_v<_IteratorIn>)
 	{
-		for (; __ab != __ae; ++__ab, ++__bb) construct(__ab.get(), *__bb);
+		for(; __ab != __ae; ++__ab, ++__bb) construct(__ab.get(), *__bb);
 	}
-	template <
-		typename _Ty,
-		typename ... _Args>
+	template<
+	 typename _Ty,
+	 typename... _Args>
 	pf_decl_inline pf_decl_constexpr void
 	construct(
-		__marray<_Ty> *__arr,
-		size_t __count,
-		_Args &&... __args)
-	requires(std::is_copy_constructible_v<_Ty>)
+	 __marray<_Ty> *__arr,
+	 size_t __count,
+	 _Args &&...__args)
+		requires(std::is_copy_constructible_v<_Ty>)
 	{
 		__arr->count = __count;
-		for (size_t i = 0; i < __count; ++i)
+		for(size_t i = 0; i < __count; ++i)
 		{
-			construct(&__arr[i], {std::forward<_Args>(__args)...});
+			construct(&__arr[i], { std::forward<_Args>(__args)... });
 		}
 	}
 
 	/// MEMORY: Utility -> Destroy
 	template<
-		typename _Ty>
+	 typename _Ty>
 	pf_decl_inline pf_decl_constexpr void
 	destroy(
-		_Ty *__ptr) pf_attr_noexcept
+	 _Ty *__ptr) pf_attr_noexcept
 	{
 		__ptr->~_Ty();
 	}
-	template <
-		typename _IteratorIn>
+	template<
+	 typename _IteratorIn>
 	pf_decl_inline pf_decl_constexpr void
 	destroy(
-		_IteratorIn __it) pf_attr_noexcept
-	requires(is_iterator_v<_IteratorIn>)
+	 _IteratorIn __it) pf_attr_noexcept
+		requires(is_iterator_v<_IteratorIn>)
 	{
 		destroy(__it.get());
 	}
-	template <
-		typename _IteratorIn>
+	template<
+	 typename _IteratorIn>
 	pf_decl_inline pf_decl_constexpr void
 	destroy(
-		_IteratorIn __beg,
-		_IteratorIn __end) pf_attr_noexcept
-	requires(is_iterator_v<_IteratorIn>)
+	 _IteratorIn __beg,
+	 _IteratorIn __end) pf_attr_noexcept
+		requires(is_iterator_v<_IteratorIn>)
 	{
-		for (; __beg != __end; ++__beg) destroy(__beg.get());
+		for(; __beg != __end; ++__beg) destroy(__beg.get());
 	}
-	template <
-		typename _Ty>
+	template<
+	 typename _Ty>
 	pf_decl_inline pf_decl_constexpr void
 	destroy(
-		__marray<_Ty> *__ptr) pf_attr_noexcept
+	 __marray<_Ty> *__ptr) pf_attr_noexcept
 	{
 		destroy(iterator(&__ptr->data[0]), iterator(&__ptr->data[0] + __ptr->count));
 	}
 
 	/// MEMORY: Utility -> Assign
 	template<
-		typename _Ty,
-		typename _Uy>
+	 typename _Ty,
+	 typename _Uy>
 	pf_decl_inline pf_decl_constexpr void
 	assign(
-		_Ty *__ptr,
-		_Uy const &__val)
-	requires(std::is_assignable_v<_Ty, _Uy const&>)
+	 _Ty *__ptr,
+	 _Uy const &__val)
+		requires(std::is_assignable_v<_Ty, _Uy const &>)
 	{
 		*__ptr = __val;
 	}
 	template<
-		typename _Ty,
-		typename _Uy>
+	 typename _Ty,
+	 typename _Uy>
 	pf_decl_inline pf_decl_constexpr void
 	assign(
-		_Ty *__ptr,
-		_Uy const &__val)
-	requires(!std::is_assignable_v<_Ty, _Uy const&> && std::is_constructible_v<_Ty, _Uy const&>)
+	 _Ty *__ptr,
+	 _Uy const &__val)
+		requires(!std::is_assignable_v<_Ty, _Uy const &> && std::is_constructible_v<_Ty, _Uy const &>)
 	{
 		destroy(__ptr);
 		construct(__ptr, __val);
 	}
 	template<
-		typename _Ty,
-		typename _Uy>
+	 typename _IteratorIn,
+	 typename _Uy>
 	pf_decl_inline pf_decl_constexpr void
 	assign(
-		_Ty *__ptr,
-		_Uy&& __val)
-	requires(std::is_assignable_v<_Ty, _Uy &&>)
+	 _IteratorIn __it,
+	 _Uy const &__val)
+		requires(is_iterator_v<_IteratorIn>)
+	{
+		return assign(__it.get(), __val);
+	}
+	template<
+	 typename _Ty,
+	 typename _Uy>
+	pf_decl_inline pf_decl_constexpr void
+	assign(
+	 _Ty *__ptr,
+	 _Uy &&__val)
+		requires(std::is_assignable_v<_Ty, _Uy &&>)
 	{
 		*__ptr = std::move(__val);
 	}
 	template<
-		typename _Ty,
-		typename _Uy>
+	 typename _Ty,
+	 typename _Uy>
 	pf_decl_inline pf_decl_constexpr void
 	assign(
-		_Ty *__ptr,
-		_Uy&& __val)
-	requires(!std::is_assignable_v<_Ty, _Uy &&> && std::is_constructible_v<_Ty, _Uy &&>)
+	 _Ty *__ptr,
+	 _Uy &&__val)
+		requires(!std::is_assignable_v<_Ty, _Uy &&> && std::is_constructible_v<_Ty, _Uy &&>)
 	{
 		destroy(__ptr);
 		construct(__ptr, std::move(__val));
 	}
 	template<
-		typename _IteratorOut,
-		typename _IteratorIn>
+	 typename _IteratorIn,
+	 typename _Uy>
 	pf_decl_inline pf_decl_constexpr void
 	assign(
-		_IteratorOut __beg,
-		_IteratorOut __end,
-		_IteratorIn __in)
-	requires(is_iterator_v<_IteratorOut>
-					 && is_iterator_v<_IteratorIn>)
+	 _IteratorIn __it,
+	 _Uy &&__val)
+		requires(is_iterator_v<_IteratorIn>)
 	{
-		for (; __beg != __end; ++__beg, ++__in)
+		return assign(__it.get(), std::move(__val));
+	}
+	template<
+	 typename _IteratorOut,
+	 typename _IteratorIn>
+	pf_decl_inline pf_decl_constexpr void
+	assign(
+	 _IteratorOut __beg,
+	 _IteratorOut __end,
+	 _IteratorIn __in)
+		requires(is_iterator_v<_IteratorOut> && is_iterator_v<_IteratorIn>)
+	{
+		for(; __beg != __end; ++__beg, ++__in)
 		{
-			assign(__beg.get(), *__in);
+			assign(__beg, *__in);
 		}
 	}
-	template <
-		typename _IteratorOut,
-		typename _Uy>
+	template<
+	 typename _IteratorOut,
+	 typename _Uy>
 	pf_decl_inline pf_decl_constexpr void
 	assign(
-		_IteratorOut __beg,
-		_IteratorOut __end,
-		_Uy const &__val)
-	requires(is_iterator_v<_IteratorOut>
-					 && !is_iterator_v<_Uy>)
+	 _IteratorOut __beg,
+	 _IteratorOut __end,
+	 _Uy const &__val)
+		requires(is_iterator_v<_IteratorOut> && !is_iterator_v<_Uy>)
 	{
-		for (; __beg != __end; ++__beg)
+		for(; __beg != __end; ++__beg)
 		{
-			assign(__beg.get(), __val);
+			assign(__beg, __val);
 		}
 	}
 	// NOTE: May have to be updated later
 
 	/// MEMORY: Cache -> New Construct
-	template <
-		typename _Ty,
-		typename ... _Args>
-	pf_hint_nodiscard _Ty*
+	template<
+	 typename _Ty,
+	 typename... _Args>
+	pf_hint_nodiscard _Ty *
 	cnew_construct_ex(
-		size_t __exBytes,
-		_Args && ... __args)
+	 size_t __exBytes,
+	 _Args &&...__args)
 	{
-		_Ty *ptr = union_cast<_Ty*>(calloc(sizeof(_Ty) + __exBytes));
+		_Ty *ptr = union_cast<_Ty *>(calloc(sizeof(_Ty) + __exBytes));
 		new(ptr) _Ty(std::forward<_Args>(__args)...);
 		return ptr;
 	}
-	template <
-		typename _Ty,
-		typename ... _Args>
-	pf_hint_nodiscard _Ty*
+	template<
+	 typename _Ty,
+	 typename... _Args>
+	pf_hint_nodiscard _Ty *
 	cnew_construct(
-		_Args && ... __args)
+	 _Args &&...__args)
 	{
 		return cnew_construct_ex<_Ty>(0, std::forward<_Args>(__args)...);
 	}
 
-	template <
-		typename _Ty>
-	void cdestroy_delete(
-		_Ty *__p) pf_attr_noexcept
+	template<
+	 typename _Ty>
+	void
+	cdestroy_delete(
+	 _Ty *__p) pf_attr_noexcept
 	{
 		__p->~_Ty();
 		cfree(__p);
 	}
 
 	/// MEMORY: New Construct
-	template <typename _Ty, typename ... _Args>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename... _Args>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_aligned_at_ex(
-		size_t __exBytes,
-		align_val_t __align,
-		size_t __offset,
-		_Args&& ... __args)
-	requires(std::is_constructible_v<_Ty, _Args...>)
+	 size_t __exBytes,
+	 align_val_t __align,
+	 size_t __offset,
+	 _Args &&...__args)
+		requires(std::is_constructible_v<_Ty, _Args...>)
 	{
-		_Ty *p = union_cast<_Ty*>(
-			halloc(sizeof(_Ty) + __exBytes, __align, __offset));
-		if (pf_unlikely(!p)) pf_throw(
-				dbg_category_generic(), dbg_code::bad_alloc, dbg_flags::dump_with_handle_data,
-				"Failed to create new object of type={}, size={}, align={}, offset={} with heap memory.",
-				typeid(_Ty).name(), sizeof(_Ty) + __exBytes, union_cast<size_t>(__align), __offset);
+		_Ty *p = union_cast<_Ty *>(
+		 halloc(sizeof(_Ty) + __exBytes, __align, __offset));
+		if(pf_unlikely(!p)) pf_throw(
+		 dbg_category_generic(), dbg_code::bad_alloc, dbg_flags::dump_with_handle_data, "Failed to create new object of type={}, size={}, align={}, offset={} with heap memory.", typeid(_Ty).name(), sizeof(_Ty) + __exBytes, union_cast<size_t>(__align), __offset);
 		construct(p, std::forward<_Args>(__args)...);
 		return p;
 	}
-	template <typename _Ty, typename ... _Args>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename... _Args>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_aligned_ex(
-		size_t __exBytes,
-		align_val_t __align,
-		_Args&& ... __args)
-	requires(std::is_constructible_v<_Ty, _Args...>)
+	 size_t __exBytes,
+	 align_val_t __align,
+	 _Args &&...__args)
+		requires(std::is_constructible_v<_Ty, _Args...>)
 	{
 		return new_construct_aligned_at_ex<_Ty>(
-			__exBytes,
-			__align,
-			0,
-			std::forward<_Args>(__args)...);
+		 __exBytes,
+		 __align,
+		 0,
+		 std::forward<_Args>(__args)...);
 	}
-	template <typename _Ty, typename ... _Args>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename... _Args>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_ex(
-		size_t __exBytes,
-		_Args&& ... __args)
-	requires(std::is_constructible_v<_Ty, _Args...>)
+	 size_t __exBytes,
+	 _Args &&...__args)
+		requires(std::is_constructible_v<_Ty, _Args...>)
 	{
 		return new_construct_aligned_at_ex<_Ty>(
-			__exBytes,
-			align_val_t(alignof(_Ty)),
-			0,
-			std::forward<_Args>(__args)...);
+		 __exBytes,
+		 align_val_t(alignof(_Ty)),
+		 0,
+		 std::forward<_Args>(__args)...);
 	}
-	template <typename _Ty, typename _Allocator, typename ... _Args>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename _Allocator, typename... _Args>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_aligned_at_ex(
-		_Allocator  &__all,
-		align_val_t __align,
-		size_t __offset,
-		size_t __exBytes,
-		_Args&& ... __args)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_constructible_v<_Ty, _Args...>)
+	 _Allocator &__all,
+	 align_val_t __align,
+	 size_t __offset,
+	 size_t __exBytes,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && std::is_constructible_v<_Ty, _Args...>)
 	{
-		_Ty *p = union_cast<_Ty*>(
-			allocate<_Ty>(__all, sizeof(_Ty) + __exBytes, __align, __offset));
-		if (pf_unlikely(!p)) pf_throw(
-				dbg_category_generic(), dbg_code::bad_alloc, dbg_flags::dump_with_handle_data,
-				"Failed to create new object of type={}, size={}, align={}, offset={} with allocator={}.",
-				typeid(_Ty).name(), sizeof(_Ty) + __exBytes, union_cast<size_t>(__align), __offset, union_cast<void*>(&__all));
+		_Ty *p = union_cast<_Ty *>(
+		 allocate<_Ty>(__all, sizeof(_Ty) + __exBytes, __align, __offset));
+		if(pf_unlikely(!p)) pf_throw(
+		 dbg_category_generic(), dbg_code::bad_alloc, dbg_flags::dump_with_handle_data, "Failed to create new object of type={}, size={}, align={}, offset={} with allocator={}.", typeid(_Ty).name(), sizeof(_Ty) + __exBytes, union_cast<size_t>(__align), __offset, union_cast<void *>(&__all));
 		construct(p, std::forward<_Args>(__args)...);
 		return p;
 	}
-	template <typename _Ty, typename _Allocator, typename ... _Args>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename _Allocator, typename... _Args>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_aligned_ex(
-		_Allocator  &__all,
-		align_val_t __align,
-		size_t __exBytes,
-		_Args&& ... __args)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_constructible_v<_Ty, _Args...>)
+	 _Allocator &__all,
+	 align_val_t __align,
+	 size_t __exBytes,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && std::is_constructible_v<_Ty, _Args...>)
 	{
 		return new_construct_aligned_at_ex<_Ty>(
-			__all,
-			0,
-			__align,
-			0,
-			std::forward<_Args>(__args)...);
+		 __all,
+		 0,
+		 __align,
+		 0,
+		 std::forward<_Args>(__args)...);
 	}
-	template <typename _Ty, typename _Allocator, typename ... _Args>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename _Allocator, typename... _Args>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_ex(
-		_Allocator  &__all,
-		size_t __exBytes,
-		_Args&& ... __args)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_constructible_v<_Ty, _Args...>)
+	 _Allocator &__all,
+	 size_t __exBytes,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && std::is_constructible_v<_Ty, _Args...>)
 	{
 		return new_construct_aligned_at_ex<_Ty>(
-			__all,
-			0,
-			align_val_t(alignof(_Ty)),
-			0,
-			std::forward<_Args>(__args)...);
+		 __all,
+		 0,
+		 align_val_t(alignof(_Ty)),
+		 0,
+		 std::forward<_Args>(__args)...);
 	}
-	template <typename _Ty, typename ... _Args>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename... _Args>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_aligned_at(
-		align_val_t __align,
-		size_t __offset,
-		_Args&& ... __args)
-	requires(std::is_constructible_v<_Ty, _Args...>)
+	 align_val_t __align,
+	 size_t __offset,
+	 _Args &&...__args)
+		requires(std::is_constructible_v<_Ty, _Args...>)
 	{
 		return new_construct_aligned_at_ex<_Ty>(0, __align, __offset, std::forward<_Args>(__args)...);
 	}
-	template <typename _Ty, typename ... _Args>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename... _Args>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_aligned(
-		align_val_t __align,
-		_Args&& ... __args)
-	requires(std::is_constructible_v<_Ty, _Args...>)
+	 align_val_t __align,
+	 _Args &&...__args)
+		requires(std::is_constructible_v<_Ty, _Args...>)
 	{
 		return new_construct_aligned_ex<_Ty>(0, __align, std::forward<_Args>(__args)...);
 	}
-	template <typename _Ty, typename ... _Args>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename... _Args>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct(
-		_Args&& ... __args)
-	requires(std::is_constructible_v<_Ty, _Args...>)
+	 _Args &&...__args)
+		requires(std::is_constructible_v<_Ty, _Args...>)
 	{
 		return new_construct_ex<_Ty>(0, std::forward<_Args>(__args)...);
 	}
 
-	template <typename _Ty, typename _Allocator, typename ... _Args>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename _Allocator, typename... _Args>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_aligned_at(
-		_Allocator  &__all,
-		align_val_t __align,
-		size_t __offset,
-		_Args&& ... __args)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_constructible_v<_Ty, _Args...>)
+	 _Allocator &__all,
+	 align_val_t __align,
+	 size_t __offset,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && std::is_constructible_v<_Ty, _Args...>)
 	{
 		return new_construct_aligned_at_ex<_Ty>(__all, 0, __align, __offset, std::forward<_Args>(__args)...);
 	}
-	template <typename _Ty, typename _Allocator, typename ... _Args>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename _Allocator, typename... _Args>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_aligned(
-		_Allocator  &__all,
-		align_val_t __align,
-		_Args&& ... __args)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_constructible_v<_Ty, _Args...>)
+	 _Allocator &__all,
+	 align_val_t __align,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && std::is_constructible_v<_Ty, _Args...>)
 	{
 		return new_construct_aligned_ex<_Ty>(__all, 0, __align, std::forward<_Args>(__args)...);
 	}
-	template <typename _Ty, typename _Allocator, typename ... _Args>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename _Allocator, typename... _Args>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct(
-		_Allocator  &__all,
-		_Args&& ... __args)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_constructible_v<_Ty, _Args...>)
+	 _Allocator &__all,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && std::is_constructible_v<_Ty, _Args...>)
 	{
 		return new_construct_ex<_Ty>(__all, 0, std::forward<_Args>(__args)...);
 	}
@@ -537,7 +545,7 @@ namespace pul
 	template<typename _Ty>
 	pf_decl_inline pf_decl_constexpr void
 	destroy_delete(
-		_Ty *__ptr) pf_attr_noexcept
+	 _Ty *__ptr) pf_attr_noexcept
 	{
 		destroy(__ptr);
 		hfree(__ptr);
@@ -545,9 +553,9 @@ namespace pul
 	template<typename _Ty, typename _Allocator>
 	pf_decl_inline pf_decl_constexpr void
 	destroy_delete(
-		_Allocator &__all,
-		_Ty *__ptr) pf_attr_noexcept
-	requires(is_allocator_v<_Allocator>)
+	 _Allocator &__all,
+	 _Ty *__ptr) pf_attr_noexcept
+		requires(is_allocator_v<_Allocator>)
 	{
 		destroy(__ptr);
 		deallocate(__all, __ptr);
@@ -555,179 +563,173 @@ namespace pul
 
 
 	/// MEMORY: Utility -> New Construct Array
-	template <typename _Ty>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_array_aligned_at(
-		size_t __count,
-		align_val_t __align,
-		size_t __offset)
-	requires(std::is_default_constructible_v<_Ty>)
+	 size_t __count,
+	 align_val_t __align,
+	 size_t __offset)
+		requires(std::is_default_constructible_v<_Ty>)
 	{
 		union
 		{
 			__marray<_Ty> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<__marray<_Ty>*>(
-			halloc(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
+		as_array = union_cast<__marray<_Ty> *>(
+		 halloc(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count));
 		return &as_array->data[0];
 	}
-	template <typename _Ty>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_array_aligned(
-		size_t __count,
-		align_val_t __align)
-	requires(std::is_default_constructible_v<_Ty>)
+	 size_t __count,
+	 align_val_t __align)
+		requires(std::is_default_constructible_v<_Ty>)
 	{
 		return new_construct_array_aligned_at<_Ty>(__count, __align, 0);
 	}
-	template <typename _Ty>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_array(
-		size_t __count)
-	requires(std::is_default_constructible_v<_Ty>)
+	 size_t __count)
+		requires(std::is_default_constructible_v<_Ty>)
 	{
 		return new_construct_array_aligned_at<_Ty>(__count, align_val_t(alignof(_Ty)), 0);
 	}
-	template <typename _Ty, typename _Allocator>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename _Allocator>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_array_aligned_at(
-		_Allocator  &__all,
-		size_t __count,
-		align_val_t __align,
-		size_t __offset)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_default_constructible_v<_Ty>)
+	 _Allocator &__all,
+	 size_t __count,
+	 align_val_t __align,
+	 size_t __offset)
+		requires(is_allocator_v<_Allocator> && std::is_default_constructible_v<_Ty>)
 	{
 		union
 		{
 			__marray<_Ty> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<__marray<_Ty>*>(
-			halloc(__all, sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
+		as_array = union_cast<__marray<_Ty> *>(
+		 halloc(__all, sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count));
 		return &as_array->data[0];
 	}
-	template <typename _Ty, typename _Allocator>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename _Allocator>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_array_aligned(
-		_Allocator  &__all,
-		size_t __count,
-		align_val_t __align)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_default_constructible_v<_Ty>)
+	 _Allocator &__all,
+	 size_t __count,
+	 align_val_t __align)
+		requires(is_allocator_v<_Allocator> && std::is_default_constructible_v<_Ty>)
 	{
 		return new_construct_array_aligned_at<_Ty>(__all, __count, __align, 0);
 	}
-	template <typename _Ty, typename _Allocator>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename _Allocator>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_array(
-		_Allocator &__all,
-		size_t __count)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_default_constructible_v<_Ty>)
+	 _Allocator &__all,
+	 size_t __count)
+		requires(is_allocator_v<_Allocator> && std::is_default_constructible_v<_Ty>)
 	{
 		return new_construct_array_aligned_at<_Ty>(__all, __count, align_val_t(alignof(_Ty)), 0);
 	}
 
-	template <typename _Ty>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_array_aligned_at(
-		size_t __count,
-		align_val_t __align,
-		size_t __offset,
-		_Ty const   &__val)
-	requires(std::is_copy_constructible_v<_Ty>)
+	 size_t __count,
+	 align_val_t __align,
+	 size_t __offset,
+	 _Ty const &__val)
+		requires(std::is_copy_constructible_v<_Ty>)
 	{
 		union
 		{
 			__marray<_Ty> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<__marray<_Ty>*>(
-			halloc(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
+		as_array = union_cast<__marray<_Ty> *>(
+		 halloc(sizeof(size_t) + sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count), __val);
 		return &as_array->data[0];
 	}
-	template <typename _Ty>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_array_aligned(
-		size_t __count,
-		align_val_t __align,
-		_Ty const   &__val)
-	requires(std::is_copy_constructible_v<_Ty>)
+	 size_t __count,
+	 align_val_t __align,
+	 _Ty const &__val)
+		requires(std::is_copy_constructible_v<_Ty>)
 	{
 		return new_construct_array_aligned_at<_Ty>(__count, __align, 0, __val);
 	}
-	template <typename _Ty>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_array(
-		size_t __count,
-		_Ty const &__val)
-	requires(std::is_copy_constructible_v<_Ty>)
+	 size_t __count,
+	 _Ty const &__val)
+		requires(std::is_copy_constructible_v<_Ty>)
 	{
 		return new_construct_array_aligned_at<_Ty>(__count, align_val_t(alignof(_Ty)), 0, __val);
 	}
 
-	template <typename _Ty, typename _Allocator>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename _Allocator>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_array_aligned_at(
-		_Allocator  &__all,
-		size_t __count,
-		align_val_t __align,
-		size_t __offset,
-		_Ty const   &__val)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_copy_constructible_v<_Ty>)
+	 _Allocator &__all,
+	 size_t __count,
+	 align_val_t __align,
+	 size_t __offset,
+	 _Ty const &__val)
+		requires(is_allocator_v<_Allocator> && std::is_copy_constructible_v<_Ty>)
 	{
 		union
 		{
 			__marray<_Ty> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<__marray<_Ty>*>(
-			halloc(__all, sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
+		as_array = union_cast<__marray<_Ty> *>(
+		 halloc(__all, sizeof(_Ty) * __count, __align, sizeof(size_t) + __offset));
 		as_array->count = __count;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + __count), __val);
 		return &as_array->data[0];
 	}
-	template <typename _Ty, typename _Allocator>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename _Allocator>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_array_aligned(
-		_Allocator  &__all,
-		size_t __count,
-		align_val_t __align,
-		_Ty const   &__val)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_copy_constructible_v<_Ty>)
+	 _Allocator &__all,
+	 size_t __count,
+	 align_val_t __align,
+	 _Ty const &__val)
+		requires(is_allocator_v<_Allocator> && std::is_copy_constructible_v<_Ty>)
 	{
 		return new_construct_array_aligned_at<_Ty>(__all, __count, __align, 0, __val);
 	}
-	template <typename _Ty, typename _Allocator>
-	pf_decl_inline pf_decl_constexpr _Ty*
+	template<typename _Ty, typename _Allocator>
+	pf_decl_inline pf_decl_constexpr _Ty *
 	new_construct_array(
-		_Allocator &__all,
-		size_t __count,
-		_Ty const  &__val)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_copy_constructible_v<_Ty>)
+	 _Allocator &__all,
+	 size_t __count,
+	 _Ty const &__val)
+		requires(is_allocator_v<_Allocator> && std::is_copy_constructible_v<_Ty>)
 	{
 		return new_construct_array_aligned_at<_Ty>(__all, __count, align_val_t(alignof(_Ty)), 0, __val);
 	}
 
-	template <typename _IteratorIn>
-	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t*
+	template<typename _IteratorIn>
+	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t *
 	new_construct_array_aligned_at(
-		_IteratorIn __beg,
-		_IteratorIn __end,
-		align_val_t __align,
-		size_t __offset)
-	requires(std::is_copy_constructible_v<typename _IteratorIn::value_t>)
+	 _IteratorIn __beg,
+	 _IteratorIn __end,
+	 align_val_t __align,
+	 size_t __offset)
+		requires(std::is_copy_constructible_v<typename _IteratorIn::value_t>)
 	{
 		const size_t c = countof(__beg, __end);
 		union
@@ -735,49 +737,48 @@ namespace pul
 			__marray<typename _IteratorIn::value_t> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<__marray<typename _IteratorIn::value_t>*>(
-			halloc(sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
+		as_array = union_cast<__marray<typename _IteratorIn::value_t> *>(
+		 halloc(sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
 		as_array->count = c;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + c), __beg);
 		return &as_array->data[0];
 	}
-	template <typename _IteratorIn>
-	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t*
+	template<typename _IteratorIn>
+	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t *
 	new_construct_array_aligned(
-		_IteratorIn __beg,
-		_IteratorIn __end,
-		align_val_t __align)
-	requires(std::is_copy_constructible_v<typename _IteratorIn::value_t>)
+	 _IteratorIn __beg,
+	 _IteratorIn __end,
+	 align_val_t __align)
+		requires(std::is_copy_constructible_v<typename _IteratorIn::value_t>)
 	{
 		return new_construct_array_aligned_at(
-			__beg,
-			__end,
-			__align,
-			0);
+		 __beg,
+		 __end,
+		 __align,
+		 0);
 	}
-	template <typename _IteratorIn>
-	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t*
+	template<typename _IteratorIn>
+	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t *
 	new_construct_array(
-		_IteratorIn __beg,
-		_IteratorIn __end)
-	requires(std::is_copy_constructible_v<typename _IteratorIn::value_t>)
+	 _IteratorIn __beg,
+	 _IteratorIn __end)
+		requires(std::is_copy_constructible_v<typename _IteratorIn::value_t>)
 	{
 		return new_construct_array_aligned_at(
-			__beg,
-			__end,
-			align_val_t(alignof(typename _IteratorIn::value_t)),
-			0);
+		 __beg,
+		 __end,
+		 align_val_t(alignof(typename _IteratorIn::value_t)),
+		 0);
 	}
-	template <typename _IteratorIn, typename _Allocator>
-	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t*
+	template<typename _IteratorIn, typename _Allocator>
+	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t *
 	new_construct_array_aligned_at(
-		_Allocator  &__all,
-		_IteratorIn __beg,
-		_IteratorIn __end,
-		align_val_t __align,
-		size_t __offset)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_copy_constructible_v<typename _IteratorIn::value_t>)
+	 _Allocator &__all,
+	 _IteratorIn __beg,
+	 _IteratorIn __end,
+	 align_val_t __align,
+	 size_t __offset)
+		requires(is_allocator_v<_Allocator> && std::is_copy_constructible_v<typename _IteratorIn::value_t>)
 	{
 		const size_t c = countof(__beg, __end);
 		union
@@ -785,44 +786,42 @@ namespace pul
 			__marray<typename _IteratorIn::value_t> *as_array;
 			size_t *as_size;
 		};
-		as_array = union_cast<__marray<typename _IteratorIn::value_t>*>(
-			halloc(__all, sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
+		as_array = union_cast<__marray<typename _IteratorIn::value_t> *>(
+		 halloc(__all, sizeof(typename _IteratorIn::value_t) * c, __align, sizeof(size_t) + __offset));
 		as_array->count = c;
 		construct(iterator(&as_array->data[0]), iterator(&as_array->data[0] + c), __beg);
 		return &as_array->data[0];
 	}
-	template <typename _IteratorIn, typename _Allocator>
-	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t*
+	template<typename _IteratorIn, typename _Allocator>
+	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t *
 	new_construct_array_aligned(
-		_Allocator  &__all,
-		_IteratorIn __beg,
-		_IteratorIn __end,
-		align_val_t __align)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_copy_constructible_v<typename _IteratorIn::value_t>)
+	 _Allocator &__all,
+	 _IteratorIn __beg,
+	 _IteratorIn __end,
+	 align_val_t __align)
+		requires(is_allocator_v<_Allocator> && std::is_copy_constructible_v<typename _IteratorIn::value_t>)
 	{
 		return new_construct_array_aligned_at(
-			__all,
-			__beg,
-			__end,
-			__align,
-			0);
+		 __all,
+		 __beg,
+		 __end,
+		 __align,
+		 0);
 	}
-	template <typename _IteratorIn, typename _Allocator>
-	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t*
+	template<typename _IteratorIn, typename _Allocator>
+	pf_decl_inline pf_decl_constexpr typename _IteratorIn::value_t *
 	new_construct_array(
-		_Allocator  &__all,
-		_IteratorIn __beg,
-		_IteratorIn __end)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_copy_constructible_v<typename _IteratorIn::value_t>)
+	 _Allocator &__all,
+	 _IteratorIn __beg,
+	 _IteratorIn __end)
+		requires(is_allocator_v<_Allocator> && std::is_copy_constructible_v<typename _IteratorIn::value_t>)
 	{
 		return new_construct_array_aligned_at(
-			__all,
-			__beg,
-			__end,
-			std::align_val_t(alignof(typename _IteratorIn::value_t)),
-			0);
+		 __all,
+		 __beg,
+		 __end,
+		 std::align_val_t(alignof(typename _IteratorIn::value_t)),
+		 0);
 	}
 
 
@@ -830,7 +829,7 @@ namespace pul
 	template<typename _Ty>
 	pf_decl_inline pf_decl_constexpr void
 	destroy_delete_array(
-		_Ty *__ptr) pf_attr_noexcept
+	 _Ty *__ptr) pf_attr_noexcept
 	{
 		__marray<_Ty> *as_array = __mem_get_marray_typeless<_Ty>(__ptr);
 		destroy(as_array);
@@ -839,9 +838,9 @@ namespace pul
 	template<typename _Ty, typename _Allocator>
 	pf_decl_inline pf_decl_constexpr void
 	destroy_delete_array(
-		_Allocator &__all,
-		_Ty *__ptr) pf_attr_noexcept
-	requires(is_allocator_v<_Allocator>)
+	 _Allocator &__all,
+	 _Ty *__ptr) pf_attr_noexcept
+		requires(is_allocator_v<_Allocator>)
 	{
 		__marray<_Ty> *as_array = __mem_get_marray_typeless<_Ty>(__ptr);
 		destroy(as_array);
@@ -857,7 +856,7 @@ namespace pul
 		/// Operator()
 		pf_decl_inline pf_decl_constexpr void
 		operator()(
-			_Ty *__ptr) pf_attr_noexcept
+		 _Ty *__ptr) pf_attr_noexcept
 		{
 			destroy_delete(__ptr);
 		}
@@ -869,7 +868,7 @@ namespace pul
 		/// Operator()
 		pf_decl_inline pf_decl_constexpr void
 		operator()(
-			_Ty *__ptr) pf_attr_noexcept
+		 _Ty *__ptr) pf_attr_noexcept
 		{
 			destroy_delete_array(__ptr);
 		}
@@ -883,14 +882,14 @@ namespace pul
 		/// Constructor
 		pf_decl_inline pf_decl_constexpr
 		deleter_allocator(
-			_Allocator *__all) pf_attr_noexcept
+		 _Allocator *__all) pf_attr_noexcept
 			: allocator_(__all)
 		{}
 
 		/// Operator()
 		pf_decl_inline pf_decl_constexpr void
 		operator()(
-			_Ty *__ptr) const pf_attr_noexcept
+		 _Ty *__ptr) const pf_attr_noexcept
 		{
 			destroy(__ptr);
 			this->allocator_->deallocate(__ptr);
@@ -906,14 +905,14 @@ namespace pul
 		/// Constructor
 		pf_decl_inline pf_decl_constexpr
 		deleter_allocator(
-			_Allocator *__all) pf_attr_noexcept
+		 _Allocator *__all) pf_attr_noexcept
 			: allocator_(__all)
 		{}
 
 		/// Operator()
 		pf_decl_inline pf_decl_constexpr void
 		operator()(
-			_Ty *__ptr) const pf_attr_noexcept
+		 _Ty *__ptr) const pf_attr_noexcept
 		{
 			(__ptr);
 			this->allocator_->deallocate(__ptr, 1);
@@ -931,40 +930,38 @@ namespace pul
 	 */
 
 	/// MEMORY: Unique -> Store
-	template <typename _Ty>
+	template<typename _Ty>
 	struct unique_store
 	{
 		/// Constructors
-		template <typename ..._Args>
+		template<typename... _Args>
 		pf_decl_constexpr
 		unique_store(
-			_Args && ... __args) pf_attr_noexcept
-		requires(std::is_constructible_v<_Ty, _Args ...>)
+		 _Args &&...__args) pf_attr_noexcept
+			requires(std::is_constructible_v<_Ty, _Args...>)
 			: store(std::forward<_Args>(__args)...)
 		{}
 		unique_store(unique_store<_Ty> const &) = delete;
 		unique_store(unique_store<_Ty> &&)			= delete;
 
 		/// Destructor
-		pf_decl_constexpr
-		~unique_store() pf_attr_noexcept = default;
+		pf_decl_constexpr ~unique_store() pf_attr_noexcept = default;
 
 		/// Store
 		_Ty store;
 	};
 
 	/// MEMORY: Unique -> Array Store
-	template <typename _Ty>
+	template<typename _Ty>
 	struct unique_store<_Ty[]>
 	{
 		/// Constructor
-		template <typename ..._Args>
+		template<typename... _Args>
 		pf_decl_constexpr
 		unique_store(
-			size_t __count,
-			_Args && ... __args) pf_attr_noexcept
-		requires((sizeof...(_Args) == 0 && std::is_default_constructible_v<_Ty>)
-						 || std::is_copy_constructible_v<_Ty>)
+		 size_t __count,
+		 _Args &&...__args) pf_attr_noexcept
+			requires((sizeof...(_Args) == 0 && std::is_default_constructible_v<_Ty>) || std::is_copy_constructible_v<_Ty>)
 		{
 			construct(&this->store, __count, std::forward<_Args>(__args)...);
 		}
@@ -972,8 +969,7 @@ namespace pul
 		unique_store(unique_store<_Ty[]> &&)			= delete;
 
 		/// Destructor
-		pf_decl_constexpr
-		~unique_store() pf_attr_noexcept
+		pf_decl_constexpr ~unique_store() pf_attr_noexcept
 		{
 			destroy(&this->store);
 		}
@@ -983,61 +979,60 @@ namespace pul
 	};
 
 	/// MEMORY: Unique -> Pointer
-	template <typename _Ty, typename _Deleter>
+	template<typename _Ty, typename _Deleter>
 	class unique_ptr
 	{
-	/// Delete
-	pf_decl_constexpr void
-	__delete_no_check() pf_attr_noexcept
-	{
-		this->del_(this->ptr_);
-	}
+		/// Delete
+		pf_decl_constexpr void
+		__delete_no_check() pf_attr_noexcept
+		{
+			this->del_(this->ptr_);
+		}
 
 	public:
 		/// Constructors
 		pf_decl_constexpr
 		unique_ptr(
-			unique_store<_Ty> *__ptr,
-			_Deleter          && __deleter) pf_attr_noexcept
+		 unique_store<_Ty> *__ptr,
+		 _Deleter &&__deleter) pf_attr_noexcept
 			: ptr_(__ptr)
 			, del_(std::move(__deleter))
 		{}
 		pf_decl_constexpr
 		unique_ptr(
-			nullptr_t,
-			_Deleter &&__deleter) pf_attr_noexcept
+		 nullptr_t,
+		 _Deleter &&__deleter) pf_attr_noexcept
 			: unique_ptr(nullptr, std::move(__deleter))
 		{}
 		pf_decl_constexpr
 		unique_ptr(
-			_Deleter &&__deleter) pf_attr_noexcept
+		 _Deleter &&__deleter) pf_attr_noexcept
 			: unique_ptr(nullptr, std::move(__deleter))
 		{}
 		pf_decl_constexpr
 		unique_ptr(
-			unique_ptr<_Ty, _Deleter> const &__r) pf_attr_noexcept = delete;
+		 unique_ptr<_Ty, _Deleter> const &__r) pf_attr_noexcept = delete;
 		pf_decl_constexpr
 		unique_ptr(
-			unique_ptr<_Ty, _Deleter> &&__r) pf_attr_noexcept
+		 unique_ptr<_Ty, _Deleter> &&__r) pf_attr_noexcept
 			: unique_ptr(__r.ptr_, std::move(__r.del_))
 		{
 			__r.ptr_ = nullptr;
 		}
 
 		/// Destructor
-		pf_decl_constexpr
-		~unique_ptr() pf_attr_noexcept
+		pf_decl_constexpr ~unique_ptr() pf_attr_noexcept
 		{
 			this->reset();
 		}
 
 		/// Operator=
 		pf_decl_constexpr unique_ptr<_Ty, _Deleter> &
-		operator =(
-			unique_ptr<_Ty, _Deleter> const &) pf_attr_noexcept = delete;
+		operator=(
+		 unique_ptr<_Ty, _Deleter> const &) pf_attr_noexcept = delete;
 		pf_decl_constexpr unique_ptr<_Ty, _Deleter> &
-		operator =(
-			unique_ptr<_Ty, _Deleter> &&__r) pf_attr_noexcept
+		operator=(
+		 unique_ptr<_Ty, _Deleter> &&__r) pf_attr_noexcept
 		{
 			if(this != &__r)
 			{
@@ -1049,8 +1044,8 @@ namespace pul
 			return *this;
 		}
 		pf_decl_constexpr unique_ptr<_Ty, _Deleter> &
-		operator =(
-			unique_store<_Ty> *__r) pf_attr_noexcept
+		operator=(
+		 unique_store<_Ty> *__r) pf_attr_noexcept
 		{
 			if(this->ptr_ != __r)
 			{
@@ -1061,37 +1056,37 @@ namespace pul
 
 		/// Operator<=> / ==
 		pf_decl_constexpr bool
-		operator ==(
-			const _Ty *__r) pf_attr_noexcept
+		operator==(
+		 const _Ty *__r) pf_attr_noexcept
 		{
 			return this->ptr_ == __r;
 		}
 		pf_decl_constexpr std::strong_ordering
-		operator <=>(
-			const _Ty *__r) pf_attr_noexcept
+		operator<=>(
+		 const _Ty *__r) pf_attr_noexcept
 		{
 			return this->ptr_ <=> __r;
 		}
 
 		/// Operator*
 		pf_decl_constexpr _Ty &
-		operator *() pf_attr_noexcept
+		operator*() pf_attr_noexcept
 		{
 			return *this->get();
 		}
 		pf_decl_constexpr const _Ty &
-		operator *() const pf_attr_noexcept
+		operator*() const pf_attr_noexcept
 		{
 			return *this->get();
 		}
 
 		/// Operator->
-		pf_decl_constexpr _Ty*
+		pf_decl_constexpr _Ty *
 		operator->() pf_attr_noexcept
 		{
 			return this->get();
 		}
-		pf_decl_constexpr const _Ty*
+		pf_decl_constexpr const _Ty *
 		operator->() const pf_attr_noexcept
 		{
 			return this->get();
@@ -1099,12 +1094,12 @@ namespace pul
 
 		/// Operator _Ty*
 		pf_decl_constexpr
-		operator _Ty* () pf_attr_noexcept
+		operator _Ty *() pf_attr_noexcept
 		{
 			return this->get();
 		}
 		pf_decl_constexpr
-		operator const _Ty* () const pf_attr_noexcept
+		operator const _Ty *() const pf_attr_noexcept
 		{
 			return this->get();
 		}
@@ -1117,12 +1112,12 @@ namespace pul
 		}
 
 		/// Get
-		pf_decl_constexpr _Ty*
+		pf_decl_constexpr _Ty *
 		get() pf_attr_noexcept
 		{
 			return &this->ptr_->store;
 		}
-		pf_decl_constexpr const _Ty*
+		pf_decl_constexpr const _Ty *
 		get() const pf_attr_noexcept
 		{
 			return &this->ptr_->store;
@@ -1131,8 +1126,8 @@ namespace pul
 		/// Set
 		pf_decl_constexpr void
 		set(
-			unique_store<_Ty> *__r,
-			_Deleter          && __deleter = _Deleter()) pf_attr_noexcept
+		 unique_store<_Ty> *__r,
+		 _Deleter &&__deleter = _Deleter()) pf_attr_noexcept
 		{
 			if(this->ptr_) this->__delete_no_check();
 			this->ptr_ = __r;
@@ -1157,60 +1152,60 @@ namespace pul
 	};
 
 	/// MEMORY: Unique -> Pointer Array
-	template <typename _Ty, typename _Deleter>
+	template<typename _Ty, typename _Deleter>
 	class unique_ptr<_Ty[], _Deleter>
 	{
-	/// Delete
-	pf_decl_constexpr void __delete_no_check() pf_attr_noexcept
-	{
-		this->del_(this->ptr_);
-	}
+		/// Delete
+		pf_decl_constexpr void
+		__delete_no_check() pf_attr_noexcept
+		{
+			this->del_(this->ptr_);
+		}
 
 	public:
 		/// Constructors
 		pf_decl_constexpr
 		unique_ptr(
-			unique_store<_Ty[]> *__ptr,
-			_Deleter            && __deleter) pf_attr_noexcept
+		 unique_store<_Ty[]> *__ptr,
+		 _Deleter &&__deleter) pf_attr_noexcept
 			: ptr_(__ptr)
 			, del_(std::move(__deleter))
 		{}
 		pf_decl_constexpr
 		unique_ptr(
-			nullptr_t,
-			_Deleter &&__deleter) pf_attr_noexcept
+		 nullptr_t,
+		 _Deleter &&__deleter) pf_attr_noexcept
 			: unique_ptr(nullptr, std::move(__deleter))
 		{}
 		pf_decl_constexpr
 		unique_ptr(
-			_Deleter &&__deleter) pf_attr_noexcept
+		 _Deleter &&__deleter) pf_attr_noexcept
 			: unique_ptr(nullptr, std::move(__deleter))
 		{}
 		pf_decl_constexpr
 		unique_ptr(
-			unique_ptr<_Ty[], _Deleter> const &__r) pf_attr_noexcept = delete;
+		 unique_ptr<_Ty[], _Deleter> const &__r) pf_attr_noexcept = delete;
 		pf_decl_constexpr
 		unique_ptr(
-			unique_ptr<_Ty[], _Deleter> &&__r) pf_attr_noexcept
+		 unique_ptr<_Ty[], _Deleter> &&__r) pf_attr_noexcept
 			: unique_ptr(__r.ptr_, std::move(__r.del_))
 		{
 			__r.ptr_ = nullptr;
 		}
 
 		/// Destructor
-		pf_decl_constexpr
-		~unique_ptr() pf_attr_noexcept
+		pf_decl_constexpr ~unique_ptr() pf_attr_noexcept
 		{
 			this->reset();
 		}
 
 		/// Operator=
 		pf_decl_constexpr unique_ptr<_Ty[], _Deleter> &
-		operator =(
-			unique_ptr<_Ty[], _Deleter> const &) pf_attr_noexcept = delete;
+		operator=(
+		 unique_ptr<_Ty[], _Deleter> const &) pf_attr_noexcept = delete;
 		pf_decl_constexpr unique_ptr<_Ty[], _Deleter> &
-		operator =(
-			unique_ptr<_Ty[], _Deleter> &&__r) pf_attr_noexcept
+		operator=(
+		 unique_ptr<_Ty[], _Deleter> &&__r) pf_attr_noexcept
 		{
 			if(this != &__r)
 			{
@@ -1222,8 +1217,8 @@ namespace pul
 			return *this;
 		}
 		pf_decl_constexpr unique_ptr<_Ty[], _Deleter> &
-		operator =(
-			unique_store<_Ty[]> *__s) pf_attr_noexcept
+		operator=(
+		 unique_store<_Ty[]> *__s) pf_attr_noexcept
 		{
 			if(this->ptr_ != __s)
 			{
@@ -1234,38 +1229,40 @@ namespace pul
 
 		/// Operator<=> / ==
 		pf_decl_constexpr bool
-		operator ==(
-			const _Ty *__ptr) const pf_attr_noexcept
+		operator==(
+		 const _Ty *__ptr) const pf_attr_noexcept
 		{
 			return this->get() == __ptr;
 		}
 		pf_decl_constexpr std::strong_ordering
-		operator <=>(
-			const _Ty *__ptr) const pf_attr_noexcept
+		operator<=>(
+		 const _Ty *__ptr) const pf_attr_noexcept
 		{
 			return this->get() <=> __ptr;
 		}
 
 		/// Operator[]
-		pf_decl_constexpr _Ty &operator [](
-			size_t __index) pf_attr_noexcept
+		pf_decl_constexpr _Ty &
+		operator[](
+		 size_t __index) pf_attr_noexcept
 		{
 			return this->get()[__index];
 		}
-		pf_decl_constexpr const _Ty &operator [](
-			size_t __index) const pf_attr_noexcept
+		pf_decl_constexpr const _Ty &
+		operator[](
+		 size_t __index) const pf_attr_noexcept
 		{
 			return this->get()[__index];
 		}
 
 		/// Operator _Ty*
 		pf_decl_constexpr
-		operator _Ty* () pf_attr_noexcept
+		operator _Ty *() pf_attr_noexcept
 		{
 			return this->get();
 		}
 		pf_decl_constexpr
-		operator const _Ty* () const pf_attr_noexcept
+		operator const _Ty *() const pf_attr_noexcept
 		{
 			return this->get();
 		}
@@ -1278,12 +1275,12 @@ namespace pul
 		}
 
 		/// Get
-		pf_decl_constexpr _Ty*
+		pf_decl_constexpr _Ty *
 		get() pf_attr_noexcept
 		{
 			return &this->ptr_->first;
 		}
-		pf_decl_constexpr const _Ty*
+		pf_decl_constexpr const _Ty *
 		get() const pf_attr_noexcept
 		{
 			return &this->ptr_->first;
@@ -1292,8 +1289,8 @@ namespace pul
 		/// Set
 		pf_decl_constexpr void
 		set(
-			unique_store<_Ty[]> *__r,
-			_Deleter            && __deleter = _Deleter()) pf_attr_noexcept
+		 unique_store<_Ty[]> *__r,
+		 _Deleter &&__deleter = _Deleter()) pf_attr_noexcept
 		{
 			if(this->ptr_) this->__delete_no_check();
 			this->ptr_ = __r;
@@ -1318,200 +1315,194 @@ namespace pul
 	};
 
 	/// MEMORY: Unique -> Maker
-	template <typename _Ty, typename ..._Args>
+	template<typename _Ty, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_default<unique_store<_Ty>>>
 	make_unique(
-		_Args && ... __args)
-	requires(!std::is_array_v<_Ty>)
+	 _Args &&...__args)
+		requires(!std::is_array_v<_Ty>)
 	{
 		return unique_ptr(
-			new_construct<unique_store<_Ty>>(
-				std::forward<_Args>(__args)...),
-			deleter_default<unique_store<_Ty>>());
+		 new_construct<unique_store<_Ty>>(
+			std::forward<_Args>(__args)...),
+		 deleter_default<unique_store<_Ty>>());
 	}
-	template <typename _Ty, typename ..._Args>
+	template<typename _Ty, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_default<unique_store<_Ty>>>
 	make_unique_aligned(
-		align_val_t __align,
-		_Args && ... __args)
-	requires(!std::is_array_v<_Ty>)
+	 align_val_t __align,
+	 _Args &&...__args)
+		requires(!std::is_array_v<_Ty>)
 	{
 		return unique_ptr(
-			new_construct_aligned<unique_store<_Ty>>(
-				__align,
-				std::forward<_Args>(__args)...),
-			deleter_default<unique_store<_Ty>>());
+		 new_construct_aligned<unique_store<_Ty>>(
+			__align,
+			std::forward<_Args>(__args)...),
+		 deleter_default<unique_store<_Ty>>());
 	}
-	template <typename _Ty, typename ..._Args>
+	template<typename _Ty, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_default<unique_store<_Ty>>>
 	make_unique_aligned_at(
-		align_val_t __align,
-		size_t __offset,
-		_Args && ... __args)
-	requires(!std::is_array_v<_Ty>)
+	 align_val_t __align,
+	 size_t __offset,
+	 _Args &&...__args)
+		requires(!std::is_array_v<_Ty>)
 	{
 		return unique_ptr(
-			new_construct_aligned_at<unique_store<_Ty>>(
-				__align,
-				__offset,
-				std::forward<_Args>(__args)...),
-			deleter_default<unique_store<_Ty>>());
+		 new_construct_aligned_at<unique_store<_Ty>>(
+			__align,
+			__offset,
+			std::forward<_Args>(__args)...),
+		 deleter_default<unique_store<_Ty>>());
 	}
 
 	/// MEMORY: Unique -> Maker -> Array
-	template <typename _Ty, typename ..._Args>
+	template<typename _Ty, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_default<unique_store<_Ty>>>
 	make_unique(
-		size_t __count,
-		_Args && ... __args)
-	requires(std::is_array_v<_Ty>)
+	 size_t __count,
+	 _Args &&...__args)
+		requires(std::is_array_v<_Ty>)
 	{
 		return unique_ptr(
-			new_construct_ex<unique_store<_Ty>>(
-				__count * sizeof(std::remove_all_extents_t<_Ty>),
-				__count,
-				std::forward<_Args>(__args)...),
-			deleter_default<unique_store<_Ty>>());
+		 new_construct_ex<unique_store<_Ty>>(
+			__count * sizeof(std::remove_all_extents_t<_Ty>),
+			__count,
+			std::forward<_Args>(__args)...),
+		 deleter_default<unique_store<_Ty>>());
 	}
-	template <typename _Ty, typename ..._Args>
+	template<typename _Ty, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_default<unique_store<_Ty>>>
 	make_unique_aligned(
-		size_t __count,
-		align_val_t __align,
-		_Args && ... __args)
-	requires(std::is_array_v<_Ty>)
+	 size_t __count,
+	 align_val_t __align,
+	 _Args &&...__args)
+		requires(std::is_array_v<_Ty>)
 	{
 		return unique_ptr(
-			new_construct_aligned_ex<unique_store<_Ty>>(
-				__count * sizeof(std::remove_all_extents_t<_Ty>),
-				__align,
-				std::forward<_Args>(__args)...),
-			deleter_default<unique_store<_Ty>>());
+		 new_construct_aligned_ex<unique_store<_Ty>>(
+			__count * sizeof(std::remove_all_extents_t<_Ty>),
+			__align,
+			std::forward<_Args>(__args)...),
+		 deleter_default<unique_store<_Ty>>());
 	}
-	template <typename _Ty, typename ... _Args>
+	template<typename _Ty, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_default<unique_store<_Ty>>>
 	make_unique_aligned_at(
-		size_t __count,
-		align_val_t __align,
-		size_t __offset,
-		_Args && ... __args)
-	requires(std::is_array_v<_Ty>)
+	 size_t __count,
+	 align_val_t __align,
+	 size_t __offset,
+	 _Args &&...__args)
+		requires(std::is_array_v<_Ty>)
 	{
 		return unique_ptr(
-			new_construct_aligned_at_ex<unique_store<_Ty>>(
-				__count * sizeof(std::remove_all_extents_t<_Ty>),
-				__align,
-				__offset,
-				std::forward<_Args>(__args)...),
-			deleter_default<unique_store<_Ty>>());
+		 new_construct_aligned_at_ex<unique_store<_Ty>>(
+			__count * sizeof(std::remove_all_extents_t<_Ty>),
+			__align,
+			__offset,
+			std::forward<_Args>(__args)...),
+		 deleter_default<unique_store<_Ty>>());
 	}
 
 	/// MEMORY: Unique -> Maker -> Allocator
-	template <typename _Ty, typename _Allocator, typename ..._Args>
+	template<typename _Ty, typename _Allocator, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_allocator<unique_store<_Ty>, _Allocator>>
 	make_unique(
-		_Allocator   & __all,
-		_Args && ... __args)
-	requires(is_allocator_v<_Allocator>
-					 && !std::is_array_v<_Ty>)
+	 _Allocator &__all,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && !std::is_array_v<_Ty>)
 	{
 		return unique_ptr(
-			new_construct<unique_store<_Ty>>(
-				__all,
-				std::forward<_Args>(__args)...),
-			deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
+		 new_construct<unique_store<_Ty>>(
+			__all,
+			std::forward<_Args>(__args)...),
+		 deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
 	}
-	template <typename _Ty, typename _Allocator, typename ..._Args>
+	template<typename _Ty, typename _Allocator, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_allocator<unique_store<_Ty>, _Allocator>>
 	make_unique_aligned(
-		_Allocator   & __all,
-		align_val_t __align,
-		_Args && ... __args)
-	requires(is_allocator_v<_Allocator>
-					 && !std::is_array_v<_Ty>)
+	 _Allocator &__all,
+	 align_val_t __align,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && !std::is_array_v<_Ty>)
 	{
 		return unique_ptr(
-			new_construct_aligned<unique_store<_Ty>>(
-				__all,
-				__align,
-				std::forward<_Args>(__args)...),
-			deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
+		 new_construct_aligned<unique_store<_Ty>>(
+			__all,
+			__align,
+			std::forward<_Args>(__args)...),
+		 deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
 	}
-	template <typename _Ty, typename _Allocator, typename ..._Args>
+	template<typename _Ty, typename _Allocator, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_allocator<unique_store<_Ty>, _Allocator>>
 	make_unique_aligned_at(
-		_Allocator& __all,
-		align_val_t __align,
-		size_t __offset,
-		_Args && ... __args)
-	requires(is_allocator_v<_Allocator>
-					 && !std::is_array_v<_Ty>)
+	 _Allocator &__all,
+	 align_val_t __align,
+	 size_t __offset,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && !std::is_array_v<_Ty>)
 	{
 		return unique_ptr(
-			new_construct_aligned_at<unique_store<_Ty>>(
-				__all,
-				__align,
-				__offset,
-				std::forward<_Args>(__args)...),
-			deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
+		 new_construct_aligned_at<unique_store<_Ty>>(
+			__all,
+			__align,
+			__offset,
+			std::forward<_Args>(__args)...),
+		 deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
 	}
 
 	/// MEMORY: Unique -> Maker -> Allocator -> Array
-	template <typename _Ty, typename _Allocator, typename ..._Args>
+	template<typename _Ty, typename _Allocator, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_allocator<unique_store<_Ty>, _Allocator>>
 	make_unique(
-		_Allocator& __all,
-		size_t __count,
-		_Args && ... __args)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_array_v<_Ty>)
+	 _Allocator &__all,
+	 size_t __count,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && std::is_array_v<_Ty>)
 	{
 		return unique_ptr(
-			new_construct_ex<unique_store<_Ty>>(
-				__all,
-				__count * sizeof(std::remove_all_extents_t<_Ty>),
-				__count,
-				std::forward<_Args>(__args)...),
-			deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
+		 new_construct_ex<unique_store<_Ty>>(
+			__all,
+			__count * sizeof(std::remove_all_extents_t<_Ty>),
+			__count,
+			std::forward<_Args>(__args)...),
+		 deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
 	}
-	template <typename _Ty, typename _Allocator, typename ..._Args>
+	template<typename _Ty, typename _Allocator, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_allocator<unique_store<_Ty>, _Allocator>>
 	make_unique_aligned(
-		_Allocator& __all,
-		size_t __count,
-		align_val_t __align,
-		_Args && ... __args)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_array_v<_Ty>)
+	 _Allocator &__all,
+	 size_t __count,
+	 align_val_t __align,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && std::is_array_v<_Ty>)
 	{
 		return unique_ptr(
-			new_construct_aligned_ex<unique_store<_Ty>>(
-				__all,
-				__count * sizeof(std::remove_all_extents_t<_Ty>),
-				__align,
-				__count,
-				std::forward<_Args>(__args)...),
-			deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
+		 new_construct_aligned_ex<unique_store<_Ty>>(
+			__all,
+			__count * sizeof(std::remove_all_extents_t<_Ty>),
+			__align,
+			__count,
+			std::forward<_Args>(__args)...),
+		 deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
 	}
-	template <typename _Ty, typename _Allocator, typename ..._Args>
+	template<typename _Ty, typename _Allocator, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr unique_ptr<_Ty, deleter_allocator<unique_store<_Ty>, _Allocator>>
 	make_unique_aligned_at(
-		_Allocator& __all,
-		size_t __count,
-		align_val_t __align,
-		size_t __offset,
-		_Args && ... __args)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_array_v<_Ty>)
+	 _Allocator &__all,
+	 size_t __count,
+	 align_val_t __align,
+	 size_t __offset,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && std::is_array_v<_Ty>)
 	{
 		return unique_ptr(
-			new_construct_aligned_at_ex<unique_store<_Ty>>(
-				__all,
-				__count * sizeof(std::remove_all_extents_t<_Ty>),
-				__align,
-				__count,
-				std::forward<_Args>(__args)...),
-			deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
+		 new_construct_aligned_at_ex<unique_store<_Ty>>(
+			__all,
+			__count * sizeof(std::remove_all_extents_t<_Ty>),
+			__align,
+			__count,
+			std::forward<_Args>(__args)...),
+		 deleter_allocator<unique_store<_Ty>, _Allocator>(&__all));
 	}
 
 
@@ -1526,11 +1517,11 @@ namespace pul
 	struct shared_store
 	{
 		/// Constructor
-		template<typename ... _Args>
+		template<typename... _Args>
 		pf_decl_constexpr
 		shared_store(
-			_Args &&... __args) pf_attr_noexcept
-		requires(std::is_constructible_v<_Ty, _Args...>)
+		 _Args &&...__args) pf_attr_noexcept
+			requires(std::is_constructible_v<_Ty, _Args...>)
 			: shared(1)
 			, store(std::forward<_Args>(__args)...)
 		{}
@@ -1553,13 +1544,12 @@ namespace pul
 	struct shared_store<_Ty[]>
 	{
 		/// Constructor
-		template<typename ... _Args>
+		template<typename... _Args>
 		pf_decl_constexpr
 		shared_store(
-			size_t __count,
-			_Args &&... __args) pf_attr_noexcept
-		requires((sizeof...(_Args) == 0 && std::is_default_constructible_v<_Ty>)
-						 || std::is_copy_constructible_v<_Ty>)
+		 size_t __count,
+		 _Args &&...__args) pf_attr_noexcept
+			requires((sizeof...(_Args) == 0 && std::is_default_constructible_v<_Ty>) || std::is_copy_constructible_v<_Ty>)
 			: shared(1)
 		{
 			construct(&this->array, __count, std::forward<_Args>(__args)...);
@@ -1583,17 +1573,17 @@ namespace pul
 	template<typename _Ty, typename _Deleter>
 	class shared_ptr
 	{
-	/// Delete
-	pf_decl_constexpr void
-	__increase_share_count() pf_attr_noexcept
-	{
-		if(this->ptr_) ++this->ptr_->shared;
-	}
-	pf_decl_constexpr void
-	__delete_no_check() pf_attr_noexcept
-	{
-		if(--this->ptr_->shared == 0) this->del_(this->ptr_);
-	}
+		/// Delete
+		pf_decl_constexpr void
+		__increase_share_count() pf_attr_noexcept
+		{
+			if(this->ptr_) ++this->ptr_->shared;
+		}
+		pf_decl_constexpr void
+		__delete_no_check() pf_attr_noexcept
+		{
+			if(--this->ptr_->shared == 0) this->del_(this->ptr_);
+		}
 
 	public:
 		/// Constructors
@@ -1633,7 +1623,10 @@ namespace pul
 		pf_decl_constexpr shared_ptr<_Ty, _Deleter> &
 		operator=(shared_ptr<_Ty, _Deleter> const &__r) pf_attr_noexcept
 		{
-			if(this != &__r) { this->set(__r.ptr, __r.del_); }
+			if(this != &__r)
+			{
+				this->set(__r.ptr, __r.del_);
+			}
 			return *this;
 		}
 		pf_decl_constexpr shared_ptr<_Ty, _Deleter> &
@@ -1651,7 +1644,10 @@ namespace pul
 		pf_decl_constexpr shared_ptr<_Ty, _Deleter> &
 		operator=(shared_store<_Ty> *__s) pf_attr_noexcept
 		{
-			if(this != &__s) { this->set(__s); }
+			if(this != &__s)
+			{
+				this->set(__s);
+			}
 			return *this;
 		}
 
@@ -1680,12 +1676,12 @@ namespace pul
 		}
 
 		/// Operator->
-		pf_decl_constexpr _Ty*
+		pf_decl_constexpr _Ty *
 		operator->() pf_attr_noexcept
 		{
 			return this->get();
 		}
-		pf_decl_constexpr const _Ty*
+		pf_decl_constexpr const _Ty *
 		operator->() const pf_attr_noexcept
 		{
 			return this->get();
@@ -1693,11 +1689,11 @@ namespace pul
 
 		/// Operator _Ty *
 		pf_decl_constexpr
-		operator _Ty* () pf_attr_noexcept
+		operator _Ty *() pf_attr_noexcept
 		{
 			return this->get();
 		}
-		pf_decl_constexpr operator const _Ty* () const pf_attr_noexcept
+		pf_decl_constexpr operator const _Ty *() const pf_attr_noexcept
 		{
 			return this->get();
 		}
@@ -1709,12 +1705,12 @@ namespace pul
 		}
 
 		/// Get
-		pf_decl_constexpr _Ty*
+		pf_decl_constexpr _Ty *
 		get() pf_attr_noexcept
 		{
 			return &this->ptr_->first;
 		}
-		pf_decl_constexpr const _Ty*
+		pf_decl_constexpr const _Ty *
 		get() const pf_attr_noexcept
 		{
 			return &this->ptr_->first;
@@ -1754,17 +1750,17 @@ namespace pul
 	template<typename _Ty, typename _Deleter>
 	class shared_ptr<_Ty[], _Deleter>
 	{
-	/// Delete
-	pf_decl_constexpr void
-	__increase_share_count() pf_attr_noexcept
-	{
-		if(this->ptr_) ++this->ptr_->shared;
-	}
-	pf_decl_constexpr void
-	__delete_no_check() pf_attr_noexcept
-	{
-		if(--this->ptr_->shared == 0) this->del_(this->ptr_);
-	}
+		/// Delete
+		pf_decl_constexpr void
+		__increase_share_count() pf_attr_noexcept
+		{
+			if(this->ptr_) ++this->ptr_->shared;
+		}
+		pf_decl_constexpr void
+		__delete_no_check() pf_attr_noexcept
+		{
+			if(--this->ptr_->shared == 0) this->del_(this->ptr_);
+		}
 
 	public:
 		/// Constructors
@@ -1804,7 +1800,10 @@ namespace pul
 		pf_decl_constexpr shared_ptr<_Ty[], _Deleter> &
 		operator=(shared_ptr<_Ty[], _Deleter> const &__r) pf_attr_noexcept
 		{
-			if(this != &__r) { this->set(__r.ptr_, __r.del_); }
+			if(this != &__r)
+			{
+				this->set(__r.ptr_, __r.del_);
+			}
 			return *this;
 		}
 		pf_decl_constexpr shared_ptr<_Ty[], _Deleter> &
@@ -1822,7 +1821,10 @@ namespace pul
 		pf_decl_constexpr shared_ptr<_Ty[], _Deleter> &
 		operator=(shared_store<_Ty[]> *__s) pf_attr_noexcept
 		{
-			if(this != &__s) { this->set(__s); }
+			if(this != &__s)
+			{
+				this->set(__s);
+			}
 			return *this;
 		}
 
@@ -1852,11 +1854,11 @@ namespace pul
 
 		/// Operator _Ty *
 		pf_decl_constexpr
-		operator _Ty* () pf_attr_noexcept
+		operator _Ty *() pf_attr_noexcept
 		{
 			return this->get();
 		}
-		pf_decl_constexpr operator const _Ty* () const pf_attr_noexcept
+		pf_decl_constexpr operator const _Ty *() const pf_attr_noexcept
 		{
 			return this->get();
 		}
@@ -1868,12 +1870,12 @@ namespace pul
 		}
 
 		/// Get
-		pf_decl_constexpr _Ty*
+		pf_decl_constexpr _Ty *
 		get() pf_attr_noexcept
 		{
 			return &this->ptr_->first;
 		}
-		pf_decl_constexpr const _Ty*
+		pf_decl_constexpr const _Ty *
 		get() const pf_attr_noexcept
 		{
 			return &this->ptr_->first;
@@ -1910,196 +1912,190 @@ namespace pul
 	};
 
 	/// MEMORY: Shared -> Maker
-	template<typename _Ty, typename ... _Args>
+	template<typename _Ty, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_default<shared_store<_Ty>>>
 	make_shared(
-		_Args &&... __args)
-	requires(!std::is_array_v<_Ty>)
+	 _Args &&...__args)
+		requires(!std::is_array_v<_Ty>)
 	{
 		return shared_ptr(
-			new_construct<shared_store<_Ty>>(
-				std::forward<_Args>(__args)...),
-			deleter_default<shared_store<_Ty>>());
+		 new_construct<shared_store<_Ty>>(
+			std::forward<_Args>(__args)...),
+		 deleter_default<shared_store<_Ty>>());
 	}
-	template<typename _Ty, typename ... _Args>
+	template<typename _Ty, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_default<shared_store<_Ty>>>
 	make_shared_aligned(
-		align_val_t __align,
-		_Args &&... __args)
-	requires(!std::is_array_v<_Ty>)
+	 align_val_t __align,
+	 _Args &&...__args)
+		requires(!std::is_array_v<_Ty>)
 	{
 		return shared_ptr(
-			new_construct_aligned<shared_store<_Ty>>(
-				__align,
-				std::forward<_Args>(__args)...),
-			deleter_default<shared_store<_Ty>>());
+		 new_construct_aligned<shared_store<_Ty>>(
+			__align,
+			std::forward<_Args>(__args)...),
+		 deleter_default<shared_store<_Ty>>());
 	}
-	template<typename _Ty, typename ... _Args>
+	template<typename _Ty, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_default<shared_store<_Ty>>>
 	make_shared_aligned_at(
-		align_val_t __align,
-		size_t __offset,
-		_Args &&... __args)
-	requires(!std::is_array_v<_Ty>)
+	 align_val_t __align,
+	 size_t __offset,
+	 _Args &&...__args)
+		requires(!std::is_array_v<_Ty>)
 	{
 		return shared_ptr(
-			new_construct_aligned_at<shared_store<_Ty>>(
-				__align,
-				__offset,
-				std::forward<_Args>(__args)...),
-			deleter_default<shared_store<_Ty>>());
+		 new_construct_aligned_at<shared_store<_Ty>>(
+			__align,
+			__offset,
+			std::forward<_Args>(__args)...),
+		 deleter_default<shared_store<_Ty>>());
 	}
 
 	/// MEMORY: Shared -> Maker -> Array
-	template <typename _Ty, typename ... _Args>
+	template<typename _Ty, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_default<shared_store<_Ty>>>
 	make_shared(
-		size_t __count,
-		_Args &&... __args)
-	requires(std::is_array_v<_Ty>)
+	 size_t __count,
+	 _Args &&...__args)
+		requires(std::is_array_v<_Ty>)
 	{
 		return shared_ptr(
-			new_construct_ex<shared_store<_Ty>>(
-				__count * sizeof(std::remove_all_extents_t<_Ty>),
-				__count,
-				std::forward<_Args>(__args)...),
-			deleter_default<shared_store<_Ty>>());
+		 new_construct_ex<shared_store<_Ty>>(
+			__count * sizeof(std::remove_all_extents_t<_Ty>),
+			__count,
+			std::forward<_Args>(__args)...),
+		 deleter_default<shared_store<_Ty>>());
 	}
-	template <typename _Ty, typename ... _Args>
+	template<typename _Ty, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_default<shared_store<_Ty>>>
 	make_shared_aligned(
-		size_t __count,
-		align_val_t __align,
-		_Args &&... __args)
-	requires(std::is_array_v<_Ty>)
+	 size_t __count,
+	 align_val_t __align,
+	 _Args &&...__args)
+		requires(std::is_array_v<_Ty>)
 	{
 		return shared_ptr(
-			new_construct_aligned_ex<shared_store<_Ty>>(
-				__count * sizeof(std::remove_all_extents_t<_Ty>),
-				__count,
-				__align,
-				std::forward<_Args>(__args)...),
-			deleter_default<shared_store<_Ty>>());
+		 new_construct_aligned_ex<shared_store<_Ty>>(
+			__count * sizeof(std::remove_all_extents_t<_Ty>),
+			__count,
+			__align,
+			std::forward<_Args>(__args)...),
+		 deleter_default<shared_store<_Ty>>());
 	}
-	template <typename _Ty, typename ... _Args>
+	template<typename _Ty, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_default<shared_store<_Ty>>>
 	make_shared_aligned_at(
-		size_t __count,
-		align_val_t __align,
-		_Args &&... __args)
-	requires(std::is_array_v<_Ty>)
+	 size_t __count,
+	 align_val_t __align,
+	 _Args &&...__args)
+		requires(std::is_array_v<_Ty>)
 	{
 		return shared_ptr(
-			new_construct_aligned_at_ex<shared_store<_Ty>>(
-				__count * sizeof(std::remove_all_extents_t<_Ty>),
-				__count,
-				__align,
-				std::forward<_Args>(__args)...),
-			deleter_default<shared_store<_Ty>>());
+		 new_construct_aligned_at_ex<shared_store<_Ty>>(
+			__count * sizeof(std::remove_all_extents_t<_Ty>),
+			__count,
+			__align,
+			std::forward<_Args>(__args)...),
+		 deleter_default<shared_store<_Ty>>());
 	}
 
 	/// MEMORY: Shared -> Maker -> Allocator
-	template <typename _Ty, typename _Allocator, typename ... _Args>
+	template<typename _Ty, typename _Allocator, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_allocator<shared_store<_Ty>, _Allocator>>
 	make_shared(
-		_Allocator& __all,
-		_Args &&... __args)
-	requires(is_allocator_v<_Allocator>
-					 && !std::is_array_v<_Ty>)
+	 _Allocator &__all,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && !std::is_array_v<_Ty>)
 	{
 		return shared_ptr(
-			new_construct<shared_store<_Ty>>(
-				std::forward<_Args>(__args)...),
-			deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
+		 new_construct<shared_store<_Ty>>(
+			std::forward<_Args>(__args)...),
+		 deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
 	}
-	template <typename _Ty, typename _Allocator, typename ... _Args>
+	template<typename _Ty, typename _Allocator, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_allocator<shared_store<_Ty>, _Allocator>>
 	make_shared_aligned(
-		_Allocator& __all,
-		align_val_t __align,
-		_Args &&... __args)
-	requires(is_allocator_v<_Allocator>
-					 && !std::is_array_v<_Ty>)
+	 _Allocator &__all,
+	 align_val_t __align,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && !std::is_array_v<_Ty>)
 	{
 		return shared_ptr(
-			new_construct_aligned<shared_store<_Ty>>(
-				__align,
-				std::forward<_Args>(__args)...),
-			deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
+		 new_construct_aligned<shared_store<_Ty>>(
+			__align,
+			std::forward<_Args>(__args)...),
+		 deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
 	}
-	template <typename _Ty, typename _Allocator, typename ... _Args>
+	template<typename _Ty, typename _Allocator, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_allocator<shared_store<_Ty>, _Allocator>>
 	make_shared_aligned(
-		_Allocator& __all,
-		align_val_t __align,
-		size_t __offset,
-		_Args &&... __args)
-	requires(is_allocator_v<_Allocator>
-					 && !std::is_array_v<_Ty>)
+	 _Allocator &__all,
+	 align_val_t __align,
+	 size_t __offset,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && !std::is_array_v<_Ty>)
 	{
 		return shared_ptr(
-			new_construct_aligned_at<shared_store<_Ty>>(
-				__align,
-				__offset,
-				std::forward<_Args>(__args)...),
-			deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
+		 new_construct_aligned_at<shared_store<_Ty>>(
+			__align,
+			__offset,
+			std::forward<_Args>(__args)...),
+		 deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
 	}
 
 	/// MEMORY: Shared -> Maker -> Allocator -> Array
-	template <typename _Ty, typename _Allocator, typename ... _Args>
+	template<typename _Ty, typename _Allocator, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_allocator<shared_store<_Ty>, _Allocator>>
 	make_shared(
-		_Allocator& __all,
-		size_t __count,
-		_Args &&... __args)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_array_v<_Ty>)
+	 _Allocator &__all,
+	 size_t __count,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && std::is_array_v<_Ty>)
 	{
 		return shared_ptr(
-			new_construct_ex<shared_store<_Ty>>(
-				__count * sizeof(std::remove_all_extents_t<_Ty>),
-				__count,
-				std::forward<_Args>(__args)...),
-			deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
+		 new_construct_ex<shared_store<_Ty>>(
+			__count * sizeof(std::remove_all_extents_t<_Ty>),
+			__count,
+			std::forward<_Args>(__args)...),
+		 deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
 	}
-	template <typename _Ty, typename _Allocator, typename ... _Args>
+	template<typename _Ty, typename _Allocator, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_allocator<shared_store<_Ty>, _Allocator>>
 	make_shared_aligned(
-		_Allocator& __all,
-		size_t __count,
-		align_val_t __align,
-		_Args &&... __args)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_array_v<_Ty>)
+	 _Allocator &__all,
+	 size_t __count,
+	 align_val_t __align,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && std::is_array_v<_Ty>)
 	{
 		return shared_ptr(
-			new_construct_aligned_ex<shared_store<_Ty>>(
-				__count * sizeof(std::remove_all_extents_t<_Ty>),
-				__count,
-				__align,
-				std::forward<_Args>(__args)...),
-			deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
+		 new_construct_aligned_ex<shared_store<_Ty>>(
+			__count * sizeof(std::remove_all_extents_t<_Ty>),
+			__count,
+			__align,
+			std::forward<_Args>(__args)...),
+		 deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
 	}
-	template <typename _Ty, typename _Allocator, typename ... _Args>
+	template<typename _Ty, typename _Allocator, typename... _Args>
 	pf_hint_nodiscard pf_decl_constexpr shared_ptr<_Ty, deleter_allocator<shared_store<_Ty>, _Allocator>>
 	make_shared_aligned_at(
-		_Allocator& __all,
-		size_t __count,
-		align_val_t __align,
-		size_t __offset,
-		_Args &&... __args)
-	requires(is_allocator_v<_Allocator>
-					 && std::is_array_v<_Ty>)
+	 _Allocator &__all,
+	 size_t __count,
+	 align_val_t __align,
+	 size_t __offset,
+	 _Args &&...__args)
+		requires(is_allocator_v<_Allocator> && std::is_array_v<_Ty>)
 	{
 		return shared_ptr(
-			new_construct_aligned_at_ex<shared_store<_Ty>>(
-				__count * sizeof(std::remove_all_extents_t<_Ty>),
-				__count,
-				__align,
-				__offset,
-				std::forward<_Args>(__args)...),
-			deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
+		 new_construct_aligned_at_ex<shared_store<_Ty>>(
+			__count * sizeof(std::remove_all_extents_t<_Ty>),
+			__count,
+			__align,
+			__offset,
+			std::forward<_Args>(__args)...),
+		 deleter_allocator<shared_store<_Ty>, _Allocator>(&__all));
 	}
-}
+}	 // namespace pul
 
-#endif // !PULSAR_MEMORY_HPP
+#endif	// !PULSAR_MEMORY_HPP
