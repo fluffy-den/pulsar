@@ -269,7 +269,6 @@ namespace pul
 			s9.replace(s9.begin() + 6, s9.begin() + 13, v6);
 			pt_check(equal(s9.begin() + 6, s9.begin() + 11, iterator(v6.begin())));
 			// { -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 }
-			pf_print("{}\n", s9);
 
 			// shrink(val) + reserve(val)
 			pt_check(s9.reserve(30) == 9);	// NOTE: Last capacity={21}
