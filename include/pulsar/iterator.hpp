@@ -1102,16 +1102,14 @@ namespace pul
 	template<typename _Iterable>
 	pf_decl_static pf_decl_constexpr bool is_const_iterable_v = is_const_iterable<_Iterable>::value;
 
-	template<typename _Iterable>
-	concept __iterable_c = requires(_Iterable &__ia) {
+	template<typename _Iterable>	// clang-format off
+	concept __iterable_c = 
+	 requires(_Iterable &__ia) 
+	{
 		typename _Iterable::iterator_t;
-		{
-			__ia.begin()
-		} -> std::same_as<typename _Iterable::iterator_t>;
-		{
-			__ia.end()
-		} -> std::same_as<typename _Iterable::iterator_t>;
-	};
+		{__ia.begin()} -> std::same_as<typename _Iterable::iterator_t>;
+		{__ia.end()} -> std::same_as<typename _Iterable::iterator_t>;
+	};	 // clang-format on
 	template<typename _Iterable>
 	struct is_iterable : std::false_type
 	{};
@@ -1121,16 +1119,14 @@ namespace pul
 	template<typename _Iterable>
 	pf_decl_static pf_decl_constexpr bool is_iterable_v = is_iterable<_Iterable>::value;
 
-	template<typename _Iterable>
-	concept __reverse_const_iterable_c = requires(_Iterable const &__ia) {
+	template<typename _Iterable>	// clang-format off
+	concept __reverse_const_iterable_c = 
+	 requires(_Iterable const &__ia) 
+	{
 		typename _Iterable::const_reverse_iterator_t;
-		{
-			__ia.rbegin()
-		} -> std::same_as<typename _Iterable::const_reverse_iterator_t>;
-		{
-			__ia.rend()
-		} -> std::same_as<typename _Iterable::const_reverse_iterator_t>;
-	};
+		{__ia.rbegin()} -> std::same_as<typename _Iterable::const_reverse_iterator_t>;
+		{__ia.rend()} -> std::same_as<typename _Iterable::const_reverse_iterator_t>;
+	};	 // clang-format on
 	template<typename _Iterable>
 	struct is_const_reverse_iterable : std::false_type
 	{};

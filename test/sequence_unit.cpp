@@ -19,22 +19,6 @@ namespace pul
 {
 	pt_pack(sequence_pack)
 	{
-		pt_unit(sequence_iterator_unit)
-		{
-			// sequence_iterator
-			int32_t arr[32];
-			iterator it = begin(arr);
-			pt_check((it + 1) == &arr[1]);
-		}
-		pt_unit(sequence_const_iterator_unit)
-		{
-		}
-		pt_unit(sequence_reverse_iterator_unit)
-		{
-		}
-		pt_unit(sequence_const_reverse_iterator_unit)
-		{
-		}
 		pt_unit(sequence_view_unit)
 		{
 			// sequence_view()
@@ -70,13 +54,12 @@ namespace pul
 			sequence_view v3 = sequence_view(begin(arr1), end(arr1));
 			pt_check(v3.begin() == v2.begin());
 			pt_check(v3.end() == v2.end());
-			initializer_list arr3 = { 1, 2, 3, 4, 5, 6, 7, 8 };
-			sequence_view v3b			= { 1, 2, 3, 4, 5, 6, 7, 8 };
+			int32_t arr3[] = { 1, 2, 3, 4, 5, 6, 7, 8 };
 
 			// sequence_view(__il)
 			sequence_view v4 = arr3;
-			pt_check(v4.begin() == arr3.begin());
-			pt_check(v4.end() == arr3.end());
+			pt_check(v4.begin() == begin(arr3));
+			pt_check(v4.end() == end(arr3));
 
 			// sequence_view(__r)
 			sequence_view v5 = v3;
@@ -211,7 +194,8 @@ namespace pul
 			// { 1, 2, 3, 4, 5, 6, 7, 7, 7, 7, 7 }
 
 			// insert_back(view) => (beg, end)
-			sequence_view v3 = { 8, 9, 10 };
+			int32_t arr3[]	 = { 8, 9, 10 };
+			sequence_view v3 = arr3;
 			s9.insert_back(v3);
 			// { 1, 2, 3, 4, 5, 6, 7, 7, 7, 7, 7, 8, 9, 10 }
 			pt_check(equal(s9.begin() + 11, s9.end(), v3.begin()));
@@ -267,9 +251,9 @@ namespace pul
 			// { 0, 0, 9, 1, 2, 3, 4, 5, 6, 3, 4, 5, 6, 8, 9 }
 
 			// replace(w, v) -> replace(w, beg, end)
-			sequence_view v4 = { -2, -1 };
+			initializer_list v4 = { -2, -1 };
 			s9.replace(s9.begin() + 0, v4);
-			pt_check(equal(s9.begin() + 0, s9.begin() + 2, v4.begin()));
+			pt_check(equal(s9.begin() + 0, s9.begin() + 2, iterator(v4.begin())));
 			// { -2, -1, 0, 9, 1, 2, 3, 4, 5, 6, 3, 4, 5, 6, 8, 9 }
 
 			// replace(wbeg, wend, val, count)
@@ -277,14 +261,15 @@ namespace pul
 			pt_check(equal(s9.begin() + 3, s9.begin() + 8, 9));
 			// { -2, -1, 0, 9, 9, 9, 9, 9, 9, 9 }
 			// replace(wbeg, wend, ibeg, iend)
-			v4 = { -5, -4, -3, -2, -1 };
-			s9.replace(s9.begin() + 0, s9.begin() + 2, v4);
-			pt_check(equal(s9.begin() + 0, s9.begin() + 5, v4.begin()));
+			initializer_list v5 = { -5, -4, -3, -2, -1 };
+			s9.replace(s9.begin() + 0, s9.begin() + 2, v5);
+			pt_check(equal(s9.begin() + 0, s9.begin() + 5, iterator(v5.begin())));
 			// { -5, -4, -3, -2, -1, 0, 9, 9, 9, 9, 9, 9 }
-			v4 = { 1, 2, 3, 4, 5 };
-			s9.replace(s9.begin() + 6, s9.begin() + 13, v4);
-			pt_check(equal(s9.begin() + 6, s9.begin() + 11, v4.begin()));
+			initializer_list v6 = { 1, 2, 3, 4, 5 };
+			s9.replace(s9.begin() + 6, s9.begin() + 13, v6);
+			pt_check(equal(s9.begin() + 6, s9.begin() + 11, iterator(v6.begin())));
 			// { -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 }
+			pf_print("{}\n", s9);
 
 			// shrink(val) + reserve(val)
 			pt_check(s9.reserve(30) == 9);	// NOTE: Last capacity={21}
@@ -331,6 +316,13 @@ namespace pul
 
 			// sequence -> sequence_view by CTAD
 			v2 = s1;
+		}
+
+		pt_benchmark(sequence_insert_back_m4096, __bvn, 65'536)
+		{
+			sequence<int32_t, magnifier_linear> s(align_val_t(8), magnifier_linear(4'096));
+			__bvn.measure([&](size_t __index)
+										{ return s.push_back(__index); });
 		}
 	}
 }	 // namespace pul

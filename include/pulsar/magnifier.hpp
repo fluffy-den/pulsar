@@ -102,9 +102,9 @@ namespace pul
 		/// Operator()
 		pf_hint_nodiscard pf_decl_constexpr size_t
 		operator()(
-			size_t __rs) const pf_attr_noexcept
+		 size_t __rs) const pf_attr_noexcept
 		{
-			return (__rs + this->count_ - 1) / this->count_;
+			return (((__rs + this->count_ - 1) / this->count_) * this->count_);
 		}
 
 	private:

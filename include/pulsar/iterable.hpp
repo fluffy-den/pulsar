@@ -23,11 +23,7 @@ namespace pul
 {
 	/// ITERABLE: Concept -> View
 	template<typename _Iterable>
-	concept __iterable_view_c = requires(
-	 _Iterable &__it) {
-		__it.begin();	 // TODO: View Concept
-	};
-
+	concept __iterable_view_c = !is_iterable_v<_Iterable> && is_const_iterable_v<_Iterable>;
 	template<typename _Iterable>
 	struct is_view : std::false_type
 	{};
@@ -40,10 +36,10 @@ namespace pul
 
 	/// ITERABLE: Concept -> Container
 	template<typename _Iterable>
-	concept __iterable_container_c = requires(
-	 _Iterable &__it) {
-		__it.begin();	 // TODO: Container Concept
-	};
+	concept __iterable_container_c =
+	 is_iterable_v<_Iterable>
+	 && is_const_iterable_v<_Iterable>
+	 && (is_back_insertable_v<_Iterable> || is_front_insertable_v<_Iterable> || is_insertable_v<_Iterable>);
 
 	template<typename _Iterable>
 	struct is_container : std::false_type

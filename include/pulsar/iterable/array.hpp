@@ -37,58 +37,67 @@ namespace pul
 			requires(std::is_default_constructible_v<_Ty>)
 		{}
 		pf_decl_constexpr
-		array(const _Ty &__val) pf_attr_noexcept
+		array(
+		 const _Ty &__val) pf_attr_noexcept
 			requires(std::is_copy_constructible_v<_Ty>)
 			: store_ { __val }
 		{}
 		template<size_t _NumIn>
 		pf_decl_constexpr
-		array(const _Ty (&__arr)[_NumIn])
+		array(
+		 const _Ty (&__arr)[_NumIn])
 			requires(_NumIn <= _Num)
 		{
 			copy_forward(pul::begin(__arr), pul::end(__arr), this->begin());
 		}
 		template<size_t _NumIn>
 		pf_decl_constexpr
-		array(_Ty (&&__arr)[_NumIn])
+		array(
+		 _Ty (&&__arr)[_NumIn])
 			requires(_NumIn <= _Num)
 		{
 			copy_forward(make_move_iterator(pul::begin(__arr)), make_move_iterator(pul::end(__arr)), this->begin());
 		}
 		template<typename... _Args>
 		pf_decl_constexpr
-		array(_Args &&...__args) pf_attr_noexcept
+		array(
+		 _Args &&...__args) pf_attr_noexcept
 			requires(sizeof...(_Args) <= _Num && (std::is_constructible_v<_Ty, _Args> && ...))
 			: store_ { std::forward<_Args>(__args)... }
 		{}
 		pf_decl_constexpr
-		array(const array<_Ty, _Num> &__r) pf_attr_noexcept
+		array(
+		 const array<_Ty, _Num> &__r) pf_attr_noexcept
 			requires(std::is_copy_constructible_v<_Ty>)
 			: store_(__r.store_)
 		{}
 		pf_decl_constexpr
-		array(array<_Ty, _Num> &&__r) pf_attr_noexcept
+		array(
+		 array<_Ty, _Num> &&__r) pf_attr_noexcept
 			requires(std::is_move_constructible_v<_Ty>)
 			: store_(std::move(__r.store_))
 		{}
 
 		/// Operator=
 		pf_decl_constexpr array<_Ty, _Num> &
-		operator=(const _Ty (&__arr)[_Num])
+		operator=(
+		 const _Ty (&__arr)[_Num])
 			requires(std::is_copy_assignable_v<_Ty>)
 		{
 			copy_forward(pul::begin(__arr), pul::end(__arr), this->begin());
 			return *this;
 		}
 		pf_decl_constexpr array<_Ty, _Num> &
-		operator=(_Ty (&&__arr)[_Num])
+		operator=(
+		 _Ty (&&__arr)[_Num])
 			requires(std::is_move_assignable_v<_Ty>)
 		{
 			copy_forward(make_move_iterator(pul::begin(__arr)), make_move_iterator(pul::end(__arr)), this->begin());
 			return *this;
 		}
 		pf_decl_constexpr array<_Ty, _Num> &
-		operator=(array<_Ty, _Num> const &__r) pf_attr_noexcept
+		operator=(
+		 array<_Ty, _Num> const &__r) pf_attr_noexcept
 			requires(std::is_copy_assignable_v<_Ty>)
 		{
 			if(pf_likely(this != &__r))
@@ -98,7 +107,8 @@ namespace pul
 			return *this;
 		}
 		pf_decl_constexpr array<_Ty, _Num> &
-		operator=(array<_Ty, _Num> &&__r) pf_attr_noexcept
+		operator=(
+		 array<_Ty, _Num> &&__r) pf_attr_noexcept
 			requires(std::is_move_assignable_v<_Ty>)
 		{
 			if(pf_likely(this != &__r))
@@ -109,42 +119,32 @@ namespace pul
 		}
 		template<typename... _Args>
 		pf_decl_constexpr array<_Ty, _Num> &
-		operator=(_Args &&...__args) pf_attr_noexcept
+		operator=(
+		 _Args &&...__args) pf_attr_noexcept
 			requires(sizeof...(_Args) == _Num && (std::is_constructible_v<_Ty, _Args> && ...))
 		{
 			this->store_ = { std::forward<_Args>(__args)... };
 			return *this;
 		}
 
-		/// Operator ==
-		pf_hint_nodiscard pf_decl_constexpr bool
-		operator==(array<_Ty, _Num> const &__r) const pf_attr_noexcept
-		{
-			if(pf_likely(this != &__r))
-			{
-				return equal(this->begin(), this->end(), __r.begin());
-			}
-			return true;
-		}
-		pf_hint_nodiscard pf_decl_constexpr bool
-		operator!=(
-		 const array<_Ty, _Num> &__r) const pf_attr_noexcept = default;
-
 		/// Operator[]
 		pf_hint_nodiscard pf_decl_constexpr _Ty &
-		operator[](size_t __index) pf_attr_noexcept
+		operator[](
+		 size_t __index) pf_attr_noexcept
 		{
 			return this->store_[__index];
 		}
 		pf_hint_nodiscard pf_decl_constexpr const _Ty &
-		operator[](size_t __index) const pf_attr_noexcept
+		operator[](
+		 size_t __index) const pf_attr_noexcept
 		{
 			return this->store_[__index];
 		}
 
 		/// Swap
 		pf_decl_constexpr void
-		swap(array<_Ty, _Num> &__r) pf_attr_noexcept
+		swap(
+		 array<_Ty, _Num> &__r) pf_attr_noexcept
 		{
 			for(auto l = this->begin(), r = __r.begin(), e = this->end(); l != e; ++l)
 			{
