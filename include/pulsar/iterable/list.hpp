@@ -21,13 +21,12 @@ namespace pul
 	 */
 
 	/// SINGLY: Node Concepts
-	template<typename _NodeTy>
+	template<typename _NodeTy>	// clang-format off
 	concept __iterable_singly_node_c =
-	 requires(_NodeTy &__n) {
-		 {
-			 __n.next
-		 } -> std::same_as<_NodeTy *&>;
-	 };
+	 requires(_NodeTy &__n) 
+	 {
+		 {__n.next} -> std::same_as<_NodeTy *&>;
+	 };	 // clang-format on
 	template<typename _NodeTy>
 	struct is_singly_node : std::false_type
 	{};
@@ -101,16 +100,13 @@ namespace pul
 	 */
 
 	/// DOUBLY: Node Concepts
-	template<typename _NodeTy>
+	template<typename _NodeTy>	// clang-format off
 	concept __iterable_doubly_node_c =
-	 requires(_NodeTy &__n) {
-		 {
-			 __n.next
-		 } -> std::same_as<_NodeTy *&>;
-		 {
-			 __n.prev
-		 } -> std::same_as<_NodeTy *&>;
-	 };
+	 requires(_NodeTy &__n) 
+	 {
+		 { __n.next } -> std::same_as<_NodeTy *&>;
+		 { __n.prev } -> std::same_as<_NodeTy *&>;
+	 };	 // clang-format on
 	template<typename _NodeTy>
 	struct is_doubly_node : std::false_type
 	{};

@@ -25,9 +25,9 @@ namespace pul
 	{}
 
 	/// Thread
-	__thread_t*
+	__thread_t *
 	__thread_pool_t::__buffer_t::__get_thread(
-		uint32_t __index) pf_attr_noexcept
+	 uint32_t __index) pf_attr_noexcept
 	{
 		union
 		{
@@ -39,15 +39,15 @@ namespace pul
 	}
 
 	/// Buffer -> Make
-	__thread_pool_t::__buffer_t*
+	__thread_pool_t::__buffer_t *
 	__thread_pool_t::__make_buffer()
 	{
 		return new_construct_ex<__buffer_t>(
-			CCY_NUM_WORKERS * sizeof(__thread_t));
+		 CCY_NUM_WORKERS * sizeof(__thread_t));
 	}
 	void
 	__thread_pool_t::__delete_buffer(
-		__buffer_t *__buf) pf_attr_noexcept
+	 __buffer_t *__buf) pf_attr_noexcept
 	{
 		destroy_delete(__buf);
 	}
@@ -55,7 +55,7 @@ namespace pul
 	/// Thread -> Process
 	int32_t
 	__thread_process(
-		__thread_pool_t::__buffer_t *__buf) pf_attr_noexcept
+	 __thread_pool_t::__buffer_t *__buf) pf_attr_noexcept
 	{
 		// Security
 		__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
@@ -64,32 +64,36 @@ namespace pul
 		do
 		{
 			// Stop?
-			if (__buf->numTasks.load(atomic_order::relaxed) < __buf->numProcessing.load(atomic_order::relaxed))
+			if(__buf->numTasks.load(atomic_order::relaxed) < __buf->numProcessing.load(atomic_order::relaxed))
 			{
 				__buf->numProcessing.fetch_sub(1, atomic_order::relaxed);
 				{
 					lock_unique lck(__buf->mutex);
-					__buf->cv.wait_for(
-						lck, microseconds_t(10), [&]() pf_attr_noexcept// NOTE: wait_for as additionnal protection for infinite blocking. 10 microseconds may be sufficient.
-																													// NOTE: condition variable may be too slow
-						{ return __buf->run.load(atomic_order::relaxed) == false
-							|| __buf->numTasks.load(atomic_order::relaxed) > __buf->numProcessing.load(atomic_order::relaxed); });
+					while(__buf->run.load(atomic_order::relaxed)
+								&& __buf->numTasks.load(atomic_order::relaxed) <= __buf->numProcessing.load(atomic_order::relaxed))
+					{
+						this_thread::yield();
+					}
+					// __buf->cv.wait_for(
+					// 	lck, microseconds_t(10), [&]() pf_attr_noexcept// NOTE: wait_for as additionnal protection for infinite blocking. 10 microseconds may be sufficient.
+					// 																								// NOTE: condition variable may be too slow
+					// 	{ return __buf->run.load(atomic_order::relaxed) == false
+					// 		|| __buf->numTasks.load(atomic_order::relaxed) > __buf->numProcessing.load(atomic_order::relaxed); });
 				}
 				__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
 			}
 
 			// Process
-			while (__buf->numTasks.load(atomic_order::relaxed) >= __buf->numProcessing.load(atomic_order::relaxed))	// NOTE: Avoid low task overhead
+			while(__buf->numTasks.load(atomic_order::relaxed) >= __buf->numProcessing.load(atomic_order::relaxed))	// NOTE: Avoid low task overhead
 			{
 				uint32_t i	= 0;
 				__task_t *t = __buf->queue.try_dequeue();
-				while (t)
+				while(t)
 				{
 					try
 					{
 						t->__call();
-					}
-					catch(std::exception const&)
+					} catch(std::exception const &)
 					{
 						__dbg_move_exception_context_to_0();
 					}
@@ -97,9 +101,9 @@ namespace pul
 					t = __buf->queue.try_dequeue();
 					++i;
 				};
-				if (i > 0) __buf->numTasks.fetch_sub(i, atomic_order::relaxed);
+				if(i > 0) __buf->numTasks.fetch_sub(i, atomic_order::relaxed);
 			};
-		} while (__buf->run.load(atomic_order::relaxed) == true);
+		} while(__buf->run.load(atomic_order::relaxed) == true);
 
 		__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
 		// Success
@@ -113,7 +117,7 @@ namespace pul
 		this->buf_ = this->__make_buffer();
 
 		/// Threads
-		for (size_t i = 0; i != CCY_NUM_WORKERS; ++i)
+		for(size_t i = 0; i != CCY_NUM_WORKERS; ++i)
 		{
 			construct(this->buf_->__get_thread(i), __thread_process, this->buf_);
 		}
@@ -124,19 +128,21 @@ namespace pul
 	{
 		/// Stop the run
 		this->buf_->run.store(false, atomic_order::release);
-		this->buf_->cv.notify_all();
-		while (this->buf_->numProcessing.load(atomic_order::relaxed) != 2 * CCY_NUM_WORKERS) process_tasks_0();	// Waits for all workers to terminate
+		// this->buf_->cv.notify_all();
+		while(this->buf_->numProcessing.load(atomic_order::relaxed) != 2 * CCY_NUM_WORKERS) process_tasks_0();	// Waits for all workers to terminate
 
 		/// Threads
-		for (size_t i = 0; i < CCY_NUM_WORKERS; ++i)
+		for(size_t i = 0; i < CCY_NUM_WORKERS; ++i)
 		{
 			auto t = this->buf_->__get_thread(i);
-			if (t->joinable()) t->join();
+			if(t->joinable()) t->join();
 		}
 
 		/// Process Remaining
-		while(this->__process());
-		while(this->__process_0() > 0);
+		while(this->__process())
+			;
+		while(this->__process_0() > 0)
+			;
 
 		/// Buffer
 		this->__delete_buffer(this->buf_);
@@ -145,34 +151,35 @@ namespace pul
 	/// Submit
 	void
 	__thread_pool_t::__submit(
-		__task_t *__task)
+	 __task_t *__task)
 	{
 		// Add
 		if(!this->buf_->queue.try_enqueue(__task))
 		{
 			pf_throw(
-				dbg_category_generic(),
-				dbg_code::runtime_error,
-				0,
-				"Problem when adding a task to the shared queue. task={}", union_cast<void*>(__task));
+			 dbg_category_generic(),
+			 dbg_code::runtime_error,
+			 0,
+			 "Problem when adding a task to the shared queue. task={}",
+			 union_cast<void *>(__task));
 			return;
 		}
 
 		// Notify
-		if (this->buf_->numTasks.fetch_add(1, atomic_order::relaxed) + 1 <= CCY_NUM_WORKERS) this->buf_->cv.notify_one();
-
+		this->buf_->numTasks.fetch_add(1, atomic_order::relaxed);
 	}
 	void
 	__thread_pool_t::__submit_0(
-		__task_t *__task)
+	 __task_t *__task)
 	{
 		if(!this->buf_->queue0.try_enqueue(__task))
 		{
 			pf_throw(
-				dbg_category_generic(),
-				dbg_code::runtime_error,
-				0,
-				"Problem when adding a task to the main queue. task={}", union_cast<void*>(__task));
+			 dbg_category_generic(),
+			 dbg_code::runtime_error,
+			 0,
+			 "Problem when adding a task to the main queue. task={}",
+			 union_cast<void *>(__task));
 			return;
 		}
 	}
@@ -182,7 +189,7 @@ namespace pul
 	__thread_pool_t::__process()
 	{
 		__task_t *t = this->buf_->queue.try_dequeue();
-		if (t)
+		if(t)
 		{
 			t->__call();
 			cdestroy_delete(t);
@@ -209,13 +216,13 @@ namespace pul
 	/// CONCURRENCY: Task -> Enqueue
 	pulsar_api void
 	__task_enqueue_0(
-		__task_t *__task) pf_attr_noexcept
+	 __task_t *__task) pf_attr_noexcept
 	{
 		__internal.thread_pool.__submit_0(__task);
 	}
 	pulsar_api void
 	__task_enqueue(
-		__task_t *__task) pf_attr_noexcept
+	 __task_t *__task) pf_attr_noexcept
 	{
 		__internal.thread_pool.__submit(__task);
 	}
@@ -231,4 +238,4 @@ namespace pul
 	{
 		return __internal.thread_pool.__process_0();
 	}
-}
+}	 // namespace pul

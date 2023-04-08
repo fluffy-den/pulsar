@@ -34,16 +34,26 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 
 ### Iterable ### (0.6)
 [o] sequence
+[o] sequence tests
 [x] singly_linked_list
+[x] singly_linked_rotative_list
 [x] doubly_linked_list
-[x] hash_map
+[x] doubly_linked_rotative_list
+
+#Robin Hood based
+[x] hash_map   
 [x] flat_hash_map
+[x] hash_set
+[x] flat_hash_set
 [x] xxhash
+[x] murmurhash3 for hash_map
+[x] hash_map test
+[x] flat_hash_map test
+[x] hash_set test
+[x] flat_hash_set test
 
-[x] RAII improvements
-[x] constexpr memory header size
-
-[x] all_tests
+[o] RAII improvements
+[o] RAII tests
 
 ### UTF-8 Everywhere ### (0.7)
 [x] utf8_string
@@ -64,12 +74,19 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 [x] all_tests
 
 ### Live++ ### (0.9)
+[x] host
+[x] client
+[x] auto-updater
+[x] hooks
 [x] all_tests
 
 ### Image Loader ### 0.10
+[x] .tga loader
 [x] all_tests
 
 ### Networking ### 0.11
+[x] sockets
+[x] protocols
 [x] all_tests
 
 ### Mathematics ### 0.12

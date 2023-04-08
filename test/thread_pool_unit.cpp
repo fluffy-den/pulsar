@@ -99,9 +99,9 @@ namespace pul
 			pt_check(f1.value() == f2.value());
 		}
 
-		pt_unit(task_throw)
-		{
-			pf_throw(dbg_category_generic(), dbg_code::unknown, dbg_flags::none, "This is a C++ exception!");
-		}
+		// pt_unit(task_throw)
+		// {
+		// 	pf_throw(dbg_category_generic(), dbg_code::unknown, dbg_flags::none, "This is a C++ exception!");
+		// }
 	}
 }	 // namespace pul

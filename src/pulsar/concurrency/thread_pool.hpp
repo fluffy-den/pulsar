@@ -23,8 +23,8 @@
 namespace pul
 {
 	/// TASK Constants
-	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM	 = 8192;
-	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM_0 = 4096;
+	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM	 = 8'192;
+	pf_decl_constexpr size_t CCY_TASKS_MAX_NUM_0 = 4'096;
 
 	/// Type -> Thread
 	using __thread_t = std::thread;
@@ -45,34 +45,36 @@ namespace pul
 			~__buffer_t() pf_attr_noexcept = default;
 
 			/// Thread
-			pf_hint_nodiscard __thread_t*
+			pf_hint_nodiscard __thread_t *
 			__get_thread(
-				uint32_t __index) pf_attr_noexcept;
+			 uint32_t __index) pf_attr_noexcept;
 
 			/// Operator =
-			__buffer_t &operator=(
-				__buffer_t const &) = delete;
-			__buffer_t &operator=(
-				__buffer_t &&) = delete;
+			__buffer_t &
+			operator=(
+			 __buffer_t const &) = delete;
+			__buffer_t &
+			operator=(
+			 __buffer_t &&) = delete;
 
 			/// Store
 			pf_alignas(CCY_ALIGN) atomic<bool> run;
 			pf_alignas(CCY_ALIGN) atomic<uint32_t> numTasks;
 			pf_alignas(CCY_ALIGN) atomic<uint32_t> numProcessing;
 			mutex_t mutex;
-			condition_variable_t cv;
+			// condition_variable_t cv;
 			mpmc_lifo2<__task_t> queue;
-			mpmc_lifo2<__task_t> queue0;// Will use bulks
-			byte_t store[];	// [t1][t2][tn-1]
-											//     workers
+			mpmc_lifo2<__task_t> queue0;	// Will use bulks
+			byte_t store[];								// [t1][t2][tn-1]
+																		//     workers
 		};
 
 		/// Buffer -> Make
-		pf_hint_nodiscard __buffer_t*
+		pf_hint_nodiscard __buffer_t *
 		__make_buffer();
 		void
 		__delete_buffer(
-			__buffer_t *__buf) pf_attr_noexcept;
+		 __buffer_t *__buf) pf_attr_noexcept;
 
 		/// Constructors
 		__thread_pool_t();
@@ -83,25 +85,31 @@ namespace pul
 		~__thread_pool_t() pf_attr_noexcept;
 
 		/// Operator =
-		__thread_pool_t &operator=(
-			__thread_pool_t const&) = delete;
-		__thread_pool_t &operator=(
-			__thread_pool_t &&) = delete;
+		__thread_pool_t &
+		operator=(
+		 __thread_pool_t const &) = delete;
+		__thread_pool_t &
+		operator=(
+		 __thread_pool_t &&) = delete;
 
 		/// Submit
-		void __submit(
-			__task_t *__task);
-		void __submit_0(
-			__task_t *__task);
+		void
+		__submit(
+		 __task_t *__task);
+		void
+		__submit_0(
+		 __task_t *__task);
 
 		/// Process
-		bool __process();
-		uint32_t __process_0();
+		bool
+		__process();
+		uint32_t
+		__process_0();
 
 	private:
 		/// Store
 		__buffer_t *buf_;
 	};
-}
+}	 // namespace pul
 
-#endif // !PULSAR_SRC_THREAD_POOL_HPP
+#endif	// !PULSAR_SRC_THREAD_POOL_HPP
