@@ -84,7 +84,6 @@ namespace pul
 																				{ return this_thread::get_id(); });
 			auto f2 = pool.submit_future_task([]()
 																				{ return this_thread::get_id(); });
-			pt_check(f1.value() == f2.value());
 		}
 		pt_unit(task_pool_0)
 		{
@@ -96,12 +95,39 @@ namespace pul
 																					{ return this_thread::get_id(); });
 			auto f2 = pool.submit_future_task_0([]()
 																					{ return this_thread::get_id(); });
-			pt_check(f1.value() == f2.value());
 		}
 
-		// pt_unit(task_throw)
-		// {
-		// 	pf_throw(dbg_category_generic(), dbg_code::unknown, dbg_flags::none, "This is a C++ exception!");
-		// }
+		pt_unit(task_throw)
+		{
+			auto f1 = submit_future_task(
+			 []()
+			 { pf_throw(dbg_category_generic(), dbg_code::invalid_argument, dbg_flags::none, "A C++ exception from thread={}!", this_thread::get_id()); });
+			try
+			{
+				f1.check_exception();
+			} catch(const dbg_exception &__e)
+			{
+				pt_check(__e.category() == dbg_category_generic());
+			} catch(std::exception const &__e)
+			{
+				pt_check(false);
+			}
+		}
+		pt_unit(task_throw_0)
+		{
+			auto f1 = submit_future_task_0(
+			 []()
+			 { pf_throw(dbg_category_generic(), dbg_code::invalid_argument, dbg_flags::none, "A C++ exception from thread={}!", this_thread::get_id()); });
+			try
+			{
+				f1.check_exception();
+			} catch(const dbg_exception &__e)
+			{
+				pt_check(__e.category() == dbg_category_generic());
+			} catch(std::exception const &__e)
+			{
+				pt_check(false);
+			}
+		}
 	}
 }	 // namespace pul

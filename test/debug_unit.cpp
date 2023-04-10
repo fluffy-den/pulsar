@@ -27,26 +27,26 @@ namespace pul
 		pt_benchmark(mimalloc_allocate_08t, __bvn, DBG_UNIT_NUM_ITERATIONS, 8)
 		{
 			const size_t n = __bvn.num_iterations();
-			void **p			 = new_construct_array<void *>(n);
+			void **p			 = new_construct<void *[]>(n);
 			__bvn.measure([&](size_t __i)
 										{ return p[__i] = halloc(8); });
 			for(size_t i = 0; i < n; ++i)
 			{
 				hfree(p[i]);
 			}
-			destroy_delete_array(p);
+			destroy_delete<void *>(p);
 		}
 		pt_benchmark(ring_buffer_08t, __bvn, DBG_UNIT_NUM_ITERATIONS, 8)
 		{
 			const size_t n = __bvn.num_iterations();
-			void **p			 = new_construct_array<void *>(n);
+			void **p			 = new_construct<void *[]>(n);
 			__bvn.measure([&](size_t __i)
 										{ return p[__i] = calloc(8); });
 			for(size_t i = 0; i < n; ++i)
 			{
 				cfree(p[i]);
 			}
-			destroy_delete_array(p);
+			destroy_delete<void *>(p);
 		}
 	}
 
@@ -59,7 +59,7 @@ namespace pul
 				pf_throw(dbg_category_generic(), dbg_code::invalid_argument, dbg_flags::none, "Throwed!");
 			} catch(dbg_exception const &__e)
 			{
-				pt_check(__e.code() == dbg_code::invalid_argument);
+				pt_check(__e.code() == union_cast<uint32_t>(dbg_code::invalid_argument));
 				pt_check(__e.category() == dbg_category_generic());
 			}
 		}

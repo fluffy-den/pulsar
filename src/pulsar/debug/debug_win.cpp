@@ -203,7 +203,7 @@ namespace pul
 	{
 		const thread_id_t ID = this_thread::get_id();
 		auto *b							 = __internal.dbg_internal.__retrieve_current_context();
-		if(!b->exp || __info->ExceptionRecord->ExceptionAddress != b->exp->ExceptionRecord->ExceptionAddress)
+		if(!b->exp || !b->exp->ExceptionRecord || !b->exp->ContextRecord || __info->ExceptionRecord->ExceptionAddress != b->exp->ExceptionRecord->ExceptionAddress)
 		{
 			// Exception -> Ex
 			b->exp = __info;
@@ -214,7 +214,7 @@ namespace pul
 
 	/// Constructors
 	__dbg_internal_t::__dbg_internal_t() pf_attr_noexcept
-		: buffer_(new_construct<__dbg_context_win_t[]>(CCY_NUM_THREADS))
+		: buffer_(new_construct<__dbg_record_win_t[]>(CCY_NUM_THREADS))
 	{
 		this->handle_ = AddVectoredExceptionHandler(0, __vectored_exception_handler);
 		pf_assert(this->handle_, "[WIN] AddVectoredExceptionHandler for printing stacktrace failed! handle={}", this->handle_);
@@ -224,7 +224,7 @@ namespace pul
 	/// Destructor
 	__dbg_internal_t::~__dbg_internal_t() pf_attr_noexcept
 	{
-		destroy_delete<__dbg_context_win_t[]>(this->buffer_);
+		destroy_delete<__dbg_record_win_t[]>(this->buffer_);
 		if(this->handle_ && !RemoveVectoredExceptionHandler(this->handle_))
 		{
 			pf_print(dbg_type::warning, dbg_level::low, "[WIN] RemoveVectoredExceptionHandler failed for handle={}!", this->handle_);
@@ -232,7 +232,7 @@ namespace pul
 	}
 
 	// Retrieve
-	__dbg_context_win_t *
+	__dbg_record_win_t *
 	__dbg_internal_t::__retrieve_current_context() pf_attr_noexcept
 	{
 		return &this->buffer_[this_thread::get_id()];
@@ -531,39 +531,67 @@ namespace pul
 		std::abort();
 	}
 
-	/// DEBUG: Context -> Switcher
+	/// DEBUG: Exception -> Record
 	pf_hint_noreturn void
-	__dbg_exception_context_switch_task_win(
+	__dbg_exception_record_switch_task_win(
 	 std::exception_ptr &&__ptr,
-	 __dbg_context_win_t const *__ctx,
-	 atomic<bool> *__ctrl) pf_attr_noexcept
+	 void *__record,
+	 atomic<bool> *__ctrl)
 	{
 		// Update local thread EXCEPTION_POINTERS + ID of thread thrower
-		auto *c = __internal.dbg_internal.__retrieve_current_context();
-		c->exp	= __ctx->exp;
-		c->ID		= __ctx->ID;
+		__dbg_set_current_exception_record(__record);
 
 		// Rethrow exception. Since it's thrown inside a try - catch block, it'll
 		// be destroyed only if it exit it, unblocking the throwing thread.
 		try
 		{
-			throw(__dbg_exception_context_switcher_t(std::move(__ptr), __ctrl));
-		} catch(__dbg_exception_context_switcher_t const &__e)
+			throw(__dbg_exception_record_switcher_t(std::move(__ptr), __ctrl));
+		} catch(__dbg_exception_record_switcher_t const &__e)
 		{
+			__ptr = nullptr;
 			__e.__rethrow();	// NOTE: Lifetime => Deleted when exit a catch block
 		}
 	}
+	void
+	__dbg_exception_record_t::rethrow()
+	{
+		if(this->ptr_)
+		{
+			auto p		 = std::move(this->ptr_);
+			this->ptr_ = nullptr;
+			__dbg_exception_record_switch_task_win(std::move(p), this->record_, this->ctrl_);
+		}
+	}
+
+	/// DEBUG: Record
+	void *
+	__dbg_get_current_exception_record() pf_attr_noexcept
+	{
+		auto *ctx = __internal.dbg_internal.__retrieve_current_context();
+		return ctx;
+	}
+	void
+	__dbg_set_current_exception_record(
+	 void *__record) pf_attr_noexcept
+	{
+		__dbg_record_win_t *r	 = __internal.dbg_internal.__retrieve_current_context();
+		__dbg_record_win_t *in = union_cast<__dbg_record_win_t *>(__record);
+		r->exp								 = in->exp;
+		r->ID									 = in->ID;
+	}
+
+	/// DEBUG: Record -> Switcher
 	pulsar_api void
-	__dbg_move_exception_context_to_0() pf_attr_noexcept
+	__dbg_move_exception_record_to_0() pf_attr_noexcept
 	{
 		pf_assert(
 		 this_thread::get_id() != 0,
-		 "[WIN] Can't move exception context from main to main thread!");
+		 "[WIN] Can't move exception record from main to main thread!");
 		pf_alignas(CCY_ALIGN) atomic<bool> ctrl = false;
 		submit_task_0(
-		 __dbg_exception_context_switch_task_win,
+		 __dbg_exception_record_switch_task_win,
 		 std::current_exception(),
-		 __internal.dbg_internal.__retrieve_current_context(),
+		 __dbg_get_current_exception_record(),
 		 &ctrl);
 		while(!ctrl.load(atomic_order::relaxed)) this_thread::yield();
 	}

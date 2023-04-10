@@ -506,7 +506,12 @@ namespace pul
 		dbg_exception(
 		 dbg_exception const &) = delete;
 		dbg_exception(
-		 dbg_exception &&) = default;
+		 dbg_exception &&__r)
+			: cat_(__r.cat_)
+			, msg_(std::move(__r.msg_))
+			, code_(__r.code_)
+			, flags_(__r.flags_)
+		{}
 
 		/// Destructor
 		~dbg_exception() pf_attr_noexcept = default;
@@ -551,6 +556,113 @@ namespace pul
 		uint32_t flags_;
 	};
 
+
+	/// DEBUG: Exception -> Record -> Make
+	pf_hint_nodiscard pulsar_api void *
+	__dbg_get_current_exception_record() pf_attr_noexcept;
+	pulsar_api void
+	__dbg_set_current_exception_record(
+	 void *__record) pf_attr_noexcept;
+
+	/// DEBUG: Exception -> Record
+	class __dbg_exception_record_t
+	{
+	public:
+		/// Constructors
+		__dbg_exception_record_t() pf_attr_noexcept
+			: ptr_(nullptr)
+			, record_(nullptr)
+		{}
+		__dbg_exception_record_t(__dbg_exception_record_t const &) = delete;
+		__dbg_exception_record_t(__dbg_exception_record_t &&)			 = delete;
+
+		/// Destructor
+		~__dbg_exception_record_t() pf_attr_noexcept
+		{
+			this->rethrow();	// NOTE: If user forget to check for exception, and one is handled, the program will crash!
+		}
+
+		/// Operator =
+		__dbg_exception_record_t &
+		operator=(
+		 __dbg_exception_record_t const &) = delete;
+		__dbg_exception_record_t &
+		operator=(
+		 __dbg_exception_record_t &&) = delete;
+
+		/// Rethrow
+		pulsar_api void
+		rethrow();
+
+		/// Operator (Bool)
+		pf_hint_nodiscard operator bool() const pf_attr_noexcept
+		{
+			return this->ptr_ != nullptr;
+		}
+
+		/// Set
+		void
+		set_record(
+		 std::exception_ptr &&__ptr,
+		 atomic<bool> *__control)
+		{
+			this->ptr_		= std::move(__ptr);
+			this->ctrl_		= __control;
+			this->record_ = __dbg_get_current_exception_record();
+		}
+
+	private:
+		std::exception_ptr ptr_;
+		atomic<bool> *ctrl_;
+		void *record_;
+	};
+
+	/// DEBUG: Context Record -> Switcher
+	// Function
+	pulsar_api void
+	__dbg_move_exception_record_to_0() pf_attr_noexcept;
+
+	// Type
+	class __dbg_exception_record_switcher_t pf_attr_final
+	{
+	public:
+		/// Constructors
+		__dbg_exception_record_switcher_t() pf_attr_noexcept
+			: ptr_(nullptr)
+			, ctrl_(nullptr)
+		{}
+		__dbg_exception_record_switcher_t(
+		 std::exception_ptr &&__ptr,
+		 atomic<bool> *__ctrl) pf_attr_noexcept
+			: ptr_(__ptr)
+			, ctrl_(__ctrl)
+		{}
+		__dbg_exception_record_switcher_t(__dbg_exception_record_switcher_t const &) = delete;
+		__dbg_exception_record_switcher_t(__dbg_exception_record_switcher_t &&)			 = delete;
+
+		/// Destructor
+		~__dbg_exception_record_switcher_t() pf_attr_noexcept
+		{
+			if(this->ctrl_) this->ctrl_->store(true, atomic_order::relaxed);
+		}
+
+		/// Operator =
+		__dbg_exception_record_switcher_t &
+		operator=(__dbg_exception_record_switcher_t const &) = delete;
+		__dbg_exception_record_switcher_t &
+		operator=(__dbg_exception_record_switcher_t &&) = delete;
+
+		/// Rethrow
+		pf_hint_noreturn void
+		__rethrow() const
+		{
+			std::rethrow_exception(this->ptr_);
+		}
+
+	private:
+		std::exception_ptr ptr_;
+		atomic<bool> *ctrl_;
+	};
 
 	/// DEBUG: Format -> Functions
 	template<typename... _Args>

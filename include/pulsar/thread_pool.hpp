@@ -82,17 +82,87 @@ namespace pul
 			return !b;
 		}
 
-		/// Val
-		pf_hint_nodiscard _RetTy
-		__value() pf_attr_noexcept
+		/// Check For Exception
+		void
+		__check_exception()
 		{
 			this->__wait();
+			record.rethrow();
+		}
+
+		/// Value
+		pf_hint_nodiscard _RetTy
+		__value()
+		{
+			this->__wait();
+			record.rethrow();
 			return std::move(*union_cast<_RetTy *>(&this->retVal[0]));
 		}
 
 		/// Store
 		pf_alignas(64) atomic<bool> finished;
+		__dbg_exception_record_t record;
 		byte_t retVal[sizeof(_RetTy)];
+	};
+	template<>
+	struct __future_store<void> pf_attr_final
+	{
+		__future_store() pf_attr_noexcept
+			: finished(false)
+		{}
+		__future_store(__future_store<void> const &) = delete;
+		__future_store(__future_store<void> &&)			 = delete;
+
+		/// Destructor
+		~__future_store() pf_attr_noexcept = default;
+
+		/// Operator =
+		__future_store<void> &
+		operator=(__future_store<void> const &) = delete;
+		__future_store<void> &
+		operator=(__future_store<void> &&) = delete;
+
+		/// Is Finished?
+		pf_hint_nodiscard bool
+		__is_finished() pf_attr_noexcept
+		{
+			return this->finished.load(atomic_order::relaxed);
+		}
+
+		/// Wait
+		bool
+		__wait()
+		{
+			bool b = this->finished.load(atomic_order::relaxed);
+			if(b) return false;
+			if(this_thread::get_id() == 0)
+			{
+				while(!this->finished.load(atomic_order::relaxed))
+				{
+					process_tasks_0();
+				}
+			}
+			else
+			{
+				while(!this->finished.load(atomic_order::relaxed))
+				{
+					this_thread::yield();
+				}
+			}
+			return !b;
+		}
+
+		/// Check For Exception
+		void
+		__check_exception()
+		{
+			this->__wait();
+			record.rethrow();
+		}
+
+		/// Store
+		pf_alignas(64) atomic<bool> finished;
+		__dbg_exception_record_t record;
 	};
 	template<typename _RetTy>
 	class future pf_attr_final
@@ -140,6 +210,13 @@ namespace pul
 			return this->store_->__wait();
 		}
 
+		/// Check Exception
+		void
+		check_exception()
+		{
+			return this->store_->__check_exception();
+		}
+
 		/// Val
 		pf_hint_nodiscard pf_decl_inline _RetTy
 		value()
@@ -149,6 +226,62 @@ namespace pul
 
 	private:
 		__future_store<_RetTy> *store_;
+	};
+	template<>
+	class future<void> pf_attr_final
+	{
+	public:
+		/// Constructors
+		future(
+		 __future_store<void> *__store) pf_attr_noexcept
+			: store_(__store)
+		{}
+		future(future<void> const &) = delete;
+		future(future<void> &&__r)
+			: store_(__r.store_)
+		{
+			__r.store_ = nullptr;
+		}
+
+		/// Destructor
+		~future() pf_attr_noexcept
+		{
+			if(this->store_)
+			{
+				this->wait();
+				destroy_delete(this->store_);
+			}
+		}
+
+		/// Operator =
+		future<void> &
+		operator=(future<void> const &) = delete;
+		future<void> &
+		operator=(future<void> &&) = default;
+
+		/// Is Finished?
+		pf_hint_nodiscard pf_decl_inline bool
+		is_finished() const pf_attr_noexcept
+		{
+			return this->store_->__is_finished();
+		}
+
+		/// Wait
+		pf_decl_inline bool
+		wait() const pf_attr_noexcept
+		{
+			return this->store_->__wait();
+		}
+
+		/// Check Exception
+		void
+		check_exception()
+		{
+			return this->store_->__check_exception();
+		}
+
+	private:
+		__future_store<void> *store_;
 	};
 
 	/// CONCURRENCY: Type -> Task Function
@@ -296,17 +429,62 @@ namespace pul
 	pf_decl_inline void
 	__task_data_f_proc(
 	 void *__data)
+		requires(!std::is_void_v<std::invoke_result_t<_FunTy, _Args...>>)
 	{
-		auto data																= union_cast<__task_data_f<_FunTy, _Args...> *>(__data);
-		pf_alignas(CCY_ALIGN) atomic<bool> ctrl = false;
+		auto data = union_cast<__task_data_f<_FunTy, _Args...> *>(__data);
 		try
 		{
 			*union_cast<std::invoke_result_t<_FunTy, _Args...> *>(&data->store->retVal[0]) = tuple_apply(std::move(data->fun), std::move(data->args));
 		} catch(std::exception const &)
 		{
-			data->store->finished.store(true, atomic_order::relaxed);
-			destroy(data);
-			throw;
+			if(this_thread::get_id() == 0)
+			{
+				data->store->finished.store(true, atomic_order::relaxed);
+				destroy(data);
+				throw;
+			}
+			else
+			{
+				pf_alignas(CCY_ALIGN) atomic<bool> ctrl = false;
+				data->store->record.set_record(std::current_exception(), &ctrl);
+				data->store->finished.store(true, atomic_order::relaxed);
+				destroy(data);
+				while(!ctrl.load(atomic_order::relaxed)) this_thread::yield();
+				return;
+			}
+		}
+		data->store->finished.store(true, atomic_order::relaxed);
+		destroy(data);
+	}
+	template<
+	 typename _FunTy,
+	 typename... _Args>
+	pf_decl_inline void
+	__task_data_f_proc(
+	 void *__data)
+		requires(std::is_void_v<std::invoke_result_t<_FunTy, _Args...>>)
+	{
+		auto data = union_cast<__task_data_f<_FunTy, _Args...> *>(__data);
+		try
+		{
+			tuple_apply(std::move(data->fun), std::move(data->args));
+		} catch(std::exception const &)
+		{
+			if(this_thread::get_id() == 0)
+			{
+				data->store->finished.store(true, atomic_order::relaxed);
+				destroy(data);
+				throw;
+			}
+			else
+			{
+				pf_alignas(CCY_ALIGN) atomic<bool> ctrl = false;
+				data->store->record.set_record(std::current_exception(), &ctrl);
+				data->store->finished.store(true, atomic_order::relaxed);
+				destroy(data);
+				while(!ctrl.load(atomic_order::relaxed)) this_thread::yield();
+				return;
+			}
 		}
 		data->store->finished.store(true, atomic_order::relaxed);
 		destroy(data);
@@ -381,7 +559,7 @@ namespace pul
 	submit_future_task(
 	 _FunTy &&__fun,
 	 _Args &&...__args)
-		requires(!std::is_void_v<std::invoke_result_t<_FunTy, _Args...>> && std::is_invocable_v<_FunTy, _Args...>)
+		requires(std::is_invocable_v<_FunTy, _Args...>)
 	{
 		auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
 		try
@@ -402,7 +580,7 @@ namespace pul
 	submit_future_task_0(
 	 _FunTy &&__fun,
 	 _Args &&...__args)
-		requires(!std::is_void_v<std::invoke_result_t<_FunTy, _Args...>> && std::is_invocable_v<_FunTy, _Args...>)
+		requires(std::is_invocable_v<_FunTy, _Args...>)
 	{
 		auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
 		try
@@ -701,7 +879,7 @@ namespace pul
 		submit_future_task(
 		 _FunTy &&__fun,
 		 _Args &&...__args) pf_attr_noexcept
-			requires(!std::is_void_v<std::invoke_result_t<_FunTy, _Args...>> && std::is_invocable_v<_FunTy, _Args...>)
+			requires(std::is_invocable_v<_FunTy, _Args...>)
 		{
 			return this->buf_->__submit_future_task(std::move(__fun), std::forward<_Args>(__args)...);
 		}
@@ -784,7 +962,7 @@ namespace pul
 		submit_future_task_0(
 		 _FunTy &&__fun,
 		 _Args &&...__args) pf_attr_noexcept
-			requires(!std::is_void_v<std::invoke_result_t<_FunTy, _Args...>> && std::is_invocable_v<_FunTy, _Args...>)
+			requires(std::is_invocable_v<_FunTy, _Args...>)
 		{
 			return this->buf_->__submit_future_task_0(std::move(__fun), std::forward<_Args>(__args)...);
 		}

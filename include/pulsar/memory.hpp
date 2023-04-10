@@ -1065,6 +1065,7 @@ namespace pul
 			 is_iterator_v<_IteratorIn>
 			 && std::is_convertible_v<typename _IteratorIn::value_t, _Ty>)
 		{
+			ignore						= __end;
 			// Optimized construct, since we already know __count
 			this->store.count = __count;
 			construct(
@@ -1928,6 +1929,7 @@ namespace pul
 			 is_iterator_v<_IteratorIn>
 			 && std::is_convertible_v<typename _IteratorIn::value_t, _Ty>)
 		{
+			ignore						= __end;
 			// Optimized construct, since we already know __count
 			this->store.count = __count;
 			construct(

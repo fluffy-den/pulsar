@@ -16,7 +16,7 @@ namespace pul
 {
 	/// CONCURRENCY: Thread Pool
 	/// Buffer
-	__thread_pool_t::__buffer_t::__buffer_t() pf_attr_noexcept
+	__thread_pool_t::__buffer_t::__buffer_t() pf_attr_noexcept	// TODO: Move buffer (horrible)
 		: run(true)
 		, numTasks(0)
 		, numProcessing(0)
@@ -74,11 +74,6 @@ namespace pul
 					{
 						this_thread::yield();
 					}
-					// __buf->cv.wait_for(
-					// 	lck, microseconds_t(10), [&]() pf_attr_noexcept// NOTE: wait_for as additionnal protection for infinite blocking. 10 microseconds may be sufficient.
-					// 																								// NOTE: condition variable may be too slow
-					// 	{ return __buf->run.load(atomic_order::relaxed) == false
-					// 		|| __buf->numTasks.load(atomic_order::relaxed) > __buf->numProcessing.load(atomic_order::relaxed); });
 				}
 				__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
 			}
@@ -95,7 +90,7 @@ namespace pul
 						t->__call();
 					} catch(std::exception const &)
 					{
-						__dbg_move_exception_context_to_0();
+						__dbg_move_exception_record_to_0();
 					}
 					cdestroy_delete(t);
 					t = __buf->queue.try_dequeue();
@@ -128,7 +123,6 @@ namespace pul
 	{
 		/// Stop the run
 		this->buf_->run.store(false, atomic_order::release);
-		// this->buf_->cv.notify_all();
 		while(this->buf_->numProcessing.load(atomic_order::relaxed) != 2 * CCY_NUM_WORKERS) process_tasks_0();	// Waits for all workers to terminate
 
 		/// Threads

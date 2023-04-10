@@ -72,7 +72,7 @@ namespace pul
 		pt_benchmark(pop2_t8, __bvn, 16'192, 8)
 		{
 			mpmc_lifo2<size_t> queue(16'192 * 128);
-			size_t *buf = new_construct_array<size_t>(__bvn.num_iterations());
+			size_t *buf = new_construct<size_t[]>(__bvn.num_iterations());
 			for(size_t i = 0; i < __bvn.num_iterations(); ++i)
 			{
 				buf[i] = i;
@@ -83,12 +83,12 @@ namespace pul
 			 {
 				ignore = __index;
 				return queue.try_dequeue(); });
-			destroy_delete_array(buf);
+			destroy_delete<size_t[]>(buf);
 		}
 		pt_benchmark(push2_t8, __bvn, 16'192, 8)
 		{
 			mpmc_lifo2<size_t> queue(16'192 * 128);
-			size_t *buf = new_construct_array<size_t>(__bvn.num_iterations());
+			size_t *buf = new_construct<size_t[]>(__bvn.num_iterations());
 			for(size_t i = 0; i < __bvn.num_iterations(); ++i)
 			{
 				buf[i] = i;
@@ -98,7 +98,7 @@ namespace pul
 			 {
 				queue.try_enqueue(&buf[__index]);
 				return __index; });
-			destroy_delete_array(buf);
+			destroy_delete<size_t[]>(buf);
 		}
 		pt_benchmark(pop2_empty_t8, __bvn, 16'192, 8)
 		{
