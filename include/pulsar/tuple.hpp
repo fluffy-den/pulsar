@@ -13,7 +13,6 @@
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
-#include "pulsar/hash.hpp"
 #include "pulsar/utility.hpp"
 
 // Pulsar

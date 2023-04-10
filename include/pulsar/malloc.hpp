@@ -33,7 +33,10 @@ namespace pul
 	struct __marray
 	{
 		size_t count;
-		_Ty data[1];
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
+		_Ty data[];
+#pragma GCC diagnostic pop
 	};
 	using __marray_t = __marray<byte_t>;
 
@@ -75,7 +78,7 @@ namespace pul
 	{
 		ignore		= __align;
 		ignore		= __offset;
-		auto *ma	= union_cast<__marray_t *>(new byte_t[sizeof(size_t) + __size]);
+		auto *ma	= union_cast<__marray_t *>(new byte_t[sizeof(__marray_t) + __size]);
 		ma->count = __size;
 		memset(&ma->data[0], 0, ma->count);
 		return &ma->data[0];
@@ -95,7 +98,7 @@ namespace pul
 	{
 		ignore		= __align;
 		ignore		= __offset;
-		auto *ma	= union_cast<__marray_t *>(new byte_t[sizeof(size_t) + __size]);
+		auto *ma	= union_cast<__marray_t *>(new byte_t[sizeof(__marray_t) + __size]);
 		ma->count = __size;
 		if(pf_unlikely(!__ptr)) return &ma->data[0];
 		auto *oa = __mem_get_marray(__ptr);

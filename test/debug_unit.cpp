@@ -50,11 +50,18 @@ namespace pul
 		}
 	}
 
-	// pt_pack(exception)
-	// {
-	// 	pt_unit(throwing)
-	// 	{
-	// 		pf_throw(dbg_category_generic(), dbg_code::invalid_argument, dbg_flags::none, "Throwed!");
-	// 	}
-	// }
+	pt_pack(exception)
+	{
+		pt_unit(throwing)
+		{
+			try
+			{
+				pf_throw(dbg_category_generic(), dbg_code::invalid_argument, dbg_flags::none, "Throwed!");
+			} catch(dbg_exception const &__e)
+			{
+				pt_check(__e.code() == dbg_code::invalid_argument);
+				pt_check(__e.category() == dbg_category_generic());
+			}
+		}
+	}
 }	 // namespace pul

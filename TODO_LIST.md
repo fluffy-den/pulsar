@@ -32,27 +32,13 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 [o] stability_test
 [o] benchmarks
 
-### Iterable ### (0.6)
+### Container & Memory ### (0.6)
+# iterable.hpp
 [o] sequence
 [o] sequence tests
-[x] singly_linked_list
-[x] singly_linked_rotative_list
-[x] doubly_linked_list
-[x] doubly_linked_rotative_list
 
-#Robin Hood based
-[x] hash_map   
-[x] flat_hash_map
-[x] hash_set
-[x] flat_hash_set
-[x] xxhash
-[x] murmurhash3 for hash_map
-[x] hash_map test
-[x] flat_hash_map test
-[x] hash_set test
-[x] flat_hash_set test
-
-[o] RAII improvements
+# memory.hpp
+[o] RAII
 [o] RAII tests
 
 ### UTF-8 Everywhere ### (0.7)
@@ -69,7 +55,7 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 [x] file_iterator
 [x] file_functions
 [x] file_package (.zip reformat) (zlib)
-[x] file_listener
+[x] file_signals
 
 [x] all_tests
 
@@ -90,6 +76,7 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 [x] all_tests
 
 ### Mathematics ### 0.12
+[x] Rewriting matrix as column major order (DOD)
 [x] Quaternions
 [x] Projections
 [x] Transformations

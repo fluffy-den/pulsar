@@ -43,7 +43,8 @@ namespace pul
 
 		/// Constructors
 		pf_decl_inline pf_decl_constexpr
-		sequence_view() pf_attr_noexcept : data_(nullptr)
+		sequence_view() pf_attr_noexcept
+			: data_(nullptr)
 			, count_(0)
 		{}
 		pf_decl_inline pf_decl_constexpr

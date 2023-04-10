@@ -577,7 +577,6 @@ namespace pul
 
 	/// SINGLY: MPSC List
 	template<typename _NodeTy>
-		requires(is_singly_node_v<_NodeTy>)
 	class mpsc_singly_lifo
 	{
 		pf_assert_static(!std::is_const_v<_NodeTy>, "_NodeTy is a constant type!");

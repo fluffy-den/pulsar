@@ -90,7 +90,8 @@ namespace pul
 		 uint64_t *__results)
 		{
 			// Measure
-			for(size_t i = __off, e = __off + __itc; i != e; ++i) {
+			for(size_t i = __off, e = __off + __itc; i != e; ++i)
+			{
 				uint64_t s																	 = __rdtsc();
 				pf_hint_maybe_unused pf_decl_volatile auto k = __measureFun(i);
 				__results[i]																 = __rdtsc() - s;
@@ -124,12 +125,13 @@ namespace pul
 		{
 			// Allocate
 			const size_t num	= this->num_iterations();
-			uint64_t *results = new_construct_array<uint64_t>(this->itc_ * this->ntt_);
+			uint64_t *results = new_construct<uint64_t[]>(this->itc_ * this->ntt_);
 
 			// Submit Tasks & Measure
 			pf_alignas(CCY_ALIGN) atomic<uint32_t> control	= 1;
 			pf_alignas(CCY_ALIGN) atomic<uint32_t> finished = 1;
-			for(size_t i = 1; i < this->ntt_; ++i) {
+			for(size_t i = 1; i < this->ntt_; ++i)
+			{
 				submit_task(this->__measure_proc_worker<_FunTy>, std::move(__measureFun), &control, &finished, this->itc_, this->itc_ * i, results);
 			}
 			while(control.load(atomic_order::relaxed) != this->ntt_) process_tasks_0();
@@ -143,7 +145,7 @@ namespace pul
 			__display_measures(results, num);
 
 			// Deallocate
-			destroy_delete_array(results);
+			destroy_delete<uint64_t[]>(results);
 		}
 
 		/// Name
@@ -307,19 +309,25 @@ namespace pul
 #define pt_check(cond)	 pul::tester_engine.__test(cond, __FILE__, __LINE__)
 #define pt_require(cond) pul::__test_require(cond, __FILE__, __LINE__)
 #define pt_check_catch(ex, callable, ...) \
-	try {                                   \
+	try                                     \
+	{                                       \
 		callable(__VA_ARGS__);                \
-	} catch(ex const &__e) {                \
+	} catch(ex const &__e)                  \
+	{                                       \
 		pt_check(true);                       \
-	} catch(std::exception const &) {       \
+	} catch(std::exception const &)         \
+	{                                       \
 		pt_check(false);                      \
 	}
 #define pt_require_catch(ex, callable, ...) \
-	try {                                     \
+	try                                       \
+	{                                         \
 		callable(__VA_ARGS__);                  \
-	} catch(ex const &__e) {                  \
+	} catch(ex const &__e)                    \
+	{                                         \
 		pt_require(true);                       \
-	} catch(std::exception const &) {         \
+	} catch(std::exception const &)           \
+	{                                         \
 		pt_require(false);                      \
 	}
 

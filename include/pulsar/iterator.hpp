@@ -828,19 +828,17 @@ namespace pul
 		using category = iterator_sequence_tag_t;
 
 		/// Constructors
-		pf_decl_constexpr
+		pf_decl_inline pf_decl_constexpr
 		iterator(_Ty *__ptr = nullptr) pf_attr_noexcept
 			: ptr_(__ptr)
-		{
-		}
-		pf_decl_constexpr
+		{}
+		pf_decl_inline pf_decl_constexpr
 		iterator(iterator<_Ty> const &__it) pf_attr_noexcept
 			: iterator(__it.ptr_)
-		{
-		}
+		{}
 
 		/// Destructor
-		~iterator() = default;
+		pf_decl_inline pf_decl_constexpr ~iterator() pf_attr_noexcept = default;
 
 		/// Get
 		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t *
@@ -856,11 +854,13 @@ namespace pul
 
 		/// Operator =
 		pf_decl_constexpr iterator<_Ty> &
-		operator=(iterator<_Ty> const &__r) pf_attr_noexcept = default;
+		operator=(
+		 iterator<_Ty> const &__r) pf_attr_noexcept = default;
 
 		/// Operator +=
 		pf_decl_constexpr iterator<_Ty> &
-		operator+=(diff_t __i) pf_attr_noexcept
+		operator+=(
+		 diff_t __i) pf_attr_noexcept
 		{
 			this->ptr_ += __i;
 			return *this;
@@ -868,10 +868,11 @@ namespace pul
 
 		/// Operator ++
 		pf_decl_constexpr iterator<_Ty>
-		operator++(int32_t) pf_attr_noexcept
+		operator++(
+		 int32_t) pf_attr_noexcept
 		{
-			iterator<_Ty> p = this->ptr_++;
-			return p;
+			iterator<_Ty> it = this->ptr_++;
+			return it;
 		}
 		pf_decl_constexpr iterator<_Ty> &
 		operator++() pf_attr_noexcept
@@ -882,7 +883,8 @@ namespace pul
 
 		/// Operator -=
 		pf_decl_constexpr iterator<_Ty> &
-		operator-=(diff_t __i) pf_attr_noexcept
+		operator-=(
+		 diff_t __i) pf_attr_noexcept
 		{
 			this->ptr_ -= __i;
 			return *this;
@@ -890,10 +892,11 @@ namespace pul
 
 		/// Operator --
 		pf_decl_constexpr iterator<_Ty>
-		operator--(int32_t) pf_attr_noexcept
+		operator--(
+		 int32_t) pf_attr_noexcept
 		{
-			iterator<_Ty> p = this->ptr_--;
-			return p;
+			iterator<_Ty> it = this->ptr_--;
+			return it;
 		}
 		pf_decl_constexpr iterator<_Ty> &
 		operator--() pf_attr_noexcept
@@ -906,43 +909,43 @@ namespace pul
 		pf_hint_nodiscard pf_decl_constexpr value_t &
 		operator*() pf_attr_noexcept
 		{
-			return *this->ptr_;
+			return *this->get();
 		}
 		pf_hint_nodiscard pf_decl_constexpr const value_t &
 		operator*() const pf_attr_noexcept
 		{
-			return *this->ptr_;
+			return *this->get();
 		}
 
 		/// Operator ->
 		pf_hint_nodiscard pf_decl_constexpr value_t *
 		operator->() pf_attr_noexcept
 		{
-			return this->ptr_;
+			return this->get();
 		}
 		pf_hint_nodiscard pf_decl_constexpr const value_t *
 		operator->() const pf_attr_noexcept
 		{
-			return this->ptr_;
+			return this->get();
 		}
 
 		/// Operator (bool)
 		pf_hint_nodiscard pf_decl_explicit pf_decl_constexpr
 		operator bool() const pf_attr_noexcept
 		{
-			return this->ptr_ != nullptr;
+			return this->get() != nullptr;
 		}
 
 		/// Operator (value_t*)
 		pf_hint_nodiscard pf_decl_constexpr
 		operator value_t *() pf_attr_noexcept
 		{
-			return this->ptr_;
+			return this->get();
 		}
 		pf_hint_nodiscard pf_decl_constexpr
 		operator const value_t *() const pf_attr_noexcept
 		{
-			return this->ptr_;
+			return this->get();
 		}
 
 	private:
@@ -963,27 +966,24 @@ namespace pul
 		using category = iterator_sequence_tag_t;
 
 		/// Constructors
-		pf_decl_constexpr
+		pf_decl_inline pf_decl_constexpr
 		iterator(
 		 const _Ty *__ptr) pf_attr_noexcept
 			: ptr_(__ptr)
-		{
-		}
-		pf_decl_constexpr
+		{}
+		pf_decl_inline pf_decl_constexpr
 		iterator(
 		 iterator<_Ty> __it) pf_attr_noexcept
 			: iterator(__it.ptr_)
-		{
-		}
-		pf_decl_constexpr
+		{}
+		pf_decl_inline pf_decl_constexpr
 		iterator(
 		 iterator<const _Ty> const &__it) pf_attr_noexcept
 			: iterator(__it.ptr_)
-		{
-		}
+		{}
 
 		/// Destructor
-		pf_decl_constexpr ~iterator() = default;
+		pf_decl_inline pf_decl_constexpr ~iterator() pf_attr_noexcept = default;
 
 		/// Get
 		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
@@ -1008,10 +1008,11 @@ namespace pul
 
 		/// Operator ++
 		pf_decl_constexpr iterator<const _Ty>
-		operator++(int32_t) pf_attr_noexcept
+		operator++(
+		 int32_t) pf_attr_noexcept
 		{
-			iterator<const _Ty> p = this->ptr_++;
-			return p;
+			iterator<const _Ty> it = this->ptr_++;
+			return it;
 		}
 		pf_decl_constexpr iterator<const _Ty> &
 		operator++() pf_attr_noexcept
@@ -1022,7 +1023,8 @@ namespace pul
 
 		/// Operator -=
 		pf_decl_constexpr iterator<const _Ty> &
-		operator-=(diff_t __i) pf_attr_noexcept
+		operator-=(
+		 diff_t __i) pf_attr_noexcept
 		{
 			this->ptr_ -= __i;
 			return *this;
@@ -1030,10 +1032,11 @@ namespace pul
 
 		/// Operator --
 		pf_decl_constexpr iterator<const _Ty>
-		operator--(int32_t) pf_attr_noexcept
+		operator--(
+		 int32_t) pf_attr_noexcept
 		{
-			iterator<_Ty> p = this->ptr_--;
-			return p;
+			iterator<_Ty> it = this->ptr_--;
+			return it;
 		}
 		pf_decl_constexpr iterator<const _Ty> &
 		operator--() pf_attr_noexcept
@@ -1046,28 +1049,28 @@ namespace pul
 		pf_hint_nodiscard pf_decl_constexpr const value_t &
 		operator*() const pf_attr_noexcept
 		{
-			return *this->ptr_;
+			return *this->get();
 		}
 
 		/// Operator ->
 		pf_hint_nodiscard pf_decl_constexpr const value_t *
 		operator->() const pf_attr_noexcept
 		{
-			return this->ptr_;
+			return this->get();
 		}
 
 		/// Operator (bool)
 		pf_hint_nodiscard pf_decl_explicit pf_decl_constexpr
 		operator bool() const pf_attr_noexcept
 		{
-			return this->ptr_ != nullptr;
+			return this->get() != nullptr;
 		}
 
 		/// Operator (const value_t *)
 		pf_hint_nodiscard pf_decl_constexpr
 		operator const value_t *() const pf_attr_noexcept
 		{
-			return this->ptr_;
+			return this->get();
 		}
 
 	private:
@@ -1083,16 +1086,14 @@ namespace pul
 	iterator(const _Ty *) -> iterator<const _Ty>;
 
 	/// ITERABLE: Concept -> Iterable
-	template<typename _Iterable>
-	concept __const_iterable_c = requires(_Iterable const &__cia) {
+	template<typename _Iterable>	// clang-format off
+	concept __const_iterable_c = 
+	requires(_Iterable const &__cia) 
+	{
 		typename _Iterable::const_iterator_t;
-		{
-			__cia.begin()
-		} -> std::same_as<typename _Iterable::const_iterator_t>;
-		{
-			__cia.end()
-		} -> std::same_as<typename _Iterable::const_iterator_t>;
-	};
+		{ __cia.begin() } -> std::same_as<typename _Iterable::const_iterator_t>;
+		{ __cia.end() } -> std::same_as<typename _Iterable::const_iterator_t>;
+	};	 // clang-format on
 	template<typename _Iterable>
 	struct is_const_iterable : std::false_type
 	{};
@@ -1136,16 +1137,14 @@ namespace pul
 	template<typename _Iterable>
 	pf_decl_static pf_decl_constexpr bool is_const_reverse_iterable_v = is_const_reverse_iterable<_Iterable>::value;
 
-	template<typename _Iterable>
-	concept __reverse_iterable_c = requires(_Iterable &__ia) {
+	template<typename _Iterable>	// clang-format off
+	concept __reverse_iterable_c = 
+	requires(_Iterable &__ia) 
+	{
 		typename _Iterable::reverse_iterator_t;
-		{
-			__ia.rbegin()
-		} -> std::same_as<typename _Iterable::reverse_iterator_t>;
-		{
-			__ia.rend()
-		} -> std::same_as<typename _Iterable::reverse_iterator_t>;
-	};
+		{ __ia.rbegin() } -> std::same_as<typename _Iterable::reverse_iterator_t>;
+		{ __ia.rend() } -> std::same_as<typename _Iterable::reverse_iterator_t>;
+	};	 // clang-format on
 	template<typename _Iterable>
 	struct is_reverse_iterable : std::false_type
 	{};
@@ -1156,16 +1155,14 @@ namespace pul
 	pf_decl_static pf_decl_constexpr bool is_reverse_iterable_v = is_reverse_iterable<_Iterable>::value;
 
 	/// ITERABLE: Concept -> Mappable
-	template<typename _Iterable>
-	concept __iterable_mappable_c = is_iterable_v<_Iterable>
-															 && requires(_Iterable &__ia) {
-																		{
-																			__ia.data()
-																		} -> std::same_as<typename _Iterable::value_t *>;
-																		{
-																			__ia.data()
-																		} -> std::same_as<const typename _Iterable::value_t *>;
-																	};
+	template<typename _Iterable>	// clang-format off
+	concept __iterable_mappable_c = 
+	 is_iterable_v<_Iterable>
+	 && requires(_Iterable &__ia) 
+	 {
+		{ __ia.data() } -> std::same_as<typename _Iterable::value_t *>;
+		{ __ia.data() } -> std::same_as<const typename _Iterable::value_t *>;
+	};	// clang-format on
 	template<typename _Iterable>
 	struct is_mappable : std::false_type
 	{};
@@ -1177,10 +1174,9 @@ namespace pul
 
 	/// ITERABLE: Concept -> Swappable
 	template<typename _Iterable>
-	concept __iterable_swappable_c = is_iterable_v<_Iterable>
-																&& requires(_Iterable &__ia) {
-																		 __ia.swap(std::declval<_Iterable>());
-																	 };
+	concept __iterable_swappable_c =
+	 is_iterable_v<_Iterable>
+	 && requires(_Iterable &__ia) { __ia.swap(std::declval<_Iterable>()); };
 	template<typename _Iterable>
 	struct is_swappable : std::false_type
 	{};
@@ -1192,11 +1188,9 @@ namespace pul
 
 	/// ITERABLE: Concept -> Insertable
 	template<typename _Iterable>
-	concept __iterable_front_insertable_c = is_iterable_v<_Iterable>
-																			 && requires(_Iterable &__ia) {
-																						__ia.insert_front(
-																						 std::declval<typename _Iterable::value_t>());
-																					};
+	concept __iterable_front_insertable_c =
+	 is_iterable_v<_Iterable>
+	 && requires(_Iterable &__ia) { __ia.insert_front(std::declval<typename _Iterable::value_t>()); };
 	template<typename _Iterable>
 	struct is_front_insertable : std::false_type
 	{};
@@ -1206,11 +1200,9 @@ namespace pul
 	template<typename _Iterable>
 	pf_decl_static pf_decl_constexpr bool is_front_insertable_v = is_front_insertable<_Iterable>::value;
 	template<typename _Iterable>
-	concept __iterable_back_insertable_c = is_iterable_v<_Iterable>
-																			&& requires(_Iterable &__ia) {
-																					 __ia.insert_back(
-																						std::declval<typename _Iterable::value_t>());
-																				 };
+	concept __iterable_back_insertable_c =
+	 is_iterable_v<_Iterable>
+	 && requires(_Iterable &__ia) { __ia.insert_back(std::declval<typename _Iterable::value_t>()); };
 	template<typename _Iterable>
 	struct is_back_insertable : std::false_type
 	{};
@@ -1220,12 +1212,14 @@ namespace pul
 	template<typename _Iterable>
 	pf_decl_static pf_decl_constexpr bool is_back_insertable_v = is_back_insertable<_Iterable>::value;
 	template<typename _Iterable>
-	concept __iterable_placement_insertable_c = is_iterable_v<_Iterable>
-																					 && requires(_Iterable &__ia) {
-																								__ia.insert(
-																								 std::declval<typename _Iterable::iterator_t>(),
-																								 std::declval<typename _Iterable::value_t>());
-																							};
+	concept __iterable_placement_insertable_c =
+	 is_iterable_v<_Iterable>	 // clang-format off
+	 && requires(_Iterable &__ia) 
+	{
+		__ia.insert(
+		 std::declval<typename _Iterable::iterator_t>(),
+		 std::declval<typename _Iterable::value_t>());
+	};	// clang-format on
 	template<typename _Iterable>
 	struct is_placement_insertable : std::false_type
 	{};
@@ -1233,12 +1227,14 @@ namespace pul
 	struct is_placement_insertable<_Iterable> : std::true_type
 	{};
 	template<typename _Iterable>
-	pf_decl_static pf_decl_constexpr bool is_placement_insertable_v = is_placement_insertable<_Iterable>::value;
+	pf_decl_static pf_decl_constexpr bool is_placement_insertable_v =
+	 is_placement_insertable<_Iterable>::value;
 
 	template<typename _Iterable>
-	pf_decl_static pf_decl_constexpr bool is_insertable_v = is_back_insertable_v<_Iterable>
-																											 || is_front_insertable_v<_Iterable>
-																											 || is_placement_insertable_v<_Iterable>;
+	pf_decl_static pf_decl_constexpr bool is_insertable_v =
+	 is_back_insertable_v<_Iterable>
+	 || is_front_insertable_v<_Iterable>
+	 || is_placement_insertable_v<_Iterable>;
 
 	/// ITERABLE: Inserter -> Front
 	template<typename _Iterable>
@@ -1435,8 +1431,7 @@ namespace pul
 		back_insert_iterator(
 		 _Iterable *__ia)
 			: ia_(__ia)
-		{
-		}
+		{}
 
 		/// Destructor
 		pf_decl_constexpr ~back_insert_iterator() pf_attr_noexcept = default;
@@ -1704,11 +1699,9 @@ namespace pul
 
 	/// ITERABLE: Concept -> Replaceable
 	template<typename _Iterable>
-	concept __iterable_replaceable_front_c = is_iterable_v<_Iterable>
-																				&& requires(_Iterable &__ia) {
-																						 __ia.replace_front(
-																							std::declval<typename _Iterable::value_t>());
-																					 };
+	concept __iterable_replaceable_front_c =
+	 is_iterable_v<_Iterable>
+	 && requires(_Iterable &__ia) { __ia.replace_front(std::declval<typename _Iterable::value_t>()); };
 	template<typename _Iterable>
 	struct is_front_replaceable : std::false_type
 	{};
@@ -1719,11 +1712,9 @@ namespace pul
 	pf_decl_static pf_decl_constexpr bool is_front_replaceable_v = is_front_replaceable<_Iterable>::value;
 
 	template<typename _Iterable>
-	concept __iterable_replaceable_back_c = is_iterable_v<_Iterable>
-																			 && requires(_Iterable &__ia) {
-																						__ia.replace_back(
-																						 std::declval<typename _Iterable::value_t>());
-																					};
+	concept __iterable_replaceable_back_c =
+	 is_iterable_v<_Iterable>
+	 && requires(_Iterable &__ia) { __ia.replace_back(std::declval<typename _Iterable::value_t>()); };
 	template<typename _Iterable>
 	struct is_back_replaceable : std::false_type
 	{};
@@ -1734,12 +1725,14 @@ namespace pul
 	pf_decl_static pf_decl_constexpr bool is_back_replaceable_v = is_back_replaceable<_Iterable>::value;
 
 	template<typename _Iterable>
-	concept __iterable_placement_replaceable_c = is_iterable_v<_Iterable>
-																						&& requires(_Iterable &__ia) {
-																								 __ia.replace(
-																									std::declval<typename _Iterable::iterator_t>(),
-																									std::declval<typename _Iterable::value_t>());
-																							 };
+	concept __iterable_placement_replaceable_c =
+	 is_iterable_v<_Iterable>	 // clang-format off
+	 && requires(_Iterable &__ia) 
+	{
+		__ia.replace(
+		 std::declval<typename _Iterable::iterator_t>(),
+		 std::declval<typename _Iterable::value_t>());
+	};	// clang-format on
 	template<typename _Iterable>
 	struct is_placement_replaceable : std::false_type
 	{};
@@ -1799,8 +1792,7 @@ namespace pul
 		front_replace_iterator(
 		 _Iterable *__ia)
 			: ia_(__ia)
-		{
-		}
+		{}
 
 		/// Destructor
 		pf_decl_constexpr ~front_replace_iterator() pf_attr_noexcept = default;
@@ -1946,8 +1938,7 @@ namespace pul
 		back_replace_iterator(
 		 _Iterable *__ia)
 			: ia_(__ia)
-		{
-		}
+		{}
 
 		/// Destructor
 		pf_decl_constexpr ~back_replace_iterator() pf_attr_noexcept = default;

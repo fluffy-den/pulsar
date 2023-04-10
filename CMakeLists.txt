@@ -258,14 +258,14 @@ if(BUILD_TESTING)
 
     add_test(${BINARY_NAME} ${BINARY_NAME})
 
-    # cv2pdb
-    if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-      add_custom_command(
-        TARGET ${BINARY_NAME} POST_BUILD
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/test/${OUTPUT_SYSTEM}/
-        COMMAND cv2pdb ${BINARY_NAME}.exe
-      )
-    endif()
+    # # cv2pdb
+    # if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    # add_custom_command(
+    # TARGET ${BINARY_NAME} POST_BUILD
+    # WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/test/${OUTPUT_SYSTEM}/
+    # COMMAND cv2pdb ${BINARY_NAME}.exe
+    # )
+    # endif()
   endforeach()
 endif()
 

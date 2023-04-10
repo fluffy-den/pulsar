@@ -13,8 +13,8 @@
 
 // Windows
 #ifdef PF_OS_WINDOWS
-#include <windows.h>
-#include <dbghelp.h>
+ #include <windows.h>
+ #include <dbghelp.h>
 
 // Pulsar
 namespace pul
@@ -22,14 +22,14 @@ namespace pul
 	/// DEBUG: Win -> Stack Trace
 	pf_hint_nodiscard __dbg_stacktrace_formatted_t
 	__dbg_capture_stacktrace_win(
-		CONTEXT *__ctx,
-		uint32_t __ignore) pf_attr_noexcept
+	 CONTEXT *__ctx,
+	 uint32_t __ignore) pf_attr_noexcept
 	{
 		// Symbol Init
 		HANDLE thdl = GetCurrentThread();
 		HANDLE phdl = GetCurrentProcess();
 		SymSetOptions(SYMOPT_DEFERRED_LOADS);
-		if (!SymInitializeW(phdl, nullptr, TRUE))
+		if(!SymInitializeW(phdl, nullptr, TRUE))
 		{
 			pf_print(dbg_type::warning, dbg_level::high, "[WIN] SymInitialize failed! process={}", phdl);
 			return { 0, '\0' };
@@ -41,17 +41,17 @@ namespace pul
 		memset(&sf, 0, sizeof(sf));
 		// https://docs.microsoft.com/en-us/windows/win32/api/dbghelp/ns-dbghelp-stackframe
 		// x86 platforms
-# if defined(PF_ARCHITECTURE_I386)
-		DWORD machineType = IMAGE_FILE_MACHINE_I386;
+ #if defined(PF_ARCHITECTURE_I386)
+		DWORD machineType		= IMAGE_FILE_MACHINE_I386;
 		sf.AddrPC.Offset		= __ctx->Eip;
 		sf.AddrPC.Mode			= AddrModeFlat;
 		sf.AddrFrame.Offset = __ctx->Ebp;
 		sf.AddrFrame.Mode		= AddrModeFlat;
 		sf.AddrStack.Offset = __ctx->Esp;
 		sf.AddrStack.Mode		= AddrModeFlat;
-		// intel itanium
-# elif defined(PF_ARCHITECTURE_IA64)
-		DWORD machineType = IMAGE_FILE_MACHINE_IA64;
+			// intel itanium
+ #elif defined(PF_ARCHITECTURE_IA64)
+		DWORD machineType		 = IMAGE_FILE_MACHINE_IA64;
 		sf.AddrPC.Offset		 = __ctx->StIIP;
 		sf.AddrPC.Mode			 = AddrModeFlat;
 		sf.AddrFrame.Offset	 = __ctx->IntSp;
@@ -60,25 +60,25 @@ namespace pul
 		sf.AddrBStore.Mode	 = AddrModeFlat;
 		sf.AddrStack.Offset	 = __ctx->IntSp;
 		sf.AddrStack.Mode		 = AddrModeFlat;
-		// x64 platforms
-# elif defined(PF_ARCHITECTURE_AMD64)
-		DWORD machineType = IMAGE_FILE_MACHINE_AMD64;
+			 // x64 platforms
+ #elif defined(PF_ARCHITECTURE_AMD64)
+		DWORD machineType		= IMAGE_FILE_MACHINE_AMD64;
 		sf.AddrPC.Offset		= __ctx->Rip;
 		sf.AddrPC.Mode			= AddrModeFlat;
 		sf.AddrFrame.Offset = __ctx->Rsp;
 		sf.AddrFrame.Mode		= AddrModeFlat;
 		sf.AddrStack.Offset = __ctx->Rsp;
 		sf.AddrStack.Mode		= AddrModeFlat;
-# else
-#   error "Platform unsupported!"
-# endif
+ #else
+	#error "Platform unsupported!"
+ #endif
 		// symbol handling
 		union
 		{
 			IMAGEHLP_SYMBOL64 as_symbol;
 			BYTE as_buffer[sizeof(as_symbol) + DBG_FMT_NAME_LEN * sizeof(CHAR)];
 		};
-		memset(union_cast<byte_t*>(&as_buffer), 0, sizeof(as_buffer));
+		memset(union_cast<byte_t *>(&as_buffer), 0, sizeof(as_buffer));
 		as_symbol.SizeOfStruct	= sizeof(as_symbol);
 		as_symbol.MaxNameLength = DBG_FMT_NAME_LEN;
 		// module of the symbol
@@ -86,20 +86,19 @@ namespace pul
 		memset(&m, 0, sizeof(m));
 		m.SizeOfStruct = sizeof(m);
 		// number of trace
-		uint32_t cn = DBG_FMT_STACK_FRAMES - __ignore;
+		uint32_t cn		 = DBG_FMT_STACK_FRAMES - __ignore;
 
 		// "Walk" the stacktrace
 		__dbg_stacktrace_formatted_t st = { 0, '\0' };
 		auto *w													= &st.message[0];
-		while (
-			StackWalk64(
-				machineType, phdl, thdl, &sf, __ctx, nullptr,
-				SymFunctionTableAccess64, SymGetModuleBase64, nullptr)
-			&& cn > 0)
+		while(
+		 StackWalk64(
+			machineType, phdl, thdl, &sf, __ctx, nullptr, SymFunctionTableAccess64, SymGetModuleBase64, nullptr)
+		 && cn > 0)
 		{
 			// Retrieve
 			// ignore
-			if (__ignore > 0)
+			if(__ignore > 0)
 			{
 				--__ignore;
 			}
@@ -110,7 +109,7 @@ namespace pul
 				IMAGEHLP_LINE64 l;
 				memset(&l, 0, sizeof(l));
 				l.SizeOfStruct = sizeof(l);
-				DWORD64 sd = 0;
+				DWORD64 sd		 = 0;
 				char_t name[DBG_FMT_NAME_LEN];
 				SymGetSymFromAddr64(phdl, sf.AddrPC.Offset, &sd, &as_symbol);
 				UnDecorateSymbolName(&as_symbol.Name[0], &name[0], DBG_FMT_NAME_LEN, UNDNAME_COMPLETE);
@@ -118,12 +117,13 @@ namespace pul
 				DWORD ld = 0;
 				SymGetLineFromAddr64(phdl, sf.AddrPC.Offset, &ld, &l);
 				const size_t s = fmt::formatted_size(
-					"\nat function={}, in module={} at file={}:{}\n",
-					&as_symbol.Name[0],
-					&m.ModuleName[0],
-					&l.FileName[0] ? &l.FileName[0] : "???",
-					l.LineNumber) + 11;
-				if (w + s > &st.message[0] + DBG_FMT_STACKTRACE_MAX_LENGTH)
+													"\nat function={}, in module={} at file={}:{}\n",
+													&as_symbol.Name[0],
+													&m.ModuleName[0],
+													&l.FileName[0] ? &l.FileName[0] : "???",
+													l.LineNumber)
+											 + 11;
+				if(w + s > &st.message[0] + DBG_FMT_STACKTRACE_MAX_LENGTH)
 				{
 					w = fmt::format_to(w, "\nat ...\n");
 					break;
@@ -131,11 +131,7 @@ namespace pul
 				else
 				{
 					w = fmt::format_to(
-						w, "\tat function={}, in module={} at file={}:{}\n",
-						&as_symbol.Name[0],
-						&m.ModuleName[0],
-						&l.FileName[0] ? &l.FileName[0] : "???",
-						l.LineNumber);
+					 w, "\tat function={}, in module={} at file={}:{}\n", &as_symbol.Name[0], &m.ModuleName[0], &l.FileName[0] ? &l.FileName[0] : "???", l.LineNumber);
 				}
 				--cn;
 			}
@@ -165,7 +161,7 @@ namespace pul
 	/// DEBUG: Win -> Category -> System
 	pulsar_api dbg_u8string
 	dbg_category_system_t::message(
-		uint32_t __val) const pf_attr_noexcept
+	 uint32_t __val) const pf_attr_noexcept
 	{
 		return __dbg_generate_error_message_win(__val);
 	}
@@ -173,9 +169,9 @@ namespace pul
 	/// DEBUG: Win -> Print
 	pulsar_api void
 	dbg_print_exception(
-		dbg_category const *__cat,
-		uint32_t __code,
-		dbg_u8string_view __msg) pf_attr_noexcept
+	 dbg_category const *__cat,
+	 uint32_t __code,
+	 dbg_u8string_view __msg) pf_attr_noexcept
 	{
 		// Initialisation
 		auto *b = __internal.dbg_internal.__retrieve_current_context();
@@ -183,27 +179,17 @@ namespace pul
 
 		// Size
 		const size_t s = DBG_FMT_WRITE_OFFSET
-										 + fmt::formatted_size(" T={} /{}/ /{}/ ({}) message={} | ",
-																					 b->ID,
-																					 dbg_styled('E', dbg_style_fg(dbg_color::red)),
-																					 dbg_styled(__cat->name().data(), dbg_style_fg(dbg_color::orange)),
-																					 dbg_styled(__code, dbg_style_fg(dbg_color::red)), dbg_styled(__cat->message(__code).data(), dbg_style_fg(dbg_color::orange)))
-										 + st.length + fmt::formatted_size("{}\n", __msg.begin()) + 2;// 2 == '\0' + '\n'
+									 + fmt::formatted_size(" T={} /{}/ /{}/ ({}) message={} | ", b->ID, dbg_styled('E', dbg_style_fg(dbg_color::red)), dbg_styled(__cat->name().data(), dbg_style_fg(dbg_color::orange)), dbg_styled(__code, dbg_style_fg(dbg_color::red)), dbg_styled(__cat->message(__code).data(), dbg_style_fg(dbg_color::orange)))
+									 + st.length + fmt::formatted_size("{}\n", __msg.begin()) + 2;	// 2 == '\0' + '\n'
 
 		// Format
 		dbg_u8string str(s, '\0');
 		char_t *p = str.begin();
-		p = __dbg_format_chrono_to(p);
-		p = dbg_u8format_to(p,
-												" T={} /{}/ /{}/ ({}) message={} | ",
-												b->ID,
-												dbg_styled('E', dbg_style_fg(dbg_color::red)),
-												dbg_styled(__cat->name().data(), dbg_style_fg(dbg_color::orange)),
-												dbg_styled(__code, dbg_style_fg(dbg_color::red)),
-												dbg_styled(__cat->message(__code).data(), dbg_style_fg(dbg_color::orange)));
-		p			 = dbg_u8format_to(p, "{}\n", __msg.begin());
-		p			 = __dbg_append_stacktrace_to(p, st);
-		*(p++) = '\n';
+		p					= __dbg_format_chrono_to(p);
+		p					= dbg_u8format_to(p, " T={} /{}/ /{}/ ({}) message={} | ", b->ID, dbg_styled('E', dbg_style_fg(dbg_color::red)), dbg_styled(__cat->name().data(), dbg_style_fg(dbg_color::orange)), dbg_styled(__code, dbg_style_fg(dbg_color::red)), dbg_styled(__cat->message(__code).data(), dbg_style_fg(dbg_color::orange)));
+		p					= dbg_u8format_to(p, "{}\n", __msg.begin());
+		p					= __dbg_append_stacktrace_to(p, st);
+		*(p++)		= '\n';
 
 		// Print
 		dbg_log(std::move(str));
@@ -211,12 +197,13 @@ namespace pul
 
 	/// DEBUG: Win -> Exception Handler
 	/// Handle
-	LONG WINAPI __dbg_internal_t::__vectored_exception_handler(
-		EXCEPTION_POINTERS *__info) pf_attr_noexcept
+	LONG WINAPI
+	__dbg_internal_t::__vectored_exception_handler(
+	 EXCEPTION_POINTERS *__info) pf_attr_noexcept
 	{
 		const thread_id_t ID = this_thread::get_id();
 		auto *b							 = __internal.dbg_internal.__retrieve_current_context();
-		if (!b->exp || __info->ExceptionRecord->ExceptionAddress != b->exp->ExceptionRecord->ExceptionAddress)
+		if(!b->exp || __info->ExceptionRecord->ExceptionAddress != b->exp->ExceptionRecord->ExceptionAddress)
 		{
 			// Exception -> Ex
 			b->exp = __info;
@@ -227,7 +214,7 @@ namespace pul
 
 	/// Constructors
 	__dbg_internal_t::__dbg_internal_t() pf_attr_noexcept
-		: buffer_(new_construct_array<__dbg_context_win_t>(CCY_NUM_THREADS))
+		: buffer_(new_construct<__dbg_context_win_t[]>(CCY_NUM_THREADS))
 	{
 		this->handle_ = AddVectoredExceptionHandler(0, __vectored_exception_handler);
 		pf_assert(this->handle_, "[WIN] AddVectoredExceptionHandler for printing stacktrace failed! handle={}", this->handle_);
@@ -237,67 +224,67 @@ namespace pul
 	/// Destructor
 	__dbg_internal_t::~__dbg_internal_t() pf_attr_noexcept
 	{
-		destroy_delete_array(this->buffer_);
-		if (this->handle_ && !RemoveVectoredExceptionHandler(this->handle_))
+		destroy_delete<__dbg_context_win_t[]>(this->buffer_);
+		if(this->handle_ && !RemoveVectoredExceptionHandler(this->handle_))
 		{
 			pf_print(dbg_type::warning, dbg_level::low, "[WIN] RemoveVectoredExceptionHandler failed for handle={}!", this->handle_);
 		}
 	}
 
 	// Retrieve
-	__dbg_context_win_t*
+	__dbg_context_win_t *
 	__dbg_internal_t::__retrieve_current_context() pf_attr_noexcept
 	{
 		return &this->buffer_[this_thread::get_id()];
 	}
 
 	// Terminate
-	void __dbg_internal_t::__set_terminate(
-		dbg_terminate_handle_t __handle) pf_attr_noexcept
+	void
+	__dbg_internal_t::__set_terminate(
+	 dbg_terminate_handle_t __handle) pf_attr_noexcept
 	{
 		this->terminate_ = __handle;
 	}
-	dbg_terminate_handle_t __dbg_internal_t::__get_terminate() const pf_attr_noexcept
+	dbg_terminate_handle_t
+	__dbg_internal_t::__get_terminate() const pf_attr_noexcept
 	{
 		return this->terminate_;
 	}
-	void __dbg_internal_t::__call_terminate() const pf_attr_noexcept
+	void
+	__dbg_internal_t::__call_terminate() const pf_attr_noexcept
 	{
-		if (this->terminate_) this->terminate_();
+		if(this->terminate_) this->terminate_();
 	}
 
 	/// DEBUG: Win -> Convert
-	__dbg_wsstring __dbg_convert_u8_to_wide_win(
-		const char_t *__buf,
-		size_t __size)
+	__dbg_wsstring
+	__dbg_convert_u8_to_wide_win(
+	 const char_t *__buf,
+	 size_t __size)
 	{
 		// Buffer
-		if (!__buf || !__size) return __dbg_wsstring();
+		if(!__buf || !__size) return __dbg_wsstring();
 		const size_t r = MultiByteToWideChar(CP_UTF8, 0, __buf, __size, nullptr, 0);
 		__dbg_wsstring str(r, '\0');
-		if (pf_unlikely(!MultiByteToWideChar(CP_UTF8, 0, __buf, __size, str.begin(), str.size())))
+		if(pf_unlikely(!MultiByteToWideChar(CP_UTF8, 0, __buf, __size, str.begin(), str.size())))
 			pf_throw(
-				dbg_category_system(), GetLastError(), dbg_flags::none,
-				"[WIN] MultiByteToWideChar bad convertion! buffer={}, size={}",
-				union_cast<void*>(__buf), __size);
+			 dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] MultiByteToWideChar bad convertion! buffer={}, size={}", union_cast<void *>(__buf), __size);
 
 		// Returns
 		return str;
 	}
 	dbg_u8string
 	__dbg_convert_wide_to_u8_win(
-		const wchar_t *__buf,
-		size_t __count)
+	 const wchar_t *__buf,
+	 size_t __count)
 	{
 		// Buffer
-		if (!__buf || !__count) return dbg_u8string();
+		if(!__buf || !__count) return dbg_u8string();
 		const size_t r = WideCharToMultiByte(CP_UTF8, 0, __buf, __count, nullptr, 0, 0, 0);
 		dbg_u8string str(r, '\0');
-		if (pf_unlikely(!WideCharToMultiByte(CP_UTF8, 0, __buf, __count, str.begin(), str.size(), 0, 0)))
+		if(pf_unlikely(!WideCharToMultiByte(CP_UTF8, 0, __buf, __count, str.begin(), str.size(), 0, 0)))
 			pf_throw(
-				dbg_category_system(), GetLastError(), dbg_flags::none,
-				"[WIN] WideCharToMultiByte bad convertion! buffer={}, count={}",
-				union_cast<void*>(__buf), __count);
+			 dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] WideCharToMultiByte bad convertion! buffer={}, count={}", union_cast<void *>(__buf), __count);
 
 		// Returns
 		return str;
@@ -306,98 +293,102 @@ namespace pul
 	/// DEBUG: Win -> Generate
 	MINIDUMP_TYPE
 	__dbg_flags_to_minidump_type_win(
-		uint32_t __flags) pf_attr_noexcept
+	 uint32_t __flags) pf_attr_noexcept
 	{
 		DWORD flags = MINIDUMP_TYPE::MiniDumpNormal;
-		if (__flags & dbg_flags::dump_with_data_segs)
+		if(__flags & dbg_flags::dump_with_data_segs)
 			flags |= MINIDUMP_TYPE::MiniDumpWithDataSegs;
-		if (__flags & dbg_flags::dump_with_full_memory)
+		if(__flags & dbg_flags::dump_with_full_memory)
 			flags |= MINIDUMP_TYPE::MiniDumpWithFullMemory;
-		if (__flags & dbg_flags::dump_with_handle_data)
+		if(__flags & dbg_flags::dump_with_handle_data)
 			flags |= MINIDUMP_TYPE::MiniDumpWithHandleData;
-		if (__flags & dbg_flags::dump_filter_memory)
+		if(__flags & dbg_flags::dump_filter_memory)
 			flags |= MINIDUMP_TYPE::MiniDumpFilterMemory;
-		if (__flags & dbg_flags::dump_with_scan_memory)
+		if(__flags & dbg_flags::dump_with_scan_memory)
 			flags |= MINIDUMP_TYPE::MiniDumpScanMemory;
-		if (__flags & dbg_flags::dump_with_unloaded_modules)
+		if(__flags & dbg_flags::dump_with_unloaded_modules)
 			flags |= MINIDUMP_TYPE::MiniDumpWithUnloadedModules;
-		if (__flags & dbg_flags::dump_with_indirectly_referenced_memory)
+		if(__flags & dbg_flags::dump_with_indirectly_referenced_memory)
 			flags |= MINIDUMP_TYPE::MiniDumpWithIndirectlyReferencedMemory;
-		if (__flags & dbg_flags::dump_with_filter_module_paths)
+		if(__flags & dbg_flags::dump_with_filter_module_paths)
 			flags |= MINIDUMP_TYPE::MiniDumpFilterModulePaths;
-		if (__flags & dbg_flags::dump_with_process_thread_data)
+		if(__flags & dbg_flags::dump_with_process_thread_data)
 			flags |= MINIDUMP_TYPE::MiniDumpWithProcessThreadData;
-		if (__flags & dbg_flags::dump_with_private_read_write_memory)
+		if(__flags & dbg_flags::dump_with_private_read_write_memory)
 			flags |= MINIDUMP_TYPE::MiniDumpWithPrivateReadWriteMemory;
-		if (__flags & dbg_flags::dump_without_auxiliary_state)
+		if(__flags & dbg_flags::dump_without_auxiliary_state)
 			flags |= MINIDUMP_TYPE::MiniDumpWithoutAuxiliaryState;
-		if (__flags & dbg_flags::dump_with_full_auxiliary_state)
+		if(__flags & dbg_flags::dump_with_full_auxiliary_state)
 			flags |= MINIDUMP_TYPE::MiniDumpWithFullAuxiliaryState;
-		if (__flags & dbg_flags::dump_with_private_read_write_memory)
+		if(__flags & dbg_flags::dump_with_private_read_write_memory)
 			flags |= MINIDUMP_TYPE::MiniDumpWithPrivateReadWriteMemory;
-		if (__flags & dbg_flags::dump_ignore_inaccessible_memory)
+		if(__flags & dbg_flags::dump_ignore_inaccessible_memory)
 			flags |= MINIDUMP_TYPE::MiniDumpIgnoreInaccessibleMemory;
-		if (__flags & dbg_flags::dump_with_token_information)
+		if(__flags & dbg_flags::dump_with_token_information)
 			flags |= MINIDUMP_TYPE::MiniDumpWithTokenInformation;
-		if (__flags & dbg_flags::dump_with_module_headers)
+		if(__flags & dbg_flags::dump_with_module_headers)
 			flags |= MINIDUMP_TYPE::MiniDumpWithModuleHeaders;
-		if (__flags & dbg_flags::dump_filter_triage)
+		if(__flags & dbg_flags::dump_filter_triage)
 			flags |= MINIDUMP_TYPE::MiniDumpFilterTriage;
-		if (__flags & dbg_flags::dump_with_avx_state_context)
+		if(__flags & dbg_flags::dump_with_avx_state_context)
 			flags |= MINIDUMP_TYPE::MiniDumpWithAvxXStateContext;
-		if (__flags & dbg_flags::dump_with_ipt_trace)
+		if(__flags & dbg_flags::dump_with_ipt_trace)
 			flags |= MINIDUMP_TYPE::MiniDumpWithIptTrace;
-		if (__flags & dbg_flags::dump_scan_inaccessible_partial_pages)
+		if(__flags & dbg_flags::dump_scan_inaccessible_partial_pages)
 			flags |= MINIDUMP_TYPE::MiniDumpScanInaccessiblePartialPages;
-		if (__flags & dbg_flags::dump_valid_type_flags)
+		if(__flags & dbg_flags::dump_valid_type_flags)
 			flags |= MINIDUMP_TYPE::MiniDumpValidTypeFlags;
 		return union_cast<MINIDUMP_TYPE>(flags);
 	}
-	dbg_u8string __dbg_generate_error_message_win(
-		DWORD __error)
+	dbg_u8string
+	__dbg_generate_error_message_win(
+	 DWORD __error)
 	{
 		// Buffer
 		PWSTR msg			 = nullptr;
 		const size_t c = FormatMessageW(
-			FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-			0, __error, MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US), union_cast<PWSTR>(&msg), 0, nullptr);
-		if (pf_unlikely(!msg || c == 0))
+		 FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+		 0,
+		 __error,
+		 MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US),
+		 union_cast<PWSTR>(&msg),
+		 0,
+		 nullptr);
+		if(pf_unlikely(!msg || c == 0))
 			pf_throw(
-				dbg_category_system(), GetLastError(), dbg_flags::none,
-				"[WIN] FormatMessageW failed for code={}!", __error);
+			 dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] FormatMessageW failed for code={}!", __error);
 		LocalFree(msg);
 
 		// Returns
 		return __dbg_convert_wide_to_u8_win(msg, c);
 	}
-	void __dbg_generate_error_popup_win(
-		dbg_u8string_view __title,
-		dbg_u8string_view __msg)
+	void
+	__dbg_generate_error_popup_win(
+	 dbg_u8string_view __title,
+	 dbg_u8string_view __msg)
 	{
 		// Convert u8 -> wide
 		__dbg_wsstring wstitle = __dbg_convert_u8_to_wide_win(__title.data(), __title.size());
 		__dbg_wsstring wsmsg	 = __dbg_convert_u8_to_wide_win(__msg.data(), __msg.size());
 
 		// Display
-		if (!MessageBoxW(nullptr, wsmsg.data(), wstitle.data(), MB_OK | MB_ICONERROR))
+		if(!MessageBoxW(nullptr, wsmsg.data(), wstitle.data(), MB_OK | MB_ICONERROR))
 			pf_throw(
-				dbg_category_system(), GetLastError(), dbg_flags::none,
-				"[WIN] MessageBoxW failed! title={}, message={}",
-				__title.data(), __msg.data());
+			 dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] MessageBoxW failed! title={}, message={}", __title.data(), __msg.data());
 	}
-	dbg_u8string __dbg_generate_dumpbin_win(
-		MINIDUMP_EXCEPTION_INFORMATION *__mei,
-		MINIDUMP_TYPE __type)
+	dbg_u8string
+	__dbg_generate_dumpbin_win(
+	 MINIDUMP_EXCEPTION_INFORMATION *__mei,
+	 MINIDUMP_TYPE __type)
 	{
 		// Path
 		PWSTR known = nullptr;
 		BOOL ret		= SHGetKnownFolderPath(FOLDERID_LocalAppDataLow, 0, 0, &known);
-		if (ret != S_OK)
+		if(ret != S_OK)
 		{
 			CoTaskMemFree(known);
 			pf_throw(
-				dbg_category_system(), GetLastError(), dbg_flags::none,
-				"[WIN] SHGetKnownFolderPath failed with FOLDERID_LocalAppDataLow!");
+			 dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] SHGetKnownFolderPath failed with FOLDERID_LocalAppDataLow!");
 		}
 		// Directory
 		__dbg_wsstring str(DBG_FMT_NAME_LEN, '\0');
@@ -407,12 +398,11 @@ namespace pul
 		if(!CreateDirectoryW(str.data(), nullptr))
 		{
 			DWORD err = GetLastError();
-			if (err != ERROR_ALREADY_EXISTS)
+			if(err != ERROR_ALREADY_EXISTS)
 			{
 				dbg_u8string u8path = __dbg_convert_wide_to_u8_win(str.data(), std::wcslen(str.data()));
 				pf_throw(
-					dbg_category_system(), GetLastError(), dbg_flags::none,
-					"[WIN] CreateDirectoryW failed for path={}", u8path.data());
+				 dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] CreateDirectoryW failed for path={}", u8path.data());
 			}
 		}
 
@@ -420,50 +410,44 @@ namespace pul
 		str.insert_back(L"minidump.dmp");
 		HANDLE file					= CreateFileW(str.data(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 		dbg_u8string u8path = __dbg_convert_wide_to_u8_win(str.data(), std::wcslen(str.data()));
-		if (!file)
+		if(!file)
 		{
 			pf_throw(
-				dbg_category_system(), GetLastError(), dbg_flags::none,
-				"[WIN] CreateFileW failed at path={}", u8path.data());
+			 dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] CreateFileW failed at path={}", u8path.data());
 		}
 
 		// Generate
 		if(!MiniDumpWriteDump(
-				 GetCurrentProcess(), GetCurrentProcessId(), file,
-				 __type, __mei, nullptr, nullptr))
+				GetCurrentProcess(), GetCurrentProcessId(), file, __type, __mei, nullptr, nullptr))
 		{
 			DWORD result = HRESULT_FROM_WIN32(GetLastError());
 			pf_throw(
-				dbg_category_system(), result, dbg_flags::none,
-				"[WIN] Failed to generate dumpbin at path={}", u8path.data());
+			 dbg_category_system(), result, dbg_flags::none, "[WIN] Failed to generate dumpbin at path={}", u8path.data());
 		}
 
 		// Close File
-		if (!CloseHandle(file))
+		if(!CloseHandle(file))
 		{
 			pf_throw(
-				dbg_category_system(), GetLastError(), dbg_flags::none,
-				"[WIN] Failed closing file handle for file={}, at path={}",
-				union_cast<void*>(file), u8path.data());
+			 dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] Failed closing file handle for file={}, at path={}", union_cast<void *>(file), u8path.data());
 		}
 
 		// Print
 		pf_print(
-			dbg_type::info, dbg_level::high,
-			"[WIN] Dumpfile written at path={}.", u8path.data());
+		 dbg_type::info, dbg_level::high, "[WIN] Dumpfile written at path={}.", u8path.data());
 
 		// Returns
 		return u8path;
 	}
-	void __dbg_generate_exception_dumpbin_win(
-		dbg_category const *__cat,
-		uint32_t __code,
-		uint32_t __flags,
-		dbg_u8string_view __what)
+	void
+	__dbg_generate_exception_dumpbin_win(
+	 dbg_category const *__cat,
+	 uint32_t __code,
+	 uint32_t __flags,
+	 dbg_u8string_view __what)
 	{
 		// Print
-		pf_print(dbg_type::info, dbg_level::high, "[WIN] Caught unhandled exception of category={}, code={}, message={}",
-						 __cat->name().data(), __code, __what.data());
+		pf_print(dbg_type::info, dbg_level::high, "[WIN] Caught unhandled exception of category={}, code={}, message={}", __cat->name().data(), __code, __what.data());
 		auto st	 = __dbg_retrieve_stacktrace();
 		size_t s = st.length;
 		dbg_u8string str(s, '\0');
@@ -476,68 +460,66 @@ namespace pul
 		memset(&mei, 0, sizeof(mei));
 		CONTEXT c;
 		memset(&c, 0, sizeof(c));
-		c.ContextFlags = CONTEXT_ALL;
-		const auto *b = __internal.dbg_internal.__retrieve_current_context();
+		c.ContextFlags				= CONTEXT_ALL;
+		const auto *b					= __internal.dbg_internal.__retrieve_current_context();
 		mei.ThreadId					= b->ID + 1;
 		mei.ExceptionPointers = b->exp;
 		mei.ClientPointers		= FALSE;
-		dbg_u8string u8path = __dbg_generate_dumpbin_win(&mei, __dbg_flags_to_minidump_type_win(__flags));
+		dbg_u8string u8path		= __dbg_generate_dumpbin_win(&mei, __dbg_flags_to_minidump_type_win(__flags));
 
 		// Popup
 		__dbg_generate_error_popup_win(
-			"Pulsar", dbg_u8format(
-				"An exception has been thrown of category={}, code={}, message={} | {}.\n"
-				"A dumpfile has been generated at location={}.\n"
-				"Press ok to terminate the program.",
-				__cat->name().data(), __code, __cat->message(__code).data(), __what.data(), u8path.data()).data());
+		 "Pulsar", dbg_u8format("An exception has been thrown of category={}, code={}, message={} | {}.\n"
+														"A dumpfile has been generated at location={}.\n"
+														"Press ok to terminate the program.",
+														__cat->name().data(),
+														__code,
+														__cat->message(__code).data(),
+														__what.data(),
+														u8path.data())
+								.data());
 	}
-	void __dbg_terminate_exception_dumpbin_win(
-		dbg_category const *__cat,
-		uint32_t __code,
-		uint32_t __flags,
-		dbg_u8string_view __what) pf_attr_noexcept
+	void
+	__dbg_terminate_exception_dumpbin_win(
+	 dbg_category const *__cat,
+	 uint32_t __code,
+	 uint32_t __flags,
+	 dbg_u8string_view __what) pf_attr_noexcept
 	{
 		// Generate
 		try
 		{
 			__dbg_generate_exception_dumpbin_win(__cat, __code, __flags, __what);
-		}
-		catch(dbg_exception const &__e)
+		} catch(dbg_exception const &__e)
 		{
 			pf_print(
-				dbg_type::warning, dbg_level::high,
-				"[WIN] Failed to generate exception dumpbin! Reason: category={}, code={}, message={} | {}",
-				__e.category()->name().data(),
-				__e.code(),
-				__e.category()->message(__e.code()).data(),
-				__e.what());
+			 dbg_type::warning, dbg_level::high, "[WIN] Failed to generate exception dumpbin! Reason: category={}, code={}, message={} | {}", __e.category()->name().data(), __e.code(), __e.category()->message(__e.code()).data(), __e.what());
 		}
 	}
-	void __dbg_terminate_win() pf_attr_noexcept
+	void
+	__dbg_terminate_win() pf_attr_noexcept
 	{
 		/// Exception?
 		std::exception_ptr p = std::current_exception();
-		if (p)
+		if(p)
 		{
 			try
 			{
 				std::rethrow_exception(p);
-			}
-			catch(dbg_exception const &__e)
+			} catch(dbg_exception const &__e)
 			{
 				__dbg_terminate_exception_dumpbin_win(
-					__e.category(),
-					__e.code(),
-					__e.flags(),
-					__e.what());
-			}
-			catch(std::exception const &__e)
+				 __e.category(),
+				 __e.code(),
+				 __e.flags(),
+				 __e.what());
+			} catch(std::exception const &__e)
 			{
 				__dbg_terminate_exception_dumpbin_win(
-					dbg_category_generic(),
-					union_cast<uint32_t>(dbg_code::unknown),
-					dbg_flags::none,
-					__e.what());
+				 dbg_category_generic(),
+				 union_cast<uint32_t>(dbg_code::unknown),
+				 dbg_flags::none,
+				 __e.what());
 			}
 		}
 
@@ -545,47 +527,46 @@ namespace pul
 		__internal.dbg_internal.__call_terminate();
 
 		/// Abort
-		process_tasks();// Write down messages
+		process_tasks();	// Write down messages
 		std::abort();
 	}
 
 	/// DEBUG: Context -> Switcher
 	pf_hint_noreturn void
 	__dbg_exception_context_switch_task_win(
-		std::exception_ptr &&__ptr,
-		__dbg_context_win_t const *__ctx,
-		atomic<bool> *__ctrl) pf_attr_noexcept
+	 std::exception_ptr &&__ptr,
+	 __dbg_context_win_t const *__ctx,
+	 atomic<bool> *__ctrl) pf_attr_noexcept
 	{
 		// Update local thread EXCEPTION_POINTERS + ID of thread thrower
 		auto *c = __internal.dbg_internal.__retrieve_current_context();
-		c->exp = __ctx->exp;
-		c->ID	 = __ctx->ID;
+		c->exp	= __ctx->exp;
+		c->ID		= __ctx->ID;
 
 		// Rethrow exception. Since it's thrown inside a try - catch block, it'll
 		// be destroyed only if it exit it, unblocking the throwing thread.
 		try
 		{
 			throw(__dbg_exception_context_switcher_t(std::move(__ptr), __ctrl));
-		}
-		catch(__dbg_exception_context_switcher_t const& __e)
+		} catch(__dbg_exception_context_switcher_t const &__e)
 		{
-			__e.__rethrow();// NOTE: Lifetime => Deleted when exit a catch block
+			__e.__rethrow();	// NOTE: Lifetime => Deleted when exit a catch block
 		}
 	}
 	pulsar_api void
 	__dbg_move_exception_context_to_0() pf_attr_noexcept
 	{
 		pf_assert(
-			this_thread::get_id() != 0,
-			"[WIN] Can't move exception context from main to main thread!");
+		 this_thread::get_id() != 0,
+		 "[WIN] Can't move exception context from main to main thread!");
 		pf_alignas(CCY_ALIGN) atomic<bool> ctrl = false;
 		submit_task_0(
-			__dbg_exception_context_switch_task_win,
-			std::current_exception(),
-			__internal.dbg_internal.__retrieve_current_context(),
-			&ctrl);
-		while (!ctrl.load(atomic_order::relaxed)) this_thread::yield();
+		 __dbg_exception_context_switch_task_win,
+		 std::current_exception(),
+		 __internal.dbg_internal.__retrieve_current_context(),
+		 &ctrl);
+		while(!ctrl.load(atomic_order::relaxed)) this_thread::yield();
 	}
-}
+}	 // namespace pul
 
-#endif // !PF_WINDOWS
+#endif	// !PF_WINDOWS
