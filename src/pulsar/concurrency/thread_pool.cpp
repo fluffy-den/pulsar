@@ -16,7 +16,7 @@ namespace pul
 {
 	/// CONCURRENCY: Thread Pool
 	/// Buffer
-	__thread_pool_t::__buffer_t::__buffer_t() pf_attr_noexcept	// TODO: Move buffer (horrible)
+	__thread_pool_storage_t::__thread_pool_storage_t() pf_attr_noexcept
 		: run(true)
 		, numTasks(0)
 		, numProcessing(0)
@@ -26,7 +26,7 @@ namespace pul
 
 	/// Thread
 	__thread_t *
-	__thread_pool_t::__buffer_t::__get_thread(
+	__thread_pool_storage_t::__get_thread(
 	 uint32_t __index) pf_attr_noexcept
 	{
 		union
@@ -39,15 +39,15 @@ namespace pul
 	}
 
 	/// Buffer -> Make
-	__thread_pool_t::__buffer_t *
-	__thread_pool_t::__make_buffer()
+	__thread_pool_storage_t *
+	__thread_pool_t::__make_storage()
 	{
-		return new_construct_ex<__buffer_t>(
+		return new_construct_ex<__thread_pool_storage_t>(
 		 CCY_NUM_WORKERS * sizeof(__thread_t));
 	}
 	void
-	__thread_pool_t::__delete_buffer(
-	 __buffer_t *__buf) pf_attr_noexcept
+	__thread_pool_t::__delete_storage(
+	 __thread_pool_storage_t *__buf) pf_attr_noexcept
 	{
 		destroy_delete(__buf);
 	}
@@ -55,7 +55,7 @@ namespace pul
 	/// Thread -> Process
 	int32_t
 	__thread_process(
-	 __thread_pool_t::__buffer_t *__buf) pf_attr_noexcept
+	 __thread_pool_storage_t *__buf) pf_attr_noexcept
 	{
 		// Security
 		__buf->numProcessing.fetch_add(1, atomic_order::relaxed);
@@ -68,7 +68,6 @@ namespace pul
 			{
 				__buf->numProcessing.fetch_sub(1, atomic_order::relaxed);
 				{
-					lock_unique lck(__buf->mutex);
 					while(__buf->run.load(atomic_order::relaxed)
 								&& __buf->numTasks.load(atomic_order::relaxed) <= __buf->numProcessing.load(atomic_order::relaxed))
 					{
@@ -109,7 +108,7 @@ namespace pul
 	__thread_pool_t::__thread_pool_t()
 	{
 		/// Make Buffer
-		this->buf_ = this->__make_buffer();
+		this->buf_ = this->__make_storage();
 
 		/// Threads
 		for(size_t i = 0; i != CCY_NUM_WORKERS; ++i)
@@ -139,7 +138,7 @@ namespace pul
 			;
 
 		/// Buffer
-		this->__delete_buffer(this->buf_);
+		this->__delete_storage(this->buf_);
 	}
 
 	/// Submit

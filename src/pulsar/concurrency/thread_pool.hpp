@@ -30,7 +30,7 @@ namespace pul
 	using __thread_t = std::thread;
 
 	/// TASK: Pool -> Buffer
-	struct __thread_pool_storage_t	// TODO: Move storage defs
+	struct __thread_pool_storage_t
 	{
 		/// Constructors
 		__thread_pool_storage_t() pf_attr_noexcept;
@@ -57,7 +57,6 @@ namespace pul
 		pf_alignas(CCY_ALIGN) atomic<bool> run;
 		pf_alignas(CCY_ALIGN) atomic<uint32_t> numTasks;
 		pf_alignas(CCY_ALIGN) atomic<uint32_t> numProcessing;
-		mutex_t mutex;
 		// condition_variable_t cv;
 		mpmc_lifo2<__task_t> queue;
 		mpmc_lifo2<__task_t> queue0;	// Will use bulks
@@ -69,48 +68,12 @@ namespace pul
 	class __thread_pool_t
 	{
 	public:
-		/// Type -> Buffer
-		struct __buffer_t
-		{
-			/// Constructors
-			__buffer_t() pf_attr_noexcept;
-			__buffer_t(__buffer_t const &) = delete;
-			__buffer_t(__buffer_t &&)			 = delete;
-
-			/// Destructor
-			~__buffer_t() pf_attr_noexcept = default;
-
-			/// Thread
-			pf_hint_nodiscard __thread_t *
-			__get_thread(
-			 uint32_t __index) pf_attr_noexcept;
-
-			/// Operator =
-			__buffer_t &
-			operator=(
-			 __buffer_t const &) = delete;
-			__buffer_t &
-			operator=(
-			 __buffer_t &&) = delete;
-
-			/// Store
-			pf_alignas(CCY_ALIGN) atomic<bool> run;
-			pf_alignas(CCY_ALIGN) atomic<uint32_t> numTasks;
-			pf_alignas(CCY_ALIGN) atomic<uint32_t> numProcessing;
-			mutex_t mutex;
-			// condition_variable_t cv;
-			mpmc_lifo2<__task_t> queue;
-			mpmc_lifo2<__task_t> queue0;	// Will use bulks
-			byte_t store[];								// [t1][t2][tn-1]
-																		//     workers
-		};
-
-		/// Buffer -> Make
-		pf_hint_nodiscard __buffer_t *
-		__make_buffer();
+		/// Store -> Make
+		pf_hint_nodiscard __thread_pool_storage_t *
+		__make_storage();
 		void
-		__delete_buffer(
-		 __buffer_t *__buf) pf_attr_noexcept;
+		__delete_storage(
+		 __thread_pool_storage_t *__s) pf_attr_noexcept;
 
 		/// Constructors
 		__thread_pool_t();
@@ -144,7 +107,7 @@ namespace pul
 
 	private:
 		/// Store
-		__buffer_t *buf_;
+		__thread_pool_storage_t *buf_;
 	};
 }	 // namespace pul
 
