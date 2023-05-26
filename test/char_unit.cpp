@@ -218,8 +218,22 @@ namespace pul
 		}
 
 		// -> String
-		pt_unit(u8string_unit)
+		pt_unit(u8string_constructors_unit)
 		{
+			// u8string()
+			u8string<> str1;
+			// u8string(char, num)
+			u8string<> str2('a', 16);
+			// u8string(code, num)
+			u8string<> str3(0x1'F6'00u, 16);
+			// u8string((char) arr)
+			u8char_t arr1[] = "This is a c++ string!";
+			u8string<> str4(arr1);
+			// u8string((code) arr)
+			u8code_t arr2[] = { 0x1'F6'00u, 0x1'F6'03u, 0x1'F6'04u };
+			u8string<> str5(arr2);
+			// u8string(cstr)
+			u8string<> str6 = "This is a c style string!";
 		}
 	}
 }	 // namespace pul

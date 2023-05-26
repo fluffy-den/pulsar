@@ -42,10 +42,10 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 [o] RAII tests
 
 ### UTF-8 Everywhere ### (0.7)
-[x] utf8_string
-[x] utf8_iterator
-[x] utf8_utilities
-[x] utf8_format (fmt)
+[o] utf8_string
+[o] utf8_iterator
+[o] utf8_utilities
+[o] utf8_format (fmt)
 [x] all_tests
 
 ### Filesystem ### (0.8)

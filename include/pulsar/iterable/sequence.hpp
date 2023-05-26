@@ -260,20 +260,19 @@ namespace pul
 			return d;
 		}
 
-		// __throw_if_incorrect_position
+		// __throw_if*
 		pf_decl_inline pf_decl_constexpr void
 		__throw_if_incorrect_insert_position(
-		 iterator<_Ty> __w)
+		 size_t __w)
 		{
 			pf_throw_if(
-			 __w < this->begin() || __w > this->end(),
+			 __w > this->count_,
 			 dbg_category_generic(),
 			 dbg_code::invalid_argument,
 			 dbg_flags::none,
-			 "Trying to insert outside of sequence range! begin={}, end={}, where={}",
-			 union_cast<const void *>(this->begin().get()),
-			 union_cast<const void *>(this->end().get()),
-			 union_cast<const void *>(__w.get()));
+			 "Trying to insert outside of sequence range! count={}, where={}",
+			 this->count_,
+			 __w);
 		}
 		pf_decl_inline pf_decl_constexpr void
 		__throw_if_incorrect_index_position(
@@ -290,52 +289,52 @@ namespace pul
 		}
 		pf_decl_inline pf_decl_constexpr void
 		__throw_if_incorrect_remove_replace_position(
-		 iterator<_Ty> __w)
+		 size_t __w)
 		{
 			pf_throw_if(
-			 __w < this->begin() || __w >= this->end(),
+			 __w >= this->count_,
 			 dbg_category_generic(),
 			 dbg_code::invalid_argument,
 			 dbg_flags::none,
-			 "Trying to remove / replace outside of sequence range! begin={}, end={}, where={}",
-			 union_cast<const void *>(this->begin().get()),
-			 union_cast<const void *>(this->end().get()),
-			 union_cast<const void *>(__w.get()));
-		}
-		pf_decl_inline pf_decl_constexpr void
-		__throw_if_incorrect_formed_range(
-		 iterator<_Ty> __beg,
-		 iterator<_Ty> __end)
-		{
-			pf_throw_if(
-			 __beg >= __end,
-			 dbg_category_generic(),
-			 dbg_code::invalid_argument,
-			 dbg_flags::none,
-			 "Range of elements to remove / replace is ill-formed! begin={}, end={}",
-			 union_cast<const void *>(__beg.get()),
-			 union_cast<const void *>(__end.get()));
+			 "Trying to remove / replace outside of sequence range! count={}, where={}",
+			 this->count_,
+			 __w);
 		}
 		pf_decl_inline pf_decl_constexpr void
 		__throw_if_incorrect_remove_replace_range(
-		 iterator<_Ty> __wbeg,
-		 iterator<_Ty> __wend)
+		 size_t __wbeg,
+		 size_t __wend)
 		{
 			pf_throw_if(
-			 __wbeg < this->begin() || __wend >= this->end(),
+			 __wbeg > __wend,
 			 dbg_category_generic(),
 			 dbg_code::invalid_argument,
 			 dbg_flags::none,
-			 "Trying to remove / replace outside of sequence range! seq_begin={}, seq_end={}, range_begin={}, range_end={}",
-			 union_cast<const void *>(this->begin().get()),
-			 union_cast<const void *>(this->end().get()),
-			 union_cast<const void *>(__beg.get()),
-			 union_cast<const void *>(__end.get()));
+			 "Formed range between where_begin and where_end is ill-formed! where_begin={}, where_end={}",
+			 __wbeg,
+			 __wend);
+			pf_throw_if(
+			 __wbeg >= this->count_,
+			 dbg_category_generic(),
+			 dbg_code::invalid_argument,
+			 dbg_flags::none,
+			 "Trying to remove / replace outside of sequence range! count={}, where_begin={}, where_end={}",
+			 this->count_,
+			 __wbeg,
+			 __wend);
+		}
+
+		// __iterator_to_index
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
+		__iterator_to_index(
+		 iterator<_Ty> __it) pf_attr_noexcept
+		{
+			return countof(this->begin(), __it);
 		}
 
 		// __push_insert_back
 		template<typename... _Args>
-		pf_decl_constexpr void
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__push_insert_back(
 		 _Args &&...__args)
 		{
@@ -343,61 +342,70 @@ namespace pul
 			iterator_t w = this->begin() + this->count_;
 			construct(w, std::forward<_Args>(__args)...);
 			++this->count_;
+			return this->count_;
 		}
-		pf_decl_constexpr void
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__push_insert_back(
 		 const _Ty &__val,
 		 size_t __count)
 		{
+			if(pf_unlikely(!__count)) return -1;
 			this->reserve_with_magnifier(this->count_ + __count);
 			iterator_t b = this->begin() + this->count_;
 			iterator_t e = this->begin() + this->count_ + __count;
 			construct(b, e, __val);
 			this->count_ += __count;
+			return this->count_;
 		}
 		template<typename _IteratorIn>
-		pf_decl_constexpr void
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__push_insert_back(
 		 _IteratorIn __beg,
 		 _IteratorIn __end)
 		{
 			const size_t c = countof(__beg, __end);
+			if(pf_unlikely(!c)) return -1;
 			this->reserve_with_magnifier(this->count_ + c);
 			iterator_t b = this->begin() + this->count_;
 			iterator_t e = this->begin() + this->count_ + c;
 			construct(b, e, __beg);
 			this->count_ += c;
+			return this->count_;
 		}
 
 		// __push_insert
 		template<typename... _Args>
-		pf_hint_nodiscard pf_decl_constexpr diff_t
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__push_insert(
-		 iterator<_Ty> __w,
+		 size_t __w,
 		 _Args &&...__args)
 		{
 			this->__throw_if_incorrect_insert_position(__w);
 			this->reserve_with_magnifier(this->count_ + 1);
-			memmove(__w + 1, __w, distof(__w, this->end()));
-			construct(__w, std::forward<_Args>(__args)...);
+			auto w = this->begin() + __w;
+			memmove(w + 1, w, distof(w, this->end()));
+			construct(w, std::forward<_Args>(__args)...);
 			++this->count_;
-			return 1;
+			return __w;
 		}
-		pf_hint_nodiscard pf_decl_constexpr diff_t
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__push_insert_no_check(
-		 iterator<_Ty> __w,
+		 size_t __w,
 		 const _Ty &__val,
 		 size_t __count)
 		{
+			if(pf_unlikely(!__count)) return -1;
 			this->reserve_with_magnifier(this->count_ + __count);
-			memmove(__w + __count, __w, distof(__w, this->end()));
-			construct(__w, __w + __count, __val);
+			auto w = this->begin() + __w;
+			auto l = w + __count;
+			memmove(l, w, distof(w, this->end()));
+			construct(w, l, __val);
 			this->count_ += __count;
-			return __count;
+			return __w;
 		}
-		pf_hint_nodiscard pf_decl_constexpr diff_t
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__push_insert(
-		 iterator<_Ty> __w,
+		 size_t __w,
 		 const _Ty &__val,
 		 size_t __count)
 		{
@@ -405,23 +413,26 @@ namespace pul
 			return this->__push_insert_no_check(__w, __val, __count);
 		}
 		template<typename _IteratorIn>
-		pf_hint_nodiscard pf_decl_constexpr diff_t
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__push_insert_no_check(
-		 iterator<_Ty> __w,
+		 size_t __w,
 		 _IteratorIn __beg,
 		 _IteratorIn __end)
 		{
 			const size_t c = countof(__beg, __end);
+			if(pf_unlikely(!c)) return -1;
 			this->reserve_with_magnifier(this->count_ + c);
-			memmove(__w + c, __w, distof(__w, this->end()));
-			construct(__w, __w + c, __beg);
+			auto w = this->begin() + __w;
+			auto n = w + c;
+			memmove(n, w, distof(w, this->end()));
+			construct(w, n, __beg);
 			this->count_ += c;
-			return c;
+			return __w;
 		}
 		template<typename _IteratorIn>
-		pf_hint_nodiscard pf_decl_constexpr diff_t
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__push_insert(
-		 iterator<_Ty> __w,
+		 size_t __w,
 		 _IteratorIn __beg,
 		 _IteratorIn __end)
 		{
@@ -430,142 +441,160 @@ namespace pul
 		}
 
 		// __pop_remove_back
-		pf_decl_constexpr void
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__pop_remove_back()
 		{
 			pf_throw_if(
 			 this->is_empty(),
 			 dbg_category_generic(),
-			 dbg_code::invalid_argument,
+			 dbg_code::runtime_error,
 			 dbg_flags::none,
 			 "Trying to remove elements from empty sequence!");
 			--this->count_;
 			destroy(this->end());
+			return this->count_ - 1;
 		}
 
 		// __pop_remove
-		pf_decl_constexpr void
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__pop_remove(
-		 iterator<_Ty> __w)
+		 size_t __w)
 		{
 			this->__throw_if_incorrect_remove_replace_position(__w);
-			destroy(__w);
-			memmove(__w, __w + 1, distof(__w + 1, this->end()));
+			auto w = this->begin() + __w;
+			auto l = w + 1;
+			destroy(w);
+			memmove(w, l, distof(l, this->end()));
 			--this->count_;
+			return __w >= this->count_ ? this->count_ - 1 : __w;
 		}
-		pf_decl_constexpr void
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__pop_remove(
-		 iterator<_Ty> __beg,
-		 iterator<_Ty> __end)
+		 size_t __wbeg,
+		 size_t __wend)
 		{
-			this->__throw_if_incorrect_formed_range(__beg, __end);
-			this->__throw_if_incorrect_remove_replace_range(__beg, __end);
-			destroy(__beg, __end);
-			memcpy(__beg, __end, distof(__end, this->end()));
-			this->count_ -= countof(__beg, __end);
+			this->__throw_if_incorrect_remove_replace_range(__wbeg, __wend);
+			auto wbeg = this->begin() + __wbeg;
+			auto wend = this->begin() + __wend;
+			destroy(wbeg, wend);
+			memcpy(wbeg, wend, distof(wend, this->end()));
+			this->count_ -= countof(wbeg, wend);
+			return __wbeg >= this->count_ ? this->count_ - 1 : __wbeg;
 		}
 
 		// __replace
 		template<typename... _Args>
-		pf_hint_nodiscard pf_decl_constexpr diff_t
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__replace(
-		 iterator<_Ty> __w,
+		 size_t __w,
 		 _Args &&...__args)
 		{
 			this->__throw_if_incorrect_remove_replace_position(__w);
-			pul::assign(__w, std::forward<_Args>(__args)...);
-			return 1;
+			auto w = this->begin() + __w;
+			pul::assign(w, std::forward<_Args>(__args)...);
+			return __w;
 		}
-		pf_hint_nodiscard pf_decl_constexpr diff_t
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__replace(
-		 iterator<_Ty> __w,
+		 size_t __w,
 		 const _Ty &__val,
 		 size_t __count)
 		{
-			if(pf_unlikely(!__count)) return 0;
+			if(pf_unlikely(!__count)) return this->count_;
 			this->__throw_if_incorrect_remove_replace_position(__w);
-			pul::assign(__w, __val);
-			return this->__push_insert_no_check(__w + 1, __val, __count - 1) + 1;
+			auto w = this->begin() + __w;
+			pul::assign(w, __val);
+			this->__push_insert_no_check(__w + 1, __val, __count - 1);
+			return __w;
 		}
 		template<typename _IteratorIn>
-		pf_hint_nodiscard pf_decl_constexpr diff_t
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__replace(
-		 iterator<_Ty> __w,
+		 size_t __w,
 		 _IteratorIn __beg,
 		 _IteratorIn __end)
 		{
 			this->__throw_if_incorrect_remove_replace_position(__w);
-			pul::assign(__w, *__beg);
-			return this->__push_insert_no_check(__w + 1, __beg + 1, __end) + 1;
+			auto w = this->begin() + __w;
+			pul::assign(w, *__beg);
+			this->__push_insert_no_check(__w + 1, __beg + 1, __end);
+			return __w;
 		}
-		pf_hint_nodiscard pf_decl_constexpr diff_t
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__replace(
-		 iterator<_Ty> __wbeg,
-		 iterator<_Ty> __wend,
+		 size_t __wbeg,
+		 size_t __wend,
 		 const _Ty &__val,
 		 size_t __count)
 		{
-			if(pf_unlikely(!__count)) return 0;
-			this->__throw_if_incorrect_formed_range(__wbeg, __wend);
+			if(pf_unlikely(!__count)) return this->count_;
 			this->__throw_if_incorrect_remove_replace_range(__wbeg, __wend);
-			const size_t c = countof(__wbeg, __wend);
+			const size_t c = __wend - __wbeg;
 			if(c < __count)
 			{
 				const size_t n = __count - c;
 				this->reserve_with_magnifier(this->count_ + n);
-				iterator_t l = __wbeg + __count;
-				pul::assign(__wbeg, __wend, __val);
-				memmove(l, __wend, distof(__wend, this->end()));
-				construct(__wbeg + c, l, __val);
+				auto wbeg = this->begin() + __wbeg;
+				auto wend = this->begin() + __wend;
+				auto w		= wbeg + __count;
+				pul::assign(wbeg, wend, __val);
+				memmove(w, wend, distof(wend, this->end()));
+				construct(wbeg + c, w, __val);
 				this->count_ += n;
 			}
 			else
 			{
-				iterator_t l = __wbeg + __count;
-				pul::assign(__wbeg, __wend, __val);
+				auto wbeg = this->begin() + __wbeg;
+				auto wend = this->begin() + __wend;
+				auto w		= wbeg + __count;
+				pul::assign(wbeg, wend, __val);
 				if(c > __count)
 				{
-					destroy(l, __wend);
-					memcpy(l, __wend, distof(__wend, this->end()));
+					destroy(w, wend);
+					memcpy(w, wend, distof(wend, this->end()));
 					this->count_ -= (c - __count);
 				}
 			}
-			return __count;
+			return __wbeg;
 		}
 		template<typename _IteratorIn>
-		pf_hint_nodiscard pf_decl_constexpr diff_t
+		pf_hint_nodiscard pf_decl_constexpr size_t
 		__replace(
-		 iterator<_Ty> __wbeg,
-		 iterator<_Ty> __wend,
+		 size_t __wbeg,
+		 size_t __wend,
 		 _IteratorIn __ibeg,
 		 _IteratorIn __iend)
 		{
-			this->__throw_if_incorrect_formed_range(__wbeg, __wend);
 			this->__throw_if_incorrect_remove_replace_range(__wbeg, __wend);
-			const size_t wc = countof(__wbeg, __wend);
 			const size_t ic = countof(__ibeg, __iend);
+			if(pf_unlikely(!ic)) return this->count_;
+			const size_t wc = (__wend - __wbeg);
 			if(wc < ic)
 			{
 				const size_t n = ic - wc;
 				this->reserve_with_magnifier(this->count_ + n);
-				iterator_t l = __wbeg + ic;
-				pul::assign(__wbeg, __wend, __ibeg);
-				memmove(l, __wend, distof(__wend, this->end()));
-				construct(__wbeg + wc, l, __ibeg + wc);
+				auto wbeg = this->begin() + __wbeg;
+				auto wend = this->begin() + __wend;
+				auto last = wbeg + ic;
+				pul::assign(wbeg, wend, __ibeg);
+				memmove(last, wend, distof(wend, this->end()));
+				construct(wbeg + wc, last, __ibeg + wc);
 				this->count_ += n;
 			}
 			else
 			{
-				iterator_t l = __wbeg + ic;
-				pul::assign(__wbeg, __wend, __ibeg);
+				auto wbeg = this->begin() + __wbeg;
+				auto wend = this->begin() + __wend;
+				auto last = wbeg + ic;
+				pul::assign(wbeg, wend, __ibeg);
 				if(wc > ic)
 				{
-					destroy(l, __wend);
-					memcpy(l, __wend, distof(__wend, this->end()));
+					destroy(last, wend);
+					memcpy(last, wend, distof(wend, this->end()));
 					this->count_ -= (wc - ic);
 				}
 			}
-			return ic;
+			return __wbeg;
 		}
 
 	public:
@@ -881,34 +910,31 @@ namespace pul
 
 		/// Push
 		template<typename... _Args>
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		push_back(
 		 _Args &&...__args)
 			requires(std::is_constructible_v<_Ty, _Args...>)
 		{
-			this->__push_insert_back(std::forward<_Args>(__args)...);
-			return this->count_;
+			return this->__push_insert_back(std::forward<_Args>(__args)...);
 		}
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		push_back(
 		 const _Ty &__val,
 		 size_t __count)
 		{
-			this->__push_insert_back(__val, __count);
-			return this->count_;
+			return this->__push_insert_back(__val, __count);
 		}
 		template<typename _IteratorIn>
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		push_back(
 		 _IteratorIn __beg,
 		 _IteratorIn __end)
 			requires(is_iterator_v<_IteratorIn>)
 		{
-			this->__push_insert_back(__beg, __end);
-			return this->count_;
+			return this->__push_insert_back(__beg, __end);
 		}
 		template<typename _View>
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		push_back(
 		 _View __v)
 			requires(
@@ -917,7 +943,7 @@ namespace pul
 		{
 			return this->push_back(__v.begin(), __v.end());
 		}
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		push_back(
 		 initializer_list<_Ty> __il)
 		{
@@ -925,34 +951,34 @@ namespace pul
 		}
 
 		template<typename... _Args>
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		push(
 		 size_t __w,
 		 _Args &&...__args)
 			requires(std::is_constructible_v<_Ty, _Args...>)
 		{
-			return __w + this->__push_insert(this->begin() + __w, std::forward<_Args>(__args)...);
+			return this->__push_insert(__w, std::forward<_Args>(__args)...);
 		}
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		push(
 		 size_t __w,
 		 const _Ty &__val,
 		 size_t __count)
 		{
-			return __w + this->__push_insert(this->begin() + __w, __val, __count);
+			return this->__push_insert(__w, __val, __count);
 		}
 		template<typename _IteratorIn>
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		push(
 		 size_t __w,
 		 _IteratorIn __beg,
 		 _IteratorIn __end)
 			requires(is_iterator_v<_IteratorIn>)
 		{
-			return __w + this->__push_insert(this->begin() + __w, __beg, __end);
+			return this->__push_insert(__w, __beg, __end);
 		}
 		template<typename _View>
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		push(
 		 size_t __w,
 		 _View __v)
@@ -977,16 +1003,14 @@ namespace pul
 		 _Args &&...__args)
 			requires(std::is_constructible_v<_Ty, _Args...>)
 		{
-			this->__push_insert_back(std::forward<_Args>(__args)...);
-			return this->begin() + this->count_;
+			return this->begin() + this->__push_insert_back(std::forward<_Args>(__args)...);
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
 		insert_back(
 		 const _Ty &__val,
 		 size_t __count)
 		{
-			this->__push_insert_back(__val, __count);
-			return this->begin() + this->count_;
+			return this->begin() + this->__push_insert_back(__val, __count);
 		}
 		template<typename _IteratorIn>
 		pf_decl_inline pf_decl_constexpr iterator_t
@@ -995,8 +1019,7 @@ namespace pul
 		 _IteratorIn __end)
 			requires(is_iterator_v<_IteratorIn>)
 		{
-			this->__push_insert_back(__beg, __end);
-			return this->begin() + this->count_;
+			return this->begin() + this->__push_insert_back(__beg, __end);
 		}
 		template<typename _View>
 		pf_decl_inline pf_decl_constexpr iterator_t
@@ -1022,7 +1045,7 @@ namespace pul
 		 _Args &&...__args)
 			requires(std::is_constructible_v<_Ty, _Args...>)
 		{
-			return __w + this->__push_insert(__w, std::forward<_Args>(__args)...);
+			return this->begin() + this->__push_insert(this->__iterator_to_index(__w), std::forward<_Args>(__args)...);
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
 		insert(
@@ -1030,7 +1053,7 @@ namespace pul
 		 const _Ty &__val,
 		 size_t __count)
 		{
-			return __w + this->__push_insert(__w, __val, __count);
+			return this->begin() + this->__push_insert(this->__iterator_to_index(__w), __val, __count);
 		}
 		template<typename _IteratorIn>
 		pf_decl_inline pf_decl_constexpr iterator_t
@@ -1040,7 +1063,7 @@ namespace pul
 		 _IteratorIn __end)
 			requires(is_iterator_v<_IteratorIn>)
 		{
-			return __w + this->__push_insert(__w, __beg, __end);
+			return this->begin() + this->__push_insert(this->__iterator_to_index(__w), __beg, __end);
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
 		insert(
@@ -1069,83 +1092,77 @@ namespace pul
 		}
 
 		/// Remove
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		pop_back()
 		{
-			this->__pop_remove_back();
-			return this->count_;
+			return this->__pop_remove_back();
 		}
 
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		pop(
 		 size_t __w)
 		{
-			this->__pop_remove(this->begin() + __w);
-			return __w > 0 ? --__w : __w;
+			return this->__pop_remove(__w);
 		}
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		pop(
-		 size_t __beg,
-		 size_t __end)
+		 size_t __wbeg,
+		 size_t __wend)
 		{
-			this->__pop_remove(this->begin() + __beg, this->begin() + __end);
-			return __beg > 0 ? --__beg : __beg;
+			return this->__pop_remove(__wbeg, __wend);
 		}
 
 		/// Remove
-		pf_decl_constexpr iterator_t
+		pf_decl_inline pf_decl_constexpr iterator_t
 		remove_back() pf_attr_noexcept
 		{
-			this->__pop_remove_back();
-			return this->begin() + this->count_;
+			return this->begin() + this->__pop_remove_back();
 		}
 
-		pf_decl_constexpr iterator_t
+		pf_decl_inline pf_decl_constexpr iterator_t
 		remove(
 		 iterator_t __w) pf_attr_noexcept
 		{
-			this->__pop_remove(__w);
-			return --__w;
+			return this->begin() + this->__pop_remove(this->__iterator_to_index(__w));
 		}
-		pf_decl_constexpr iterator_t
+		pf_decl_inline pf_decl_constexpr iterator_t
 		remove(
 		 iterator_t __wb,
 		 iterator_t __we) pf_attr_noexcept
 		{
-			this->__pop_remove(__wb, __we);
-			return --__wb;
+			return this->begin() + this->__pop_remove(this->__iterator_to_index(__wb), this->__iterator_to_index(__we));
 		}
 
 		/// Replace
 		template<typename... _Args>
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		replace(
 		 size_t __w,
 		 _Args &&...__args)
 			requires(std::is_constructible_v<_Ty, _Args...>)
 		{
-			return __w + this->__replace(this->begin() + __w, std::forward<_Args>(__args)...);
+			return this->__replace(__w, std::forward<_Args>(__args)...);
 		}
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		replace(
 		 size_t __w,
 		 const _Ty &__val,
 		 size_t __count)
 		{
-			return __w + this->__replace(this->begin() + __w, __val, __count);
+			return this->__replace(__w, __val, __count);
 		}
 		template<typename _IteratorIn>
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		replace(
 		 size_t __w,
 		 _IteratorIn __beg,
 		 _IteratorIn __end)
 			requires(is_iterator_v<_IteratorIn>)
 		{
-			return __w + this->__replace(this->begin() + __w, __beg, __end);
+			return this->__replace(__w, __beg, __end);
 		}
 		template<typename _View>
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		replace(
 		 size_t __w,
 		 _View __v)
@@ -1155,24 +1172,24 @@ namespace pul
 		{
 			return this->replace(__w, __v.begin(), __v.end());
 		}
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		replace(
 		 size_t __w,
 		 initializer_list<_Ty> __il)
 		{
 			return this->replace(__w, iterator_t(__il.begin()), iterator_t(__il.end()));
 		}
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		replace(
 		 size_t __wbeg,
 		 size_t __wend,
 		 const _Ty &__val,
 		 size_t __count)
 		{
-			return __wbeg + this->__replace(this->begin() + __wbeg, this->end() + __wend, __val, __count);
+			return this->__replace(__wbeg, __wend, __val, __count);
 		}
 		template<typename _IteratorIn>
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		replace(
 		 size_t __wbeg,
 		 size_t __wend,
@@ -1180,10 +1197,10 @@ namespace pul
 		 _IteratorIn __iend)
 			requires(is_iterator_v<_IteratorIn>)
 		{
-			return __wbeg + this->__replace(this->begin() + __wbeg, this->end() + __wend, __ibeg, __iend);
+			return this->__replace(__wbeg, __wend, __ibeg, __iend);
 		}
 		template<typename _View>
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		replace(
 		 size_t __wbeg,
 		 size_t __wend,
@@ -1194,7 +1211,7 @@ namespace pul
 		{
 			return this->replace(__wbeg, __wend, __v.begin(), __v.end());
 		}
-		pf_decl_constexpr size_t
+		pf_decl_inline pf_decl_constexpr size_t
 		replace(
 		 size_t __wbeg,
 		 size_t __wend,
@@ -1206,34 +1223,34 @@ namespace pul
 
 		/// Replace (Iterator)
 		template<typename... _Args>
-		pf_decl_constexpr iterator_t
+		pf_decl_inline pf_decl_constexpr iterator_t
 		replace(
 		 iterator_t __w,
 		 _Args &&...__args)
 			requires(std::is_constructible_v<_Ty, _Args...>)
 		{
-			return __w + this->__replace(__w, std::forward<_Args>(__args)...);
+			return this->begin() + this->__replace(this->__iterator_to_index(__w), std::forward<_Args>(__args)...);
 		}
-		pf_decl_constexpr iterator_t
+		pf_decl_inline pf_decl_constexpr iterator_t
 		replace(
 		 iterator_t __w,
 		 const _Ty &__val,
 		 size_t __count)
 		{
-			return __w + this->__replace(__w, __val, __count);
+			return this->begin() + this->__replace(this->__iterator_to_index(__w), __val, __count);
 		}
 		template<typename _IteratorIn>
-		pf_decl_constexpr iterator_t
+		pf_decl_inline pf_decl_constexpr iterator_t
 		replace(
 		 iterator_t __w,
 		 _IteratorIn __beg,
 		 _IteratorIn __end)
 			requires(is_iterator_v<_IteratorIn>)
 		{
-			return __w + this->__replace(__w, __beg, __end);
+			return this->begin() + this->__replace(this->__iterator_to_index(__w), __beg, __end);
 		}
 		template<typename _View>
-		pf_decl_constexpr iterator_t
+		pf_decl_inline pf_decl_constexpr iterator_t
 		replace(
 		 iterator_t __w,
 		 _View __v)
@@ -1243,24 +1260,24 @@ namespace pul
 		{
 			return this->replace(__w, __v.begin(), __v.end());
 		}
-		pf_decl_constexpr iterator_t
+		pf_decl_inline pf_decl_constexpr iterator_t
 		replace(
 		 iterator_t __w,
 		 initializer_list<_Ty> __il)
 		{
 			return this->replace(__w, iterator(__il.begin()), iterator(__il.end()));
 		}
-		pf_decl_constexpr iterator_t
+		pf_decl_inline pf_decl_constexpr iterator_t
 		replace(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 const _Ty &__val,
 		 size_t __count)
 		{
-			return __wbeg + this->__replace(__wbeg, __wend, __val, __count);
+			return this->begin() + this->__replace(this->__iterator_to_index(__wbeg), this->__iterator_to_index(__wend), __val, __count);
 		}
 		template<typename _IteratorIn>
-		pf_decl_constexpr iterator_t
+		pf_decl_inline pf_decl_constexpr iterator_t
 		replace(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
@@ -1268,10 +1285,10 @@ namespace pul
 		 _IteratorIn __iend)
 			requires(is_iterator_v<_IteratorIn>)
 		{
-			return __wbeg + this->__replace(__wbeg, __wend, __ibeg, __iend);
+			return this->begin() + this->__replace(this->__iterator_to_index(__wbeg), this->__iterator_to_index(__wend), __ibeg, __iend);
 		}
 		template<typename _View>
-		pf_decl_constexpr iterator_t
+		pf_decl_inline pf_decl_constexpr iterator_t
 		replace(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
@@ -1282,7 +1299,7 @@ namespace pul
 		{
 			return this->replace(__wbeg, __wend, __v.begin(), __v.end());
 		}
-		pf_decl_constexpr iterator_t
+		pf_decl_inline pf_decl_constexpr iterator_t
 		replace(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
@@ -1373,9 +1390,11 @@ namespace pul
 		{
 			if(__count > this->count_)
 			{
+				const size_t old = this->count_;
 				this->reserve(__count);
 				construct(this->begin() + this->count_, __val);
 				this->count_ = __count;
+				return __count - old;
 			}
 			return 0;
 		}
