@@ -55,8 +55,7 @@ namespace pul
 		pf_decl_inline
 		__union_cast(_InTy __in)
 			: in(__in)
-		{
-		}
+		{}
 		__union_cast(__union_cast const &) = delete;
 		__union_cast(__union_cast &&)			 = delete;
 

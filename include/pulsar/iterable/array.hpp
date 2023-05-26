@@ -40,8 +40,9 @@ namespace pul
 		array(
 		 const _Ty &__val) pf_attr_noexcept
 			requires(std::is_copy_constructible_v<_Ty>)
-			: store_ { __val }
-		{}
+		{
+			fill(this->begin(), this->end(), __val);
+		}
 		template<size_t _NumIn>
 		pf_decl_constexpr
 		array(
@@ -56,29 +57,38 @@ namespace pul
 		 _Ty (&&__arr)[_NumIn])
 			requires(_NumIn <= _Num)
 		{
-			copy_forward(make_move_iterator(pul::begin(__arr)), make_move_iterator(pul::end(__arr)), this->begin());
+			move_forward(pul::begin(__arr), pul::end(__arr), this->begin());
 		}
 		template<typename... _Args>
 		pf_decl_constexpr
 		array(
 		 _Args &&...__args) pf_attr_noexcept
-			requires(sizeof...(_Args) <= _Num && (std::is_constructible_v<_Ty, _Args> && ...))
+			requires(sizeof...(_Args) > 1 && sizeof...(_Args) <= _Num && (std::is_constructible_v<_Ty, _Args> && ...))
 			: store_ { std::forward<_Args>(__args)... }
 		{}
 		pf_decl_constexpr
 		array(
 		 const array<_Ty, _Num> &__r) pf_attr_noexcept
 			requires(std::is_copy_constructible_v<_Ty>)
-			: store_(__r.store_)
-		{}
+		{
+			copy_forward(__r.begin(), __r.end(), this->begin());
+		}
 		pf_decl_constexpr
 		array(
 		 array<_Ty, _Num> &&__r) pf_attr_noexcept
 			requires(std::is_move_constructible_v<_Ty>)
-			: store_(std::move(__r.store_))
-		{}
+		{
+			move_forward(__r.begin(), __r.end(), this->begin());
+		}
 
 		/// Operator=
+		pf_decl_constexpr array<_Ty, _Num> &
+		operator=(
+		 const _Ty &__val)
+			requires(std::is_copy_assignable_v<_Ty>)
+		{
+			fill(this->begin(), this->end(), __val);
+		}
 		pf_decl_constexpr array<_Ty, _Num> &
 		operator=(
 		 const _Ty (&__arr)[_Num])
@@ -92,7 +102,7 @@ namespace pul
 		 _Ty (&&__arr)[_Num])
 			requires(std::is_move_assignable_v<_Ty>)
 		{
-			copy_forward(make_move_iterator(pul::begin(__arr)), make_move_iterator(pul::end(__arr)), this->begin());
+			move_forward(pul::begin(__arr), pul::end(__arr), this->begin());
 			return *this;
 		}
 		pf_decl_constexpr array<_Ty, _Num> &
@@ -113,17 +123,8 @@ namespace pul
 		{
 			if(pf_likely(this != &__r))
 			{
-				copy_forward(make_move_iterator(__r.begin()), make_move_iterator(__r.end()), this->begin());
+				move_forward(__r.begin(), __r.end(), this->begin());
 			}
-			return *this;
-		}
-		template<typename... _Args>
-		pf_decl_constexpr array<_Ty, _Num> &
-		operator=(
-		 _Args &&...__args) pf_attr_noexcept
-			requires(sizeof...(_Args) == _Num && (std::is_constructible_v<_Ty, _Args> && ...))
-		{
-			this->store_ = { std::forward<_Args>(__args)... };
 			return *this;
 		}
 
@@ -146,10 +147,7 @@ namespace pul
 		swap(
 		 array<_Ty, _Num> &__r) pf_attr_noexcept
 		{
-			for(auto l = this->begin(), r = __r.begin(), e = this->end(); l != e; ++l)
-			{
-				swap(*l, *r);
-			}
+			pul::swap(this->begin(), this->end(), __r.begin());
 		}
 
 		/// Iterator -> Begin
@@ -266,7 +264,7 @@ namespace pul
 	template<typename _Ty, size_t _Num>
 	array(_Ty (&&__il)[_Num]) -> array<_Ty, _Num>;
 	template<typename _Ty, typename... _Args>
-	array(const _Ty &__arg, _Args &&...__args) -> array<_Ty, sizeof...(_Args)>;
+	array(const _Ty &__arg, _Args &&...__args) -> array<_Ty, 1 + sizeof...(_Args)>;
 
 	/// ARRAY: Test
 	pf_assert_static(is_iterable_v<array<int32_t, 6>>);

@@ -10,6 +10,8 @@
 
 // Include: Pulsar
 #include "pulsar/algorithm.hpp"
+#include "pulsar/iterable.hpp"
+#include "pulsar/iterator.hpp"
 
 // Include: Pulsar -> Tester
 #include "pulsar_tester/pulsar_tester.hpp"

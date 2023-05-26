@@ -34,7 +34,7 @@ namespace pul
 			{
 				hfree(p[i]);
 			}
-			destroy_delete<void *>(p);
+			destroy_delete<void *[]>(p);
 		}
 		pt_benchmark(ring_buffer_08t, __bvn, DBG_UNIT_NUM_ITERATIONS, 8)
 		{
@@ -46,7 +46,7 @@ namespace pul
 			{
 				cfree(p[i]);
 			}
-			destroy_delete<void *>(p);
+			destroy_delete<void *[]>(p);
 		}
 	}
 

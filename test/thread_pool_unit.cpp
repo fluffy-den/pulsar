@@ -17,6 +17,23 @@
 // Pulsar
 namespace pul
 {
+	// Thread Pool but for Paien
+	pt_pack(thread_pool_but_for_paien)
+	{
+		// Task
+		pt_unit(task_he_dont_understand_that_a_tool)
+		{
+			for(size_t i = 0; i < 10'000; ++i)
+			{
+				submit_task(
+				 []()
+				 {
+					pf_print("THREAD POOL IS A TOOL! THREAD ID =", this_thread::get_id());
+				});
+			}
+		}
+	}
+
 	// Thread Pool
 	pt_pack(thread_pool)
 	{
@@ -81,9 +98,9 @@ namespace pul
 											 { return __i; },
 											 10);
 			auto f1 = pool.submit_future_task([]()
-																				{ return this_thread::get_id(); });
+																				{ return this_thread::get_idx(); });
 			auto f2 = pool.submit_future_task([]()
-																				{ return this_thread::get_id(); });
+																				{ return this_thread::get_idx(); });
 		}
 		pt_unit(task_pool_0)
 		{
@@ -92,9 +109,9 @@ namespace pul
 												 { return __i; },
 												 10);
 			auto f1 = pool.submit_future_task_0([]()
-																					{ return this_thread::get_id(); });
+																					{ return this_thread::get_idx(); });
 			auto f2 = pool.submit_future_task_0([]()
-																					{ return this_thread::get_id(); });
+																					{ return this_thread::get_idx(); });
 		}
 
 		pt_unit(task_throw)

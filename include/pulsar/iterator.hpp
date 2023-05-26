@@ -57,26 +57,26 @@ namespace pul
 	 && !std::is_void_v<typename _Iterator::value_t>
 	 && !std::is_const_v<typename _Iterator::value_t>
 	 && __iterator_arrowable_c<_Iterator>
-	 && requires(	 // clang-format off
-	 _Iterator __it,
-	 _Iterator const __ct) 
-	{	
-		{ __it.get() } -> std::convertible_to<typename _Iterator::value_t *>;
-		{ __ct.get() } -> std::convertible_to<const typename _Iterator::value_t *>;
-		{ *__it } -> std::convertible_to<typename _Iterator::value_t &>;
-		{ *__ct } -> std::convertible_to<const typename _Iterator::value_t &>;
-		{ __ct == std::declval<const typename _Iterator::value_t *>() } -> std::same_as<bool>;
-		{ __ct != std::declval<const typename _Iterator::value_t *>() } -> std::same_as<bool>;
-	};	// clang-format on
+	  && requires(	 // clang-format off
+	  _Iterator __it,
+	  _Iterator const __ct) 
+	 {	
+	 	{ __it.get() } -> std::convertible_to<void*>;
+	 	{ __ct.get() } -> std::convertible_to<const void*>;
+	 	{ *__it } -> std::convertible_to<typename _Iterator::value_t>;
+	 	{ *__ct } -> std::convertible_to<typename _Iterator::value_t>;
+	 	{ __ct == std::declval<const void *>() } -> std::same_as<bool>;
+	 	{ __ct != std::declval<const void *>() } -> std::same_as<bool>;
+	 };	// clang-format on
 
 	/// ITERATOR: Concept -> Const Arrowable
 	template<typename _Iterator>
 	concept __iterator_const_arrowable_c =
 	 std::is_trivial_v<typename _Iterator::value_t>	 // clang-format off
-	 || requires(const _Iterator __it) 
-	{
-		{ __it.operator->() } -> std::convertible_to<const typename _Iterator::value_t *>;
-	};	// clang-format on
+	  || requires(const _Iterator __it) 
+	 {
+	 	{ __it.operator->() } -> std::convertible_to<const typename _Iterator::value_t *>;
+	 };	// clang-format on
 
 	/// ITERATOR: Concept -> Const
 	template<typename _Iterator>
@@ -86,14 +86,14 @@ namespace pul
 	 && !std::is_void_v<typename _Iterator::value_t>
 	 && std::is_const_v<typename _Iterator::value_t>
 	 && __iterator_const_arrowable_c<_Iterator>	 // clang-format off
-	 && requires(
-	 const _Iterator __it) 
-	{
-		{ __it.get() } -> std::convertible_to<const typename _Iterator::value_t *>;
-		{ *__it } -> std::convertible_to<const typename _Iterator::value_t &>;
-		{ __it == std::declval<const typename _Iterator::value_t *>() } -> std::same_as<bool>;
-		{ __it != std::declval<const typename _Iterator::value_t *>() } -> std::same_as<bool>;
-	};	// clang-format on
+	  && requires(
+	  const _Iterator __it) 
+	 {
+	 	{ __it.get() } -> std::convertible_to<const void *>;
+	 	{ *__it } -> std::convertible_to<const typename _Iterator::value_t>;
+	 	{ __it == std::declval<const void*>() } -> std::same_as<bool>;
+	 	{ __it != std::declval<const void*>() } -> std::same_as<bool>;
+	 };	// clang-format on
 	template<typename _Iterator>
 	struct is_const_iterator : std::false_type
 	{};
@@ -144,18 +144,19 @@ namespace pul
 	pf_decl_static pf_decl_constexpr bool is_decrementable_v = is_decrementable<_Iterator>::value;
 
 	/// ITERATOR: Concept -> Sequence
-	template<typename _Iterator>
-	concept __iterator_sequence_c =
-	 (__iterator_base_c<_Iterator> || __iterator_base_const_c<_Iterator>)&&__iterator_incrementable_c<_Iterator>
-	 && __iterator_decrementable_c<_Iterator>
-	 && std::derived_from<typename _Iterator::category, iterator_sequence_tag_t>	// clang-format off
+	template<typename _Iterator>	// clang-format off
+	 concept __iterator_sequence_c =
+		(__iterator_base_c<_Iterator> || __iterator_base_const_c<_Iterator>)
+		&& __iterator_incrementable_c<_Iterator>
+		&& __iterator_decrementable_c<_Iterator>
+		&& std::derived_from<typename _Iterator::category, iterator_sequence_tag_t>	 
 	 && requires(
 	  const _Iterator __it) 
 	{
-		{ __it < std::declval<const typename _Iterator::value_t *>() } -> std::same_as<bool>;
-		{ __it <= std::declval<const typename _Iterator::value_t *>() } -> std::same_as<bool>;
-		{ __it > std::declval<const typename _Iterator::value_t *>() } -> std::same_as<bool>;
-		{ __it >= std::declval<const typename _Iterator::value_t *>() } -> std::same_as<bool>;
+		 { __it < std::declval<const void *>() } -> std::same_as<bool>;
+		 { __it <= std::declval<const void *>() } -> std::same_as<bool>;
+		 { __it > std::declval<const void *>() } -> std::same_as<bool>;
+		 { __it >= std::declval<const void *>() } -> std::same_as<bool>;
 	};	// clang-format on
 	template<typename _Iterator>
 	struct is_sequence_iterator : std::false_type
@@ -270,19 +271,18 @@ namespace pul
 		 _Args... __args) pf_attr_noexcept
 			requires(std::is_constructible_v<_Iterator, _Args...>)
 			: it_(__args...)
-		{
-		}
+		{}
 
 		/// Destructor
 		pf_decl_constexpr ~reverse_iterator() = default;
 
 		/// Get
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t *
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto *
 		get() pf_attr_noexcept
 		{
 			return this->it_.get();
 		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const auto *
 		get() const pf_attr_noexcept
 		{
 			return this->it_.get();
@@ -340,24 +340,24 @@ namespace pul
 		}
 
 		/// Operator *
-		pf_hint_nodiscard pf_decl_constexpr value_t &
+		pf_hint_nodiscard pf_decl_constexpr auto
 		operator*() pf_attr_noexcept
 		{
 			return *this->it_;
 		}
-		pf_hint_nodiscard pf_decl_constexpr const value_t &
+		pf_hint_nodiscard pf_decl_constexpr const auto
 		operator*() const pf_attr_noexcept
 		{
 			return *this->it_;
 		}
 
 		/// Operator ->
-		pf_hint_nodiscard pf_decl_constexpr value_t *
+		pf_hint_nodiscard pf_decl_constexpr auto *
 		operator->() pf_attr_noexcept
 		{
 			return this->it_.operator->();
 		}
-		pf_hint_nodiscard pf_decl_constexpr const value_t *
+		pf_hint_nodiscard pf_decl_constexpr const auto *
 		operator->() const pf_attr_noexcept
 		{
 			return this->it_.operator->();
@@ -372,12 +372,12 @@ namespace pul
 
 		/// Operator (value_t)
 		pf_hint_nodiscard pf_decl_constexpr
-		operator value_t *() pf_attr_noexcept
+		operator auto *() pf_attr_noexcept
 		{
 			return this->get();
 		}
 		pf_hint_nodiscard pf_decl_constexpr
-		operator const value_t *() const pf_attr_noexcept
+		operator const auto *() const pf_attr_noexcept
 		{
 			return this->get();
 		}
@@ -402,17 +402,16 @@ namespace pul
 		 _Args... __args) pf_attr_noexcept
 			requires(std::is_constructible_v<_Iterator, _Args...>)
 			: it_(__args...)
-		{
-		}
+		{}
 
 		/// Destructor
 		pf_decl_constexpr ~reverse_iterator() = default;
 
 		/// Get
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t *
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto *
 		get() const pf_attr_noexcept
 		{
-			return this->ptr_;
+			return this->it_.get();
 		}
 
 		/// Operator =
@@ -467,14 +466,14 @@ namespace pul
 		}
 
 		/// Operator *
-		pf_hint_nodiscard pf_decl_constexpr value_t &
+		pf_hint_nodiscard pf_decl_constexpr auto
 		operator*() const pf_attr_noexcept
 		{
 			return *this->it_;
 		}
 
 		/// Operator ->
-		pf_hint_nodiscard pf_decl_constexpr value_t *
+		pf_hint_nodiscard pf_decl_constexpr auto *
 		operator->() const pf_attr_noexcept
 		{
 			return this->it_.operator->();
@@ -489,7 +488,7 @@ namespace pul
 
 		/// Operator (value_t)
 		pf_hint_nodiscard pf_decl_constexpr
-		operator const value_t *() const pf_attr_noexcept
+		operator const auto *() const pf_attr_noexcept
 		{
 			return this->get();
 		}
@@ -642,7 +641,7 @@ namespace pul
 		{
 			return this->it_ != __ptr;
 		}
-		pf_hint_nodiscard pf_decl_constexpr std::strong_ordering
+		pf_hint_nodiscard pf_decl_constexpr auto
 		operator<=>(
 		 const value_t *__ptr) const pf_attr_noexcept
 		{
@@ -783,7 +782,7 @@ namespace pul
 		{
 			return this->it_ != __ptr;
 		}
-		pf_hint_nodiscard pf_decl_constexpr std::strong_ordering
+		pf_hint_nodiscard pf_decl_constexpr auto
 		operator<=>(
 		 const value_t *__ptr) const pf_attr_noexcept
 		{
@@ -853,12 +852,12 @@ namespace pul
 		}
 
 		/// Operator =
-		pf_decl_constexpr iterator<_Ty> &
+		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
 		operator=(
 		 iterator<_Ty> const &__r) pf_attr_noexcept = default;
 
 		/// Operator +=
-		pf_decl_constexpr iterator<_Ty> &
+		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
 		operator+=(
 		 diff_t __i) pf_attr_noexcept
 		{
@@ -867,14 +866,14 @@ namespace pul
 		}
 
 		/// Operator ++
-		pf_decl_constexpr iterator<_Ty>
+		pf_decl_inline pf_decl_constexpr iterator<_Ty>
 		operator++(
 		 int32_t) pf_attr_noexcept
 		{
 			iterator<_Ty> it = this->ptr_++;
 			return it;
 		}
-		pf_decl_constexpr iterator<_Ty> &
+		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
 		operator++() pf_attr_noexcept
 		{
 			++this->ptr_;
@@ -882,7 +881,7 @@ namespace pul
 		}
 
 		/// Operator -=
-		pf_decl_constexpr iterator<_Ty> &
+		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
 		operator-=(
 		 diff_t __i) pf_attr_noexcept
 		{
@@ -891,14 +890,14 @@ namespace pul
 		}
 
 		/// Operator --
-		pf_decl_constexpr iterator<_Ty>
+		pf_decl_inline pf_decl_constexpr iterator<_Ty>
 		operator--(
 		 int32_t) pf_attr_noexcept
 		{
 			iterator<_Ty> it = this->ptr_--;
 			return it;
 		}
-		pf_decl_constexpr iterator<_Ty> &
+		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
 		operator--() pf_attr_noexcept
 		{
 			--this->ptr_;
@@ -906,43 +905,43 @@ namespace pul
 		}
 
 		/// Operator *
-		pf_hint_nodiscard pf_decl_constexpr value_t &
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t &
 		operator*() pf_attr_noexcept
 		{
 			return *this->get();
 		}
-		pf_hint_nodiscard pf_decl_constexpr const value_t &
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t &
 		operator*() const pf_attr_noexcept
 		{
 			return *this->get();
 		}
 
 		/// Operator ->
-		pf_hint_nodiscard pf_decl_constexpr value_t *
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t *
 		operator->() pf_attr_noexcept
 		{
 			return this->get();
 		}
-		pf_hint_nodiscard pf_decl_constexpr const value_t *
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
 		operator->() const pf_attr_noexcept
 		{
 			return this->get();
 		}
 
 		/// Operator (bool)
-		pf_hint_nodiscard pf_decl_explicit pf_decl_constexpr
+		pf_hint_nodiscard pf_decl_inline pf_decl_explicit pf_decl_constexpr
 		operator bool() const pf_attr_noexcept
 		{
 			return this->get() != nullptr;
 		}
 
 		/// Operator (value_t*)
-		pf_hint_nodiscard pf_decl_constexpr
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
 		operator value_t *() pf_attr_noexcept
 		{
 			return this->get();
 		}
-		pf_hint_nodiscard pf_decl_constexpr
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
 		operator const value_t *() const pf_attr_noexcept
 		{
 			return this->get();
@@ -1035,7 +1034,7 @@ namespace pul
 		operator--(
 		 int32_t) pf_attr_noexcept
 		{
-			iterator<_Ty> it = this->ptr_--;
+			iterator<const _Ty> it = this->ptr_--;
 			return it;
 		}
 		pf_decl_constexpr iterator<const _Ty> &

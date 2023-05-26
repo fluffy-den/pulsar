@@ -670,8 +670,8 @@ namespace pul
 		pair(
 		 _TyA &&__a,
 		 _TyB &&__b) pf_attr_noexcept
-			: a(std::move<_TyA>(__a))
-			, b(std::move<_TyB>(__b))
+			: a(std::forward<_TyA>(__a))
+			, b(std::forward<_TyB>(__b))
 		{}
 		template<typename _InTyA, typename _InTyB>
 		pf_decl_constexpr
@@ -679,8 +679,8 @@ namespace pul
 		 _InTyA &&__a,
 		 _InTyB &&__b) pf_attr_noexcept
 			requires(std::is_convertible_v<_InTyA, _TyA> && std::is_convertible_v<_InTyB, _TyB>)
-			: a(std::move<_InTyA>(__a))
-			, b(std::move<_InTyB>(__b))
+			: a(std::forward<_InTyA>(__a))
+			, b(std::forward<_InTyB>(__b))
 		{}
 		pf_decl_constexpr
 		pair(pair<_TyA, _TyB> const &) pf_attr_noexcept = default;
@@ -713,10 +713,10 @@ namespace pul
 
 	/// PAIR: Make
 	template<typename _TyA, typename _TyB>
-	pf_decl_constexpr pair<_TyA, _TyB>
+	pf_decl_constexpr pair<std::decay_t<_TyA>, std::decay_t<_TyB>>
 	make_pair(_TyA &&__a, _TyB &&__b) pf_attr_noexcept
 	{
-		return pair(std::forward<_TyA>(__a), std::forward<_TyB>(__b));
+		return pair<std::decay_t<_TyA>, std::decay_t<_TyB>>(std::forward<_TyA>(__a), std::forward<_TyB>(__b));
 	}
 
 #pragma GCC diagnostic pop
@@ -724,9 +724,6 @@ namespace pul
 
 
 
-
-	/// NUPLE: Macro -> $
-	// #define $(name) xxhash::hash(name)
 
 	/// NUPLE: SFINAE -> Index
 	template<typename _Ty, size_t _Hash, size_t _Index>

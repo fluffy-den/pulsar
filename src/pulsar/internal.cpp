@@ -20,7 +20,7 @@ namespace pul
 	{
 		/// Debug
 		dbg_u8string_view logo =
-			R"(
+		 R"(
         ██████╗ ██╗   ██╗██╗     ███████╗ █████╗ ██████╗ 
         ██╔══██╗██║   ██║██║     ██╔════╝██╔══██╗██╔══██╗
         ██████╔╝██║   ██║██║     ███████╗███████║██████╔╝
@@ -28,15 +28,12 @@ namespace pul
         ██║     ╚██████╔╝███████╗███████║██║  ██║██║  ██║
         ╚═╝      ╚═════╝ ╚══════╝╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝  )";
 		dbg_u8print("{}", logo.begin());
-		char_t buf[64] = {'\0'};
+		char_t buf[64] = { '\0' };
 		dbg_u8format_to(
-			&buf[0], "v{0}.{1}.{2}\n\n",
-			PULSAR_VERSION_MAJOR,
-			PULSAR_VERSION_MINOR,
-			PULSAR_VERSION_PATCH);
+		 &buf[0], "v{0}.{1}.{2}\n\n", PULSAR_VERSION_MAJOR, PULSAR_VERSION_MINOR, PULSAR_VERSION_PATCH);
 		dbg_u8print("{}", &buf[0]);
 	}
 
 	/// INTERNAL: Instance
 	__internal_t __internal;
-}
+}	 // namespace pul

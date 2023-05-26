@@ -201,7 +201,7 @@ namespace pul
 	__dbg_internal_t::__vectored_exception_handler(
 	 EXCEPTION_POINTERS *__info) pf_attr_noexcept
 	{
-		const thread_id_t ID = this_thread::get_id();
+		const thread_id_t ID = this_thread::get_idx();
 		auto *b							 = __internal.dbg_internal.__retrieve_current_context();
 		if(!b->exp || !b->exp->ExceptionRecord || !b->exp->ContextRecord || __info->ExceptionRecord->ExceptionAddress != b->exp->ExceptionRecord->ExceptionAddress)
 		{
@@ -235,7 +235,7 @@ namespace pul
 	__dbg_record_win_t *
 	__dbg_internal_t::__retrieve_current_context() pf_attr_noexcept
 	{
-		return &this->buffer_[this_thread::get_id()];
+		return &this->buffer_[this_thread::get_idx()];
 	}
 
 	// Terminate
@@ -264,11 +264,10 @@ namespace pul
 	{
 		// Buffer
 		if(!__buf || !__size) return __dbg_wsstring();
-		const size_t r = MultiByteToWideChar(CP_UTF8, 0, __buf, __size, nullptr, 0);
-		__dbg_wsstring str(r, '\0');
-		if(pf_unlikely(!MultiByteToWideChar(CP_UTF8, 0, __buf, __size, str.begin(), str.size())))
-			pf_throw(
-			 dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] MultiByteToWideChar bad convertion! buffer={}, size={}", union_cast<void *>(__buf), __size);
+		const size_t r = utf8_to_utf16le::required_count(__buf, __size);
+		__dbg_wsstring str(r, L'\0');
+		const auto res = utf8_to_utf16le::convert(__buf, __size, union_cast<u16char_t *>(&str[0]));
+		pf_throw_if(res.code != char_error_code::success, dbg_category_char(), res.code, 0, "[WIN] utf8 to utf16 transcoding failed!");
 
 		// Returns
 		return str;
@@ -280,11 +279,10 @@ namespace pul
 	{
 		// Buffer
 		if(!__buf || !__count) return dbg_u8string();
-		const size_t r = WideCharToMultiByte(CP_UTF8, 0, __buf, __count, nullptr, 0, 0, 0);
+		const size_t r = utf16le_to_utf8::required_count(union_cast<const u16char_t *>(__buf), __count);
 		dbg_u8string str(r, '\0');
-		if(pf_unlikely(!WideCharToMultiByte(CP_UTF8, 0, __buf, __count, str.begin(), str.size(), 0, 0)))
-			pf_throw(
-			 dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] WideCharToMultiByte bad convertion! buffer={}, count={}", union_cast<void *>(__buf), __count);
+		const auto res = utf16le_to_utf8::convert(union_cast<const u16char_t *>(__buf), __count, &str[0]);
+		pf_throw_if(res.code != char_error_code::success, dbg_category_char(), res.code, 0, "[WIN] utf16le to utf8 transcoding failed!");
 
 		// Returns
 		return str;
@@ -585,7 +583,7 @@ namespace pul
 	__dbg_move_exception_record_to_0() pf_attr_noexcept
 	{
 		pf_assert(
-		 this_thread::get_id() != 0,
+		 this_thread::get_idx() != 0,
 		 "[WIN] Can't move exception record from main to main thread!");
 		pf_alignas(CCY_ALIGN) atomic<bool> ctrl = false;
 		submit_task_0(
@@ -595,6 +593,7 @@ namespace pul
 		 &ctrl);
 		while(!ctrl.load(atomic_order::relaxed)) this_thread::yield();
 	}
+	// TODO: Maybe we'll need different way of getting exception record in the future!
 }	 // namespace pul
 
 #endif	// !PF_WINDOWS

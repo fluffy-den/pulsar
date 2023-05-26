@@ -14,7 +14,9 @@
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
 #include "pulsar/iterable.hpp"
-#include "pulsar/utf8.hpp"
+#include "pulsar/debug.hpp"
+#include "pulsar/char.hpp"
+#include "pulsar/algorithm.hpp"
 
 // Pulsar
 namespace pul
@@ -400,35 +402,77 @@ namespace pul
 		pf_hint_nodiscard bool
 		is_amd() const pf_attr_noexcept
 		{
-			array<char_t, 0x20> vendor;
-			array<char_t, 0x20> asAMD = { "AuthenticAMD" };
+			array<char_t, 32> vendor;
+			array<char_t, 32> memory = { "AuthenticAMD" };
 			this->__retrieve_vendor(vendor.data());
-			return vendor == asAMD;
+			return equal(vendor.begin(), vendor.end(), memory.begin());
 		}
 		pf_hint_nodiscard bool
 		is_intel() const pf_attr_noexcept
 		{
-			array<char_t, 0x20> vendor;
-			array<char_t, 0x20> asIntel = { "GenuineIntel" };
+			array<char_t, 32> vendor;
+			array<char_t, 32> memory = { "GenuineIntel" };
 			this->__retrieve_vendor(vendor.data());
-			return vendor == asIntel;
+			return equal(vendor.begin(), vendor.end(), memory.begin());
 		}
 
 		/// Name
-		pf_hint_nodiscard string<char_traits::ascii, magnifier_default, allocator_default>
+		pf_hint_nodiscard array<char_t, 64>
 		brand() const pf_attr_noexcept
 		{
-			array<char_t, 0x40> brand;
+			array<char_t, 64> brand;
 			this->__retrieve_brand(brand.data());
-			return string<char_traits::ascii, magnifier_default, allocator_default>(brand, 0x40);
+			return brand;
 		}
-		pf_hint_nodiscard string<char_traits::ascii, magnifier_default, allocator_default>
+		pf_hint_nodiscard array<char_t, 32>
 		vendor() const pf_attr_noexcept
 		{
-			array<char_t, 0x20> vendor;
+			array<char_t, 32> vendor;
 			this->__retrieve_vendor(vendor.data());
-			return string<char_traits::ascii, magnifier_default, allocator_default>(vendor, 0x20);
+			return vendor;
 		}
+
+		/// SIMD: Family -> Type
+		pf_decl_static pf_decl_constexpr uint64_t NONE_BIT	= 0x00'00'00'00'00'00'00'00;
+		pf_decl_static pf_decl_constexpr uint64_t SSE1_BIT	= 0x00'00'00'00'00'00'00'01;
+		pf_decl_static pf_decl_constexpr uint64_t SSE2_BIT	= 0x00'00'00'00'00'00'00'02;
+		pf_decl_static pf_decl_constexpr uint64_t SSE3_BIT	= 0x00'00'00'00'00'00'00'02;
+		pf_decl_static pf_decl_constexpr uint64_t SSSE3_BIT = 0x00'00'00'00'00'00'00'02;
+		pf_decl_static pf_decl_constexpr uint64_t SSE41_BIT = 0x00'00'00'00'00'00'00'02;
+		pf_decl_static pf_decl_constexpr uint64_t SSE42_BIT = 0x00'00'00'00'00'00'00'02;
+		pf_decl_static pf_decl_constexpr uint64_t AVX1_BIT	= 0x00'00'00'00'00'00'00'04;
+		pf_decl_static pf_decl_constexpr uint64_t AVX2_BIT	= 0x00'00'00'00'00'00'00'04;
+		pf_decl_static pf_decl_constexpr uint64_t FMA_BIT		= 0x00'00'00'00'00'00'00'04;
+
+		/// SIMD: Family -> Retriever
+		pf_hint_nodiscard pf_decl_static pf_decl_inline uint64_t
+		__get_available_simd_families() pf_attr_noexcept
+		{
+			uint64_t val = NONE_BIT;
+			instruction_set set;
+			if(set.sse())
+				val |= SSE1_BIT;
+			if(set.sse2())
+				val |= SSE2_BIT;
+			if(set.sse3())
+				val |= SSE3_BIT;
+			if(set.ssse3())
+				val |= SSSE3_BIT;
+			if(set.sse41())
+				val |= SSE41_BIT;
+			if(set.sse42())
+				val |= SSE42_BIT;
+			if(set.avx())
+				val |= AVX1_BIT;
+			if(set.avx2())
+				val |= AVX2_BIT;
+			if(set.fma())
+				val |= FMA_BIT;
+			return val;
+		}
+
+		/// SIMD: Family -> Variable
+		pf_decl_static pf_decl_inline const uint64_t simd = __get_available_simd_families();
 
 	private:
 		array<int32_t, 4> brand1_;
@@ -444,28 +488,6 @@ namespace pul
 		int32_t f_81_ECX_;
 		int32_t f_81_EDX_;
 	};
-
-	/// SYSTEM: Memory
-	struct memory_info_t
-	{
-		size_t physTotal;
-		size_t physAvail;
-		size_t pageFileTotal;
-		size_t pageFileAvail;
-		size_t virtTotal;
-		size_t virtAvail;
-		size_t virtExtendedAvail;
-		uint32_t memoryLoad;
-	};
-
-	pf_hint_nodiscard pulsar_api memory_info_t
-	get_process_memory_usage() pf_attr_noexcept;	// TODO: Impl of get_process_memory_usage
-	pf_hint_nodiscard pulsar_api memory_info_t
-	get_system_memory_usage() pf_attr_noexcept;		// TODO: Impl of get_system_memory_usage
-
-	/// SYSTEM: OS
-	pf_hint_nodiscard pulsar_api u8string_t
-	get_os_name() pf_attr_noexcept;	 // TODO: Impl of get_os_name
 }	 // namespace pul
 
 #endif	// !PULSAR_SYSTEM_HPP

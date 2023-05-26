@@ -121,26 +121,32 @@
 namespace pul
 {
 	// Integral: Signed
-	using int8_t	= char;
-	using int16_t = short;
-	using int32_t = int;
-	using int64_t = long long;
+	using int8_t	= __int8;
+	using int16_t = __int16;
+	using int32_t = __int32;
+	using int64_t = __int64;
 
 	// Integral: Unsigned
-	using uint8_t	 = unsigned char;
-	using uint16_t = unsigned short;
-	using uint32_t = unsigned int;
-	using uint64_t = unsigned long long;
+	using uint8_t	 = unsigned __int8;
+	using uint16_t = unsigned __int16;
+	using uint32_t = unsigned __int32;
+	using uint64_t = unsigned __int64;
 
 	// Floating-Points
 	using float32_t = float;
 	using float64_t = double;
 
 	// Byte
-	using ubyte_t = unsigned char;
-	using byte_t	= char;
-	using uchar_t = ubyte_t;
-	using char_t	= char;
+	using byte_t	= int8_t;
+	using ubyte_t = uint8_t;
+
+	// Utf
+	using char_t		= char;
+	using uchar_t		= unsigned char;
+	using u8char_t	= char;
+	using u8code_t	= uint32_t;
+	using u16char_t = char16_t;
+	using u16code_t = uint32_t;
 
 	// Enum
 	using enum_t = uint32_t;
@@ -159,22 +165,23 @@ namespace pul
 }	 // namespace pul
 
 // Decl -> Standard
-#define pf_decl_safebuffers	 __declspec(safebuffers)
-#define pf_decl_noinline		 __declspec(noinline)
-#define pf_decl_novtable		 __declspec(novtable)
-#define pf_decl_export			 __declspec(dllexport)
-#define pf_decl_import			 __declspec(dllimport)
-#define pf_decl_constexpr		 constexpr
-#define pf_decl_consteval		 consteval
-#define pf_decl_constinit		 constinit
-#define pf_decl_friend			 friend
-#define pf_decl_extern			 extern
-#define pf_decl_static			 static
-#define pf_decl_inline			 inline
-#define pf_decl_virtual			 virtual
-#define pf_decl_explicit		 explicit
-#define pf_decl_thread_local thread_local
-#define pf_decl_volatile		 volatile
+#define pf_decl_safebuffers		__declspec(safebuffers)
+#define pf_decl_noinline			__declspec(noinline)
+#define pf_decl_novtable			__declspec(novtable)
+#define pf_decl_export				__declspec(dllexport)
+#define pf_decl_import				__declspec(dllimport)
+#define pf_decl_constexpr			constexpr
+#define pf_decl_consteval			consteval
+#define pf_decl_constinit			constinit
+#define pf_decl_friend				friend
+#define pf_decl_extern				extern
+#define pf_decl_static				static
+#define pf_decl_inline				inline
+#define pf_decl_always_inline __forceinline
+#define pf_decl_virtual				virtual
+#define pf_decl_explicit			explicit
+#define pf_decl_thread_local	thread_local
+#define pf_decl_volatile			volatile
 
 // Calls
 #define pf_defcall	__cdecl

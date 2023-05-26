@@ -364,7 +364,7 @@ namespace pul
 			 __pt_generate_pack_type(name)() pf_attr_noexcept : pul::__tester_pack(__pt_generate_pack_name(name)) {} \
 		};                                                                                                         \
 	pf_decl_static pf_decl_inline __pt_generate_pack_instance_name(name);                                        \
-	namespace
+	namespace name
 
 
 /// TESTER: Macro -> Benchmark

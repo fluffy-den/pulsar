@@ -418,7 +418,7 @@ namespace pul
 
 		/// Name
 		pf_hint_nodiscard pf_decl_inline dbg_u8string_view
-		name() const pf_attr_noexcept
+		name() const pf_attr_noexcept pf_attr_override
 		{
 			return "generic";
 		}
@@ -445,13 +445,13 @@ namespace pul
 	};
 
 	/// Generic -> Instance
-	pf_decl_static pf_decl_inline dbg_category_generic_t dbg_category_generic_instance;
+	pf_decl_static pf_decl_inline dbg_category_generic_t __dbg_category_generic_instance;
 
 	/// Generic -> Retrieve
 	pf_decl_inline dbg_category *
 	dbg_category_generic() pf_attr_noexcept
 	{
-		return &dbg_category_generic_instance;
+		return &__dbg_category_generic_instance;
 	}
 
 
@@ -881,7 +881,7 @@ namespace pul
 	{
 		// Initialisation
 		auto st = __dbg_retrieve_stacktrace();
-		auto ID = this_thread::get_id();
+		auto ID = this_thread::get_idx();
 
 		// Size
 		const size_t s = DBG_FMT_WRITE_OFFSET + fmt::formatted_size(" T={} /{}/ message=", ID, fmt::styled('A', fmt::fg(fmt::color::orange) | fmt::bg(fmt::color::black))) + fmt::formatted_size(__fmt, std::forward<_Args>(__args)...) + st.length;

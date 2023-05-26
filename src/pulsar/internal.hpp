@@ -20,7 +20,7 @@
 #include "pulsar/iterable.hpp"
 #include "pulsar/allocator.hpp"
 #include "pulsar/utility.hpp"
-#include "pulsar/utf8.hpp"
+#include "pulsar/char.hpp"
 #include "pulsar/concurrency.hpp"
 #include "pulsar/thread_pool.hpp"
 
@@ -39,15 +39,17 @@ namespace pul
 	{
 		/// Constructors
 		__internal_t();
-		__internal_t(__internal_t const&) = delete;
-		__internal_t(__internal_t &&)			= delete;
+		__internal_t(__internal_t const &) = delete;
+		__internal_t(__internal_t &&)			 = delete;
 
 		/// Destructor
 		~__internal_t() pf_attr_noexcept = default;
 
 		/// Operator =
-		__internal_t &operator=(__internal_t const &) = delete;
-		__internal_t &operator=(__internal_t &&)			= delete;
+		__internal_t &
+		operator=(__internal_t const &) = delete;
+		__internal_t &
+		operator=(__internal_t &&) = delete;
 
 		/// Module -> Cache
 		allocator_mamd_ring_buffer cache;
@@ -61,6 +63,6 @@ namespace pul
 	};
 
 	pf_decl_extern __internal_t __internal;
-}
+}	 // namespace pul
 
-#endif // !PULSAR_SRC_INTERNAL_HPP
+#endif	// !PULSAR_SRC_INTERNAL_HPP

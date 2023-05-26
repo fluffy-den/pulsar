@@ -65,7 +65,7 @@ namespace pul
 		{
 			bool b = this->finished.load(atomic_order::relaxed);
 			if(b) return false;
-			if(this_thread::get_id() == 0)
+			if(this_thread::get_idx() == 0)
 			{
 				while(!this->finished.load(atomic_order::relaxed))
 				{
@@ -135,7 +135,7 @@ namespace pul
 		{
 			bool b = this->finished.load(atomic_order::relaxed);
 			if(b) return false;
-			if(this_thread::get_id() == 0)
+			if(this_thread::get_idx() == 0)
 			{
 				while(!this->finished.load(atomic_order::relaxed))
 				{
@@ -437,7 +437,7 @@ namespace pul
 			*union_cast<std::invoke_result_t<_FunTy, _Args...> *>(&data->store->retVal[0]) = tuple_apply(std::move(data->fun), std::move(data->args));
 		} catch(std::exception const &)
 		{
-			if(this_thread::get_id() == 0)
+			if(this_thread::get_idx() == 0)
 			{
 				data->store->finished.store(true, atomic_order::relaxed);
 				destroy(data);
@@ -470,7 +470,7 @@ namespace pul
 			tuple_apply(std::move(data->fun), std::move(data->args));
 		} catch(std::exception const &)
 		{
-			if(this_thread::get_id() == 0)
+			if(this_thread::get_idx() == 0)
 			{
 				data->store->finished.store(true, atomic_order::relaxed);
 				destroy(data);

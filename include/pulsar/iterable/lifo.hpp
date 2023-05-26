@@ -285,10 +285,10 @@ namespace pul
 			{
 				pf_assert(this->seqcount > CCY_NUM_THREADS * 64, "seqcount_ must be greater than {}. seqcount_={}", CCY_NUM_THREADS * 64, this->seqcount);
 
-				// Construct lists
-				for(size_t i = 0; i < CCY_NUM_THREADS; ++i)
+				// Construct Headers
+				for(uint32_t i = 0; i < CCY_NUM_THREADS; ++i)
 				{
-					construct(this->__get_list(i));
+					construct(this->__get_header(i));
 				}
 			}
 			__buffer_t(__buffer_t const &) = delete;
@@ -297,10 +297,10 @@ namespace pul
 			/// Destructor
 			~__buffer_t() pf_attr_noexcept
 			{
-				// Destroy lists
-				for(size_t i = 0; i < CCY_NUM_THREADS; ++i)
+				// Destroy Headers
+				for(uint32_t i = 0; i < CCY_NUM_THREADS; ++i)
 				{
-					destroy(this->__get_list(i));
+					destroy(this->__get_header(i));
 				}
 			}
 
@@ -333,8 +333,8 @@ namespace pul
 			__try_enqueue(
 			 _Ty *__ptr) pf_attr_noexcept
 			{
-				const thread_id_t id = this_thread::get_id();
-				uint32_t i					 = id;
+				const thread_id_t idx = this_thread::get_idx();
+				uint32_t i						= idx;
 				do {
 					__header_t *c		 = this->__get_header(i);
 					const uint32_t h = c->head.load(atomic_order::acquire);
@@ -350,7 +350,7 @@ namespace pul
 						c->writer.fetch_add(1, atomic_order::relaxed);
 						return 1;
 					}
-				} while(i != id);
+				} while(i != idx);
 				return 0;
 			}
 			template<typename _IteratorIn>
@@ -362,8 +362,8 @@ namespace pul
 			{
 				const uint32_t count = countof(__beg, __end);
 				if(pf_unlikely(count == 0 || count > this->seqcount)) return 0;
-				const thread_id_t id = this_thread::get_id();
-				uint32_t i					 = id;
+				const thread_id_t idx = this_thread::get_idx();
+				uint32_t i						= idx;
 				do {
 					__header_t *c		 = this->__get_header(i);
 					const uint32_t h = c->head.load(atomic_order::acquire);
@@ -383,7 +383,7 @@ namespace pul
 						c->writer.fetch_add(count, atomic_order::relaxed);
 						return count;
 					}
-				} while(i != id);
+				} while(i != idx);
 				return 0;
 			}
 
@@ -391,8 +391,8 @@ namespace pul
 			pf_hint_nodiscard _Ty *
 			__try_dequeue() pf_attr_noexcept
 			{
-				const thread_id_t id = this_thread::get_id();
-				uint32_t i					 = id;
+				const thread_id_t idx = this_thread::get_idx();
+				uint32_t i						= idx;
 				do {
 					__header_t *c		 = this->__get_header(i);
 					uint32_t h			 = c->head.load(atomic_order::acquire);
@@ -406,7 +406,7 @@ namespace pul
 						auto l = this->__get_list(i);
 						return l[h % this->seqcount];
 					}
-				} while(i != id);
+				} while(i != idx);
 				return nullptr;
 			}
 			template<typename _IteratorOut>
@@ -416,16 +416,16 @@ namespace pul
 			 _IteratorOut __end) pf_attr_noexcept
 				requires(is_iterator_v<_IteratorOut> && std::is_same_v<value_type_t<_IteratorOut>, _Ty *>)
 			{
-				const thread_id_t id = this_thread::get_id();
-				const uint32_t count = countof(__beg, __end);
+				const thread_id_t idx = this_thread::get_idx();
+				const uint32_t count	= union_cast<uint32_t>(countof(__beg, __end));
 				if(pf_unlikely(count == 0)) return 0;
-				uint32_t i = id;
+				uint32_t i = idx;
 				do {
 					__header_t *c						 = this->__get_header(i);
 					uint32_t h							 = c->head.load(atomic_order::acquire);
 					const uint32_t t				 = c->writer.load(atomic_order::acquire);
 					const uint32_t available = t - h;
-					size_t num							 = count > available ? available : count;
+					uint32_t num						 = count > available ? available : count;
 					if(num == 0 || !c->head.compare_exchange_strong(h, h + num, atomic_order::release, atomic_order::relaxed))
 					{
 						i = (i + 1) % CCY_NUM_THREADS;
@@ -439,7 +439,7 @@ namespace pul
 						}
 						return num;
 					}
-				} while(i != id);
+				} while(i != idx);
 				return 0;
 			}
 
@@ -615,7 +615,7 @@ namespace pul
 			/// Constructors
 			__buffer_t() pf_attr_noexcept
 			{
-				for(size_t i = 0; i != CCY_NUM_THREADS; ++i)
+				for(uint32_t i = 0; i != CCY_NUM_THREADS; ++i)
 				{
 					auto l = this->__get_list(i);
 					construct(l);
@@ -627,7 +627,7 @@ namespace pul
 			/// Destructor
 			~__buffer_t() pf_attr_noexcept
 			{
-				for(size_t i = 0; i < CCY_NUM_THREADS; ++i)
+				for(uint32_t i = 0; i < CCY_NUM_THREADS; ++i)
 				{
 					destroy(this->__get_list(i));
 				}
@@ -656,7 +656,7 @@ namespace pul
 			 _NodeTy *__e) pf_attr_noexcept
 			{
 				// Initialization
-				uint32_t i = this_thread::get_id();
+				uint32_t i = this_thread::get_idx();
 				auto *l		 = this->__get_list(i);
 				_NodeTy *t = l->tail.load(atomic_order::relaxed);
 

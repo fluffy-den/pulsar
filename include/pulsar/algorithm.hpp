@@ -40,6 +40,24 @@ namespace pul
 	{
 		__l.swap(__r);
 	}
+	template<
+	 typename _IteratorA,
+	 typename _IteratorB>
+	pf_decl_constexpr void
+	swap(
+	 _IteratorA __beg1,
+	 _IteratorA __end1,
+	 _IteratorB __beg2) pf_attr_noexcept
+		requires(
+		 is_iterator_v<_IteratorA>
+		 && is_iterator_v<_IteratorB>
+		 && std::is_same_v<typename _IteratorA::value_t, typename _IteratorB::value_t>)
+	{
+		for(; __beg1 != __end1; ++__beg1, ++__beg2)
+		{
+			swap(*__beg1, *__beg2);
+		}
+	}
 
 	/// ALGORITHM:: Copy
 	template<

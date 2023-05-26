@@ -91,7 +91,7 @@ namespace pul
 					// Allocate
 					as_byte						= this->__realign_allocation(__seqsize, as_byte, __size, __align, __offset);
 					as_header->marked = 0;
-					as_header->next		= __size;
+					as_header->next		= union_cast<uint32_t>(__size);
 
 					// Store
 					this->tail = as_header;
@@ -139,7 +139,7 @@ namespace pul
 					as_header->next		= union_cast<int32_t>(__size);
 
 					// Store
-					this->tail->next = diffof(this->tail, as_byte);
+					this->tail->next = union_cast<int32_t>(diffof(this->tail, as_byte));
 					this->tail			 = as_header;
 				}
 				return (++as_header);
@@ -275,7 +275,7 @@ namespace pul
 		 align_val_t __align = ALIGN_DEFAULT,
 		 size_t __offset		 = 0) pf_attr_noexcept
 		{
-			thread_id_t ID = this_thread::get_id();
+			thread_id_t ID = this_thread::get_idx();
 			void *p				 = this->__get_buffer(ID)->__allocate(ID == 0 ? this->seqsize0_ : this->seqsize_, __size, __align, __offset);
 			return p;
 		}

@@ -91,8 +91,10 @@ if(MSVC)
   )
 else()
   set(PULSAR_COMPILER_FLAGS
-    -Wall -Wextra -Wshadow -Wformat=2 -Wunused -pedantic -Wno-unknown-pragmas # Warnings
-    -msse -msse2 -mssse3 -msse3 -mfma -msse4 -msse4.1 -msse4.2 -mavx -mavx2) # Auto-Vectorisation)
+    -Wall -Wextra -Wshadow -Wformat=2 -Wunused -Wsign-compare -Wwrite-strings -Wpointer-arith -Winit-self -Wconversion
+    -Wno-sign-conversion -pedantic -Wno-unknown-pragmas # Warnings
+    -msse -msse2 -mssse3 -msse3 -mfma -msse4 -msse4.1 -msse4.2 -mavx -mavx2 # Auto-Vectorisation
+    -pthread)
 endif()
 
 # Release
@@ -182,7 +184,7 @@ endif()
 
 CPMAddPackage(
   NAME mimalloc
-  GIT_TAG v2.0.9
+  GIT_TAG v2.1.2
   GITHUB_REPOSITORY microsoft/mimalloc
   OPTION MI_OVERRIDE=ON)
 target_link_libraries(

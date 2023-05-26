@@ -111,7 +111,7 @@ namespace pul
 		this->buf_ = this->__make_storage();
 
 		/// Threads
-		for(size_t i = 0; i != CCY_NUM_WORKERS; ++i)
+		for(uint32_t i = 0; i != CCY_NUM_WORKERS; ++i)
 		{
 			construct(this->buf_->__get_thread(i), __thread_process, this->buf_);
 		}
@@ -125,7 +125,7 @@ namespace pul
 		while(this->buf_->numProcessing.load(atomic_order::relaxed) != 2 * CCY_NUM_WORKERS) process_tasks_0();	// Waits for all workers to terminate
 
 		/// Threads
-		for(size_t i = 0; i < CCY_NUM_WORKERS; ++i)
+		for(uint32_t i = 0; i < CCY_NUM_WORKERS; ++i)
 		{
 			auto t = this->buf_->__get_thread(i);
 			if(t->joinable()) t->join();
@@ -195,7 +195,7 @@ namespace pul
 	__thread_pool_t::__process_0()
 	{
 		__task_t *t[32]	 = { nullptr };
-		const uint32_t i = this->buf_->queue0.try_dequeue_bulk(begin(t), end(t));
+		const uint32_t i = union_cast<uint32_t>(this->buf_->queue0.try_dequeue_bulk(begin(t), end(t)));
 		uint32_t j			 = 0;
 		while(j != i)
 		{

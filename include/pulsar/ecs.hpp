@@ -17,6 +17,10 @@
 // Pulsar
 namespace pul
 {
+	// https://www.richardlord.net/blog/ecs/what-is-an-entity-framework.html
+	// https://austinmorlan.com/posts/entity_component_system/
+	// https://www.dataorienteddesign.com/dodbook/
+	// https://www.richardlord.net/blog/ecs/finite-state-machines-with-ash.html
 	// TODO: JSON + REFLECTION + ECS + MULTITHREADING SUPPORT USING THREAD POOL
 }
 

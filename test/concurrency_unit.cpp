@@ -28,7 +28,7 @@ namespace pul
 			 [&](size_t __index)
 			 {
 				ignore = __index;
-				return this_thread::get_id();
+				return this_thread::get_idx();
 			});
 		}
 		pt_benchmark(idx_get_t8, __bvn, 16'192, 8)
@@ -37,7 +37,7 @@ namespace pul
 			 [&](size_t __index)
 			 {
 				ignore = __index;
-				return this_thread::get_id();
+				return this_thread::get_idx();
 			});
 		}
 	}

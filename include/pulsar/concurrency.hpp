@@ -22,6 +22,7 @@
 #include <mutex>
 #include <shared_mutex>
 #include <condition_variable>
+#include <iosfwd>
 
 // Pulsar
 namespace pul
@@ -67,10 +68,19 @@ namespace pul
 		{
 			std::this_thread::yield();
 		}
+
+		pf_decl_static pf_decl_inline atomic<thread_id_t> __idx_counter = 0;
+
 		pf_hint_nodiscard pf_decl_inline thread_id_t
 		get_id() pf_attr_noexcept
 		{
-			return union_cast<thread_id_t>(std::this_thread::get_id()) - 1;
+			return union_cast<thread_id_t>(std::this_thread::get_id());
+		}
+		pf_hint_nodiscard pf_decl_inline thread_id_t
+		get_idx() pf_attr_noexcept
+		{
+			pf_decl_thread_local thread_id_t __idx_local = __idx_counter.fetch_add(1, atomic_order::relaxed);
+			return __idx_local;
 		}
 	}	 // namespace this_thread
 }	 // namespace pul
