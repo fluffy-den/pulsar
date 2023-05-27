@@ -234,6 +234,49 @@ namespace pul
 			u8string<> str5(arr2);
 			// u8string(cstr)
 			u8string<> str6 = "This is a c style string!";
+			// u8string(str)
+			u8string<> str7 = str6;
+			// u8string(str&&)
+			u8string<> str8 = std::move(str7);
+
+			// u8string.operator=(__str)
+			str2						 = "This is an assigned c style string!";
+			// u8string.operator=(__v)
+			u8string_view v1 = str6;
+			str3						 = v1;
+
+			// u8string.view
+			u8string_view v2 = str4;
+
+			// u8string.operator[] + .operator()
+			u8string<> str9 = "This is 😀 a C++ like array!";
+			pt_check(str9[15] == 'C');
+			pt_check(str9(12) == uint32_t('C'));
+
+			// u8string.push_back
+			u8string str10(align_val_t(32), magnifier_linear(1'024), allocator_default());
+			str10.push_back('a', 10);
+			pt_check(str10.length() == 11);
+			str10.push_back(0x1'F6'00u, 1);
+			pt_check(str10.length() == 15);
+			u8string_view v3 = str8;
+			str10.push_back(v3);
+			pt_check(str10.length() == 40);
+
+			// u8string.push()
+			str10.push(0, 'a', 1);
+			str10.push(0, 0x1'F6'00u, 1);
+			str10.push(0, "I like trains!");
+
+			// u8string.pop_back()
+			str10.pop_back();
+			str10.pop(13);
+			str10.pop(0, 2);
+			str10.pop(5, 11);	 // "like"
+
+			// u8string.replace()
+			str10.replace(0, 'L');
+			str10.replace(0, 4, 0x1'F6'03u);
 		}
 	}
 }	 // namespace pul

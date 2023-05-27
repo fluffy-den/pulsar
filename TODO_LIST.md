@@ -46,7 +46,7 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 [o] utf8_iterator
 [o] utf8_utilities
 [o] utf8_format (fmt)
-[x] all_tests
+[o] all_tests
 
 ### Filesystem ### (0.8)
 [x] file_path
