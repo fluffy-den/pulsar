@@ -498,7 +498,7 @@ namespace pul
 		}
 
 	private:
-		array<vector<_Ty, _ColNum>, _RowNum> store_;	// TODO: _Ty[_RowNum * _ColNum]
+		array<vector<_Ty, _ColNum>, _RowNum> store_;	// TODO: array<vector<_Ty, _RowNum>, _ColNum>> => (i, j) become (j, i)
 	};
 
 	/// MATH: Matrix -> Operator+

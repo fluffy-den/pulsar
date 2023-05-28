@@ -17,6 +17,7 @@
 #include "pulsar/debug.hpp"
 #include "pulsar/intrin.hpp"
 #include "pulsar/system.hpp"
+#include "pulsar/algorithm.hpp"
 #include "pulsar/tuple.hpp"
 
 // Include: C++
@@ -14393,6 +14394,102 @@ namespace pul
 		const _Iterable *owner_;
 	};
 
+	/// CHAR: Array - End
+	template<size_t _Num>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr iterator<u8char_t>
+	end(
+	 u8char_t (&__arr)[_Num]) pf_attr_noexcept
+	{
+		if pf_decl_constexpr(_Num == 1) return &__arr[0];
+		return &__arr[_Num - 1];
+	}
+	template<size_t _Num>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_iterator<u8char_t>
+	end(
+	 const u8char_t (&__arr)[_Num]) pf_attr_noexcept
+	{
+		if pf_decl_constexpr(_Num == 1) return &__arr[0];
+		return &__arr[_Num - 1];
+	}
+	template<size_t _Num>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_iterator<u8char_t>
+	cend(
+	 u8char_t (&__arr)[_Num]) pf_attr_noexcept
+	{
+		return end(__arr);
+	}
+	template<size_t _Num>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr iterator<u8char_t>
+	end(
+	 array<u8char_t, _Num> &__arr) pf_attr_noexcept
+	{
+		if pf_decl_constexpr(_Num == 1) return &__arr[0];
+		return &__arr[_Num - 1];
+	}
+	template<size_t _Num>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_iterator<u8char_t>
+	end(
+	 array<u8char_t, _Num> const &__arr) pf_attr_noexcept
+	{
+		if pf_decl_constexpr(_Num == 1) return &__arr[0];
+		return &__arr[_Num - 1];
+	}
+	template<size_t _Num>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_iterator<u8char_t>
+	cend(
+	 array<u8char_t, _Num> const &__arr) pf_attr_noexcept
+	{
+		return end(__arr);
+	}
+
+	/// CHAR: Array - Reverse Begin
+	template<size_t _Num>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr iterator<u8char_t>
+	rbegin(
+	 u8char_t (&__arr)[_Num]) pf_attr_noexcept
+	{
+		if pf_decl_constexpr(_Num == 1) return &__arr[0];
+		return &__arr[_Num - 2];
+	}
+	template<size_t _Num>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_iterator<u8char_t>
+	rbegin(
+	 const u8char_t (&__arr)[_Num]) pf_attr_noexcept
+	{
+		if pf_decl_constexpr(_Num == 1) return &__arr[0];
+		return &__arr[_Num - 2];
+	}
+	template<size_t _Num>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_iterator<u8char_t>
+	crbegin(
+	 const u8char_t (&__arr)[_Num]) pf_attr_noexcept
+	{
+		return rbegin(__arr);
+	}
+	template<size_t _Num>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr iterator<u8char_t>
+	rbegin(
+	 array<u8char_t, _Num> &__arr) pf_attr_noexcept
+	{
+		if pf_decl_constexpr(_Num == 1) return &__arr[0];
+		return &__arr[_Num - 2];
+	}
+	template<size_t _Num>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_iterator<u8char_t>
+	rbegin(
+	 array<u8char_t, _Num> const &__arr) pf_attr_noexcept
+	{
+		if pf_decl_constexpr(_Num == 1) return &__arr[0];
+		return &__arr[_Num - 2];
+	}
+	template<size_t _Num>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const_iterator<u8char_t>
+	crbegin(
+	 array<u8char_t, _Num> const &__arr) pf_attr_noexcept
+	{
+		return rbegin(__arr);
+	}
+
 	/// CHAR: String -> View
 	class u8string_view
 	{
@@ -14435,15 +14532,6 @@ namespace pul
 		 const array<u8char_t, _Num> &__arr) pf_attr_noexcept
 			: data_(&__arr[0])
 			, len_(_Num)
-		{}
-		template<
-		 typename _Magnifier,
-		 typename _Allocator>
-		pf_decl_inline pf_decl_constexpr
-		u8string_view(
-		 const u8string<_Magnifier, _Allocator> &__s) pf_attr_noexcept
-			: data_(__s.data())
-			, len_(__s.length() - 1)
 		{}
 		pf_decl_inline pf_decl_constexpr
 		u8string_view(
@@ -14647,6 +14735,9 @@ namespace pul
 		template<typename _MagnifierR, typename _AllocatorR>
 			requires(is_magnifier_v<_MagnifierR> && is_allocator_v<_AllocatorR>)
 		pf_decl_friend class u8string;
+		template<typename _MagnifierR, typename _AllocatorR>
+			requires(is_magnifier_v<_MagnifierR> && is_allocator_v<_AllocatorR>)
+		pf_decl_friend class fspath;
 
 		// __reallocate
 		pf_decl_constexpr diff_t
@@ -15501,7 +15592,7 @@ namespace pul
 		}
 
 		/// Operator (View)
-		pf_hint_nodiscard pf_decl_explicit pf_decl_inline pf_decl_constexpr
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
 		operator u8string_view() const pf_attr_noexcept
 		{
 			return this->view();
@@ -15537,7 +15628,7 @@ namespace pul
 			return &this->operator[](utf8::next(this->data_, this->len_, __index));
 		}
 
-		/// Assign=
+		/// Assign
 		pf_decl_constexpr void
 		assign(
 		 const u8char_t *__str,
@@ -15598,12 +15689,6 @@ namespace pul
 		}
 		pf_decl_inline pf_decl_constexpr void
 		assign(
-		 u8string_view __v)
-		{
-			this->assign(__v.begin(), __v.end());
-		}
-		pf_decl_inline pf_decl_constexpr void
-		assign(
 		 u8string<_Magnifier, _Allocator> const &__str)
 		{
 			if(pf_likely(this != &__str)) this->assign(__str.begin(), __str.end());
@@ -15616,48 +15701,48 @@ namespace pul
 			this->assign(__str.begin(), __str.end());
 		}
 		template<size_t _Num>
-		pf_decl_inline pf_decl_constexpr u8string<_Magnifier, _Allocator> &
+		pf_decl_inline pf_decl_constexpr void
 		assign(
 		 const u8char_t (&__arr)[_Num])
 		{
 			this->assign(pul::begin(__arr), pul::end(__arr));
 		}
 		template<size_t _Num>
-		pf_decl_inline pf_decl_constexpr u8string<_Magnifier, _Allocator> &
+		pf_decl_inline pf_decl_constexpr void
 		assign(
 		 const u8code_t (&__arr)[_Num])
 		{
 			this->assign(pul::begin(__arr), pul::end(__arr));
 		}
 		template<size_t _Num>
-		pf_decl_inline pf_decl_constexpr u8string<_Magnifier, _Allocator> &
+		pf_decl_inline pf_decl_constexpr void
 		assign(
 		 array<u8char_t, _Num> const &__arr)
 		{
 			this->assign(__arr.begin(), __arr.end());
 		}
 		template<size_t _Num>
-		pf_decl_inline pf_decl_constexpr u8string<_Magnifier, _Allocator> &
+		pf_decl_inline pf_decl_constexpr void
 		assign(
 		 array<u8code_t, _Num> const &__arr)
 		{
 			this->assign(__arr.begin(), __arr.end());
 		}
 		template<typename _View>
-		pf_decl_inline pf_decl_constexpr u8string<_Magnifier, _Allocator> &
+		pf_decl_inline pf_decl_constexpr void
 		assign(
 		 _View __v)
 			requires(is_view_v<_View>)
 		{
 			this->assign(__v.begin(), __v.end());
 		}
-		pf_decl_inline pf_decl_constexpr u8string<_Magnifier, _Allocator> &
+		pf_decl_inline pf_decl_constexpr void
 		assign(
 		 initializer_list<u8char_t> __il)
 		{
 			this->assign(iterator(__il.begin()), iterator(__il.end()));
 		}
-		pf_decl_constexpr u8string<_Magnifier, _Allocator> &
+		pf_decl_constexpr void
 		assign(
 		 u8string<_Magnifier, _Allocator> &&__r) pf_attr_noexcept
 		{
@@ -15706,7 +15791,7 @@ namespace pul
 		 _View __v)
 			requires(is_view_v<_View>)
 		{
-			return this->__push_insert_back(__v.begin(), __v.end());
+			return this->push_back(iterator(__v.begin()), iterator(__v.end()));
 		}
 		pf_decl_inline pf_decl_constexpr size_t
 		push_back(
@@ -16290,7 +16375,7 @@ namespace pul
 		}
 
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 u8char_t __val,
 		 size_t __count = 1)
@@ -16298,7 +16383,7 @@ namespace pul
 			return this->begin() + this->__replace(this->__iterator_to_index(__w), __val, __count);
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 u8code_t __code,
 		 size_t __count = 1)
@@ -16307,7 +16392,7 @@ namespace pul
 		}
 		template<typename _IteratorIn>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 _IteratorIn __beg,
 		 _IteratorIn __end)
@@ -16317,77 +16402,77 @@ namespace pul
 		}
 		template<typename _View>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 _View __v)
 			requires(is_view_v<_View>)
 		{
-			return this->replace(__w, __v.begin(), __v.end());
+			return this->reinsert(__w, __v.begin(), __v.end());
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 initializer_list<u8char_t> __il)
 		{
-			return this->replace(__w, iterator(__il.begin()), iterator(__il.end()));
+			return this->reinsert(__w, iterator(__il.begin()), iterator(__il.end()));
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 initializer_list<u8code_t> __il)
 		{
-			return this->replace(__w, iterator(__il.begin()), iterator(__il.end()));
+			return this->reinsert(__w, iterator(__il.begin()), iterator(__il.end()));
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 const u8char_t *__str,
 		 size_t __len)
 		{
-			return this->replace(__w, iterator(__str), iterator(__str + __len));
+			return this->reinsert(__w, iterator(__str), iterator(__str + __len));
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 const u8char_t *__str)
 		{
-			return this->replace(__w, iterator(__str), iterator(__str + utf8::lenof(__str) - 1));
+			return this->reinsert(__w, iterator(__str), iterator(__str + utf8::lenof(__str) - 1));
 		}
 		template<size_t _Num>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 const u8char_t (&__arr)[_Num])
 		{
-			return this->replace(__w, pul::begin(__arr), pul::end(__arr));
+			return this->reinsert(__w, pul::begin(__arr), pul::end(__arr));
 		}
 		template<size_t _Num>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 const u8code_t (&__arr)[_Num])
 		{
-			return this->replace(__w, pul::begin(__arr), pul::end(__arr));
+			return this->reinsert(__w, pul::begin(__arr), pul::end(__arr));
 		}
 		template<size_t _Num>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 array<u8char_t, _Num> const &__arr)
 		{
-			return this->replace(__w, __arr.begin(), __arr.end());
+			return this->reinsert(__w, __arr.begin(), __arr.end());
 		}
 		template<size_t _Num>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 array<u8code_t, _Num> const &__arr)
 		{
-			return this->replace(__w, __arr.begin(), __arr.end());
+			return this->reinsert(__w, __arr.begin(), __arr.end());
 		}
 
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 u8char_t __val,
@@ -16396,7 +16481,7 @@ namespace pul
 			return this->begin() + this->__replace(this->__iterator_to_index(__wbeg), this->__iterator_to_index(__wend), __val, __count);
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 u8code_t __code,
@@ -16406,7 +16491,7 @@ namespace pul
 		}
 		template<typename _IteratorIn>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 _IteratorIn __beg,
@@ -16417,82 +16502,82 @@ namespace pul
 		}
 		template<typename _View>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 _View __v)
 			requires(is_view_v<_View>)
 		{
-			return this->replace(__wbeg, __wend, __v.begin(), __v.end());
+			return this->reinsert(__wbeg, __wend, __v.begin(), __v.end());
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 initializer_list<u8char_t> __il)
 		{
-			return this->replace(__wbeg, __wend, iterator(__il.begin()), iterator(__il.end()));
+			return this->reinsert(__wbeg, __wend, iterator(__il.begin()), iterator(__il.end()));
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 initializer_list<u8code_t> __il)
 		{
-			return this->replace(__wbeg, __wend, iterator(__il.begin()), iterator(__il.end()));
+			return this->reinsert(__wbeg, __wend, iterator(__il.begin()), iterator(__il.end()));
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 const u8char_t *__str,
 		 size_t __len)
 		{
-			return this->replace(__wbeg, __wend, iterator(__str), iterator(__str + __len));
+			return this->reinsert(__wbeg, __wend, iterator(__str), iterator(__str + __len));
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 const u8char_t *__str)
 		{
-			return this->replace(__wbeg, __wend, iterator(__str), iterator(__str + utf8::lenof(__str) - 1));
+			return this->reinsert(__wbeg, __wend, iterator(__str), iterator(__str + utf8::lenof(__str) - 1));
 		}
 		template<size_t _Num>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 const u8char_t (&__arr)[_Num])
 		{
-			return this->replace(__wbeg, __wend, pul::begin(__arr), pul::end(__arr));
+			return this->reinsert(__wbeg, __wend, pul::begin(__arr), pul::end(__arr));
 		}
 		template<size_t _Num>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 const u8code_t (&__arr)[_Num])
 		{
-			return this->replace(__wbeg, __wend, pul::begin(__arr), pul::end(__arr));
+			return this->reinsert(__wbeg, __wend, pul::begin(__arr), pul::end(__arr));
 		}
 		template<size_t _Num>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 array<u8char_t, _Num> const &__arr)
 		{
-			return this->replace(__wbeg, __wend, __arr.begin(), __arr.end());
+			return this->reinsert(__wbeg, __wend, __arr.begin(), __arr.end());
 		}
 		template<size_t _Num>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 array<u8code_t, _Num> const &__arr)
 		{
-			return this->replace(__wbeg, __wend, __arr.begin(), __arr.end());
+			return this->reinsert(__wbeg, __wend, __arr.begin(), __arr.end());
 		}
 
 		/// Shrink
@@ -16886,6 +16971,22 @@ namespace pul
 		view() const pf_attr_noexcept
 		{
 			return view_t(this->begin(), this->end());
+		}
+
+		/// Swap
+		pf_decl_inline pf_decl_constexpr void
+		swap(
+		 u8string<_Magnifier, _Allocator> &__r) pf_attr_noexcept
+		{
+			if(pf_likely(this != &__r))
+			{
+				pul::swap(this->data_, __r.data_);
+				pul::swap(this->capacity_, __r.capacity_);
+				pul::swap(this->align_, __r.align_);
+				pul::swap(this->len_, __r.len_);
+				pul::swap(this->magnifier_, __r.magnifier_);
+				pul::swap(this->allocator_, __r.allocator_);
+			}
 		}
 
 		/// Magnifier

@@ -268,6 +268,7 @@ namespace pul
 
 	/// ARRAY: Test
 	pf_assert_static(is_iterable_v<array<int32_t, 6>>);
+
 }	 // namespace pul
 
 

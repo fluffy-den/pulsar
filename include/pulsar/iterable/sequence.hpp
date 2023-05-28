@@ -388,7 +388,7 @@ namespace pul
 			++this->count_;
 			return __w;
 		}
-		pf_hint_nodiscard pf_decl_constexpr size_t
+		pf_decl_constexpr size_t
 		__push_insert_no_check(
 		 size_t __w,
 		 const _Ty &__val,
@@ -413,7 +413,7 @@ namespace pul
 			return this->__push_insert_no_check(__w, __val, __count);
 		}
 		template<typename _IteratorIn>
-		pf_hint_nodiscard pf_decl_constexpr size_t
+		pf_decl_constexpr size_t
 		__push_insert_no_check(
 		 size_t __w,
 		 _IteratorIn __beg,
@@ -788,7 +788,7 @@ namespace pul
 		}
 
 		/// Operator (View)
-		pf_hint_nodiscard pf_decl_explicit pf_decl_inline pf_decl_constexpr
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
 		operator sequence_view<_Ty>() const pf_attr_noexcept
 		{
 			return this->view();
@@ -1221,10 +1221,10 @@ namespace pul
 		}
 
 
-		/// Replace (Iterator)
+		/// Reinsert
 		template<typename... _Args>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 _Args &&...__args)
 			requires(std::is_constructible_v<_Ty, _Args...>)
@@ -1232,7 +1232,7 @@ namespace pul
 			return this->begin() + this->__replace(this->__iterator_to_index(__w), std::forward<_Args>(__args)...);
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 const _Ty &__val,
 		 size_t __count)
@@ -1241,7 +1241,7 @@ namespace pul
 		}
 		template<typename _IteratorIn>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 _IteratorIn __beg,
 		 _IteratorIn __end)
@@ -1251,24 +1251,24 @@ namespace pul
 		}
 		template<typename _View>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 _View __v)
 			requires(
 			 is_view_v<_View>
 			 && std::is_same_v<_Ty, value_type_t<_View>>)
 		{
-			return this->replace(__w, __v.begin(), __v.end());
+			return this->reinsert(__w, __v.begin(), __v.end());
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __w,
 		 initializer_list<_Ty> __il)
 		{
-			return this->replace(__w, iterator(__il.begin()), iterator(__il.end()));
+			return this->reinsert(__w, iterator(__il.begin()), iterator(__il.end()));
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 const _Ty &__val,
@@ -1278,7 +1278,7 @@ namespace pul
 		}
 		template<typename _IteratorIn>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 _IteratorIn __ibeg,
@@ -1289,7 +1289,7 @@ namespace pul
 		}
 		template<typename _View>
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 _View __v)
@@ -1297,15 +1297,15 @@ namespace pul
 			 is_view_v<_View>
 			 && std::is_same_v<_Ty, value_type_t<_View>>)
 		{
-			return this->replace(__wbeg, __wend, __v.begin(), __v.end());
+			return this->reinsert(__wbeg, __wend, __v.begin(), __v.end());
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
-		replace(
+		reinsert(
 		 iterator_t __wbeg,
 		 iterator_t __wend,
 		 initializer_list<_Ty> __il)
 		{
-			return this->replace(__wbeg, __wend, iterator(__il.begin()), iterator(__il.end()));
+			return this->reinsert(__wbeg, __wend, iterator(__il.begin()), iterator(__il.end()));
 		}
 
 		/// Shrink
@@ -1577,6 +1577,22 @@ namespace pul
 		view() const pf_attr_noexcept
 		{
 			return view_t(this->begin(), this->end());
+		}
+
+		/// Swap
+		pf_decl_inline pf_decl_constexpr void
+		swap(
+		 sequence<_Ty, _Magnifier, _Allocator> &__r)
+		{
+			if(pf_likely(this != &__r))
+			{
+				pul::swap(this->data_, __r.data_);
+				pul::swap(this->capacity_, __r.capacity_);
+				pul::swap(this->align_, __r.align_);
+				pul::swap(this->count_, __r.count_);
+				pul::swap(this->magnifier_, __r.magnifier_);
+				pul::swap(this->allocator_, __r.allocator_);
+			}
 		}
 
 		/// Magnifier
