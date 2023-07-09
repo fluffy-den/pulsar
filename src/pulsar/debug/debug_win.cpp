@@ -266,8 +266,7 @@ namespace pul
 		if(!__buf || !__size) return __dbg_wsstring();
 		const size_t r = utf8_to_utf16le::required_count(__buf, __size);
 		__dbg_wsstring str(r, L'\0');
-		const auto res = utf8_to_utf16le::convert(__buf, __size, union_cast<u16char_t *>(&str[0]));
-		pf_throw_if(res.code != char_error_code::success, dbg_category_char(), res.code, 0, "[WIN] utf8 to utf16 transcoding failed!");
+		utf8_to_utf16le::convert(__buf, __size, union_cast<u16char_t *>(&str[0]));
 
 		// Returns
 		return str;
@@ -281,8 +280,7 @@ namespace pul
 		if(!__buf || !__count) return dbg_u8string();
 		const size_t r = utf16le_to_utf8::required_count(union_cast<const u16char_t *>(__buf), __count);
 		dbg_u8string str(r, '\0');
-		const auto res = utf16le_to_utf8::convert(union_cast<const u16char_t *>(__buf), __count, &str[0]);
-		pf_throw_if(res.code != char_error_code::success, dbg_category_char(), res.code, 0, "[WIN] utf16le to utf8 transcoding failed!");
+		utf16le_to_utf8::convert(union_cast<const u16char_t *>(__buf), __count, &str[0]);
 
 		// Returns
 		return str;
@@ -355,10 +353,11 @@ namespace pul
 		if(pf_unlikely(!msg || c == 0))
 			pf_throw(
 			 dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] FormatMessageW failed for code={}!", __error);
-		LocalFree(msg);
 
 		// Returns
-		return __dbg_convert_wide_to_u8_win(msg, c);
+		dbg_u8string str = __dbg_convert_wide_to_u8_win(msg, c);
+		LocalFree(msg);
+		return str;
 	}
 	void
 	__dbg_generate_error_popup_win(
@@ -384,9 +383,7 @@ namespace pul
 		BOOL ret		= SHGetKnownFolderPath(FOLDERID_LocalAppDataLow, 0, 0, &known);
 		if(ret != S_OK)
 		{
-			CoTaskMemFree(known);
-			pf_throw(
-			 dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] SHGetKnownFolderPath failed with FOLDERID_LocalAppDataLow!");
+			pf_throw(dbg_category_system(), GetLastError(), dbg_flags::none, "[WIN] SHGetKnownFolderPath failed with FOLDERID_LocalAppDataLow!");
 		}
 		// Directory
 		__dbg_wsstring str(DBG_FMT_NAME_LEN, '\0');
@@ -406,7 +403,7 @@ namespace pul
 
 		// File
 		str.insert_back(L"minidump.dmp");
-		HANDLE file					= CreateFileW(str.data(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+		HANDLE file					= CreateFileW(str.data(), FILE_GENERIC_READ | FILE_GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
 		dbg_u8string u8path = __dbg_convert_wide_to_u8_win(str.data(), std::wcslen(str.data()));
 		if(!file)
 		{
@@ -445,7 +442,8 @@ namespace pul
 	 dbg_u8string_view __what)
 	{
 		// Print
-		pf_print(dbg_type::info, dbg_level::high, "[WIN] Caught unhandled exception of category={}, code={}, message={}", __cat->name().data(), __code, __what.data());
+		auto reason = __cat->message(__code);
+		pf_print(dbg_type::info, dbg_level::high, "[WIN] Caught unhandled exception of category={}, code={}, message={} reason={}", __cat->name().data(), __code, __what.data(), reason.data());
 		auto st	 = __dbg_retrieve_stacktrace();
 		size_t s = st.length;
 		dbg_u8string str(s, '\0');

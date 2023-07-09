@@ -49,31 +49,43 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 [o] all_tests
 
 ### Filesystem ### (0.8)
-[x] file_path
-[x] file_handle
-[x] file_iterator
-[x] file_functions
-[x] file_package // https://libzip.org/
-[x] file_signals
+[o] fs_path
+[x] fs_handle
+[o] fs_iterator
+[x] fs_signals
+[x] fs_archive
 [x] all_tests
 
-### Live++ ### (0.9)
+### Memory 2 ### (0.9)
+[o] heap_local_allocation rework (heap stack allocator)
+    - local can grow.
+    - local allocator act as a stack allocator.
+[o] heap_cache_allocation rework (ring buffer allocator)
+    - cache cannot grow.
+    - cache allocator act as a ring buffer.
+
+### Live++ ### (0.10)
 [x] host
 [x] client
 [x] auto-updater
 [x] hooks
 [x] all_tests
 
-### Image Loader ### 0.10
+### File handling ### (0.11)
 [x] .tga loader
+[x] .tga writer
+[x] .jpeg loader
+[x] .jpeg writer
+[x] .wav loader
+[x] .wav writer
 [x] all_tests
 
-### Networking ### 0.11
+### Networking ### (0.12)
 [x] sockets
 [x] protocols
 [x] all_tests
 
-### Mathematics ### 0.12
+### Mathematics ### (0.13)
 [x] Rewriting matrix as column major order (DOD)
 [x] Quaternions
 [x] Projections
@@ -81,10 +93,15 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 [x] Camera
 [x] all_tests
 
-### ECS ### 0.13
+### ECS ### (0.14)
 [x] Entity
 [x] Components
 [x] System
 [x] Multithreading
 [x] all_tests
+
+### Fixing ### (0.15)
+[x] cv2pdb
+[x] Name optimisation
+[x] FMT update 
 

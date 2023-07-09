@@ -23,6 +23,10 @@
 #include "pulsar/char.hpp"
 #include "pulsar/concurrency.hpp"
 #include "pulsar/thread_pool.hpp"
+#include "pulsar/filesystem.hpp"
+
+// Include: Pulsar -> Src
+#include "pulsar/internal_allocator.hpp"
 
 // Include: Pulsar -> Src -> Debug
 #include "pulsar/debug/debug.hpp"
@@ -51,8 +55,9 @@ namespace pul
 		__internal_t &
 		operator=(__internal_t &&) = delete;
 
-		/// Module -> Cache
-		allocator_mamd_ring_buffer cache;
+		/// Module -> Local Allocators
+		allocator_mamd_ring_buffer cmem;
+		allocator_mamd_stack_buffer<magnifier_linear> smem;
 
 		/// Module -> Debug
 		__dbg_internal_t dbg_internal;
@@ -60,6 +65,9 @@ namespace pul
 
 		/// Module -> Thread Pool
 		__thread_pool_t thread_pool;
+
+		/// Module -> IO Async Controller
+		task_pool_t io_async_controller;
 	};
 
 	pf_decl_extern __internal_t __internal;

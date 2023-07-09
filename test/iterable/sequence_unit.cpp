@@ -240,35 +240,35 @@ namespace pul
 			pt_check(s9[12] == 8);
 			// { 8, 9, 1, 2, 2, 4, 2, 6, 3, 4, 5, 6, 8, 9 }
 
-			// replace(w, ...)
-			s9.replace(s9.begin() + 4, 3);
+			// reinsert(w, ...)
+			s9.reinsert(s9.begin() + 4, 3);
 			pt_check(s9[4] == 3);
-			s9.replace(s9.begin() + 6, 5);
+			s9.reinsert(s9.begin() + 6, 5);
 			pt_check(s9[6] == 5);
 			// { 8, 9, 1, 2, 3, 4, 5, 6, 3, 4, 5, 6, 8, 9 }
 
-			// replace(w, val, count)
-			s9.replace(s9.begin() + 0, 0, 2);
+			// reinsert(w, val, count)
+			s9.reinsert(s9.begin() + 0, 0, 2);
 			pt_check(equal(s9.begin() + 0, s9.begin() + 2, 0));
 			// { 0, 0, 9, 1, 2, 3, 4, 5, 6, 3, 4, 5, 6, 8, 9 }
 
-			// replace(w, v) -> replace(w, beg, end)
+			// reinsert(w, v) -> reinsert(w, beg, end)
 			initializer_list v4 = { -2, -1 };
-			s9.replace(s9.begin() + 0, v4);
+			s9.reinsert(s9.begin() + 0, v4);
 			pt_check(equal(s9.begin() + 0, s9.begin() + 2, iterator(v4.begin())));
 			// { -2, -1, 0, 9, 1, 2, 3, 4, 5, 6, 3, 4, 5, 6, 8, 9 }
 
-			// replace(wbeg, wend, val, count)
-			s9.replace(s9.begin() + 3, s9.begin() + 16, 9, 7);
+			// reinsert(wbeg, wend, val, count)
+			s9.reinsert(s9.begin() + 3, s9.begin() + 16, 9, 7);
 			pt_check(equal(s9.begin() + 3, s9.begin() + 8, 9));
 			// { -2, -1, 0, 9, 9, 9, 9, 9, 9, 9 }
-			// replace(wbeg, wend, ibeg, iend)
+			// reinsert(wbeg, wend, ibeg, iend)
 			initializer_list v5 = { -5, -4, -3, -2, -1 };
-			s9.replace(s9.begin() + 0, s9.begin() + 2, v5);
+			s9.reinsert(s9.begin() + 0, s9.begin() + 2, v5);
 			pt_check(equal(s9.begin() + 0, s9.begin() + 5, iterator(v5.begin())));
 			// { -5, -4, -3, -2, -1, 0, 9, 9, 9, 9, 9, 9 }
 			initializer_list v6 = { 1, 2, 3, 4, 5 };
-			s9.replace(s9.begin() + 6, s9.begin() + 13, v6);
+			s9.reinsert(s9.begin() + 6, s9.begin() + 13, v6);
 			pt_check(equal(s9.begin() + 6, s9.begin() + 11, iterator(v6.begin())));
 			// { -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5 }
 
@@ -323,7 +323,7 @@ namespace pul
 		{
 			sequence<int32_t, magnifier_linear> s(align_val_t(8), magnifier_linear(4'096));
 			__bvn.measure([&](size_t __index)
-										{ return s.push_back(__index); });
+										{ return s.push_back(union_cast<int32_t>(__index)); });
 		}
 	}
 }	 // namespace pul

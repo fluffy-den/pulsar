@@ -52,7 +52,7 @@ namespace pul
 	union __union_cast
 	{
 		/// Constructors
-		pf_decl_inline
+		pf_decl_always_inline
 		__union_cast(_InTy __in)
 			: in(__in)
 		{}
@@ -60,7 +60,7 @@ namespace pul
 		__union_cast(__union_cast &&)			 = delete;
 
 		/// Destructor
-		pf_decl_inline ~__union_cast() pf_attr_noexcept = default;
+		pf_decl_always_inline ~__union_cast() pf_attr_noexcept = default;
 
 		/// Operator=
 		__union_cast<_ToTy, _InTy> &
@@ -68,11 +68,12 @@ namespace pul
 		__union_cast<_ToTy, _InTy> &
 		operator=(__union_cast<_ToTy, _InTy> &&) = delete;
 
+		/// Cast
 		_InTy in;
 		_ToTy to;
 	};
 	template<typename _ToTy, typename _InTy>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _ToTy
+	pf_hint_nodiscard pf_decl_always_inline pf_decl_constexpr _ToTy
 	union_cast(
 	 _InTy __in) pf_attr_noexcept
 		requires(
@@ -90,21 +91,21 @@ namespace pul
 	}
 
 	/// UTILITY: Address <=> Pointer
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
+	pf_hint_nodiscard pf_decl_always_inline pf_decl_constexpr size_t
 	addressof(
 	 const void *__ptr) pf_attr_noexcept
 	{
 		return union_cast<size_t>(__ptr);
 	}
 	template<typename _Ty>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr _Ty *
+	pf_hint_nodiscard pf_decl_always_inline pf_decl_constexpr _Ty *
 	addrtoptr(
 	 size_t __addr) pf_attr_noexcept
 	{
 		return union_cast<_Ty *>(__addr);
 	}
 	template<typename _Ty>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const _Ty *
+	pf_hint_nodiscard pf_decl_always_inline pf_decl_constexpr const _Ty *
 	addrtocptr(
 	 size_t __addr) pf_attr_noexcept
 	{
@@ -112,14 +113,14 @@ namespace pul
 	}
 
 	/// UTILITY: Distance
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr diff_t
+	pf_hint_nodiscard pf_decl_always_inline pf_decl_constexpr diff_t
 	diffof(
 	 const void *__beg,
 	 const void *__end) pf_attr_noexcept
 	{
 		return union_cast<diff_t>(__end) - union_cast<diff_t>(__beg);
 	}
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
+	pf_hint_nodiscard pf_decl_always_inline pf_decl_constexpr size_t
 	distof(
 	 const void *__beg,
 	 const void *__end) pf_attr_noexcept
@@ -136,7 +137,7 @@ namespace pul
 
 	/// UTILITY: Count
 	template<typename _Ty>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
+	pf_hint_nodiscard pf_decl_always_inline pf_decl_constexpr size_t
 	countof(
 	 const _Ty *__beg,
 	 const _Ty *__end) pf_attr_noexcept

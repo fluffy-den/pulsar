@@ -24,8 +24,14 @@
 namespace pul
 {
 	/// DEBUG: Constants
-	pf_decl_constexpr uint32_t ALLOCATOR_CACHE_0 = 2'097'152 + 65'536;
-	pf_decl_constexpr uint32_t ALLOCATOR_CACHE	 = 524'288 + 65'536;
+	pf_decl_constexpr uint32_t ALLOCATOR_CACHE_SIZE_0 = 2'097'152;
+	pf_decl_constexpr uint32_t ALLOCATOR_CACHE_SIZE		= 524'288;
+	pf_decl_constexpr uint32_t ALLOCATOR_STACK_SIZE_0 = 4 * 65'536;
+	pf_decl_constexpr uint32_t ALLOCATOR_STACK_SIZE		= 65'536;
+
+	// NOTE: size_0 = 2359296
+	// 			 size_+ = 589814
+	// 			 For 16 = 11796320 ~ 12 Mo of cache
 
 	/// DEBUG: Type
 	class __dbg_logger_t

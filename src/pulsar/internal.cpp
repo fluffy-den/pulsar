@@ -14,10 +14,15 @@
 // Pulsar
 namespace pul
 {
-	/// INTERNAL: Type
+	/// INTERNAL:
+	// Constructor
 	__internal_t::__internal_t()
-		: cache(ALLOCATOR_CACHE_0, ALLOCATOR_CACHE)
+		: cmem(ALLOCATOR_CACHE_SIZE_0, ALLOCATOR_CACHE_SIZE)
+		, smem(ALLOCATOR_STACK_SIZE_0, ALLOCATOR_STACK_SIZE, magnifier_linear(ALLOCATOR_STACK_SIZE))
 	{
+		/// We won't use C print at all!
+		std::ios_base::sync_with_stdio(false);
+
 		/// Debug
 		dbg_u8string_view logo =
 		 R"(
@@ -34,6 +39,6 @@ namespace pul
 		dbg_u8print("{}", &buf[0]);
 	}
 
-	/// INTERNAL: Instance
+	// Instance
 	__internal_t __internal;
 }	 // namespace pul

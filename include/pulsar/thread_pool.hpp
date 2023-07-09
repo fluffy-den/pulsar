@@ -448,8 +448,8 @@ namespace pul
 				pf_alignas(CCY_ALIGN) atomic<bool> ctrl = false;
 				data->store->record.set_record(std::current_exception(), &ctrl);
 				data->store->finished.store(true, atomic_order::relaxed);
-				destroy(data);
 				while(!ctrl.load(atomic_order::relaxed)) this_thread::yield();
+				destroy(data);
 				return;
 			}
 		}
@@ -481,8 +481,8 @@ namespace pul
 				pf_alignas(CCY_ALIGN) atomic<bool> ctrl = false;
 				data->store->record.set_record(std::current_exception(), &ctrl);
 				data->store->finished.store(true, atomic_order::relaxed);
-				destroy(data);
 				while(!ctrl.load(atomic_order::relaxed)) this_thread::yield();
+				destroy(data);
 				return;
 			}
 		}
@@ -537,7 +537,7 @@ namespace pul
 	 _Args &&...__args)
 		requires(std::is_invocable_v<_FunTy, _Args...>)
 	{
-		auto *t = cnew_construct<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+		auto *t = new_construct_c<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
 		__task_enqueue(&t->task);
 	}
 	template<
@@ -549,7 +549,7 @@ namespace pul
 	 _Args &&...__args)
 		requires(std::is_invocable_v<_FunTy, _Args...>)
 	{
-		auto *t = cnew_construct<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+		auto *t = new_construct_c<__task_store<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
 		__task_enqueue_0(&t->task);
 	}
 	template<
@@ -564,7 +564,7 @@ namespace pul
 		auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
 		try
 		{
-			auto *t = cnew_construct<__task_store_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+			auto *t = new_construct_c<__task_store_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
 			__task_enqueue(&t->task);
 			return s;
 		} catch(std::exception const &)
@@ -585,7 +585,7 @@ namespace pul
 		auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
 		try
 		{
-			auto *t = cnew_construct<__task_store_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+			auto *t = new_construct_c<__task_store_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
 			__task_enqueue_0(&t->task);
 			return s;
 		} catch(std::exception const &)
@@ -702,10 +702,10 @@ namespace pul
 				} catch(std::exception const &)
 				{
 					__store->numTasks.fetch_sub(k, atomic_order::relaxed);
-					cdestroy_delete(t);
+					destroy_delete_c(t);
 					throw;
 				}
-				cdestroy_delete(t);
+				destroy_delete_c(t);
 				t = n;
 			}
 			return (__store->numTasks.fetch_sub(k, atomic_order::relaxed) - k);
@@ -738,7 +738,7 @@ namespace pul
 		 _FunTy &&__fun,
 		 _Args &&...__args) pf_attr_noexcept
 		{
-			auto *n = cnew_construct<__node_data<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+			auto *n = new_construct_c<__node_data<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
 			if(this->numTasks.fetch_add(1, atomic_order::relaxed) == 0)
 			{
 				submit_task(__process_auto_submit, this);
@@ -753,7 +753,7 @@ namespace pul
 		 _FunTy &&__fun,
 		 _Args &&...__args) pf_attr_noexcept
 		{
-			auto *n = cnew_construct<__node_data<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
+			auto *n = new_construct_c<__node_data<_FunTy, _Args...>>(std::move(__fun), std::forward<_Args>(__args)...);
 			if(this->numTasks.fetch_add(1, atomic_order::relaxed) == 0)
 			{
 				submit_task_0(__process_auto_submit_0, this);
@@ -771,7 +771,7 @@ namespace pul
 		 _Args &&...__args) pf_attr_noexcept
 		{
 			auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
-			auto *n = cnew_construct<__node_data_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+			auto *n = new_construct_c<__node_data_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
 			if(this->numTasks.fetch_add(1, atomic_order::relaxed) == 0)
 			{
 				submit_task(__process_auto_submit, this);
@@ -788,7 +788,7 @@ namespace pul
 		 _Args &&...__args) pf_attr_noexcept
 		{
 			auto *s = new_construct<__future_store<std::invoke_result_t<_FunTy, _Args...>>>();
-			auto *n = cnew_construct<__node_data_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
+			auto *n = new_construct_c<__node_data_f<_FunTy, _Args...>>(s, std::move(__fun), std::forward<_Args>(__args)...);
 			if(this->numTasks.fetch_add(1, atomic_order::relaxed) == 0)
 			{
 				submit_task_0(__process_auto_submit_0, this);
@@ -812,8 +812,7 @@ namespace pul
 			if(numTasks.load(atomic_order::relaxed) == 0) return false;
 
 			// Have to wait
-			while(numTasks.load(atomic_order::relaxed) != 0)
-				;
+			while(numTasks.load(atomic_order::relaxed) != 0) this_thread::yield();
 			return true;
 		}
 

@@ -228,7 +228,7 @@ namespace pul
 		 const char_t *__str,
 		 size_t __count)
 			: count_(__count + 1)
-			, store_(union_cast<char_t *>(calloc(this->count_ + 1)))
+			, store_(union_cast<char_t *>(salloc(this->count_ + 1)))
 		{
 			memcpy(this->store_, __str, __count);
 			*(this->data() + this->count_) = '\0';
@@ -237,7 +237,7 @@ namespace pul
 		dbg_u8string(
 		 const char_t *__str)
 			: count_(std::strlen(__str))
-			, store_(union_cast<char_t *>(calloc(this->count_ + 1)))
+			, store_(union_cast<char_t *>(salloc(this->count_ + 1)))
 		{
 			memcpy(this->store_, __str, this->count_);
 			*(this->data() + this->count_) = '\0';
@@ -247,7 +247,7 @@ namespace pul
 		 size_t __count,
 		 char_t __val) pf_attr_noexcept
 			: count_(__count)
-			, store_(union_cast<char_t *>(calloc(this->count_ + 1)))
+			, store_(union_cast<char_t *>(salloc(this->count_ + 1)))
 		{
 			memset(this->store_, __val, __count);
 			*(this->data() + this->count_) = '\0';
@@ -270,7 +270,7 @@ namespace pul
 		dbg_u8string(
 		 dbg_u8string_view __v) pf_attr_noexcept
 			: count_(__v.count())
-			, store_(union_cast<char_t *>(calloc(__v.count() + 1)))
+			, store_(union_cast<char_t *>(salloc(__v.count() + 1)))
 		{
 			this->__assign_view(__v);
 		}
@@ -278,7 +278,7 @@ namespace pul
 		/// Destructor
 		pf_decl_constexpr pf_decl_inline ~dbg_u8string() pf_attr_noexcept
 		{
-			if(this->store_) cfree(this->store_);
+			sfree(this->store_);
 		}
 
 		/// Operator =
@@ -294,7 +294,7 @@ namespace pul
 		operator=(
 		 dbg_u8string &&__r)
 		{
-			if(this->store_) cfree(this->store_);
+			sfree(this->store_);
 			this->count_ = __r.count_;
 			__r.count_	 = 0;
 			this->store_ = __r.store_;
@@ -487,9 +487,21 @@ namespace pul
 		return &dbg_category_system_instance;
 	}
 
+	/// DEBUG: Error
+	struct dbg_error_t
+	{
+		dbg_category const *cat;
+		uint32_t code;
+		uint32_t flags;
+		dbg_u8string msg;
+	};
+
+	/// DEBUG: Exception -> Base
+	using dbg_exception_base = std::exception;
+
 	/// DEBUG: Exception
 	class dbg_exception
-		: public std::exception
+		: public dbg_exception_base
 	{
 	public:
 		/// Constructors
@@ -666,7 +678,7 @@ namespace pul
 
 	/// DEBUG: Format -> Functions
 	template<typename... _Args>
-	pf_decl_inline char_t *
+	pf_decl_inline pf_decl_constexpr char_t *
 	dbg_u8format_to(
 	 char_t *__to,
 	 dbg_u8string_format<_Args...> __fmt,
@@ -676,7 +688,7 @@ namespace pul
 		return fmt::format_to(__to, __fmt, std::forward<_Args>(__args)...);
 	}
 	template<typename... _Args>
-	pf_hint_nodiscard pf_decl_inline dbg_u8string
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr dbg_u8string
 	dbg_u8format(	 // Message
 	 dbg_u8string_format<_Args...> __fmt,
 	 _Args &&...__args) pf_attr_noexcept
@@ -913,14 +925,21 @@ namespace pul
 	 *  @note no return (optimized)
 	 *  @note thread safe
 	 */
-	pf_hint_noreturn pf_decl_static pf_decl_inline void
+	pf_decl_static pf_decl_inline pf_decl_constexpr void
 	__dbg_throw(
 	 dbg_category const *__cat,
 	 uint32_t __code,
 	 uint32_t __flags,
 	 dbg_u8string &&__msg)
 	{
-		throw(dbg_exception(__cat, __code, __flags, std::move(__msg)));
+		if(std::is_constant_evaluated())
+		{
+			throw("");
+		}
+		else
+		{
+			throw(dbg_exception(__cat, __code, __flags, std::move(__msg)));
+		}
 	}
 	/*! @brief This function will take a dbg_u8string as an input and prints it
 	 *  on the standard output then the program aborts.

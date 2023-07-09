@@ -91,7 +91,7 @@ namespace pul
 					{
 						__dbg_move_exception_record_to_0();
 					}
-					cdestroy_delete(t);
+					destroy_delete_c(t);
 					t = __buf->queue.try_dequeue();
 					++i;
 				};
@@ -185,7 +185,7 @@ namespace pul
 		if(t)
 		{
 			t->__call();
-			cdestroy_delete(t);
+			destroy_delete_c(t);
 			this->buf_->numTasks.fetch_sub(1, atomic_order::relaxed);
 			return true;
 		}
@@ -200,7 +200,7 @@ namespace pul
 		while(j != i)
 		{
 			t[j]->__call();
-			cdestroy_delete(t[j]);
+			destroy_delete_c(t[j]);
 			++j;
 		}
 		return i;

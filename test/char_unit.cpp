@@ -171,10 +171,9 @@ namespace pul
 			const u8char_t str1[] = "This is a 😀 in a utf-8 encoded string. 😀.";	// len = 48
 			pt_check(utf8::lenof(str1) == 48);
 			pt_check(utf8_to_utf16le::required_count(&str1[0], utf8::lenof(&str1[0])) == 44);
-			u16char_t *str2 = new_construct<u16char_t[]>(utf8_to_utf16le::required_count(&str1[0], utf8::lenof(&str1[0])));
-			auto v1					= utf8_to_utf16le::convert(&str1[0], utf8::lenof(&str1[0]), str2);
-			pt_check(v1.code == char_error_code::success);
-			destroy_delete<u16char_t[]>(str2);
+			u16char_t *str2 = new_construct_s<u16char_t[]>(utf8_to_utf16le::required_count(&str1[0], utf8::lenof(&str1[0])));
+			utf8_to_utf16le::convert(&str1[0], utf8::lenof(&str1[0]), str2);
+			destroy_delete_s<u16char_t[]>(str2);
 		}
 
 		// -> Utf16le -> Utf8
@@ -183,10 +182,9 @@ namespace pul
 			const u16char_t str1[] = u"This is a \xD83D\xDE00 in a utf-16 encoded string. \xD83D\xDE00.";	 // len = 45
 			pt_check(utf16le::lenof(str1) == 45);
 			pt_check(utf16le_to_utf8::required_count(&str1[0], utf16le::lenof(&str1[0])) == 49);
-			u8char_t *str2 = new_construct<u8char_t[]>(utf16le_to_utf8::required_count(&str1[0], utf16le::lenof(&str1[0])));
-			auto v1				 = utf16le_to_utf8::convert(&str1[0], utf16le::lenof(&str1[0]), str2);
-			pt_check(v1.code == char_error_code::success);
-			destroy_delete<u8char_t[]>(str2);
+			u8char_t *str2 = new_construct_s<u8char_t[]>(utf16le_to_utf8::required_count(&str1[0], utf16le::lenof(&str1[0])));
+			utf16le_to_utf8::convert(&str1[0], utf16le::lenof(&str1[0]), str2);
+			destroy_delete_s<u8char_t[]>(str2);
 		}
 	}
 
@@ -254,7 +252,7 @@ namespace pul
 			pt_check(str9(12) == uint32_t('C'));
 
 			// u8string.push_back
-			u8string str10(align_val_t(32), magnifier_linear(1'024), allocator_default());
+			u8string str10(align_val_t(32), magnifier_linear(1'024), allocator_halloc());
 			str10.push_back('a', 10);
 			pt_check(str10.length() == 11);
 			str10.push_back(0x1'F6'00u, 1);
@@ -276,7 +274,7 @@ namespace pul
 
 			// u8string.replace()
 			str10.replace(0, 'L');
-			str10.replace(0, 4, 0x1'F6'03u);
+			str10.replace(0u, 4u, 0x1'F6'03u);
 		}
 	}
 }	 // namespace pul

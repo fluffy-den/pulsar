@@ -29,11 +29,11 @@ namespace pul
 		: public iterator_incrementable_tag_t
 		, public iterator_decrementable_tag_t
 	{};
-	struct iterator_forward_iterator_tag_t
+	struct iterator_forward_tag_t
 		: public iterator_incrementable_tag_t
 	{};
 	struct iterator_random_access_iterator_tag_t
-		: public iterator_forward_iterator_tag_t
+		: public iterator_forward_tag_t
 		, public iterator_decrementable_tag_t
 	{};
 
@@ -172,7 +172,7 @@ namespace pul
 	concept __iterator_forward_c =
 	 (__iterator_base_c<_Iterator> || __iterator_base_const_c<_Iterator>)&&__iterator_incrementable_c<_Iterator>
 	 && std::equality_comparable<_Iterator>
-	 && std::derived_from<typename _Iterator::category, iterator_forward_iterator_tag_t>;
+	 && std::derived_from<typename _Iterator::category, iterator_forward_tag_t>;
 	template<typename _Iterator>
 	struct is_forward_iterator : std::false_type
 	{};
@@ -304,7 +304,8 @@ namespace pul
 
 		/// Operator ++
 		pf_decl_constexpr reverse_iterator<_Iterator>
-		operator++(int32_t) pf_attr_noexcept
+		operator++(
+		 int32_t) pf_attr_noexcept
 		{
 			reverse_iterator<_Iterator> p = this->it_--;
 			return p;
@@ -807,7 +808,7 @@ namespace pul
 		_Iterator it_;
 	};
 
-	/// SEQUENCE: Move Iterator -> Maker
+	/// ITERATOR: Move Iterator -> Maker
 	template<typename _Iterator>
 	pf_hint_nodiscard pf_decl_constexpr pf_decl_inline move_iterator<_Iterator>
 	make_move_iterator(
@@ -816,275 +817,7 @@ namespace pul
 		return move_iterator(__it);
 	}
 
-	/// SEQUENCE: Iterator
-	template<typename _Ty>
-	class iterator
-	{
-		pf_decl_friend iterator<const _Ty>;
-
-	public:
-		using value_t	 = _Ty;
-		using category = iterator_sequence_tag_t;
-
-		/// Constructors
-		pf_decl_inline pf_decl_constexpr
-		iterator(_Ty *__ptr = nullptr) pf_attr_noexcept
-			: ptr_(__ptr)
-		{}
-		pf_decl_inline pf_decl_constexpr
-		iterator(iterator<_Ty> const &__it) pf_attr_noexcept
-			: iterator(__it.ptr_)
-		{}
-
-		/// Destructor
-		pf_decl_inline pf_decl_constexpr ~iterator() pf_attr_noexcept = default;
-
-		/// Get
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t *
-		get() pf_attr_noexcept
-		{
-			return this->ptr_;
-		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
-		get() const pf_attr_noexcept
-		{
-			return this->ptr_;
-		}
-
-		/// Operator =
-		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
-		operator=(
-		 iterator<_Ty> const &__r) pf_attr_noexcept = default;
-
-		/// Operator +=
-		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
-		operator+=(
-		 diff_t __i) pf_attr_noexcept
-		{
-			this->ptr_ += __i;
-			return *this;
-		}
-
-		/// Operator ++
-		pf_decl_inline pf_decl_constexpr iterator<_Ty>
-		operator++(
-		 int32_t) pf_attr_noexcept
-		{
-			iterator<_Ty> it = this->ptr_++;
-			return it;
-		}
-		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
-		operator++() pf_attr_noexcept
-		{
-			++this->ptr_;
-			return *this;
-		}
-
-		/// Operator -=
-		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
-		operator-=(
-		 diff_t __i) pf_attr_noexcept
-		{
-			this->ptr_ -= __i;
-			return *this;
-		}
-
-		/// Operator --
-		pf_decl_inline pf_decl_constexpr iterator<_Ty>
-		operator--(
-		 int32_t) pf_attr_noexcept
-		{
-			iterator<_Ty> it = this->ptr_--;
-			return it;
-		}
-		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
-		operator--() pf_attr_noexcept
-		{
-			--this->ptr_;
-			return *this;
-		}
-
-		/// Operator *
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t &
-		operator*() pf_attr_noexcept
-		{
-			return *this->get();
-		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t &
-		operator*() const pf_attr_noexcept
-		{
-			return *this->get();
-		}
-
-		/// Operator ->
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t *
-		operator->() pf_attr_noexcept
-		{
-			return this->get();
-		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
-		operator->() const pf_attr_noexcept
-		{
-			return this->get();
-		}
-
-		/// Operator (bool)
-		pf_hint_nodiscard pf_decl_inline pf_decl_explicit pf_decl_constexpr
-		operator bool() const pf_attr_noexcept
-		{
-			return this->get() != nullptr;
-		}
-
-		/// Operator (value_t*)
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
-		operator value_t *() pf_attr_noexcept
-		{
-			return this->get();
-		}
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
-		operator const value_t *() const pf_attr_noexcept
-		{
-			return this->get();
-		}
-
-	private:
-		value_t *ptr_;
-	};
-
-	/// SEQUENCE: Iterator Iterator -> CTAD
-	template<typename _Ty>
-	iterator(_Ty *) -> iterator<_Ty>;
-
-
-	/// SEQUENCE: Iterator Const
-	template<typename _Ty>
-	class iterator<const _Ty>
-	{
-	public:
-		using value_t	 = const _Ty;
-		using category = iterator_sequence_tag_t;
-
-		/// Constructors
-		pf_decl_inline pf_decl_constexpr
-		iterator(
-		 const _Ty *__ptr) pf_attr_noexcept
-			: ptr_(__ptr)
-		{}
-		pf_decl_inline pf_decl_constexpr
-		iterator(
-		 iterator<_Ty> __it) pf_attr_noexcept
-			: iterator(__it.ptr_)
-		{}
-		pf_decl_inline pf_decl_constexpr
-		iterator(
-		 iterator<const _Ty> const &__it) pf_attr_noexcept
-			: iterator(__it.ptr_)
-		{}
-
-		/// Destructor
-		pf_decl_inline pf_decl_constexpr ~iterator() pf_attr_noexcept = default;
-
-		/// Get
-		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
-		get() const pf_attr_noexcept
-		{
-			return this->ptr_;
-		}
-
-		/// Operator =
-		pf_decl_constexpr iterator<const _Ty> &
-		operator=(
-		 iterator<const _Ty> const &__r) pf_attr_noexcept = default;
-
-		/// Operator +=
-		pf_decl_constexpr iterator<const _Ty> &
-		operator+=(
-		 diff_t __i) pf_attr_noexcept
-		{
-			this->ptr_ += __i;
-			return *this;
-		}
-
-		/// Operator ++
-		pf_decl_constexpr iterator<const _Ty>
-		operator++(
-		 int32_t) pf_attr_noexcept
-		{
-			iterator<const _Ty> it = this->ptr_++;
-			return it;
-		}
-		pf_decl_constexpr iterator<const _Ty> &
-		operator++() pf_attr_noexcept
-		{
-			++this->ptr_;
-			return *this;
-		}
-
-		/// Operator -=
-		pf_decl_constexpr iterator<const _Ty> &
-		operator-=(
-		 diff_t __i) pf_attr_noexcept
-		{
-			this->ptr_ -= __i;
-			return *this;
-		}
-
-		/// Operator --
-		pf_decl_constexpr iterator<const _Ty>
-		operator--(
-		 int32_t) pf_attr_noexcept
-		{
-			iterator<const _Ty> it = this->ptr_--;
-			return it;
-		}
-		pf_decl_constexpr iterator<const _Ty> &
-		operator--() pf_attr_noexcept
-		{
-			--this->ptr_;
-			return *this;
-		}
-
-		/// Operator *
-		pf_hint_nodiscard pf_decl_constexpr const value_t &
-		operator*() const pf_attr_noexcept
-		{
-			return *this->get();
-		}
-
-		/// Operator ->
-		pf_hint_nodiscard pf_decl_constexpr const value_t *
-		operator->() const pf_attr_noexcept
-		{
-			return this->get();
-		}
-
-		/// Operator (bool)
-		pf_hint_nodiscard pf_decl_explicit pf_decl_constexpr
-		operator bool() const pf_attr_noexcept
-		{
-			return this->get() != nullptr;
-		}
-
-		/// Operator (const value_t *)
-		pf_hint_nodiscard pf_decl_constexpr
-		operator const value_t *() const pf_attr_noexcept
-		{
-			return this->get();
-		}
-
-	private:
-		const value_t *ptr_;
-	};
-
-	/// SEQUENCE: Const Iterator -> Alias
-	template<typename _Ty>
-	using const_iterator = iterator<const _Ty>;
-
-	/// SEQUENCE: Const Iterator -> CTAD
-	template<typename _Ty>
-	iterator(const _Ty *) -> iterator<const _Ty>;
-
-	/// ITERABLE: Concept -> Iterable
+	/// ITERATOR: Concept -> Iterable
 	template<typename _Iterable>	// clang-format off
 	concept __const_iterable_c = 
 	requires(_Iterable const &__cia) 
@@ -1153,7 +886,7 @@ namespace pul
 	template<typename _Iterable>
 	pf_decl_static pf_decl_constexpr bool is_reverse_iterable_v = is_reverse_iterable<_Iterable>::value;
 
-	/// ITERABLE: Concept -> Mappable
+	/// ITERATOR: Concept -> Mappable
 	template<typename _Iterable>	// clang-format off
 	concept __iterable_mappable_c = 
 	 is_iterable_v<_Iterable>
@@ -1171,7 +904,7 @@ namespace pul
 	template<typename _Iterable>
 	pf_decl_static pf_decl_constexpr bool is_mappable_v = is_mappable<_Iterable>::value;
 
-	/// ITERABLE: Concept -> Swappable
+	/// ITERATOR: Concept -> Swappable
 	template<typename _Iterable>
 	concept __iterable_swappable_c =
 	 is_iterable_v<_Iterable>
@@ -1185,7 +918,7 @@ namespace pul
 	template<typename _Iterable>
 	pf_decl_static pf_decl_constexpr bool is_swappable_v = is_swappable<_Iterable>::value;
 
-	/// ITERABLE: Concept -> Insertable
+	/// ITERATOR: Concept -> Insertable
 	template<typename _Iterable>
 	concept __iterable_front_insertable_c =
 	 is_iterable_v<_Iterable>
@@ -1235,7 +968,7 @@ namespace pul
 	 || is_front_insertable_v<_Iterable>
 	 || is_placement_insertable_v<_Iterable>;
 
-	/// ITERABLE: Inserter -> Front
+	/// ITERATOR: Inserter -> Front
 	template<typename _Iterable>
 	class __front_insert_iterator_assigner
 	{
@@ -1282,8 +1015,7 @@ namespace pul
 		front_insert_iterator(
 		 _Iterable *__ia)
 			: ia_(__ia)
-		{
-		}
+		{}
 
 		/// Destructor
 		pf_decl_constexpr ~front_insert_iterator() pf_attr_noexcept = default;
@@ -1382,7 +1114,7 @@ namespace pul
 	}
 
 
-	/// ITERABLE: Inserter -> Back
+	/// ITERATOR: Inserter -> Back
 	template<typename _Iterable>
 	class __back_insert_iterator_assigner
 	{
@@ -1528,7 +1260,7 @@ namespace pul
 		return back_insert_iterator<_Iterable>(&__ct);
 	}
 
-	/// ITERABLE: Inserter
+	/// ITERATOR: Inserter
 	template<typename _Iterable>
 	class __insert_iterator_assigner
 	{
@@ -1696,7 +1428,7 @@ namespace pul
 
 
 
-	/// ITERABLE: Concept -> Replaceable
+	/// ITERATOR: Concept -> Replaceable
 	template<typename _Iterable>
 	concept __iterable_replaceable_front_c =
 	 is_iterable_v<_Iterable>
@@ -1742,7 +1474,7 @@ namespace pul
 	pf_decl_static pf_decl_constexpr bool is_placement_replaceable_v = is_placement_replaceable<_Iterable>::value;
 
 
-	/// ITERABLE: Replacer -> Front
+	/// ITERATOR: Replacer -> Front
 	template<typename _Iterable>
 	class __front_replace_iterator_assigner
 	{
@@ -1889,7 +1621,7 @@ namespace pul
 		return front_replace_iterator<_Iterable>(&__ct);
 	}
 
-	/// ITERABLE: Replacer -> Back
+	/// ITERATOR: Replacer -> Back
 	template<typename _Iterable>
 	class __back_replace_iterator_assigner
 	{
@@ -2035,7 +1767,7 @@ namespace pul
 		return back_replace_iterator<_Iterable>(&__ct);
 	}
 
-	/// ITERABLE: Replacer
+	/// ITERATOR: Replacer
 	template<typename _Iterable>
 	class __replace_iterator_assigner
 	{
@@ -2202,7 +1934,278 @@ namespace pul
 		return replace_iterator<_Iterable>(&__ct, __it);
 	}
 
-	// Tests
+
+	/// ITERATOR: Sequence
+	template<typename _Ty>
+	class iterator
+	{
+		pf_decl_friend iterator<const _Ty>;
+
+	public:
+		using value_t	 = _Ty;
+		using category = iterator_sequence_tag_t;
+
+		/// Constructors
+		pf_decl_inline pf_decl_constexpr
+		iterator(
+		 _Ty *__ptr = nullptr) pf_attr_noexcept
+			: ptr_(__ptr)
+		{}
+		pf_decl_inline pf_decl_constexpr
+		iterator(
+		 iterator<_Ty> const &__it) pf_attr_noexcept
+			: iterator(__it.ptr_)
+		{}
+
+		/// Destructor
+		pf_decl_inline pf_decl_constexpr ~iterator() pf_attr_noexcept = default;
+
+		/// Get
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t *
+		get() pf_attr_noexcept
+		{
+			return this->ptr_;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
+		get() const pf_attr_noexcept
+		{
+			return this->ptr_;
+		}
+
+		/// Operator =
+		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
+		operator=(
+		 iterator<_Ty> const &__r) pf_attr_noexcept = default;
+
+		/// Operator +=
+		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
+		operator+=(
+		 diff_t __i) pf_attr_noexcept
+		{
+			this->ptr_ += __i;
+			return *this;
+		}
+
+		/// Operator ++
+		pf_decl_inline pf_decl_constexpr iterator<_Ty>
+		operator++(
+		 int32_t) pf_attr_noexcept
+		{
+			iterator<_Ty> it = this->ptr_++;
+			return it;
+		}
+		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
+		operator++() pf_attr_noexcept
+		{
+			++this->ptr_;
+			return *this;
+		}
+
+		/// Operator -=
+		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
+		operator-=(
+		 diff_t __i) pf_attr_noexcept
+		{
+			this->ptr_ -= __i;
+			return *this;
+		}
+
+		/// Operator --
+		pf_decl_inline pf_decl_constexpr iterator<_Ty>
+		operator--(
+		 int32_t) pf_attr_noexcept
+		{
+			iterator<_Ty> it = this->ptr_--;
+			return it;
+		}
+		pf_decl_inline pf_decl_constexpr iterator<_Ty> &
+		operator--() pf_attr_noexcept
+		{
+			--this->ptr_;
+			return *this;
+		}
+
+		/// Operator *
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t &
+		operator*() pf_attr_noexcept
+		{
+			return *this->get();
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t &
+		operator*() const pf_attr_noexcept
+		{
+			return *this->get();
+		}
+
+		/// Operator ->
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t *
+		operator->() pf_attr_noexcept
+		{
+			return this->get();
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
+		operator->() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator (bool)
+		pf_hint_nodiscard pf_decl_inline pf_decl_explicit pf_decl_constexpr
+		operator bool() const pf_attr_noexcept
+		{
+			return this->get() != nullptr;
+		}
+
+		/// Operator (value_t*)
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator value_t *() pf_attr_noexcept
+		{
+			return this->get();
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator const value_t *() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+	private:
+		value_t *ptr_;
+	};
+
+	/// ITERATOR: Iterator -> CTAD
+	template<typename _Ty>
+	iterator(_Ty *) -> iterator<_Ty>;
+
+
+	/// ITERATOR: Iterator -> Const
+	template<typename _Ty>
+	class iterator<const _Ty>
+	{
+	public:
+		using value_t	 = const _Ty;
+		using category = iterator_sequence_tag_t;
+
+		/// Constructors
+		pf_decl_inline pf_decl_constexpr
+		iterator(
+		 const _Ty *__ptr) pf_attr_noexcept
+			: ptr_(__ptr)
+		{}
+		pf_decl_inline pf_decl_constexpr
+		iterator(
+		 iterator<_Ty> __it) pf_attr_noexcept
+			: iterator(__it.ptr_)
+		{}
+		pf_decl_inline pf_decl_constexpr
+		iterator(
+		 iterator<const _Ty> const &__it) pf_attr_noexcept
+			: iterator(__it.ptr_)
+		{}
+
+		/// Destructor
+		pf_decl_inline pf_decl_constexpr ~iterator() pf_attr_noexcept = default;
+
+		/// Get
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
+		get() const pf_attr_noexcept
+		{
+			return this->ptr_;
+		}
+
+		/// Operator =
+		pf_decl_inline pf_decl_constexpr iterator<const _Ty> &
+		operator=(
+		 iterator<const _Ty> const &__other) pf_attr_noexcept = default;
+
+		/// Operator +=
+		pf_decl_inline pf_decl_constexpr iterator<const _Ty> &
+		operator+=(
+		 diff_t __i) pf_attr_noexcept
+		{
+			this->ptr_ += __i;
+			return *this;
+		}
+
+		/// Operator ++
+		pf_decl_inline pf_decl_constexpr iterator<const _Ty>
+		operator++(
+		 int32_t) pf_attr_noexcept
+		{
+			iterator<const _Ty> it = this->ptr_++;
+			return it;
+		}
+		pf_decl_inline pf_decl_constexpr iterator<const _Ty> &
+		operator++() pf_attr_noexcept
+		{
+			++this->ptr_;
+			return *this;
+		}
+
+		/// Operator -=
+		pf_decl_inline pf_decl_constexpr iterator<const _Ty> &
+		operator-=(
+		 diff_t __i) pf_attr_noexcept
+		{
+			this->ptr_ -= __i;
+			return *this;
+		}
+
+		/// Operator --
+		pf_decl_inline pf_decl_constexpr iterator<const _Ty>
+		operator--(
+		 int32_t) pf_attr_noexcept
+		{
+			iterator<const _Ty> it = this->ptr_--;
+			return it;
+		}
+		pf_decl_inline pf_decl_constexpr iterator<const _Ty> &
+		operator--() pf_attr_noexcept
+		{
+			--this->ptr_;
+			return *this;
+		}
+
+		/// Operator *
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t &
+		operator*() const pf_attr_noexcept
+		{
+			return *this->get();
+		}
+
+		/// Operator ->
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
+		operator->() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator (bool)
+		pf_hint_nodiscard pf_decl_explicit pf_decl_inline pf_decl_constexpr
+		operator bool() const pf_attr_noexcept
+		{
+			return this->get() != nullptr;
+		}
+
+		/// Operator (const value_t *)
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator const value_t *() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+	private:
+		const value_t *ptr_;
+	};
+
+	/// ITERATOR: Const Iterator -> Alias
+	template<typename _Ty>
+	using const_iterator = iterator<const _Ty>;
+
+	/// ITERATOR: Const Iterator -> CTAD
+	template<typename _Ty>
+	iterator(const _Ty *) -> iterator<const _Ty>;
+
+	/// ITERATOR: Sequence Iterator -> Static Tests
 	pf_assert_static(is_sequence_iterator_v<iterator<int32_t>>);
 	pf_assert_static(is_iterator_v<iterator<int32_t>>);
 	pf_assert_static(is_sequence_iterator_v<iterator<const int32_t>>);
@@ -2210,6 +2213,690 @@ namespace pul
 	pf_assert_static(is_sequence_iterator_v<reverse_iterator<iterator<const int32_t>>>);
 	pf_assert_static(is_sequence_iterator_v<move_iterator<iterator<int32_t>>>);
 	pf_assert_static(is_sequence_iterator_v<move_iterator<iterator<const int32_t>>>);
+
+	/// ITERATOR: Singly
+	template<typename _Ty>
+	struct singly_node
+	{
+		singly_node<_Ty> *next;
+		_Ty store;
+	};
+
+	/// ITERABLE: Singly -> Iterator
+	template<typename _Ty>
+	class singly_iterator
+	{
+		pf_decl_friend singly_iterator<const _Ty>;
+
+	public:
+		using value_t	 = _Ty;
+		using category = iterator_forward_tag_t;
+
+		/// Constructors
+		pf_decl_inline pf_decl_constexpr
+		singly_iterator(
+		 singly_node<_Ty> *__node = nullptr) pf_attr_noexcept
+			: node_(__node)
+		{}
+		pf_decl_inline pf_decl_constexpr
+		singly_iterator(
+		 singly_iterator<_Ty> const &__it) pf_attr_noexcept
+			: singly_iterator(__it.node_)
+		{}
+
+		/// Destructor
+		pf_decl_inline pf_decl_constexpr ~singly_iterator() pf_attr_noexcept = default;
+
+		/// Get
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t *
+		get() pf_attr_noexcept
+		{
+			return &this->node_->store;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
+		get() const pf_attr_noexcept
+		{
+			return &this->node_->store;
+		}
+
+		/// Node
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr singly_node<_Ty> *
+		node() pf_attr_noexcept
+		{
+			return this->node_;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const singly_node<_Ty> *
+		node() const pf_attr_noexcept
+		{
+			return this->node_;
+		}
+
+		/// Operator =
+		pf_decl_inline pf_decl_constexpr singly_iterator<_Ty> &
+		operator=(
+		 singly_iterator<_Ty> const &__r) pf_attr_noexcept = default;
+
+		/// Operator +=
+		pf_decl_inline pf_decl_constexpr singly_iterator<_Ty> &
+		operator+=(
+		 size_t __i) pf_attr_noexcept
+		{
+			while(__i > 0)
+			{
+				this->node_ = this->node_->next;
+				--__i;
+			}
+			return *this;
+		}
+
+		/// Operator ++
+		pf_decl_inline pf_decl_constexpr singly_iterator<_Ty>
+		operator++(
+		 int32_t) pf_attr_noexcept
+		{
+			singly_iterator<_Ty> it = this->node_->next;
+			return it;
+		}
+		pf_decl_inline pf_decl_constexpr singly_iterator<_Ty> &
+		operator++() pf_attr_noexcept
+		{
+			this->node_ = this->node_->next;
+			return *this;
+		}
+
+		/// Operator *
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t &
+		operator*() pf_attr_noexcept
+		{
+			return this->node_->store;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t &
+		operator*() const pf_attr_noexcept
+		{
+			return this->node_->store;
+		}
+
+		/// Operator ->
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t *
+		operator->() pf_attr_noexcept
+		{
+			return this->get();
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
+		operator->() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator <=>
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto
+		operator<=>(
+		 singly_iterator<_Ty> const &__other) const pf_attr_noexcept
+		{
+			return this->node_ <=> __other.node_;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto
+		operator<=>(
+		 singly_iterator<const _Ty> const &__other) const pf_attr_noexcept
+		{
+			return this->node_ <=> __other.node_;
+		}
+
+		/// Operator (bool)
+		pf_hint_nodiscard pf_decl_inline pf_decl_explicit pf_decl_constexpr
+		operator bool() const pf_attr_noexcept
+		{
+			return this->get() != nullptr;
+		}
+
+		/// Operator (value_t *)
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator value_t *() pf_attr_noexcept
+		{
+			return this->get();
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator const value_t *() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator (singly_node<_Ty> *)
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator singly_node<_Ty> *() pf_attr_noexcept
+		{
+			return this->node_;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator const singly_node<_Ty> *() const pf_attr_noexcept
+		{
+			return this->node_;
+		}
+
+	private:
+		/// Data
+		singly_node<_Ty> *node_;
+	};
+
+	/// ITERABLE: Singly -> Iterator -> CTAD
+	template<typename _Ty>
+	singly_iterator(_Ty *) -> singly_iterator<_Ty>;
+
+	/// ITERABLE: Singly -> Iterator -> Const
+	template<typename _Ty>
+	class singly_iterator<const _Ty>
+	{
+	public:
+		using value_t	 = const _Ty;
+		using category = iterator_forward_tag_t;
+
+		/// Constructors
+		pf_decl_inline pf_decl_constexpr
+		singly_iterator(
+		 const singly_node<_Ty> *__node) pf_attr_noexcept
+			: node_(__node)
+		{}
+		pf_decl_inline pf_decl_constexpr
+		singly_iterator(
+		 singly_iterator<_Ty> __it) pf_attr_noexcept
+			: singly_iterator(__it.node_)
+		{}
+		pf_decl_inline pf_decl_constexpr
+		singly_iterator(
+		 singly_iterator<const _Ty> const &__it) pf_attr_noexcept
+			: singly_iterator(__it.ptr_)
+		{}
+
+		/// Destructor
+		pf_decl_inline pf_decl_constexpr ~singly_iterator() pf_attr_noexcept = default;
+
+		/// Get
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
+		get() const pf_attr_noexcept
+		{
+			return &this->node_->store;
+		}
+
+		/// Node
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const singly_node<_Ty> *
+		node() const pf_attr_noexcept
+		{
+			return this->node_;
+		}
+
+		/// Operator =
+		pf_decl_inline pf_decl_constexpr singly_iterator<const _Ty> &
+		operator=(
+		 singly_iterator<const _Ty> const &__other) pf_attr_noexcept = default;
+
+		/// Operator +=
+		pf_decl_inline pf_decl_constexpr singly_iterator<const _Ty> &
+		operator+=(
+		 size_t __i) pf_attr_noexcept
+		{
+			while(__i > 0)
+			{
+				this->node_ = this->node_->next;
+				--__i;
+			}
+			return *this;
+		}
+
+		/// Operator ++
+		pf_decl_inline pf_decl_constexpr singly_iterator<const _Ty>
+		operator++(
+		 int32_t) pf_attr_noexcept
+		{
+			singly_iterator<const _Ty> it = this->node_->next;
+			return it;
+		}
+		pf_decl_inline pf_decl_constexpr singly_iterator<const _Ty> &
+		operator++() pf_attr_noexcept
+		{
+			this->node_ = this->node_->next;
+			return *this;
+		}
+
+		/// Operator *
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t &
+		operator*() const pf_attr_noexcept
+		{
+			return *this->get();
+		}
+
+		/// Operator ->
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
+		operator->() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator (bool)
+		pf_hint_nodiscard pf_decl_inline pf_decl_explicit pf_decl_constexpr
+		operator bool() const pf_attr_noexcept
+		{
+			return this->get() != nullptr;
+		}
+
+		/// Operator (value_t *)
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator const value_t *() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator (singly_node<_Ty> *)
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator const singly_node<_Ty> *() const pf_attr_noexcept
+		{
+			return this->node_;
+		}
+
+	private:
+		/// Data
+		const singly_node<_Ty> *node_;
+	};
+
+	/// ITERABLE: Singly -> CTAD
+	template<typename _Ty>
+	singly_iterator(const _Ty *) -> singly_iterator<const _Ty>;
+
+	/// ITERABLE: Singly -> Alis
+	template<typename _Ty>
+	using singly_const_iterator = singly_iterator<const _Ty>;
+
+	/// ITERABLE: Singly -> Functions
+	template<typename _Ty>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
+	singly_count(
+	 const singly_node<_Ty> *__node) pf_attr_noexcept
+	{
+		size_t n = 0;
+		while(__node)
+		{
+			++n;
+			__node = __node->next;
+		}
+		return n;
+	}
+
+
+	/// ITERATOR: Doubly -> Node
+	template<typename _Ty>
+	struct doubly_node
+	{
+		doubly_node<_Ty> *next;
+		doubly_node<_Ty> *prev;
+		_Ty store;
+	};
+
+	/// ITERABLE: Doubly -> Iterator
+	template<typename _Ty>
+	class doubly_iterator
+	{
+		pf_decl_friend doubly_iterator<const _Ty>;
+
+	public:
+		using value_t	 = _Ty;
+		using category = iterator_random_access_iterator_tag_t;
+
+		/// Constructors
+		pf_decl_inline pf_decl_constexpr
+		doubly_iterator(
+		 doubly_node<_Ty> *__node = nullptr) pf_attr_noexcept
+			: node_(__node)
+		{}
+		pf_decl_inline pf_decl_constexpr
+		doubly_iterator(
+		 doubly_iterator<_Ty> const &__it) pf_attr_noexcept
+			: doubly_iterator(__it.node_)
+		{}
+
+		/// Destructor
+		pf_decl_inline pf_decl_constexpr ~doubly_iterator() pf_attr_noexcept = default;
+
+		/// Get
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t *
+		get() pf_attr_noexcept
+		{
+			return &this->node_->store;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
+		get() const pf_attr_noexcept
+		{
+			return &this->node_->store;
+		}
+
+		/// Node
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr doubly_node<_Ty> *
+		node() pf_attr_noexcept
+		{
+			return this->node_;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const doubly_node<_Ty> *
+		node() const pf_attr_noexcept
+		{
+			return this->node_;
+		}
+
+		/// Operator =
+		pf_decl_inline pf_decl_constexpr doubly_iterator<_Ty> &
+		operator=(
+		 doubly_iterator<_Ty> const &__r) pf_attr_noexcept = default;
+
+		/// Operator +=
+		pf_decl_inline pf_decl_constexpr doubly_iterator<_Ty> &
+		operator+=(
+		 diff_t __i) pf_attr_noexcept
+		{
+			if(__i < 0)
+			{
+				do
+				{
+					this->node_ = this->node_->prev;
+					++__i;
+				} while(__i < 0);
+			}
+			else if(__i > 0)
+			{
+				do
+				{
+					this->node_ = this->node_->next;
+					--__i;
+				} while(__i > 0);
+			}
+			return *this;
+		}
+
+		/// Operator ++
+		pf_decl_inline pf_decl_constexpr doubly_iterator<_Ty>
+		operator++(
+		 int32_t) pf_attr_noexcept
+		{
+			doubly_iterator<_Ty> it = this->node_->next;
+			return it;
+		}
+		pf_decl_inline pf_decl_constexpr doubly_iterator<_Ty> &
+		operator++() pf_attr_noexcept
+		{
+			this->node_ = this->node_->next;
+			return *this;
+		}
+
+		/// Operator -=
+		pf_decl_inline pf_decl_constexpr doubly_iterator<_Ty> &
+		operator-=(
+		 diff_t __i)
+		{
+			return (*this += -__i);
+		}
+
+		/// Operator --
+		pf_decl_inline pf_decl_constexpr doubly_iterator<_Ty>
+		operator--(
+		 int32_t) pf_attr_noexcept
+		{
+			doubly_iterator<_Ty> it = this->node_->prev;
+			return it;
+		}
+		pf_decl_inline pf_decl_constexpr doubly_iterator<_Ty> &
+		operator--() pf_attr_noexcept
+		{
+			this->node_ = this->node_->prev;
+			return *this;
+		}
+
+		/// Operator *
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t &
+		operator*() pf_attr_noexcept
+		{
+			return this->node_->store;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t &
+		operator*() const pf_attr_noexcept
+		{
+			return this->node_->store;
+		}
+
+		/// Operator ->
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr value_t *
+		operator->() pf_attr_noexcept
+		{
+			return this->get();
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
+		operator->() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator <=>
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto
+		operator<=>(
+		 doubly_iterator<_Ty> const &__other) const pf_attr_noexcept
+		{
+			return this->node_ <=> __other.node_;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto
+		operator<=>(
+		 doubly_iterator<const _Ty> const &__other) const pf_attr_noexcept
+		{
+			return this->node_ <=> __other.node_;
+		}
+
+		/// Operator (bool)
+		pf_hint_nodiscard pf_decl_inline pf_decl_explicit pf_decl_constexpr
+		operator bool() const pf_attr_noexcept
+		{
+			return this->get() != nullptr;
+		}
+
+		/// Operator (value_t *)
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator value_t *() pf_attr_noexcept
+		{
+			return this->get();
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator const value_t *() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator (doubly_node<_Ty> *)
+		pf_hint_nodiscard pf_decl_inline pf_decl_explicit pf_decl_constexpr
+		operator doubly_node<_Ty> *() pf_attr_noexcept
+		{
+			return this->node_;
+		}
+		pf_hint_nodiscard pf_decl_inline pf_decl_explicit pf_decl_constexpr
+		operator const doubly_node<_Ty> *() const pf_attr_noexcept
+		{
+			return this->node_;
+		}
+
+	private:
+		/// Data
+		doubly_node<_Ty> *node_;
+	};
+
+	/// ITERABLE: Doubly -> Iterator -> CTAD
+	template<typename _Ty>
+	doubly_iterator(_Ty *) -> doubly_iterator<_Ty>;
+
+	/// ITERABLE: Doubly -> Iterator -> Const
+	template<typename _Ty>
+	class doubly_iterator<const _Ty>
+	{
+	public:
+		using value_t	 = const _Ty;
+		using category = iterator_random_access_iterator_tag_t;
+
+		/// Constructors
+		pf_decl_inline pf_decl_constexpr
+		doubly_iterator(
+		 doubly_node<_Ty> &__node = nullptr) pf_attr_noexcept
+			: node_(__node)
+		{}
+		pf_decl_inline pf_decl_constexpr
+		doubly_iterator(
+		 doubly_iterator<_Ty> const &__it) pf_attr_noexcept
+			: doubly_iterator(__it.node_)
+		{}
+
+		/// Destructor
+		pf_decl_inline pf_decl_constexpr ~doubly_iterator() pf_attr_noexcept = default;
+
+
+		/// Get
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
+		get() const pf_attr_noexcept
+		{
+			return &this->node_->store;
+		}
+
+		/// Node
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const doubly_node<_Ty> *
+		node() const pf_attr_noexcept
+		{
+			return this->node_;
+		}
+
+		/// Operator =
+		pf_decl_inline pf_decl_constexpr doubly_iterator<_Ty> &
+		operator=(
+		 doubly_iterator<_Ty> const &__other) pf_attr_noexcept
+		{
+			this->node_ = __other.node_;
+			return *this;
+		}
+
+		/// Operator +=
+		pf_decl_inline pf_decl_constexpr doubly_iterator<const _Ty> &
+		operator+=(
+		 size_t __i) pf_attr_noexcept
+		{
+			if(__i < 0)
+			{
+				do
+				{
+					this->node_ = this->node_->prev;
+					++__i;
+				} while(__i < 0);
+			}
+			else if(__i > 0)
+			{
+				do
+				{
+					this->node_ = this->node_->next;
+					--__i;
+				} while(__i > 0);
+			}
+			return *this;
+		}
+
+		/// Operator ++
+		pf_decl_inline pf_decl_constexpr doubly_iterator<const _Ty>
+		operator++(
+		 int32_t) pf_attr_noexcept
+		{
+			doubly_iterator<const _Ty> it = this->node_->next;
+			return it;
+		}
+		pf_decl_inline pf_decl_constexpr doubly_iterator<const _Ty> &
+		operator++() pf_attr_noexcept
+		{
+			this->node_ = this->node_->next;
+			return *this;
+		}
+
+		/// Operator -=
+		pf_decl_inline pf_decl_constexpr doubly_iterator<const _Ty> &
+		operator-=(
+		 size_t __i) pf_attr_noexcept
+		{
+			return (*this += -__i);
+		}
+
+		/// Operator --
+		pf_decl_inline pf_decl_constexpr doubly_iterator<const _Ty>
+		operator--(
+		 int32_t) pf_attr_noexcept
+		{
+			doubly_iterator<const _Ty> it = this->node_->prev;
+			return it;
+		}
+		pf_decl_inline pf_decl_constexpr doubly_iterator<const _Ty> &
+		operator--() pf_attr_noexcept
+		{
+			this->node_ = this->node_->prev;
+			return *this;
+		}
+
+		/// Operator *
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t &
+		operator*() const pf_attr_noexcept
+		{
+			return *this->get();
+		}
+
+		/// Operator ->
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr const value_t *
+		operator->() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator (bool)
+		pf_hint_nodiscard pf_decl_inline pf_decl_explicit pf_decl_constexpr
+		operator bool() const pf_attr_noexcept
+		{
+			return this->get() != nullptr;
+		}
+
+		/// Operator (value_t *)
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator const value_t *() const pf_attr_noexcept
+		{
+			return this->get();
+		}
+
+		/// Operator (doubly_node<_Ty> *)
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr
+		operator const doubly_node<_Ty> *() const pf_attr_noexcept
+		{
+			return this->node_;
+		}
+
+	private:
+		/// Data
+		const doubly_node<_Ty> *node_;
+	};
+
+	/// ITERABLE: Doubly -> CTAD
+	template<typename _Ty>
+	doubly_iterator(const _Ty *) -> doubly_iterator<const _Ty>;
+
+	/// ITERABLE: Doubly -> Alias
+	template<typename _Ty>
+	using doubly_const_iterator = doubly_iterator<const _Ty>;
+
+	/// ITERABLE: Doubly -> Functions
+	template<typename _Ty>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
+	doubly_count(
+	 const doubly_node<_Ty> *__node) pf_attr_noexcept
+	{
+		size_t n = 0;
+		while(__node)
+		{
+			++n;
+			__node = __node->next;
+		}
+		return n;
+	}
+
+
 }	 // namespace pul
 
 #endif	// !PULSAR_ITERATOR_HPP

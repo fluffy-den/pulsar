@@ -16,6 +16,9 @@
 // Include: Pulsar -> Tester
 #include "pulsar_tester/pulsar_tester.hpp"
 
+// Include: Pulsar -> Src
+#include "pulsar/internal_allocator.hpp"
+
 // Pulsar
 namespace pul
 {

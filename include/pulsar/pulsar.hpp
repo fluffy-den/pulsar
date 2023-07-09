@@ -33,6 +33,7 @@
  #define WIN32_LEAN_AND_MEAN 1
  #define VC_EXTRALEAN				 1
  #define NOMINMAX						 1
+ #define _WIN32_WINNT				 0x0A'00
 
  // Call
  #define pf_oscall __stdcall
@@ -168,8 +169,8 @@ namespace pul
 #define pf_decl_safebuffers		__declspec(safebuffers)
 #define pf_decl_noinline			__declspec(noinline)
 #define pf_decl_novtable			__declspec(novtable)
-#define pf_decl_export				__declspec(dllexport)
-#define pf_decl_import				__declspec(dllimport)
+#define pf_decl_export				__declspec(dllexport) __attribute__((visibility("default")))
+#define pf_decl_import				__declspec(dllimport) __attribute__((visibility("default")))
 #define pf_decl_constexpr			constexpr
 #define pf_decl_consteval			consteval
 #define pf_decl_constinit			constinit

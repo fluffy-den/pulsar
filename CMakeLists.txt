@@ -37,7 +37,7 @@ set(PULSAR_VERSION_STRING_SHORT "${PULSAR_VERSION_MAJOR}.${PULSAR_VERSION_MINOR}
 set(PULSAR_VERSION_STRING "${PULSAR_VERSION_STRING_SHORT}-${PULSAR_VERSION_BRANCH}-${PULSAR_VERSION_SHA_1}")
 project(
   "pulsar"
-  LANGUAGES CXX
+  LANGUAGES CXX C
   VERSION ${PULSAR_VERSION_STRING_SHORT}
 )
 configure_file(
@@ -94,7 +94,7 @@ else()
     -Wall -Wextra -Wshadow -Wformat=2 -Wunused -Wsign-compare -Wwrite-strings -Wpointer-arith -Winit-self -Wconversion
     -Wno-sign-conversion -pedantic -Wno-unknown-pragmas # Warnings
     -msse -msse2 -mssse3 -msse3 -mfma -msse4 -msse4.1 -msse4.2 -mavx -mavx2 # Auto-Vectorisation
-    -pthread)
+    -pthread -g)
 endif()
 
 # Release
@@ -168,7 +168,7 @@ target_include_directories(
   PRIVATE src
 )
 target_link_libraries(
-  ${PULSAR_LIBRARY_NAME} PRIVATE imagehlp dbghelp
+  ${PULSAR_LIBRARY_NAME} PRIVATE imagehlp dbghelp kernel32
 )
 
 #
@@ -183,7 +183,7 @@ if(CMAKE_BUILD_TYPE STREQUAL Debug)
 endif()
 
 CPMAddPackage(
-  NAME mimalloc
+  NAME MIMALLOC
   GIT_TAG v2.1.2
   GITHUB_REPOSITORY microsoft/mimalloc
   OPTION MI_OVERRIDE=ON)
@@ -196,13 +196,35 @@ target_link_libraries(
 # CPM -> FMT
 #
 CPMAddPackage(
-  NAME fmt
+  NAME FMT
   GIT_TAG 9.1.0
   GITHUB_REPOSITORY fmtlib/fmt
 )
 target_link_libraries(
   ${PULSAR_LIBRARY_NAME} PUBLIC fmt::fmt
 )
+
+#
+# CPM -> Lz4
+#
+CPMAddPackage(
+  NAME LZ4
+  GIT_TAG v1.9.4
+  GITHUB_REPOSITORY lz4/lz4)
+
+if(LZ4_ADDED)
+  set(LZ4_SOURCES ${LZ4_SOURCE_DIR}/lib/lz4.c ${LZ4_SOURCE_DIR}/lib/lz4hc.c)
+  set(LZ4_HEADERS ${LZ4_SOURCE_DIR}/lib/lz4.h ${LZ4_SOURCE_DIR}/lib/lz4hc.h)
+  set(LZ4_LIBRARY_NAME lz4-static)
+  add_library(${LZ4_LIBRARY_NAME} STATIC ${LZ4_HEADERS} ${LZ4_SOURCES})
+  target_compile_definitions(${LZ4_LIBRARY_NAME} PRIVATE LZ4_BUILD_EXPORT)
+  target_include_directories(
+    ${LZ4_LIBRARY_NAME}
+    PUBLIC $<BUILD_INTERFACE:${LZ4_SOURCE_DIR}/lib>
+    $<INSTALL_INTERFACE:include/${LZ4_SOURCE_DIR}>
+  )
+  target_link_libraries(${PULSAR_LIBRARY_NAME} PRIVATE ${LZ4_LIBRARY_NAME})
+endif()
 
 #
 # Testing

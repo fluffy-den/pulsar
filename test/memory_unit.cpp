@@ -43,15 +43,15 @@ namespace pul
 			array<int32_t, 2> arr5 = { -2, -1 };
 			unique_ptr p5					 = make_unique<int32_t[]>(arr5.begin(), arr5.end());
 			pt_check(p5.count() == 2);
-			pt_check(p5[0] == -2);
-			pt_check(p5[1] == -1);
+			pt_check(p5[0u] == -2);
+			pt_check(p5[1u] == -1);
 
 			// array => make_unique (initializer_list)
 			unique_ptr p6 = make_unique<int32_t[]>({ 1, 2, 3, 4 });
-			pt_check(p6[0] == 1);
-			pt_check(p6[1] == 2);
-			pt_check(p6[2] == 3);
-			pt_check(p6[3] == 4);
+			pt_check(p6[0u] == 1);
+			pt_check(p6[1u] == 2);
+			pt_check(p6[2u] == 3);
+			pt_check(p6[3u] == 4);
 
 			// array => make_unique_aligned (count)
 			unique_ptr p7 = make_unique_aligned<int32_t[]>(5, align_val_t(16));
@@ -62,8 +62,8 @@ namespace pul
 			unique_ptr p8					 = make_unique_aligned<int32_t[]>(arr8.begin(), arr8.end(), align_val_t(16));
 			pt_check(is_aligned(p8, align_val_t(16)));
 			pt_check(p8.count() == 2);
-			pt_check(p8[0] == 6);
-			pt_check(p8[1] == 7);
+			pt_check(p8[0u] == 6);
+			pt_check(p8[1u] == 7);
 
 			// array => make_unique_aligned (initializer_list)
 			unique_ptr p9 = make_unique_aligned<int32_t[]>({ 1, 2, 3 }, align_val_t(16));
@@ -96,15 +96,15 @@ namespace pul
 			array<int32_t, 2> arr5 = { -2, -1 };
 			shared_ptr p5					 = make_shared<int32_t[]>(arr5.begin(), arr5.end());
 			pt_check(p5.count() == 2);
-			pt_check(p5[0] == -2);
-			pt_check(p5[1] == -1);
+			pt_check(p5[0u] == -2);
+			pt_check(p5[1u] == -1);
 
 			// array => make_shared (initializer_list)
 			shared_ptr p6 = make_shared<int32_t[]>({ 1, 2, 3, 4 });
-			pt_check(p6[0] == 1);
-			pt_check(p6[1] == 2);
-			pt_check(p6[2] == 3);
-			pt_check(p6[3] == 4);
+			pt_check(p6[0u] == 1);
+			pt_check(p6[1u] == 2);
+			pt_check(p6[2u] == 3);
+			pt_check(p6[3u] == 4);
 
 			// array => make_shared_aligned (count)
 			shared_ptr p7 = make_shared_aligned<int32_t[]>(5, align_val_t(16));
@@ -115,8 +115,8 @@ namespace pul
 			shared_ptr p8					 = make_shared_aligned<int32_t[]>(arr8.begin(), arr8.end(), align_val_t(16));
 			pt_check(is_aligned(p8, align_val_t(16)));
 			pt_check(p8.count() == 2);
-			pt_check(p8[0] == 6);
-			pt_check(p8[1] == 7);
+			pt_check(p8[0u] == 6);
+			pt_check(p8[1u] == 7);
 
 			// array => make_shared_aligned (initializer_list)
 			shared_ptr p9 = make_shared_aligned<int32_t[]>({ 1, 2, 3 }, align_val_t(16));

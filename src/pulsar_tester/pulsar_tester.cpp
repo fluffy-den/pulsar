@@ -19,8 +19,9 @@ namespace pul
 
 	/// TESTER: Unit
 	// Constructors
-	pulsar_api __tester_unit::__tester_unit(
-		dbg_u8string_view __name) pf_attr_noexcept
+	pulsar_api
+	__tester_unit::__tester_unit(
+	 dbg_u8string_view __name) pf_attr_noexcept
 		: name_(__name)
 		, next_(nullptr)
 	{
@@ -30,8 +31,9 @@ namespace pul
 
 	/// TESTER: Unit -> Pack
 	// Constructors
-	pulsar_api __tester_pack::__tester_pack(
-		dbg_u8string_view __name) pf_attr_noexcept
+	pulsar_api
+	__tester_pack::__tester_pack(
+	 dbg_u8string_view __name) pf_attr_noexcept
 		: name_(__name)
 		, next_(nullptr)
 		, unitHead_(nullptr)
@@ -47,81 +49,85 @@ namespace pul
 	__tester_pack::__run() pf_attr_noexcept
 	{
 		// 1. Print Pack
-		if (this->name_.size() != 0)
+		if(this->name_.size() != 0)
 		{
 			pf_print(
-				dbg_type::info, dbg_level::high,
-				"Tester -> Pack <{}>",
-				dbg_styled(this->name_.data(),
-									 dbg_style_fg(dbg_color::steel_blue)));
+			 dbg_type::info, dbg_level::high, "Tester -> Pack <{}>", dbg_styled(this->name_.data(), dbg_style_fg(dbg_color::steel_blue)));
 		}
 		// 2. Run Units
 		__tester_unit *u = this->unitHead_;
-		if (!u && this->name_.size() != 0)
+		if(!u && this->name_.size() != 0)
 		{
 			pf_print("- No unit to run!\n");
 		}
 		else
 		{
-			while (u)
+			while(u)
 			{
 				try
 				{
 					u->__run();
 					u = u->next_;
-				}
-				catch (__tester_exception_require const &__r)	// Require stops the program!
+				} catch(__tester_exception_require const &__r)	// Require stops the program!
 				{
 					u = u->next_;
 				}
 			}
 		}
 		// 3. Benchmarks
-		if (this->benchHead_)
+		if(this->benchHead_)
 		{
 			// Initialisation
 			__tester_benchmark *p = this->benchHead_;
 
 			// Format
 			pf_print(
-				"- Launching benchmark(s)\n"
-				"{: <32} {: <12} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
-				"benchmark", "threads", "num", "min", "max", "avg", "var", "dev", "Q1", "Q2", "Q3", "total");
+			 "- Launching benchmark(s)\n"
+			 "{: <32} {: <12} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
+			 "benchmark",
+			 "threads",
+			 "num",
+			 "min",
+			 "max",
+			 "avg",
+			 "var",
+			 "dev",
+			 "Q1",
+			 "Q2",
+			 "Q3",
+			 "total");
 
 			// Print Results
 			p = this->benchHead_;
-			while (p)
+			while(p)
 			{
 				try
 				{
 					p->process(*p);
 					p = p->next_;
-				}
-				catch (__tester_exception_require const &__r)	// Require stops the program!
+				} catch(__tester_exception_require const &__r)	// Require stops the program!
 				{
 					p = p->next_;
 				}
 			}
 		}
 		// 4. Results
-		if (this->numFailed_ > 0)
+		if(this->numFailed_ > 0)
 		{
 			pf_print(
-				"- {} | {}\n",
-				dbg_styled(dbg_u8format("({}) Succeeded", this->numTests_ - this->numFailed_).data(),
-									 dbg_style_fg(dbg_color::green)),
-				dbg_styled(dbg_u8format("({}) Failed", this->numFailed_).data(),
-									 dbg_style_fg(dbg_color::red)));
+			 "- {} | {}\n",
+			 dbg_styled(dbg_u8format("({}) Succeeded", this->numTests_ - this->numFailed_).data(), dbg_style_fg(dbg_color::green)),
+			 dbg_styled(dbg_u8format("({}) Failed", this->numFailed_).data(), dbg_style_fg(dbg_color::red)));
 		}
 		else
 		{
-			if (this->name_.size() != 0)
+			if(this->name_.size() != 0)
 			{
-				if (this->numTests_ > 0)
+				if(this->numTests_ > 0)
 				{
 					pf_print(
-						"- ({}) Succeeded\n",
-						dbg_styled(this->numTests_, dbg_style_fg(dbg_color::green)));
+					 "- ({}) Succeeded\n",
+					 dbg_styled(this->numTests_, dbg_style_fg(dbg_color::green)));
 				}
 				else
 				{
@@ -134,9 +140,9 @@ namespace pul
 	// Unit
 	pulsar_api void
 	__tester_pack::__add_unit(
-		__tester_unit *__u) pf_attr_noexcept
+	 __tester_unit *__u) pf_attr_noexcept
 	{
-		if (!this->unitHead_)
+		if(!this->unitHead_)
 		{
 			this->unitHead_ = __u;
 			this->unitTail_ = __u;
@@ -149,9 +155,9 @@ namespace pul
 	}
 	pulsar_api void
 	__tester_pack::__add_benchmark(
-		__tester_benchmark *__b) pf_attr_noexcept
+	 __tester_benchmark *__b) pf_attr_noexcept
 	{
-		if (!this->benchHead_)
+		if(!this->benchHead_)
 		{
 			this->benchHead_ = __b;
 			this->benchTail_ = __b;
@@ -164,47 +170,50 @@ namespace pul
 	}
 	pulsar_api void
 	__tester_pack::__add_result(
-		bool __c,
-		dbg_u8string_view __file,
-		uint32_t __line) pf_attr_noexcept
+	 bool __c,
+	 dbg_u8string_view __file,
+	 uint32_t __line) pf_attr_noexcept
 	{
 		++this->numTests_;
-		if (!__c)
+		if(!__c)
 		{
 			++this->numFailed_;
-			if (this->name_.data() == nullptr)
+			if(this->name_.data() == nullptr)
 			{
 				pf_print(
-					"/{}/ at {}:{}\n",
-					dbg_styled('A', dbg_style_fg(dbg_color::red)),
-					dbg_styled(__file.data(), dbg_style_fg(dbg_color::orange)),
-					dbg_styled(__line, dbg_style_fg(dbg_color::red)));
+				 "/{}/ at {}:{}\n",
+				 dbg_styled('A', dbg_style_fg(dbg_color::red)),
+				 dbg_styled(__file.data(), dbg_style_fg(dbg_color::orange)),
+				 dbg_styled(__line, dbg_style_fg(dbg_color::red)));
 			}
 			else
 			{
 				pf_print(
-					"/{}/ <{}> at {}:{}\n",
-					dbg_styled('A', dbg_style_fg(dbg_color::red)),
-					dbg_styled(this->name_.data(), dbg_style_fg(dbg_color::steel_blue)),
-					dbg_styled(__file.data(), dbg_style_fg(dbg_color::orange)),
-					dbg_styled(__line, dbg_style_fg(dbg_color::red)));
+				 "/{}/ <{}> at {}:{}\n",
+				 dbg_styled('A', dbg_style_fg(dbg_color::red)),
+				 dbg_styled(this->name_.data(), dbg_style_fg(dbg_color::steel_blue)),
+				 dbg_styled(__file.data(), dbg_style_fg(dbg_color::orange)),
+				 dbg_styled(__line, dbg_style_fg(dbg_color::red)));
 			}
 		}
 	}
 
 	/// TESTER: Benchmark
 	// Constructors
-	pulsar_api __tester_benchmark::__tester_benchmark(
-		dbg_u8string_view __name,
-		size_t __itc,
-		size_t __ntt) pf_attr_noexcept
+	pulsar_api
+	__tester_benchmark::__tester_benchmark(
+	 dbg_u8string_view __name,
+	 size_t __itc,
+	 size_t __ntt) pf_attr_noexcept
 		: next_(nullptr)
 		, name_(__name)
 		, itc_(__itc)
 		, ntt_(__ntt)
 	{
-		if (this->ntt_ == 0) this->ntt_ = 1;
-		else if (this->ntt_ >= 128) this->ntt_ = 128;
+		if(this->ntt_ == 0)
+			this->ntt_ = 1;
+		else if(this->ntt_ >= 128)
+			this->ntt_ = 128;
 		__tester_pack *p = tester_engine.__cur_pack();
 		p->__add_benchmark(this);
 	}
@@ -212,25 +221,25 @@ namespace pul
 	// Display
 	pulsar_api void
 	__tester_benchmark::__display_measures(
-		uint64_t *__rts,
-		const size_t __c) pf_attr_noexcept
+	 uint64_t *__rts,
+	 const size_t __c) pf_attr_noexcept
 	{
 		// 1. Convert
 		uint64_t min = __rts[0];
 		uint64_t max = __rts[0];
 		uint64_t avg = __rts[0];
 		uint64_t var = __rts[0] * __rts[0];
-		for (size_t i = 1; i < __c; ++i)
+		for(size_t i = 1; i < __c; ++i)
 		{
-			if (__rts[i] < min) min = __rts[i];
-			if (__rts[i] > max) max = __rts[i];
+			if(__rts[i] < min) min = __rts[i];
+			if(__rts[i] > max) max = __rts[i];
 			avg += __rts[i];
 			var += __rts[i] * __rts[i];
 		}
 		uint64_t total = avg;
-		avg /= __c;
-		var	 = var / __c - avg * avg;
-		uint64_t ect = static_cast<uint64_t>(std::sqrt(var));
+		avg						/= __c;
+		var						 = var / __c - avg * avg;
+		uint64_t ect	 = static_cast<uint64_t>(std::sqrt(var));
 		std::sort(&__rts[0], &__rts[0] + __c);
 		uint64_t q1 = __rts[__c / 4];
 		uint64_t q2 = __rts[__c / 2];
@@ -238,13 +247,24 @@ namespace pul
 
 		// 2. Print
 		pf_print(
-			"{: <32} {: <12} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
-			dbg_styled(this->name().data(), dbg_emphasis::bold | dbg_style_fg(dbg_color::pale_golden_rod)),
-			this->num_threads(), this->num_iterations(), min, max, avg, var, ect, q1, q2, q3, total);
+		 "{: <32} {: <12} {: <16} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <12} {: <16}\n",
+		 dbg_styled(this->name().data(), dbg_emphasis::bold | dbg_style_fg(dbg_color::pale_golden_rod)),
+		 this->num_threads(),
+		 this->num_iterations(),
+		 min,
+		 max,
+		 avg,
+		 var,
+		 ect,
+		 q1,
+		 q2,
+		 q3,
+		 total);
 	}
 	/// TESTER: Engine
 	// Constructors
-	pulsar_api __tester_engine::__tester_engine() pf_attr_noexcept
+	pulsar_api
+	__tester_engine::__tester_engine() pf_attr_noexcept
 		: unscoppedPack_(nullptr)
 		, packHead_(nullptr)
 		, packTail_(nullptr)
@@ -262,9 +282,9 @@ namespace pul
 
 		// 2. Running Packs
 		this->packCurr_ = this->packHead_;
-		size_t nt = 0;
-		size_t nf = 0;
-		while (this->packCurr_ )
+		size_t nt				= 0;
+		size_t nf				= 0;
+		while(this->packCurr_)
 		{
 			this->packCurr_->__run();
 			nt						 += this->packCurr_->numTests_;
@@ -273,23 +293,17 @@ namespace pul
 		}
 
 		// 3. Print
-		if (nt == 0)
+		if(nt == 0)
 		{
 			pf_print(dbg_type::info, dbg_level::high, "Tester -> Nothing to test.\n");
 		}
-		else if (nf > 0)
+		else if(nf > 0)
 		{
-			pf_print(dbg_type::info, dbg_level::high, "Tester -> {} | {}\n",
-							 dbg_styled(dbg_u8format("({}) Succeeded", nt - nf).data(),
-													dbg_style_fg(dbg_color::green)),
-							 dbg_styled(dbg_u8format("({}) Failed", nf).data(),
-													dbg_style_fg(dbg_color::red)));
+			pf_print(dbg_type::info, dbg_level::high, "Tester -> {} | {}\n", dbg_styled(dbg_u8format("({}) Succeeded", nt - nf).data(), dbg_style_fg(dbg_color::green)), dbg_styled(dbg_u8format("({}) Failed", nf).data(), dbg_style_fg(dbg_color::red)));
 		}
 		else
 		{
-			pf_print(dbg_type::info, dbg_level::high, "Tester -> {}",
-							 dbg_styled(dbg_u8format("({}) Succeeded\n", nt).data(),
-													dbg_style_fg(dbg_color::green)));
+			pf_print(dbg_type::info, dbg_level::high, "Tester -> {}", dbg_styled(dbg_u8format("({}) Succeeded\n", nt).data(), dbg_style_fg(dbg_color::green)));
 		}
 
 		// Fail? Succeeded?
@@ -297,10 +311,11 @@ namespace pul
 	}
 
 	// Test
-	pulsar_api void __tester_engine::__test(
-		bool __c,
-		dbg_u8string_view __file,
-		uint32_t __line) pf_attr_noexcept
+	pulsar_api void
+	__tester_engine::__test(
+	 bool __c,
+	 dbg_u8string_view __file,
+	 uint32_t __line) pf_attr_noexcept
 	{
 		__tester_pack *p = this->__cur_pack();
 		p->__add_result(__c, __file, __line);
@@ -309,7 +324,7 @@ namespace pul
 	// Pack
 	pulsar_api void
 	__tester_engine::__add_pack(
-		__tester_pack *__p) pf_attr_noexcept
+	 __tester_pack *__p) pf_attr_noexcept
 	{
 		if(!this->packHead_)
 		{
@@ -323,9 +338,9 @@ namespace pul
 		}
 		this->packCurr_ = __p;
 	}
-	pulsar_api __tester_pack*
+	pulsar_api __tester_pack *
 	__tester_engine::__cur_pack() pf_attr_noexcept
 	{
 		return this->packCurr_;
 	}
-}
+}	 // namespace pul

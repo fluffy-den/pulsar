@@ -51,6 +51,7 @@ namespace pul
 	/// CONCURRENCY: This Thread
 	namespace this_thread
 	{
+		// Chrono
 		pf_decl_inline void
 		sleep_for(
 		 nanoseconds_t __s)
@@ -69,18 +70,20 @@ namespace pul
 			std::this_thread::yield();
 		}
 
+		// Local counter
 		pf_decl_static pf_decl_inline atomic<thread_id_t> __idx_counter = 0;
 
-		pf_hint_nodiscard pf_decl_inline thread_id_t
+		// IDs
+		pf_hint_nodiscard pf_decl_always_inline thread_id_t
 		get_id() pf_attr_noexcept
 		{
 			return union_cast<thread_id_t>(std::this_thread::get_id());
 		}
-		pf_hint_nodiscard pf_decl_inline thread_id_t
+		pf_hint_nodiscard pf_decl_always_inline thread_id_t
 		get_idx() pf_attr_noexcept
 		{
 			pf_decl_thread_local thread_id_t __idx_local = __idx_counter.fetch_add(1, atomic_order::relaxed);
-			return __idx_local;
+			return __idx_local % CCY_NUM_THREADS;
 		}
 	}	 // namespace this_thread
 }	 // namespace pul

@@ -162,6 +162,13 @@ namespace pul
 			return this->ptr_ != nullptr;
 		}
 
+		/// Get
+		pf_hint_nodiscard pf_decl_inline auto
+		get() const pf_attr_noexcept
+		{
+			return this->ptr_;
+		}
+
 	private:
 		_RetTy (*ptr_)(_Args...);
 	};

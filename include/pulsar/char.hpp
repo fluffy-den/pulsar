@@ -13,6 +13,7 @@
 
 // Include: Pulsar
 #include "pulsar/pulsar.hpp"
+#include "pulsar/iterator.hpp"
 #include "pulsar/iterable.hpp"
 #include "pulsar/debug.hpp"
 #include "pulsar/intrin.hpp"
@@ -81,7 +82,7 @@ namespace pul
 	pf_decl_static pf_decl_inline dbg_category_char_t __dbg_category_char_instance;
 
 	/// CHAR: Debug -> Category -> Retrieve
-	pf_decl_inline dbg_category *
+	pf_decl_inline pf_decl_constexpr dbg_category *
 	dbg_category_char() pf_attr_noexcept
 	{
 		return &__dbg_category_char_instance;
@@ -485,21 +486,22 @@ namespace pul
 
 		/// ASCII: To Scalar
 		template<typename _Ty>
-		pf_decl_inline char_error_t
+		pf_decl_inline void
 		to_scalar(
 		 const char_t *__str,
 		 size_t __len,
 		 _Ty &__scalar,
-		 int32_t __base = 10) pf_attr_noexcept
+		 int32_t __base = 10)
 			requires(std::is_arithmetic_v<_Ty>)
 		{
-			auto r = std::from_chars<_Ty>(__str, __str + __len, __scalar, __base);
-			return char_error_t { __std_error_to_char_error_code(r.ec), distof(__str, r.ptr) };
+			auto r							 = std::from_chars<_Ty>(__str, __str + __len, __scalar, __base);
+			char_error_code code = __std_error_to_char_error_code(r.ec);
+			pf_throw_if(code != char_error_code::success, dbg_category_char(), code, 0, "from_chars failed!");
 		}
 
 		/// ASCII: To Chars
 		template<typename _Ty>
-		pf_decl_inline char_error_t
+		pf_decl_inline void
 		to_chars(
 		 char_t *__str,
 		 size_t __len,
@@ -507,8 +509,9 @@ namespace pul
 		 uint32_t __base = 10)
 			requires(std::is_arithmetic_v<_Ty>)
 		{
-			auto r = std::to_chars(__str, __str + __len, __v, __base);
-			return char_error_t { __std_error_to_char_error_code(r.ec), distof(__str, r.ptr) };
+			auto r							 = std::to_chars(__str, __str + __len, __v, __base);
+			char_error_code code = __std_error_to_char_error_code(r.ec);
+			pf_throw_if(code != char_error_code::success, dbg_category_char(), code, 0, "to_chars failed!");
 		}
 	}	 // namespace ascii
 
@@ -1564,7 +1567,7 @@ namespace pul
 				{
 					for(; p + 32 <= __len; p += 32)
 					{
-						const m256i64_t seq = _mm256_lddqu_si256(union_cast<const m256i64_t *>(&__val[-p - 32]));
+						const m256i64_t seq = _mm256_lddqu_si256(union_cast<const m256i64_t *>(&__val[union_cast<diff_t>(-p) - 32]));
 						const m256i64_t cmp = ~_mm256_cmpeq_epi8(_mm256_and_si256(seq, _mm256_set1_epi8(-64)), _mm256_set1_epi8(-128));
 						const int32_t mask	= _mm256_movemask_epi8(cmp);
 						const size_t k			= _popcnt32(mask);
@@ -1585,7 +1588,7 @@ namespace pul
 					{
 						m256i64_t seq	 = _mm256_set1_epi8(-128);
 						const size_t r = __len - p;
-						memcpy(&seq, &__val[-p - r], r);
+						memcpy(&seq, &__val[union_cast<diff_t>(-p) - r], r);
 						const m256i64_t cmp = ~_mm256_cmpeq_epi8(_mm256_and_si256(seq, _mm256_set1_epi8(-64)), _mm256_set1_epi8(-128));
 						const int32_t mask	= _mm256_movemask_epi8(cmp);
 						const size_t k			= _popcnt32(mask);
@@ -1610,7 +1613,7 @@ namespace pul
 				{
 					for(; p + 16 <= __len; p += 16)
 					{
-						const m128i64_t seq = _mm_lddqu_si128(union_cast<const m128i64_t *>(&__val[-p - 16]));
+						const m128i64_t seq = _mm_lddqu_si128(union_cast<const m128i64_t *>(&__val[union_cast<diff_t>(-p) - 16]));
 						const m128i64_t cmp = ~_mm_cmpeq_epi8(_mm_and_si128(seq, _mm_set1_epi8(-64)), _mm_set1_epi8(-128));
 						const int32_t mask	= _mm_movemask_epi8(cmp);
 						const size_t k			= _popcnt32(mask);
@@ -1631,7 +1634,7 @@ namespace pul
 					{
 						m128i64_t seq	 = _mm_set1_epi8(-128);
 						const size_t r = __len - p;
-						memcpy(&seq, &__val[-p - r], r);
+						memcpy(&seq, &__val[union_cast<diff_t>(-p) - r], r);
 						const m128i64_t cmp = ~_mm_cmpeq_epi8(_mm_and_si128(seq, _mm_set1_epi8(-64)), _mm_set1_epi8(-128));
 						const int32_t mask	= _mm_movemask_epi8(cmp);
 						const size_t k			= _popcnt32(mask);
@@ -7868,7 +7871,7 @@ namespace pul
 				{
 					// We have a two-byte UTF-8, it should become
 					// a single UTF-16 w.
-					if(p + 1 >= __len) return char_error_t { char_error_code::too_short, p };	 // minimal bound checking
+					if(p + 1 >= __len) return char_error_t { char_error_code::too_short, p };
 					if((uint8_t(__in[p + 1]) & 0b11000000) != 0b10000000) return char_error_t { char_error_code::too_short, p };
 					// range check
 					uint32_t cp = (lb & 0b00011111) << 6 | (uint8_t(__in[p + 1]) & 0b00111111);
@@ -12622,14 +12625,26 @@ namespace pul
 			}
 			return consumed;
 		}
-		pf_hint_nodiscard pf_decl_always_inline pf_decl_constexpr char_error_t
+		pf_hint_noreturn pf_decl_inline pf_decl_constexpr void
+		__throw_utf8_to_utf16le(
+		 char_error_code __code,
+		 size_t __pos)
+		{
+			pf_throw(
+			 dbg_category_char(),
+			 __code,
+			 0,
+			 "Utf8 to Utf16le failed! code={}, position={}",
+			 union_cast<uint32_t>(__code),
+			 __pos);
+		}
+		pf_decl_always_inline pf_decl_constexpr void
 		convert(
 		 const u8char_t *__in,
 		 size_t __len,
-		 u16char_t *__out) pf_attr_noexcept
+		 u16char_t *__out)
 		{
-			size_t p				 = 0;
-			u16char_t *start = __out;
+			size_t p = 0;
 
 			// In the worst case, we have the haswell kernel which can cause an overflow of
 			// 8 bytes when calling convert_masked_utf8_to_utf16. If you skip the last 16 bytes,
@@ -12674,7 +12689,7 @@ namespace pul
 							{
 								char_error_t res = __rewind_and_convert_with_errors_utf8_to_utf16le(p, __in + p, __len - p, __out);
 								res.position		+= p;
-								return res;
+								__throw_utf8_to_utf16le(res.code, res.position);
 							}
 							int32_t continuation_mask			 = _mm256_movemask_epi8(_mm256_cmpgt_epi8(_mm256_set1_epi8(-64), seq));
 							int32_t leading_mask					 = ~continuation_mask;
@@ -12710,7 +12725,7 @@ namespace pul
 					{
 						char_error_t res = __rewind_and_convert_with_errors_utf8_to_utf16le(p, __in + p, __len - p, __out);
 						res.position		+= p;
-						return res;
+						__throw_utf8_to_utf16le(res.code, res.position);
 					}
 					if(p < __len)
 					{
@@ -12718,14 +12733,10 @@ namespace pul
 						if(res.code != char_error_code::success)
 						{	 // In case of error, we want the error position
 							res.position += p;
-							return res;
-						}
-						else
-						{	 // In case of success, we want the number of w written
-							__out += res.position;
+							__throw_utf8_to_utf16le(res.code, res.position);
 						}
 					}
-					return char_error_t { char_error_code::success, countof(start, __out) };
+					return;
 				}
 
 				// 128
@@ -12752,7 +12763,7 @@ namespace pul
 							{
 								char_error_t res = __rewind_and_convert_with_errors_utf8_to_utf16le(p, __in + p, __len - p, __out);
 								res.position		+= p;
-								return res;
+								__throw_utf8_to_utf16le(res.code, res.position);
 							}
 							int32_t continuation_mask			 = _mm_movemask_epi8(_mm_cmpgt_epi8(_mm_set1_epi8(-64), seq));
 							int32_t leading_mask					 = ~continuation_mask;
@@ -12771,7 +12782,7 @@ namespace pul
 					{
 						char_error_t res = __rewind_and_convert_with_errors_utf8_to_utf16le(p, __in + p, __len - p, __out);
 						res.position		+= p;
-						return res;
+						__throw_utf8_to_utf16le(res.code, res.position);
 					}
 					if(p < __len)
 					{
@@ -12779,19 +12790,22 @@ namespace pul
 						if(res.code != char_error_code::success)
 						{	 // In case of error, we want the error position
 							res.position += p;
-							return res;
+							__throw_utf8_to_utf16le(res.code, res.position);
 						}
 						else
 						{	 // In case of success, we want the number of w written
 							__out += res.position;
 						}
 					}
-					return char_error_t { char_error_code::success, countof(start, __out) };
 				}
 			}
 
 			// 64
-			return __convert_with_errors_utf8_to_utf16le(__in, __len, __out);
+			auto res = __convert_with_errors_utf8_to_utf16le(__in, __len, __out);
+			if(res.code != char_error_code::success)
+			{
+				__throw_utf8_to_utf16le(res.code, res.position);
+			}
 		}
 	}	 // namespace utf8_to_utf16le
 
@@ -13912,11 +13926,24 @@ namespace pul
 			return make_pair(char_error_t { char_error_code::success, union_cast<size_t>(__in - start) }, __out);
 		}
 
-		pf_hint_nodiscard pf_decl_always_inline pf_decl_constexpr char_error_t
+		pf_hint_noreturn pf_decl_inline pf_decl_constexpr void
+		__throw_utf16le_to_utf8(
+		 char_error_code __code,
+		 size_t __position)
+		{
+			pf_throw(
+			 dbg_category_char(),
+			 __code,
+			 0,
+			 "utf16le to utf8 conversion failed! code={}, position={}",
+			 union_cast<uint32_t>(__code),
+			 __position);
+		}
+		pf_decl_always_inline pf_decl_constexpr void
 		convert(
 		 const u16char_t *__in,
 		 size_t __len,
-		 u8char_t *__out) pf_attr_noexcept
+		 u8char_t *__out)
 		{
 			if(!std::is_constant_evaluated())
 			{
@@ -13926,49 +13953,40 @@ namespace pul
 				if(instruction_set::simd & instruction_set::AVX2_BIT)
 				{
 					auto ret = __convert_with_errors_avx2(__in, __len, __out);
-					if(ret.x.code != char_error_code::success) return ret.x;
+					if(ret.x.code != char_error_code::success) __throw_utf16le_to_utf8(ret.x.code, ret.x.position);
 					if(ret.x.position != __len)
 					{
 						char_error_t res = __convert_with_errors(__in + ret.x.position, __len - ret.x.position, ret.y);
 						if(res.code != char_error_code::success)
 						{
 							res.position += ret.x.position;
-							return res;
+							__throw_utf16le_to_utf8(ret.x.code, ret.x.position);
 						}
-						else
-						{
-							ret.y += res.position;
-						}
+						return;
 					}
-					ret.x.position = ret.y - __out;
-					return ret.x;
 				}
 
 				// 128
 				if(instruction_set::simd & instruction_set::SSE2_BIT)
 				{
 					auto ret = __convert_with_errors_sse2(__in, __len, __out);
-					if(ret.x.code != char_error_code::success) return ret.x;
+					if(ret.x.code != char_error_code::success) __throw_utf16le_to_utf8(ret.x.code, ret.x.position);
 					if(ret.x.position != __len)
 					{
 						char_error_t res = __convert_with_errors(__in + ret.x.position, __len - ret.x.position, ret.y);
 						if(res.code != char_error_code::success)
 						{
 							res.position += ret.x.position;
-							return res;
-						}
-						else
-						{
-							ret.y += res.position;
+							__throw_utf16le_to_utf8(res.code, res.position);
 						}
 					}
-					ret.x.position = ret.y - __out;
-					return ret.x;
+					return;
 				}
 			}
 
 			// 64
-			return __convert_with_errors(__in, __len, __out);
+			auto res = __convert_with_errors(__in, __len, __out);
+			if(res.code != char_error_code::success) __throw_utf16le_to_utf8(res.code, res.position);
 		}
 	}	 // namespace utf16le_to_utf8
 
@@ -13989,7 +14007,7 @@ namespace pul
 	class u8string_view;
 	template<
 	 typename _Magnifier = magnifier_default,
-	 typename _Allocator = allocator_default>
+	 typename _Allocator = allocator_halloc>
 		requires(is_magnifier_v<_Magnifier> && is_allocator_v<_Allocator>)
 	class u8string;
 
@@ -14569,9 +14587,9 @@ namespace pul
 		{
 			size_t l1 = this->len_;
 			size_t l2 = __v.len_;
-			if(l1 < l2) return -1ll;
-			if(l1 > l2) return 1ll;
-			return utf8::compare(this->cbegin().get(), __v.cbegin().get(), l1);
+			if(l1 < l2) return union_cast<diff_t>(-1);
+			if(l1 > l2) return union_cast<diff_t>(1);
+			return union_cast<diff_t>(utf8::compare(this->cbegin().get(), __v.cbegin().get(), l1));
 		}
 
 		/// Operator []
@@ -14732,12 +14750,10 @@ namespace pul
 		requires(is_magnifier_v<_Magnifier> && is_allocator_v<_Allocator>)
 	class u8string
 	{
+	protected:
 		template<typename _MagnifierR, typename _AllocatorR>
 			requires(is_magnifier_v<_MagnifierR> && is_allocator_v<_AllocatorR>)
 		pf_decl_friend class u8string;
-		template<typename _MagnifierR, typename _AllocatorR>
-			requires(is_magnifier_v<_MagnifierR> && is_allocator_v<_AllocatorR>)
-		pf_decl_friend class fspath;
 
 		// __reallocate
 		pf_decl_constexpr diff_t
@@ -15344,7 +15360,7 @@ namespace pul
 		/// Constructors
 		pf_decl_constexpr
 		u8string(
-		 align_val_t __align			= ALIGN_DEFAULT,
+		 align_val_t __align			= ALIGN_NO_ALIGN,
 		 _Magnifier &&__magnifier = _Magnifier(),
 		 _Allocator &&__allocator = _Allocator()) pf_attr_noexcept
 			: data_(nullptr)
@@ -15358,7 +15374,7 @@ namespace pul
 		u8string(
 		 u8char_t __val,
 		 size_t __count,
-		 align_val_t __align			= ALIGN_DEFAULT,
+		 align_val_t __align			= ALIGN_NO_ALIGN,
 		 _Magnifier &&__magnifier = _Magnifier(),
 		 _Allocator &&__allocator = _Allocator())
 			: u8string(__align, std::move(__magnifier), std::move(__allocator))
@@ -15374,7 +15390,7 @@ namespace pul
 		u8string(
 		 u8code_t __code,
 		 size_t __count,
-		 align_val_t __align			= ALIGN_DEFAULT,
+		 align_val_t __align			= ALIGN_NO_ALIGN,
 		 _Magnifier &&__magnifier = _Magnifier(),
 		 _Allocator &&__allocator = _Allocator())
 			: u8string(__align, std::move(__magnifier), std::move(__allocator))
@@ -15393,7 +15409,7 @@ namespace pul
 		u8string(
 		 _IteratorIn __beg,
 		 _IteratorIn __end,
-		 align_val_t __align			= ALIGN_DEFAULT,
+		 align_val_t __align			= ALIGN_NO_ALIGN,
 		 _Magnifier &&__magnifier = _Magnifier(),
 		 _Allocator &&__allocator = _Allocator())
 			requires(is_iterator_v<_IteratorIn>)
@@ -15410,7 +15426,7 @@ namespace pul
 		pf_decl_constexpr
 		u8string(
 		 const u8char_t (&__arr)[_Num],
-		 align_val_t __align			= ALIGN_DEFAULT,
+		 align_val_t __align			= ALIGN_NO_ALIGN,
 		 _Magnifier &&__magnifier = _Magnifier(),
 		 _Allocator &&__allocator = _Allocator())
 			: u8string(pul::begin(__arr), pul::end(__arr), __align, std::move(__magnifier), std::move(__allocator))
@@ -15419,7 +15435,7 @@ namespace pul
 		pf_decl_constexpr
 		u8string(
 		 const u8code_t (&__arr)[_Num],
-		 align_val_t __align			= ALIGN_DEFAULT,
+		 align_val_t __align			= ALIGN_NO_ALIGN,
 		 _Magnifier &&__magnifier = _Magnifier(),
 		 _Allocator &&__allocator = _Allocator())
 			: u8string(pul::begin(__arr), pul::end(__arr), __align, std::move(__magnifier), std::move(__allocator))
@@ -15428,7 +15444,7 @@ namespace pul
 		pf_decl_constexpr
 		u8string(
 		 const array<u8char_t, _Num> &__arr,
-		 align_val_t __align			= ALIGN_DEFAULT,
+		 align_val_t __align			= ALIGN_NO_ALIGN,
 		 _Magnifier &&__magnifier = _Magnifier(),
 		 _Allocator &&__allocator = _Allocator())
 			: u8string(__arr.begin(), __arr.end(), __align, std::move(__magnifier), std::move(__allocator))
@@ -15437,7 +15453,7 @@ namespace pul
 		pf_decl_constexpr
 		u8string(
 		 const array<u8code_t, _Num> &__arr,
-		 align_val_t __align			= ALIGN_DEFAULT,
+		 align_val_t __align			= ALIGN_NO_ALIGN,
 		 _Magnifier &&__magnifier = _Magnifier(),
 		 _Allocator &&__allocator = _Allocator())
 			: u8string(__arr.begin(), __arr.end(), __align, std::move(__magnifier), std::move(__allocator))
@@ -15446,7 +15462,7 @@ namespace pul
 		pf_decl_constexpr
 		u8string(
 		 _View __view,
-		 align_val_t __align			= ALIGN_DEFAULT,
+		 align_val_t __align			= ALIGN_NO_ALIGN,
 		 _Magnifier &&__magnifier = _Magnifier(),
 		 _Allocator &&__allocator = _Allocator())
 			requires(is_view_v<_View>)
@@ -15454,25 +15470,9 @@ namespace pul
 		{}
 		pf_decl_constexpr
 		u8string(
-		 initializer_list<u8char_t> __list,
-		 align_val_t __align			= ALIGN_DEFAULT,
-		 _Magnifier &&__magnifier = _Magnifier(),
-		 _Allocator &&__allocator = _Allocator())
-			: u8string(iterator(__list.begin()), iterator(__list.end()), __align, std::move(__magnifier), std::move(__allocator))
-		{}
-		pf_decl_constexpr
-		u8string(
-		 initializer_list<u8code_t> __list,
-		 align_val_t __align			= ALIGN_DEFAULT,
-		 _Magnifier &&__magnifier = _Magnifier(),
-		 _Allocator &&__allocator = _Allocator())
-			: u8string(iterator(__list.begin()), iterator(__list.end()), __align, std::move(__magnifier), std::move(__allocator))
-		{}
-		pf_decl_constexpr
-		u8string(
 		 const u8char_t *__str,
 		 size_t __len,
-		 align_val_t __align			= ALIGN_DEFAULT,
+		 align_val_t __align			= ALIGN_NO_ALIGN,
 		 _Magnifier &&__magnifier = _Magnifier(),
 		 _Allocator &&__allocator = _Allocator())
 			: u8string(iterator(__str), iterator(__str + __len), __align, std::move(__magnifier), std::move(__allocator))
@@ -15480,7 +15480,7 @@ namespace pul
 		pf_decl_constexpr
 		u8string(
 		 const u8char_t *__str,
-		 align_val_t __align			= ALIGN_DEFAULT,
+		 align_val_t __align			= ALIGN_NO_ALIGN,
 		 _Magnifier &&__magnifier = _Magnifier(),
 		 _Allocator &&__allocator = _Allocator())
 			: u8string(__str, utf8::lenof(__str) - 1, __align, std::move(__magnifier), std::move(__allocator))
@@ -15736,12 +15736,6 @@ namespace pul
 		{
 			this->assign(__v.begin(), __v.end());
 		}
-		pf_decl_inline pf_decl_constexpr void
-		assign(
-		 initializer_list<u8char_t> __il)
-		{
-			this->assign(iterator(__il.begin()), iterator(__il.end()));
-		}
 		pf_decl_constexpr void
 		assign(
 		 u8string<_Magnifier, _Allocator> &&__r) pf_attr_noexcept
@@ -15792,18 +15786,6 @@ namespace pul
 			requires(is_view_v<_View>)
 		{
 			return this->push_back(iterator(__v.begin()), iterator(__v.end()));
-		}
-		pf_decl_inline pf_decl_constexpr size_t
-		push_back(
-		 initializer_list<u8char_t> __il)
-		{
-			return this->push_back(iterator(__il.begin()), iterator(__il.end()));
-		}
-		pf_decl_inline pf_decl_constexpr size_t
-		push_back(
-		 initializer_list<u8code_t> __il)
-		{
-			return this->push_back(iterator(__il.begin()), iterator(__il.end()));
 		}
 		pf_decl_inline pf_decl_constexpr size_t
 		push_back(
@@ -15881,20 +15863,6 @@ namespace pul
 			requires(is_view_v<_View>)
 		{
 			return this->push(__w, __v.begin(), __v.end());
-		}
-		pf_decl_inline pf_decl_constexpr size_t
-		push(
-		 size_t __w,
-		 initializer_list<u8char_t> __il)
-		{
-			return this->push(__w, iterator(__il.begin()), iterator(__il.end()));
-		}
-		pf_decl_inline pf_decl_constexpr size_t
-		push(
-		 size_t __w,
-		 initializer_list<u8code_t> __il)
-		{
-			return this->push(__w, iterator(__il.begin()), iterator(__il.end()));
 		}
 		pf_decl_inline pf_decl_constexpr size_t
 		push(
@@ -15978,18 +15946,6 @@ namespace pul
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
 		insert_back(
-		 initializer_list<u8char_t> __il)
-		{
-			return this->insert_back(iterator(__il.begin()), iterator(__il.end()));
-		}
-		pf_decl_inline pf_decl_constexpr iterator_t
-		insert_back(
-		 initializer_list<u8code_t> __il)
-		{
-			return this->insert_back(iterator(__il.begin()), iterator(__il.end()));
-		}
-		pf_decl_inline pf_decl_constexpr iterator_t
-		insert_back(
 		 const u8char_t *__str,
 		 size_t __len)
 		{
@@ -16064,20 +16020,6 @@ namespace pul
 			requires(is_view_v<_View>)
 		{
 			return this->insert(__w, __v.begin(), __v.end());
-		}
-		pf_decl_inline pf_decl_constexpr iterator_t
-		insert(
-		 iterator_t __w,
-		 initializer_list<u8char_t> __il)
-		{
-			return this->insert(__w, iterator(__il.begin()), iterator(__il.end()));
-		}
-		pf_decl_inline pf_decl_constexpr iterator_t
-		insert(
-		 iterator_t __w,
-		 initializer_list<u8code_t> __il)
-		{
-			return this->insert(__w, iterator(__il.begin()), iterator(__il.end()));
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
 		insert(
@@ -16206,20 +16148,6 @@ namespace pul
 		pf_decl_inline pf_decl_constexpr size_t
 		replace(
 		 size_t __w,
-		 initializer_list<u8char_t> __il)
-		{
-			return this->replace(__w, iterator(__il.begin()), iterator(__il.end()));
-		}
-		pf_decl_inline pf_decl_constexpr size_t
-		replace(
-		 size_t __w,
-		 initializer_list<u8code_t> __il)
-		{
-			return this->replace(__w, iterator(__il.begin()), iterator(__il.end()));
-		}
-		pf_decl_inline pf_decl_constexpr size_t
-		replace(
-		 size_t __w,
 		 const u8char_t *__str,
 		 size_t __len)
 		{
@@ -16270,7 +16198,7 @@ namespace pul
 		 size_t __wbeg,
 		 size_t __wend,
 		 u8char_t __val,
-		 size_t __count = 1)
+		 size_t __count)
 		{
 			return this->__replace(__wbeg, __wend, __val, __count);
 		}
@@ -16279,7 +16207,7 @@ namespace pul
 		 size_t __wbeg,
 		 size_t __wend,
 		 u8code_t __code,
-		 size_t __count = 1)
+		 size_t __count)
 		{
 			return this->__replace(__wbeg, __wend, __code, __count);
 		}
@@ -16303,22 +16231,6 @@ namespace pul
 			requires(is_view_v<_View>)
 		{
 			return this->replace(__wbeg, __wend, __view.begin(), __view.end());
-		}
-		pf_decl_inline pf_decl_constexpr size_t
-		replace(
-		 size_t __wbeg,
-		 size_t __wend,
-		 initializer_list<u8char_t> __il)
-		{
-			return this->replace(__wbeg, __wend, iterator(__il.begin()), iterator(__il.end()));
-		}
-		pf_decl_inline pf_decl_constexpr size_t
-		replace(
-		 size_t __wbeg,
-		 size_t __wend,
-		 initializer_list<u8code_t> __il)
-		{
-			return this->replace(__wbeg, __wend, iterator(__il.begin()), iterator(__il.end()));
 		}
 		pf_decl_inline pf_decl_constexpr size_t
 		replace(
@@ -16412,20 +16324,6 @@ namespace pul
 		pf_decl_inline pf_decl_constexpr iterator_t
 		reinsert(
 		 iterator_t __w,
-		 initializer_list<u8char_t> __il)
-		{
-			return this->reinsert(__w, iterator(__il.begin()), iterator(__il.end()));
-		}
-		pf_decl_inline pf_decl_constexpr iterator_t
-		reinsert(
-		 iterator_t __w,
-		 initializer_list<u8code_t> __il)
-		{
-			return this->reinsert(__w, iterator(__il.begin()), iterator(__il.end()));
-		}
-		pf_decl_inline pf_decl_constexpr iterator_t
-		reinsert(
-		 iterator_t __w,
 		 const u8char_t *__str,
 		 size_t __len)
 		{
@@ -16509,22 +16407,6 @@ namespace pul
 			requires(is_view_v<_View>)
 		{
 			return this->reinsert(__wbeg, __wend, __v.begin(), __v.end());
-		}
-		pf_decl_inline pf_decl_constexpr iterator_t
-		reinsert(
-		 iterator_t __wbeg,
-		 iterator_t __wend,
-		 initializer_list<u8char_t> __il)
-		{
-			return this->reinsert(__wbeg, __wend, iterator(__il.begin()), iterator(__il.end()));
-		}
-		pf_decl_inline pf_decl_constexpr iterator_t
-		reinsert(
-		 iterator_t __wbeg,
-		 iterator_t __wend,
-		 initializer_list<u8code_t> __il)
-		{
-			return this->reinsert(__wbeg, __wend, iterator(__il.begin()), iterator(__il.end()));
 		}
 		pf_decl_inline pf_decl_constexpr iterator_t
 		reinsert(
@@ -17027,7 +16909,7 @@ namespace pul
 			return this->len_ == 0;
 		}
 
-	private:
+	protected:
 		u8char_t *data_;
 		size_t capacity_;
 		align_val_t align_;
@@ -17081,13 +16963,13 @@ namespace pul
 		return fmt::formatted_size(__fmt, std::forward<_Args>(__args)...);
 	}
 	template<typename... _Args>
-	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr u8string<>
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr auto
 	u8format(
 	 u8format_string<_Args...> __fmt,
 	 _Args &&...__args)
 	{
 		const size_t r = fmt::formatted_size(__fmt, std::forward<_Args>(__args)...);
-		u8string<> str('\0', r);
+		u8string str('\0', r);
 		fmt::format_to(str.data(), __fmt, std::forward<_Args>(__args)...);
 		return str;
 	}
@@ -17100,7 +16982,5 @@ namespace pul
 	{
 		return fmt::format_to(__out, __fmt, std::forward<_Args>(__args)...);
 	}
-
 }	 // namespace pul
-
 #endif	// !PULSAR_CHAR_HPP

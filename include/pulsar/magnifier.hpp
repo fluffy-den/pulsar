@@ -41,28 +41,28 @@ namespace pul
 	struct is_magnifier<_Magnifier> : std::true_type
 	{};
 	template<typename _Magnifier>
-	pf_decl_constexpr pf_decl_inline bool is_magnifier_v = is_magnifier<_Magnifier>::value;
+	pf_decl_inline pf_decl_constexpr bool is_magnifier_v = is_magnifier<_Magnifier>::value;
 
 	/// MAGNIFIER: Default
 	class magnifier_default pf_attr_final
 	{
 	public:
 		/// Operator()
-		pf_hint_nodiscard pf_decl_constexpr size_t
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
 		operator()(size_t __rs) const pf_attr_noexcept
 		{
 			return __rs;
 		}
 	};
 
-	/// MAGNIFIER: Linear
-	class magnifier_linear pf_attr_final
+	/// MAGNIFIER: Constant
+	class magnifier_constant pf_attr_final
 	{
 	public:
 		/// Constructors
-		pf_decl_constexpr
-		magnifier_linear(
-		 size_t __count = 2) pf_attr_noexcept
+		pf_decl_inline pf_decl_constexpr
+		magnifier_constant(
+		 size_t __count)
 			: count_(__count)
 		{
 			if(__count == 0)
@@ -72,20 +72,66 @@ namespace pul
 				 dbg_flags::none,
 				 "__count can't be equal to 0!");
 		}
-		pf_decl_constexpr
+		pf_decl_inline pf_decl_constexpr
+		magnifier_constant(
+		 magnifier_constant const &__r) pf_attr_noexcept
+			: count_(__r.count_)
+		{}
+
+		/// Destructor
+		pf_decl_inline pf_decl_constexpr ~magnifier_constant() pf_attr_noexcept = default;
+
+		/// Operator=
+		pf_decl_inline pf_decl_constexpr magnifier_constant &
+		operator=(
+		 magnifier_constant const &__r) pf_attr_noexcept
+		{
+			if(pf_likely(this != &__r))
+			{
+				this->count_ = __r.count_;
+			}
+			return *this;
+		}
+
+		/// Operator()
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
+		operator()(size_t) const pf_attr_noexcept
+		{
+			return this->count_;
+		}
+
+	private:
+		size_t count_;
+	};
+
+	/// MAGNIFIER: Linear
+	class magnifier_linear pf_attr_final
+	{
+	public:
+		/// Constructors
+		pf_decl_inline pf_decl_constexpr
+		magnifier_linear(
+		 size_t __count)
+			: count_(__count)
+		{
+			if(__count == 0)
+				pf_throw(
+				 dbg_category_generic(),
+				 dbg_code::invalid_argument,
+				 dbg_flags::none,
+				 "__count can't be equal to 0!");
+		}
+		pf_decl_inline pf_decl_constexpr
 		magnifier_linear(
 		 magnifier_linear const &__r) pf_attr_noexcept
 			: count_(__r.count_)
 		{}
-		pf_decl_constexpr
-		magnifier_linear(
-		 magnifier_linear &&) pf_attr_noexcept = default;
 
 		/// Destructor
-		pf_decl_constexpr ~magnifier_linear() pf_attr_noexcept = default;
+		pf_decl_inline pf_decl_constexpr ~magnifier_linear() pf_attr_noexcept = default;
 
 		/// Operator=
-		pf_decl_constexpr magnifier_linear &
+		pf_decl_inline pf_decl_constexpr magnifier_linear &
 		operator=(
 		 magnifier_linear const &__r) pf_attr_noexcept
 		{
@@ -95,16 +141,13 @@ namespace pul
 			}
 			return *this;
 		}
-		pf_decl_constexpr magnifier_linear &
-		operator=(
-		 magnifier_linear &&__r) pf_attr_noexcept = default;
 
 		/// Operator()
-		pf_hint_nodiscard pf_decl_constexpr size_t
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
 		operator()(
 		 size_t __rs) const pf_attr_noexcept
 		{
-			return (((__rs + this->count_ - 1) / this->count_) * this->count_);
+			return (((__rs + this->count_) / this->count_) * this->count_);
 		}
 
 	private:
@@ -116,7 +159,7 @@ namespace pul
 	{
 	public:
 		/// Operator()
-		pf_hint_nodiscard pf_decl_constexpr size_t
+		pf_hint_nodiscard pf_decl_inline pf_decl_constexpr size_t
 		operator()(
 		 size_t __rs) const pf_attr_noexcept
 		{

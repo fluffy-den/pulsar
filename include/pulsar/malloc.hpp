@@ -25,18 +25,16 @@
 namespace pul
 {
 	/// MALLOC: Constants
-	pf_decl_constexpr align_val_t ALIGN_DEFAULT = align_val_t(alignof(void *));
-	pf_decl_constexpr align_val_t ALIGN_MAX			= align_val_t(1'024);
+	pf_decl_constexpr align_val_t ALIGN_NO_ALIGN = align_val_t(1);
+	pf_decl_constexpr align_val_t ALIGN_DEFAULT	 = align_val_t(alignof(void *));
+	pf_decl_constexpr align_val_t ALIGN_MAX			 = align_val_t(1'024);
 
 	/// MALLOC: Array
 	template<typename _Ty>
 	struct __marray
 	{
 		size_t count;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpedantic"
 		_Ty data[];
-#pragma GCC diagnostic pop
 	};
 	using __marray_t = __marray<byte_t>;
 
@@ -120,11 +118,25 @@ namespace pul
 	}
 
 	/// MALLOC: Heap
+	pf_hint_nodiscard pulsar_api void *
+	__halloc(
+	 size_t __size,
+	 align_val_t __align = ALIGN_DEFAULT,
+	 size_t __offset		 = 0);
+	pf_hint_nodiscard pulsar_api void *
+	__hrealloc(
+	 void *__ptr,
+	 size_t __size,
+	 align_val_t __align = ALIGN_DEFAULT,
+	 size_t __offset		 = 0);
+	pulsar_api void
+	__hfree(
+	 void *__ptr) pf_attr_noexcept;
 	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr void *
 	halloc(
 	 size_t __size,
 	 align_val_t __align = ALIGN_DEFAULT,
-	 size_t __offset		 = 0) pf_attr_noexcept
+	 size_t __offset		 = 0)
 	{
 		if(std::is_constant_evaluated())
 		{
@@ -132,10 +144,7 @@ namespace pul
 		}
 		else
 		{
-			return mi_malloc_aligned_at(
-			 __size,
-			 union_cast<size_t>(__align),
-			 __offset);
+			return __halloc(__size, __align, __offset);
 		}
 	}
 	pf_decl_inline pf_decl_constexpr void
@@ -156,7 +165,7 @@ namespace pul
 	 void *__ptr,
 	 size_t __nsize,
 	 align_val_t __nalign = ALIGN_DEFAULT,
-	 size_t __noffset			= 0) pf_attr_noexcept
+	 size_t __noffset			= 0)
 	{
 		if(std::is_constant_evaluated())
 		{
@@ -164,7 +173,7 @@ namespace pul
 		}
 		else
 		{
-			return mi_realloc_aligned_at(__ptr, __nsize, union_cast<size_t>(__nalign), __noffset);
+			return __hrealloc(__ptr, __nsize, __nalign, __noffset);
 		}
 	}
 	pf_decl_inline pf_decl_constexpr size_t
@@ -196,13 +205,114 @@ namespace pul
 
 	/// MALLOC: Cache
 	pf_hint_nodiscard pulsar_api void *
-	calloc(
+	__calloc(
+	 size_t __size,
+	 align_val_t __align = ALIGN_DEFAULT,
+	 size_t __offset		 = 0);
+	pf_hint_nodiscard pulsar_api void *
+	__crealloc(
+	 void *__ptr,
 	 size_t __size,
 	 align_val_t __align = ALIGN_DEFAULT,
 	 size_t __offset		 = 0);
 	pulsar_api void
-	cfree(
+	__cfree(
 	 void *__ptr) pf_attr_noexcept;
+
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr void *
+	calloc(
+	 size_t __size,
+	 align_val_t __align = ALIGN_DEFAULT,
+	 size_t __offset		 = 0)
+	{
+		if(std::is_constant_evaluated())
+		{
+			return cevalloc(__size, __align, __offset);
+		}
+		else
+		{
+			return __calloc(__size, __align, __offset);
+		}
+	}
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr void *
+	crealloc(
+	 void *__ptr,
+	 size_t __size,
+	 align_val_t __align = ALIGN_DEFAULT,
+	 size_t __offset		 = 0)
+	{
+		if(std::is_constant_evaluated())
+		{
+			return cevrealloc(__ptr, __size, __align, __offset);
+		}
+		else
+		{
+			return __crealloc(__ptr, __size, __align, __offset);
+		}
+	}
+	pf_decl_inline pf_decl_constexpr void
+	cfree(
+	 void *__ptr)
+	{
+		if(std::is_constant_evaluated())
+		{
+			cevfree(__ptr);
+		}
+		else
+		{
+			__cfree(__ptr);
+		}
+	}
+
+
+	/// MALLOC: Stack
+	pf_hint_nodiscard pulsar_api void *
+	__salloc(
+	 size_t __size,
+	 align_val_t __align = ALIGN_DEFAULT,
+	 size_t __offset		 = 0);
+	pf_hint_nodiscard pulsar_api void *
+	__srealloc(
+	 void *__ptr,
+	 size_t __size,
+	 align_val_t __align = ALIGN_DEFAULT,
+	 size_t __offset		 = 0);
+	pulsar_api void
+	__sfree(
+	 void *__ptr) pf_attr_noexcept;
+
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr void *
+	salloc(
+	 size_t __size,
+	 align_val_t __align = ALIGN_DEFAULT,
+	 size_t __offset		 = 0)
+	{
+		if(std::is_constant_evaluated())
+			return cevalloc(__size, __align, __offset);
+		else
+			return __salloc(__size, __align, __offset);
+	}
+	pf_hint_nodiscard pf_decl_inline pf_decl_constexpr void *
+	srealloc(
+	 void *__ptr,
+	 size_t __size,
+	 align_val_t __align = ALIGN_DEFAULT,
+	 size_t __offset		 = 0)
+	{
+		if(std::is_constant_evaluated())
+			return cevrealloc(__ptr, __size, __align, __offset);
+		else
+			return __srealloc(__ptr, __size, __align, __offset);
+	}
+	pf_decl_inline pf_decl_constexpr void
+	sfree(
+	 void *__ptr)
+	{
+		if(std::is_constant_evaluated())
+			cevfree(__ptr);
+		else
+			__sfree(__ptr);
+	}
 }	 // namespace pul
 
 #endif	// !PULSAR_MALLOC_HPP
