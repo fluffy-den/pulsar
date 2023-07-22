@@ -820,12 +820,12 @@ namespace pul
 	/// ITERATOR: Concept -> Iterable
 	template<typename _Iterable>	// clang-format off
 	concept __const_iterable_c = 
-	requires(_Iterable const &__cia) 
+	 is_iterator_v<typename _Iterable::const_iterator_t> 
+	 && requires(_Iterable const &__cia) 
 	{
-		typename _Iterable::const_iterator_t;
 		{ __cia.begin() } -> std::same_as<typename _Iterable::const_iterator_t>;
 		{ __cia.end() } -> std::same_as<typename _Iterable::const_iterator_t>;
-	};	 // clang-format on
+	};	// clang-format on
 	template<typename _Iterable>
 	struct is_const_iterable : std::false_type
 	{};
@@ -837,12 +837,12 @@ namespace pul
 
 	template<typename _Iterable>	// clang-format off
 	concept __iterable_c = 
-	 requires(_Iterable &__ia) 
+	 is_iterator_v<typename _Iterable::iterator_t> 
+	 && requires(_Iterable &__ia) 
 	{
-		typename _Iterable::iterator_t;
 		{__ia.begin()} -> std::same_as<typename _Iterable::iterator_t>;
 		{__ia.end()} -> std::same_as<typename _Iterable::iterator_t>;
-	};	 // clang-format on
+	};	// clang-format on
 	template<typename _Iterable>
 	struct is_iterable : std::false_type
 	{};
@@ -854,12 +854,12 @@ namespace pul
 
 	template<typename _Iterable>	// clang-format off
 	concept __reverse_const_iterable_c = 
-	 requires(_Iterable const &__ia) 
+	 is_iterator_v<typename _Iterable::const_reverse_iterator_t> 
+	 && requires(_Iterable const &__ia) 
 	{
-		typename _Iterable::const_reverse_iterator_t;
 		{__ia.rbegin()} -> std::same_as<typename _Iterable::const_reverse_iterator_t>;
 		{__ia.rend()} -> std::same_as<typename _Iterable::const_reverse_iterator_t>;
-	};	 // clang-format on
+	};	// clang-format on
 	template<typename _Iterable>
 	struct is_const_reverse_iterable : std::false_type
 	{};
@@ -871,12 +871,12 @@ namespace pul
 
 	template<typename _Iterable>	// clang-format off
 	concept __reverse_iterable_c = 
-	requires(_Iterable &__ia) 
+	 is_iterator_v<typename _Iterable::reverse_iterator_t> 
+	 && requires(_Iterable &__ia) 
 	{
-		typename _Iterable::reverse_iterator_t;
 		{ __ia.rbegin() } -> std::same_as<typename _Iterable::reverse_iterator_t>;
 		{ __ia.rend() } -> std::same_as<typename _Iterable::reverse_iterator_t>;
-	};	 // clang-format on
+	};	// clang-format on
 	template<typename _Iterable>
 	struct is_reverse_iterable : std::false_type
 	{};
@@ -2218,6 +2218,37 @@ namespace pul
 	template<typename _Ty>
 	struct singly_node
 	{
+		/// Constructors
+		template<typename... _Args>
+		pf_decl_inline pf_decl_constexpr
+		singly_node(
+		 _Args &&...__args)
+			requires(std::is_constructible_v<_Ty, _Args...>)
+			: next(nullptr)
+			, store(std::forward<_Args>(__args)...)
+		{}
+		pf_decl_inline pf_decl_constexpr
+		singly_node(
+		 singly_node<_Ty> const &) = default;
+
+		/// Destructor
+		pf_decl_inline pf_decl_constexpr ~singly_node() = default;
+
+		/// Operator =
+		pf_decl_inline pf_decl_constexpr singly_node<_Ty> &
+		operator=(
+		 singly_node<_Ty> const &) = default;
+		template<typename... _Args>
+		pf_decl_inline pf_decl_constexpr singly_node<_Ty> &
+		operator=(
+		 _Args &&...__args)
+			requires(is_assignable_v<_Ty, _Args...>)
+		{
+			pul::assign(this->store, std::forward<_Args>(__args)...);
+			return *this;
+		}
+
+		/// Data
 		singly_node<_Ty> *next;
 		_Ty store;
 	};
@@ -2525,6 +2556,38 @@ namespace pul
 	template<typename _Ty>
 	struct doubly_node
 	{
+		/// Constructors
+		template<typename... _Args>
+		pf_decl_inline pf_decl_constexpr
+		doubly_node(
+		 _Args &&...__args)
+			requires(std::is_constructible_v<_Ty, _Args...>)
+			: next(nullptr)
+			, prev(nullptr)
+			, store(std::forward<_Args>(__args)...)
+		{}
+		pf_decl_inline pf_decl_constexpr
+		doubly_node(
+		 doubly_node<_Ty> const &) = default;
+
+		/// Destructor
+		pf_decl_inline pf_decl_constexpr ~doubly_node() = default;
+
+		/// Operator =
+		pf_decl_inline pf_decl_constexpr doubly_node<_Ty> &
+		operator=(
+		 doubly_node<_Ty> const &) = default;
+		template<typename... _Args>
+		pf_decl_inline pf_decl_constexpr doubly_node<_Ty> &
+		operator=(
+		 _Args &&...__args)
+			requires(is_assignable_v<_Ty, _Args...>)
+		{
+			pul::assign(this->store, std::forward<_Args>(__args)...);
+			return *this;
+		}
+
+		/// Data
 		doubly_node<_Ty> *next;
 		doubly_node<_Ty> *prev;
 		_Ty store;
@@ -2877,9 +2940,13 @@ namespace pul
 	template<typename _Ty>
 	doubly_iterator(const _Ty *) -> doubly_iterator<const _Ty>;
 
-	/// ITERABLE: Doubly -> Alias
+	/// ITERABLE: Doubly -> Aliases
 	template<typename _Ty>
 	using doubly_const_iterator = doubly_iterator<const _Ty>;
+	template<typename _Ty>
+	using doubly_reverse_iterator = reverse_iterator<doubly_iterator<_Ty>>;
+	template<typename _Ty>
+	using doubly_const_reverse_iterator = reverse_iterator<doubly_iterator<const _Ty>>;
 
 	/// ITERABLE: Doubly -> Functions
 	template<typename _Ty>

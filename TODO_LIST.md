@@ -50,7 +50,7 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 
 ### Filesystem ### (0.8)
 [o] fs_path
-[x] fs_handle
+[o] fs_handle
 [o] fs_iterator
 [x] fs_signals
 [x] fs_archive
@@ -102,6 +102,5 @@ https://dirtyhandscoding.github.io/posts/improvements-to-symbolsort-tool-for-c-c
 
 ### Fixing ### (0.15)
 [x] cv2pdb
-[x] Name optimisation
-[x] FMT update 
+[x] FMT 10.* update 
 

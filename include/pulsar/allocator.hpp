@@ -384,8 +384,17 @@ namespace pul
 	template<
 	 typename _Magnifier			= magnifier_default,
 	 typename _MemoryProvider = allocator_halloc>
+		requires(
+		 is_magnifier_v<_Magnifier>
+		 && is_standard_allocator_v<_MemoryProvider>)
 	class allocator_linear pf_attr_final
 	{
+		template<typename _MagnifierR, typename _MemoryProviderR>
+			requires(
+			 is_magnifier_v<_MagnifierR>
+			 && is_standard_allocator_v<_MemoryProviderR>)
+		pf_decl_friend class allocator_linear<_MagnifierR, _MemoryProviderR>;
+
 		/// Type -> Header
 		struct __header_t
 		{
@@ -651,8 +660,17 @@ namespace pul
 	template<
 	 typename _Magnifier			= magnifier_default,
 	 typename _MemoryProvider = allocator_halloc>
+		requires(
+		 is_magnifier_v<_Magnifier>
+		 && is_standard_allocator_v<_MemoryProvider>)
 	class allocator_stack pf_attr_final
 	{
+		template<typename _MagnifierR, typename _MemoryProviderR>
+			requires(
+			 is_magnifier_v<_MagnifierR>
+			 && is_standard_allocator_v<_MemoryProviderR>)
+		pf_decl_friend class allocator_stack<_MagnifierR, _MemoryProviderR>;
+
 		/// Type -> Header
 		struct __header_t
 		{
@@ -950,9 +968,17 @@ namespace pul
 	template<
 	 typename _Magnifier			= magnifier_default,
 	 typename _MemoryProvider = allocator_halloc>
-		requires(is_standard_allocator_v<_MemoryProvider>)
+		requires(
+		 is_magnifier_v<_Magnifier>
+		 && is_standard_allocator_v<_MemoryProvider>)
 	class allocator_ring_buffer
 	{
+		template<typename _MagnifierR, typename _MemoryProviderR>
+			requires(
+			 is_magnifier_v<_MagnifierR>
+			 && is_standard_allocator_v<_MemoryProviderR>)
+		pf_decl_friend class allocator_ring_buffer<_MagnifierR, _MemoryProviderR>;
+
 		/// Type -> Header
 		struct __header_t
 		{
@@ -1322,8 +1348,17 @@ namespace pul
 	template<
 	 typename _Magnifier			= magnifier_default,
 	 typename _MemoryProvider = allocator_halloc>
+		requires(
+		 is_magnifier_v<_Magnifier>
+		 && is_standard_allocator_v<_MemoryProvider>)
 	class allocator_pool pf_attr_final
 	{
+		template<typename _MagnifierR, typename _MemoryProviderR>
+			requires(
+			 is_magnifier_v<_MagnifierR>
+			 && is_standard_allocator_v<_MemoryProviderR>)
+		pf_decl_friend class allocator_pool<_MagnifierR, _MemoryProviderR>;
+
 		/// Type -> Header
 		struct __header_t
 		{
